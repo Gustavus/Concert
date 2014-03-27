@@ -425,7 +425,7 @@ class FileConfigurationPartTest extends TestBase
     $this->assertSame($part->editablePHPNodeValues['0-0'], $edit);
 
     $expected = sprintf('$config[\'content\'] = \'%s\';', $edit);
-    $this->assertSame($expected , $part->getContent());
+    $this->assertSame($expected, $part->getContent());
   }
 
   /**

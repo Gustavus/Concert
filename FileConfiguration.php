@@ -40,7 +40,8 @@ class FileConfiguration
    * Object constructor
    * @param array $fileConfigurationArray fileConfigurationArray to build off of
    */
-  public function __construct($fileConfigurationArray) {
+  public function __construct($fileConfigurationArray)
+  {
     $this->fileConfigurationArray = $fileConfigurationArray;
     $this->buildFileConfigurationParts();
   }
@@ -48,6 +49,7 @@ class FileConfiguration
   /**
    * Builds the FileConfigurationPart objects from the current configuration
    *
+   * @throws  UnexpectedValueException If the configuration part already exists in our fileConfigurationParts array
    * @return void
    */
   private function buildFileConfigurationParts()

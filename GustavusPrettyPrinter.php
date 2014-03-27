@@ -23,14 +23,16 @@ class GustavusPrettyPrinter extends PHPParser_PrettyPrinter_Default
   /**
    * {@inheritdoc}
    */
-  public function pExpr_Array(PHPParser_Node_Expr_Array $node) {
+  public function pExpr_Array(PHPParser_Node_Expr_Array $node)
+  {
     return "[\n" . str_replace(';', ',', $this->pStmts($node->items)) . "\n]";
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function pComments(array $comments) {
+  protected function pComments(array $comments)
+  {
     $result = '';
 
     foreach ($comments as $comment) {
@@ -47,26 +49,27 @@ class GustavusPrettyPrinter extends PHPParser_PrettyPrinter_Default
     return $result;
   }
 
-  protected function pStmts(array $nodes, $indent = true) {
+  protected function pStmts(array $nodes, $indent = true)
+  {
     $pNodes = array();
-     foreach ($nodes as $node) {
+    foreach ($nodes as $node) {
         // var_dump(get_class($node));
         // var_dump($node->subNodes);
         // var_dump($node->attributes);
         // var_dump($node->getAttribute('comments'));
-         $pNodes[] = $this->pComments($node->getAttribute('comments', array()))
-                   . $this->p($node)
-                   . ($node instanceof PHPParser_Node_Expr ? ';' : '');
-     }
+        $pNodes[] = $this->pComments($node->getAttribute('comments', array()))
+                  . $this->p($node)
+                  . ($node instanceof PHPParser_Node_Expr ? ';' : '');
+    }
 
-     if ($indent) {
-         return '    ' . preg_replace(
-             '~\n(?!$|' . $this->noIndentToken . ')~',
-             "\n" . '    ',
-             implode("\n", $pNodes)
-         );
-     } else {
-         return implode("\n", $pNodes);
-     }
+    if ($indent) {
+        return '    ' . preg_replace(
+            '~\n(?!$|' . $this->noIndentToken . ')~',
+            "\n" . '    ',
+            implode("\n", $pNodes)
+        );
+    } else {
+        return implode("\n", $pNodes);
+    }
   }
 }

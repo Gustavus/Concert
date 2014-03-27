@@ -1,4 +1,8 @@
 <?php
+/**
+ * @package CMS
+ * @author  Billy Visto
+ */
 
 namespace Gustavus\CMS;
 
@@ -6,6 +10,12 @@ use Gustavus\CMS\FileConfiguration,
   Gustavus\CMS\Config,
   DateTime;
 
+/**
+ * Class for managing a specific file
+ *
+ * @package CMS
+ * @author  Billy Visto
+ */
 class FileManager
 {
   const LOCK_DURATION = 10;
@@ -120,7 +130,8 @@ class FileManager
    *
    * @return FileConfiguration
    */
-  private function buildFileConfiguration() {
+  private function buildFileConfiguration()
+  {
     return new FileConfiguration($this->getFileConfigurationArray());
   }
 
@@ -193,8 +204,8 @@ class FileManager
   /**
    * Saves a file to the destination
    *
-   * @param  string $file        File to save
    * @param  string $destination Destination of the saved file
+   * @param  string $file        File to save
    * @return boolean
    */
   private function saveFile($destination, $file, $username = null)

@@ -70,6 +70,8 @@ class FileConfigurationPart
    * Sets up the object
    *
    * @param array $params Params to populate the object with
+   *
+   * @throws  InvalidArgumentException If contentType, content, or key is missing from the params array
    */
   public function __construct(array $params = array())
   {
@@ -115,6 +117,7 @@ class FileConfigurationPart
   /**
    * Gets the content
    *
+   * @param boolean $wrapEditableContent Whether we want editable content wrapped in our editable html container
    * @return string
    */
   public function getContent($wrapEditableContent = false)
@@ -245,7 +248,6 @@ class FileConfigurationPart
               }
             }
           }
-         // $this->buildPHPNodePart($node->expr);
         } else if (in_array($node->expr->getType(), Config::$editablePHPExprTypes)) {
           // we can edit this expr
           $this->editablePHPNodeValues[$this->buildEditableIndex($key)] = &$node->expr->value;
