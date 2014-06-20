@@ -1,20 +1,21 @@
 <?php
 /**
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS\Test;
+namespace Gustavus\ConcertCMS\Test;
 
 use Gustavus\Test\TestObject,
-  Gustavus\CMS\FileManager,
-  Gustavus\CMS\FileConfiguration;
+  Gustavus\ConcertCMS\FileManager,
+  Gustavus\ConcertCMS\FileConfiguration,
+  Gustavus\ConcertCMS\Config;
 
 /**
  * Class to test FileManager class
  *
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
@@ -127,7 +128,7 @@ class FileManagerTest extends TestBase
     $this->buildFileManager(self::$testFileDir . 'index5.php', 'testUser');
 
     $configuration = $this->fileManager->getFileConfiguration();
-    $this->assertInstanceOf('\Gustavus\CMS\FileConfiguration', $configuration);
+    $this->assertInstanceOf('\Gustavus\ConcertCMS\FileConfiguration', $configuration);
     $this->assertSame(1, count($configuration->getFileConfigurationParts()));
   }
 
@@ -157,7 +158,7 @@ class FileManagerTest extends TestBase
 
     $file = $this->fileManager->assembleFile(true);
 
-    $expected = '<?php
+    $expected = sprintf('<?php
 // use template getter...
 // must use $config["templatepreference"]
 $config = [
@@ -174,11 +175,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div><?php
+?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
 
 $config["content"] .= ob_get_contents();
 
-echo $config["content"];';
+echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $this->assertSame($expected, $file);
   }
@@ -193,9 +194,9 @@ echo $config["content"];';
     $this->buildFileManager(self::$testFileDir . 'index.php', 'testUser');
 
     $filename = $this->fileManager->makeDraft();
-    $this->assertContains('/cis/lib/', $filename);
+    $this->assertContains('/cis/www-etc/lib/Gustavus', $filename);
 
-    $expected = '<?php
+    $expected = sprintf('<?php
 // use template getter...
 // must use $config["templatepreference"]
 $config = [
@@ -212,11 +213,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div><?php
+?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
 
 $config["content"] .= ob_get_contents();
 
-echo $config["content"];';
+echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $draftFile = file_get_contents($filename);
     unlink($filename);

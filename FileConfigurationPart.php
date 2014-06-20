@@ -1,10 +1,10 @@
 <?php
 /**
- * @package CMS
+ * @package ConcertCMS
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS;
+namespace Gustavus\ConcertCMS;
 use InvalidArgumentException,
   PHPParser_Node_Expr_Array,
   PHPParser_Parser,
@@ -15,7 +15,7 @@ use InvalidArgumentException,
 /**
  * Object representing an individual piece of the file configuration
  *
- * @package CMS
+ * @package ConcertCMS
  * @author  Billy Visto
  */
 class FileConfigurationPart
@@ -196,7 +196,7 @@ class FileConfigurationPart
   private function wrapEditableContent($content, $subKey = null, $subSubKey = null)
   {
     $index = $this->buildEditableIndex($subKey, $subSubKey);
-    return sprintf('<div class="editable" data-index="%s">%s</div>', $index, trim($content));
+    return sprintf('<div class="editable" data-index="%s">%s</div>%s', $index, trim($content), Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
   }
 
   /**
