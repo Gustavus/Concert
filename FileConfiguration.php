@@ -1,19 +1,19 @@
 <?php
 /**
- * @package CMS
+ * @package ConcertCMS
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS;
+namespace Gustavus\ConcertCMS;
 
-use Gustavus\CMS\FileConfigurationPart,
-  Gustavus\CMS\Config,
+use Gustavus\ConcertCMS\FileConfigurationPart,
+  Gustavus\ConcertCMS\Config,
   UnexpectedValueException;
 
 /**
  * File configuration of the file we are trying to edit
  *
- * @package CMS
+ * @package ConcertCMS
  * @author  Billy Visto
  */
 class FileConfiguration

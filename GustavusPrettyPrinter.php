@@ -1,10 +1,10 @@
 <?php
 /**
- * @package  CMS
+ * @package  ConcertCMS
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS;
+namespace Gustavus\ConcertCMS;
 use PHPParser_PrettyPrinter_Default,
   PHPParser_Node_Expr_Array,
   //PHPParser_Node_Stmt_Function,
@@ -15,7 +15,7 @@ use PHPParser_PrettyPrinter_Default,
  *
  * @todo  Come back to this once PHPParser has support for whitespace.
  *
- * @package  CMS
+ * @package  ConcertCMS
  * @author  Billy Visto
  */
 class GustavusPrettyPrinter extends PHPParser_PrettyPrinter_Default

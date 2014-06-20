@@ -1,23 +1,23 @@
 <?php
 /**
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS\Test;
+namespace Gustavus\ConcertCMS\Test;
 
 use PHPParser_Node_Expr_Array,
   PHPParser_Parser,
   PHPParser_NodeTraverser,
   PHPParser_Lexer,
-  Gustavus\CMS\GustavusPrettyPrinter,
-  Gustavus\CMS\Config;
+  Gustavus\ConcertCMS\GustavusPrettyPrinter,
+  Gustavus\ConcertCMS\Config;
 
 /**
  * Class to test FileConfigurationPart
  *
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
@@ -30,6 +30,7 @@ class GustavusPrettyPrinterTest extends TestBase
   public function tearDown()
   {
   }
+
   /**
    * @test
    */

@@ -1,20 +1,21 @@
 <?php
 /**
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS\Test;
+namespace Gustavus\ConcertCMS\Test;
 
-use Gustavus\CMS\FileConfiguration,
-  Gustavus\CMS\FileConfigurationPart,
+use Gustavus\ConcertCMS\FileConfiguration,
+  Gustavus\ConcertCMS\FileConfigurationPart,
+  Gustavus\ConcertCMS\Config,
   Gustavus\Test\TestObject;
 
 /**
  * Class to test FileConfiguration
  *
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  * @todo  Add tests for editing php content
@@ -122,7 +123,7 @@ class FileConfigurationTest extends TestBase
     $configuration = new FileConfiguration(self::$indexConfigArray);
     $file = $configuration->buildFile(true);
 
-    $expected = '<?php
+    $expected = sprintf('<?php
 // use template getter...
 // must use $config["templatepreference"]
 $config = [
@@ -139,11 +140,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div><?php
+?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
 
 $config["content"] .= ob_get_contents();
 
-echo $config["content"];';
+echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $this->assertSame($expected, $file);
   }
@@ -154,7 +155,7 @@ echo $config["content"];';
    */
   public function getFilePartKey($expected, $index)
   {
-    $this->assertSame($expected, $this->call('\Gustavus\CMS\FileConfiguration', 'getFilePartKey', [$index]));
+    $this->assertSame($expected, $this->call('\Gustavus\ConcertCMS\FileConfiguration', 'getFilePartKey', [$index]));
   }
 
   /**

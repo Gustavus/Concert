@@ -1,18 +1,18 @@
 <?php
 /**
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS\Test;
+namespace Gustavus\ConcertCMS\Test;
 
 use Gustavus\Test\Test;
 
 /**
  * Base class for testing
  *
- * @package  CMS
+ * @package  ConcertCMS
  * @subpackage Test
  * @author  Billy Visto
  */
