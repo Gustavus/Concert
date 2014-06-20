@@ -1,19 +1,23 @@
 <?php
 /**
- * @package CMS
+ * @package ConcertCMS
  * @author  Billy Visto
  */
 
-namespace Gustavus\CMS;
+namespace Gustavus\ConcertCMS;
 
-use Gustavus\CMS\FileConfiguration,
-  Gustavus\CMS\Config,
-  DateTime;
+use Gustavus\ConcertCMS\FileConfiguration,
+  Gustavus\ConcertCMS\Config,
+  Gustavus\Extensibility\Filters,
+  DateTime,
+  RuntimeException;
 
 /**
  * Class for managing a specific file
  *
- * @package CMS
+ * @todo  add functions to save to db and what not?
+ *
+ * @package ConcertCMS
  * @author  Billy Visto
  */
 class FileManager
@@ -168,9 +172,10 @@ class FileManager
    */
   public function makeDraft()
   {
+    $this->setUpCheckEditableFilter();
     // @todo add check to make sure they can edit
     //$fileName = str_replace($_SERVER['DOCUMENT_ROOT'], '', $this->filePath);
-    $fileName = sprintf('/cis/lib/Gustavus/CMS/Web/drafts/%s-%s', str_replace('/', '_', str_replace($_SERVER['DOCUMENT_ROOT'], '', $this->filePath)), $this->username);
+    $fileName = sprintf('%s/%s-%s', Config::DRAFT_DIR, str_replace('/', '_', str_replace($_SERVER['DOCUMENT_ROOT'], '', $this->filePath)), $this->username);
 
     if ($this->saveFile($fileName, $this->assembleFile(true))) {
       return $fileName;
@@ -186,6 +191,13 @@ class FileManager
    */
   public function editFile(array $edits)
   {
+    if (isset($_SESSION['concertCMS']['nonEditableKeys'])) {
+      // remove any edits that aren't supposed to be editable.
+      // This eliminates people from modifying the html to give themselves more editable content
+      foreach ($_SESSION['concertCMS']['nonEditableKeys'] as $key) {
+        unset($edits[$key]);
+      }
+    }
     // @todo check lock?
     return $this->getFileConfiguration()->editFile($edits);
   }
@@ -206,11 +218,17 @@ class FileManager
    *
    * @param  string $destination Destination of the saved file
    * @param  string $file        File to save
+   *
+   * @throws  RuntimeException If $destination is not writable
    * @return boolean
    */
   private function saveFile($destination, $file, $username = null)
   {
-    return file_put_contents($destination, $file);
+    if (is_writable(dirname($destination))) {
+      return file_put_contents($destination, $file);
+    } else {
+      throw new RuntimeException("Unable to write file: {$destination}");
+    }
   }
 
   // Lock functions
@@ -322,34 +340,83 @@ class FileManager
     return null;
   }
 
-  public function test()
+  // publishing, staging, and draft functionality
+
+  /**
+   * Publishes a file from the staging directory
+   *
+   * @return boolean True on success false otherwise
+   */
+  public function publishFile()
   {
-    // require_once 'PHPParser/bootstrap.php';
-    // $parser = new PHPParser_Parser(new PHPParser_Lexer);
-    // // $traverser     = new PHPParser_NodeTraverser;
-    // // $prettyPrinter = new PHPParser_PrettyPrinter_Zend;
-
-    // $stmts = $parser->parse(file_get_contents($this->filePath));
-
-    // // $stmts = $traverser->traverse($stmts);
-
-    // // // pretty print
-    // // var_dump('<?php ' . $prettyPrinter->prettyPrint($stmts));
-    // // exit;
-    // var_dump($stmts);
-    // exit;
-
-    $configuration = $this->buildConfiguration();
-    //$configuration->getConfigurationParts()[1]->parseContent();
-    //var_dump($configuration->buildFile());
-    $this->saveFile('indexTest2.php', $configuration->buildFile());
-    // $config = $this->buildFileConfigurationArray();
-    // $file = $this->assembleFile($config);
-    // $this->saveFile($file, 'indexTest.php');
+    // look to DB and make sure the current file is waiting to be published.
+    //
   }
 
+  public function stageFile()
+  {
+    // throw the new file into the pending updates table and throw the file in the staging directory
+  }
+
+  public function userCanEditFile()
+  {
+    // checks to see if the user has access to edit the page
+  }
+
+  public function getUserAccessLevel()
+  {
+    # code...
+  }
+
+  /**
+   * Checks to see if the current user can edit this part
+   *
+   * @param  string $partName
+   * @return boolean
+   */
+  public function userCanEditPart($partName)
+  {
+    // @todo get the user's access level. These levels will have certain editable pieces. Just check against that. :)
+    if ($partName === 'FocusBox') {
+      return false;
+    }
+    return true;
+
+  }
+
+  /**
+   * Removes editable divs from the content so the user cannot edit this piece.
+   *   Also throws the editable div's data-index into a session variable to verify that it doesn't exist in our edits.
+   *
+   * @param  string $content The content to remove editable divs from
+   * @return string
+   */
+  private function removeEditablePieces($content)
+  {
+    $indexPattern = '`<div[^<]+class[^<]+?editable[^>]+?data-index\=(?:\'|")([^>]+)(?:\'|")>`';
+    preg_match_all($indexPattern, $content, $matches);
+    if (isset($matches[1])) {
+      $_SESSION['concertCMS']['nonEditableKeys'] = $matches[1];
+    }
+
+    $pattern = sprintf('`(?:<div[^<]+class[^<]+?editable[^>]+?>)|(?:</div>%s)`', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+    return preg_replace($pattern, '', $content);
+  }
+
+  /**
+   * Sets up a filter that will remove the editable identifiers from sections that actually aren't editable by this person.
+   *
+   * @return  void
+   */
+  private function setUpCheckEditableFilter()
+  {
+    Filters::add('concertCMSCheckEditable', function($content, $tag) {
+      if (!$this->userCanEditPart($tag)) {
+        // strip editable piece
+        return $this->removeEditablePieces($content);
+        //return $strippedContent;
+      }
+      return $content;
+    });
+  }
 }
-
-// $fileManager = new FileManager('index.php', 'billy');
-
-// $fileManager->test();
