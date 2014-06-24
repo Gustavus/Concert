@@ -1,15 +1,15 @@
 <?php
 /**
- * @package  ConcertCMS
+ * @package  Concert
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS;
+namespace Gustavus\Concert;
 
 /**
  * Configuration class
  *
- * @package  ConcertCMS
+ * @package  Concert
  * @author  Billy Visto
  */
 class Config
@@ -32,12 +32,12 @@ class Config
   /**
    * routing file's location
    */
-  const ROUTING_LOCATION = '/cis/lib/Gustavus/ConcertCMS/routing.php';
+  const ROUTING_LOCATION = '/cis/lib/Gustavus/Concert/routing.php';
 
   /**
    * DB name
    */
-  const DB  = 'concertCMS';
+  const DB  = 'concert';
 
   /**
    * directory from the web root this app lives at
@@ -47,12 +47,12 @@ class Config
   /**
    * Directory drafts are saved in
    */
-  const DRAFT_DIR = '/cis/www-etc/lib/Gustavus/ConcertCMS/drafts/';
+  const DRAFT_DIR = '/cis/www-etc/lib/Gustavus/Concert/drafts/';
 
   /**
    * Directory staged files waiting to be published are saved in
    */
-  const STAGING_DIR = '/cis/www-etc/lib/Gustavus/ConcertCMS/staging/';
+  const STAGING_DIR = '/cis/www-etc/lib/Gustavus/Concert/staging/';
 
   /**
    * JS version
@@ -109,15 +109,37 @@ class Config
   ];
 
   /**
-   * Checks to see if the current user can edit a page.
+   * AccessLevels that can't edit files
    *
-   * @return boolean
-   * @todo  finish
+   * @var array
    */
-  public static function canEditPage()
-  {
-    return true;
-  }
+  public static $nonEditableAccessLevels = [];
+
+  /**
+   * Template parts that are editable
+   *   Note: These should all be lowercase
+   *
+   * @var array
+   */
+  public static $editableParts = [
+    'title',
+    'subtitle',
+    'body',
+    'content',
+  ];
+
+  /**
+   * Array of parts that aren't editable for each access level
+   *   For example:
+   *   <code>
+   *   ['admin' => ['focusbox']] // This means that admins can't edit the focusbox
+   *   </code>
+   *   Note: The parts should all be lowercase
+   * @var array
+   */
+  public static $nonEditablePartsByAccessLevel = [
+    'admin' => ['focusbox'],
+  ];
 
   /**
    * Builds the upload location for the current user and page being edited

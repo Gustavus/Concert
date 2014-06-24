@@ -1,21 +1,21 @@
 <?php
 /**
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS\Test;
+namespace Gustavus\Concert\Test;
 
-use Gustavus\ConcertCMS\FileConfiguration,
-  Gustavus\ConcertCMS\FileConfigurationPart,
-  Gustavus\ConcertCMS\Config,
+use Gustavus\Concert\FileConfiguration,
+  Gustavus\Concert\FileConfigurationPart,
+  Gustavus\Concert\Config,
   Gustavus\Test\TestObject;
 
 /**
  * Class to test FileConfiguration
  *
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  * @todo  Add tests for editing php content
@@ -155,7 +155,7 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
    */
   public function getFilePartKey($expected, $index)
   {
-    $this->assertSame($expected, $this->call('\Gustavus\ConcertCMS\FileConfiguration', 'getFilePartKey', [$index]));
+    $this->assertSame($expected, $this->call('FileConfiguration', 'getFilePartKey', [$index]));
   }
 
   /**

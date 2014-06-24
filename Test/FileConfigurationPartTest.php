@@ -1,20 +1,20 @@
 <?php
 /**
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS\Test;
+namespace Gustavus\Concert\Test;
 
-use Gustavus\ConcertCMS\Config,
-  Gustavus\ConcertCMS\FileConfigurationPart,
+use Gustavus\Concert\Config,
+  Gustavus\Concert\FileConfigurationPart,
   Gustavus\Test\TestObject;
 
 /**
  * Class to test FileConfigurationPart
  *
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */

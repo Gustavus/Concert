@@ -1,0 +1,7 @@
+div.editable {
+  cursor: text !important;
+}
+
+div.editable.show {
+  outline: 1px dashed #BBB;
+}

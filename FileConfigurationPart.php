@@ -1,10 +1,10 @@
 <?php
 /**
- * @package ConcertCMS
+ * @package Concert
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS;
+namespace Gustavus\Concert;
 use InvalidArgumentException,
   PHPParser_Node_Expr_Array,
   PHPParser_Parser,
@@ -15,7 +15,7 @@ use InvalidArgumentException,
 /**
  * Object representing an individual piece of the file configuration
  *
- * @package ConcertCMS
+ * @package Concert
  * @author  Billy Visto
  */
 class FileConfigurationPart

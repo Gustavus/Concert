@@ -1,0 +1,20 @@
+RewriteEngine On
+
+RewriteRule js/.+\.js$ - [L]
+# allow tinymce fonts
+RewriteRule js/tinymce.+$ - [L]
+RewriteRule css/.+\.css$ - [L]
+RewriteRule images/.+\.jpg - [L]
+RewriteRule images/.+\.png - [L]
+RewriteRule .+\.html - [L]
+# allow filemanager
+RewriteRule filemanager/.+ - [L]
+# allow
+RewriteRule thumbs/.+ - [L]
+RewriteRule files/.+ - [L]
+
+RewriteRule ^edit/(.*)$ index.php?request=edit&page=$1 [QSA,L]
+RewriteRule ^index.php/?(.*)$ index.php?request=$1 [QSA,L]
+RewriteRule ^.*\.php.*$ - [L]
+
+RewriteRule ^(.*)$ index.php?request=$1 [QSA]

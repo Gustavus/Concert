@@ -1,13 +1,14 @@
 <?php
 /**
- * @package ConcertCMS
+ * @package Concert
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS;
+namespace Gustavus\Concert;
 
-use Gustavus\ConcertCMS\FileConfiguration,
-  Gustavus\ConcertCMS\Config,
+use Gustavus\Concert\FileConfiguration,
+  Gustavus\Concert\Config,
+  Gustavus\Concert\PermissionsManager,
   Gustavus\Extensibility\Filters,
   DateTime,
   RuntimeException;
@@ -17,15 +18,11 @@ use Gustavus\ConcertCMS\FileConfiguration,
  *
  * @todo  add functions to save to db and what not?
  *
- * @package ConcertCMS
+ * @package Concert
  * @author  Billy Visto
  */
 class FileManager
 {
-  const LOCK_DURATION = 10;
-
-  const LOCK_SUFFIX = '.lock';
-
   /**
    * Location of the file we are editing
    * @var string
@@ -59,7 +56,6 @@ class FileManager
   public function __construct($filePath, $username)
   {
     $this->filePath = $filePath;
-    $this->lockFilePath = $filePath . self::LOCK_SUFFIX;
     $this->username = $username;
   }
 
@@ -191,10 +187,10 @@ class FileManager
    */
   public function editFile(array $edits)
   {
-    if (isset($_SESSION['concertCMS']['nonEditableKeys'])) {
+    if (isset($_SESSION['concertCMS']['nonEditableKeys'][$this->getFilePathHash()])) {
       // remove any edits that aren't supposed to be editable.
       // This eliminates people from modifying the html to give themselves more editable content
-      foreach ($_SESSION['concertCMS']['nonEditableKeys'] as $key) {
+      foreach ($_SESSION['concertCMS']['nonEditableKeys'][$this->getFilePathHash()] as $key) {
         unset($edits[$key]);
       }
     }
@@ -229,6 +225,16 @@ class FileManager
     } else {
       throw new RuntimeException("Unable to write file: {$destination}");
     }
+  }
+
+  /**
+   * Builds a hash from the current filename
+   *
+   * @return string
+   */
+  private function getFilePathHash()
+  {
+    return md5($this->filePath);
   }
 
   // Lock functions
@@ -358,16 +364,6 @@ class FileManager
     // throw the new file into the pending updates table and throw the file in the staging directory
   }
 
-  public function userCanEditFile()
-  {
-    // checks to see if the user has access to edit the page
-  }
-
-  public function getUserAccessLevel()
-  {
-    # code...
-  }
-
   /**
    * Checks to see if the current user can edit this part
    *
@@ -376,17 +372,14 @@ class FileManager
    */
   public function userCanEditPart($partName)
   {
-    // @todo get the user's access level. These levels will have certain editable pieces. Just check against that. :)
-    if ($partName === 'FocusBox') {
-      return false;
-    }
-    return true;
-
+    return PermissionsManager::userCanEditPart($this->username, ltrim($this->filePath, '/cis/www'), $partName);
   }
 
   /**
    * Removes editable divs from the content so the user cannot edit this piece.
    *   Also throws the editable div's data-index into a session variable to verify that it doesn't exist in our edits.
+   *
+   *   <strong>Note:</strong> If a person's role changes when they are editing, they will have to log out and re log in to be able to edit sections they were no longer able to edit.
    *
    * @param  string $content The content to remove editable divs from
    * @return string
@@ -396,7 +389,7 @@ class FileManager
     $indexPattern = '`<div[^<]+class[^<]+?editable[^>]+?data-index\=(?:\'|")([^>]+)(?:\'|")>`';
     preg_match_all($indexPattern, $content, $matches);
     if (isset($matches[1])) {
-      $_SESSION['concertCMS']['nonEditableKeys'] = $matches[1];
+      $_SESSION['concertCMS']['nonEditableKeys'][$this->getFilePathHash()] = $matches[1];
     }
 
     $pattern = sprintf('`(?:<div[^<]+class[^<]+?editable[^>]+?>)|(?:</div>%s)`', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);

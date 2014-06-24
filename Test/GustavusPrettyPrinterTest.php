@@ -1,23 +1,23 @@
 <?php
 /**
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS\Test;
+namespace Gustavus\Concert\Test;
 
 use PHPParser_Node_Expr_Array,
   PHPParser_Parser,
   PHPParser_NodeTraverser,
   PHPParser_Lexer,
-  Gustavus\ConcertCMS\GustavusPrettyPrinter,
-  Gustavus\ConcertCMS\Config;
+  Gustavus\Concert\GustavusPrettyPrinter,
+  Gustavus\Concert\Config;
 
 /**
  * Class to test FileConfigurationPart
  *
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */

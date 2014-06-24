@@ -1,22 +1,22 @@
 <?php
 /**
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS\Test;
+namespace Gustavus\Concert\Test;
 
-use Gustavus\Test\Test;
+use Gustavus\Test\TestEM;
 
 /**
  * Base class for testing
  *
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
-class TestBase extends Test
+class TestBase extends TestEM
 {
   /**
    * Location for test files to live
@@ -29,6 +29,17 @@ class TestBase extends Test
    * @var string
    */
   protected $wrappedEditableIdentifier = 'div class="editable"';
+
+  /**
+   * Mapping of Generated Entities to their namespace for testing
+   * @var array
+   */
+  private static $entityMappings = [
+    'Sites'           => '\Gustavus\Concert\Setup\GeneratedEntities\Sites',
+    'Permissions' => '\Gustavus\Concert\Setup\GeneratedEntities\Permissions',
+    'Locks'           => '\Gustavus\Concert\Setup\GeneratedEntities\Locks',
+    'PendingUpdates'  => '\Gustavus\Concert\Setup\GeneratedEntities\People',
+  ];
 
   /**
    * Class constructor
@@ -225,6 +236,56 @@ more html
       ],
     ];
 
+  /**
+   * Sets up the DB using the entities and their namespace mapping
+   *
+   * @param  array  $entities Entity names
+   * @return \Doctrine\ORM\EntityManager
+   */
+  protected function constructDB(array $entities)
+  {
+    foreach ($entities as &$entity) {
+      $entity = self::$entityMappings[$entity];
+    }
+    return $this->setUpDB('/cis/lib/Gustavus/Concert/Setup/GeneratedEntities', $entities);
+  }
 
+  /**
+   * Builds the DB with all the tables
+   *
+   * @return void
+   */
+  protected function buildDB()
+  {
+    $this->constructDB(['Locks', 'UserPermissions', 'Sites', 'PendingUpdates']);
+  }
 
+  /**
+   * Destroy DB tables
+   *
+   * @return void
+   */
+  protected function destructDB()
+  {
+    $this->destroyDB('/cis/lib/Gustavus/Concert/Setup/GeneratedEntities');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function set($class, $property, $value)
+  {
+    parent::set('\Gustavus\Concert\\' . $class, $property, $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function call($object, $method, array $arguments = array())
+  {
+    if (is_object($object)) {
+      return parent::call($object, $method, $arguments);
+    }
+    return parent::call('\Gustavus\Concert\\' . $object, $method, $arguments);
+  }
 }

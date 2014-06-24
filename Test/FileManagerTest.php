@@ -1,21 +1,21 @@
 <?php
 /**
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
 
-namespace Gustavus\ConcertCMS\Test;
+namespace Gustavus\Concert\Test;
 
 use Gustavus\Test\TestObject,
-  Gustavus\ConcertCMS\FileManager,
-  Gustavus\ConcertCMS\FileConfiguration,
-  Gustavus\ConcertCMS\Config;
+  Gustavus\Concert\FileManager,
+  Gustavus\Concert\FileConfiguration,
+  Gustavus\Concert\Config;
 
 /**
  * Class to test FileManager class
  *
- * @package  ConcertCMS
+ * @package  Concert
  * @subpackage Test
  * @author  Billy Visto
  */
@@ -128,7 +128,7 @@ class FileManagerTest extends TestBase
     $this->buildFileManager(self::$testFileDir . 'index5.php', 'testUser');
 
     $configuration = $this->fileManager->getFileConfiguration();
-    $this->assertInstanceOf('\Gustavus\ConcertCMS\FileConfiguration', $configuration);
+    $this->assertInstanceOf('\Gustavus\Concert\FileConfiguration', $configuration);
     $this->assertSame(1, count($configuration->getFileConfigurationParts()));
   }
 
@@ -282,5 +282,88 @@ echo $config["content"];';
     $modifiedFile = file_get_contents(self::$testFileDir . 'index.php');
 
     $this->assertSame($expected, $modifiedFile);
+  }
+
+  /**
+   * @test
+   */
+  public function removeEditablePieces()
+  {
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->buildFileManager(self::$testFileDir . 'index.php', 'testUser');
+
+    $filename = $this->fileManager->makeDraft();
+
+    $fileContents = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertContains($this->wrappedEditableIdentifier, $fileContents);
+
+    $nonEditableContent = $this->fileManager->removeEditablePieces($fileContents);
+    $this->assertNotContains($this->wrappedEditableIdentifier, $nonEditableContent);
+
+    $expectedFile = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?><p>This is some html content</p><?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+    $this->assertSame($expectedFile, $nonEditableContent);
+  }
+
+  /**
+   * @test
+   */
+  public function removeEditablePiecesAndAttemptToEditNonEditableKey()
+  {
+    file_put_contents(self::$testFileDir . 'index5.php', self::$indexFiveContents);
+
+    $this->buildFileManager(self::$testFileDir . 'index5.php', 'testUser');
+
+    $filename = $this->fileManager->makeDraft();
+
+    $fileContents = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertContains($this->wrappedEditableIdentifier, $fileContents);
+
+    $nonEditableContent = $this->fileManager->removeEditablePieces($fileContents);
+    $this->assertNotContains($this->wrappedEditableIdentifier, $nonEditableContent);
+
+    $expectedFile = '<p>This is some html content</p><?php=$test;?>more html<?php //arst';
+
+    $this->assertSame($expectedFile, $nonEditableContent);
+
+    $this->fileManager->editFile(['0' => '<p>This is content</p>', '2' => 'arstarstarst']);
+
+    // since we removed all editable pieces from this file, we shouldn't be able to edit.
+    $this->assertEmpty($this->fileManager->getFileConfiguration()->getFileConfigurationPartsEdited());
+    $this->assertContains('0', $_SESSION['concertCMS']['nonEditableKeys'][$this->fileManager->getFilePathHash()]);
+    $this->assertContains('2', $_SESSION['concertCMS']['nonEditableKeys'][$this->fileManager->getFilePathHash()]);
+  }
+
+  /**
+   * @test
+   */
+  public function setUpCheckEditableFilter()
+  {
+
   }
 }
