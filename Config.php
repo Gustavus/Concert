@@ -45,16 +45,6 @@ class Config
   const WEB_DIR = '/concert/';
 
   /**
-   * Directory drafts are saved in
-   */
-  const DRAFT_DIR = '/cis/www-etc/lib/Gustavus/Concert/drafts/';
-
-  /**
-   * Directory staged files waiting to be published are saved in
-   */
-  const STAGING_DIR = '/cis/www-etc/lib/Gustavus/Concert/staging/';
-
-  /**
    * JS version
    */
   const JS_VERSION = 1;
@@ -78,6 +68,25 @@ class Config
    * HTML comment that gets added after the closing tag for an editable div to make it easier to identify it
    */
   const EDITABLE_DIV_CLOSING_IDENTIFIER = '<!--endeditablediv-->';
+
+  /**
+   * How long a file can be locked without touching it before the lock is released
+   */
+  const LOCK_DURATION = 86400; // 60*60*24
+
+  /**
+   * Directory drafts are saved in
+   *
+   * @var string
+   */
+  public static $draftDir = '/cis/www-etc/lib/Gustavus/Concert/drafts/';
+
+  /**
+   * Directory staged files waiting to be published are saved in
+   *
+   * @var string
+   */
+  public static $stagingDir = '/cis/www-etc/lib/Gustavus/Concert/staging/';
 
   /**
    * Supported content types

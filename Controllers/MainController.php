@@ -57,15 +57,15 @@ class MainController extends SharedController
 
     Filters::add('scripts', function($content) {
         $script = sprintf(
-          '<script type="text/javascript">
-            Modernizr.load([
-              //"//tinymce.cachefly.net/4.0/tinymce.min.js",
-              "%s",
-              "%s"
-            ]);
-          </script>',
-          Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => 0]),
-          Resource::renderResource(['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION])
+            '<script type="text/javascript">
+              Modernizr.load([
+                //"//tinymce.cachefly.net/4.0/tinymce.min.js",
+                "%s",
+                "%s"
+              ]);
+            </script>',
+            Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => 0]),
+            Resource::renderResource(['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION])
         );
         return $content . $script;
     }, 11);
