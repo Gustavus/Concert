@@ -7,7 +7,10 @@
 
 namespace Gustavus\Concert\Test;
 
-use Gustavus\Test\TestEM;
+use Gustavus\Test\TestEM,
+  Gustavus\Concert\Config,
+  Gustavus\Doctrine\DBAL,
+  Gustavus\GACCache\Workers\ArrayFactoryWorker;
 
 /**
  * Base class for testing
@@ -35,10 +38,10 @@ class TestBase extends TestEM
    * @var array
    */
   private static $entityMappings = [
-    'Sites'           => '\Gustavus\Concert\Setup\GeneratedEntities\Sites',
+    'Sites'       => '\Gustavus\Concert\Setup\GeneratedEntities\Sites',
     'Permissions' => '\Gustavus\Concert\Setup\GeneratedEntities\Permissions',
-    'Locks'           => '\Gustavus\Concert\Setup\GeneratedEntities\Locks',
-    'PendingUpdates'  => '\Gustavus\Concert\Setup\GeneratedEntities\People',
+    'Locks'       => '\Gustavus\Concert\Setup\GeneratedEntities\Locks',
+    'StagedFiles' => '\Gustavus\Concert\Setup\GeneratedEntities\StagedFiles',
   ];
 
   /**
@@ -50,17 +53,58 @@ class TestBase extends TestEM
   }
 
   /**
+   * Sets up environment for every test if parent::setUp() is called.
+   *
+   * @return void
+   */
+  public function setUp()
+  {
+    Config::$stagingDir = self::$testFileDir . '/staging/';
+    Config::$draftDir   = self::$testFileDir . '/drafts/';
+    $this->set('PermissionsManager', 'dbal', DBAL::getDBAL('testDB', $this->getDBH()));
+    $this->set('PermissionsManager', 'cache', (new ArrayFactoryWorker())->buildDataStore());
+  }
+
+  /**
+   * Sets up environment for every test if parent::tearDown() is called.
+   *
+   * @return void
+   */
+  public function tearDown()
+  {
+    $this->set('PermissionsManager', 'dbal', null);
+    $this->set('PermissionsManager', 'cache', null);
+  }
+
+  /**
    * Tears down the environment after each test class is done with tests
    * @return void
    */
   public static function tearDownAfterClass()
   {
-    $files = scandir(self::$testFileDir);
+    self::removeFiles(self::$testFileDir);
+  }
+
+  /**
+   * Recursively removes files
+   *
+   * @param  string $dir Directory to remove files from
+   * @return void
+   */
+  private static function removeFiles($dir)
+  {
+    $files = scandir($dir);
     foreach ($files as $file) {
       if ($file === '.' || $file === '..') {
         continue;
       }
-      unlink(self::$testFileDir . $file);
+      $file = $dir . '/' . $file;
+      if (is_dir($file)) {
+        self::removeFiles($file);
+        rmdir($file);
+        continue;
+      }
+      unlink($file);
     }
   }
 

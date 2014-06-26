@@ -8,9 +8,7 @@
 namespace Gustavus\Concert\Test;
 
 use Gustavus\Concert\PermissionsManager,
-  Gustavus\Concert\Config,
-  Gustavus\Doctrine\DBAL,
-  Gustavus\GACCache\Workers\ArrayFactoryWorker;
+  Gustavus\Concert\Config;
 
 /**
  * Class to test PermissionManager class
@@ -28,8 +26,7 @@ class PermissionsManagerTest extends TestBase
    */
   public function setUp()
   {
-    $this->set('PermissionsManager', 'dbal', DBAL::getDBAL('testDB', $this->getDBH()));
-    $this->set('PermissionsManager', 'cache', (new ArrayFactoryWorker())->buildDataStore());
+    parent::setUp();
   }
 
   /**
@@ -39,8 +36,7 @@ class PermissionsManagerTest extends TestBase
    */
   public function tearDown()
   {
-    $this->set('PermissionsManager', 'dbal', null);
-    $this->set('PermissionsManager', 'cache', null);
+    parent::tearDown();
   }
 
   /**
