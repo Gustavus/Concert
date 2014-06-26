@@ -528,6 +528,21 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function stopEditingAndUserHasLock()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks']);
+
+    $this->buildFileManager('/billy/files/private.php', 'bvisto');
+    $this->assertTrue($this->fileManager->createLock());
+    $this->fileManager->stopEditing();
+    $this->assertFalse($this->fileManager->userHasLock());
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function acquireLockAlreadyOwned()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks']);

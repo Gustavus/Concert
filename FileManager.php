@@ -232,7 +232,7 @@ class FileManager
    * @throws  RuntimeException If $destination is not writable
    * @return boolean
    */
-  private function saveFile($destination, $file, $username = null)
+  private function saveFile($destination, $file)
   {
     if (is_writable(dirname($destination))) {
       return file_put_contents($destination, $file);
@@ -654,6 +654,29 @@ class FileManager
   }
 
   /**
+   * Checks to see if the current user has a lock for the current file
+   *
+   * @return boolean
+   */
+  public function userHasLock()
+  {
+    $lock = $this->getLockFromDB();
+
+    if ($lock && $lock['username'] === $this->username) {
+
+      $minutes = $this->getLockDuration($lock['date']);
+
+      if ($minutes > Config::LOCK_DURATION) {
+        // user's lock has expired.
+        return false;
+      }
+
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Stops the edit process and releases the lock
    *
    * @return void
@@ -700,6 +723,9 @@ class FileManager
       $minutes = $this->getLockDuration($lock['date']);
 
       if ($minutes > Config::LOCK_DURATION) {
+        // we first need to destroy the expired lock.
+        (new FileManager($this->filePath, $lock['username']))->stopEditing();
+        // now we can create a new one.
         $this->lockAcquired = $this->createLock();
         return $this->lockAcquired;
       } else {
@@ -722,9 +748,7 @@ class FileManager
    */
   private function getLockDuration($date)
   {
-    $lockDate = new DateTime($date);
-    $diff = $lockDate->diff(new DateTime);
-    $minutes = $diff->format('%I');
-    return (int) $minutes;
+    $lockDate = (new DateTime($date))->format('U');
+    return (int) (time() - $lockDate);
   }
 }

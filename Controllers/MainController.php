@@ -35,13 +35,13 @@ class MainController extends SharedController
       return $this->renderErrorPage('Oops! It looks like there was no page specified to edit.');
     }
     if ($page === null) {
-      $page = '/' . $_GET['page'];
+      $page = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['page'];
     }
 
-    $fm = new FileManager($_SERVER['DOCUMENT_ROOT'] . $page, $this->getLoggedInUsername());
+    $fm = new FileManager($page, $this->getLoggedInUsername());
 
     if (!$fm->acquireLock()) {
-      $this->setSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false, $page);
+      $this->setSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false, str_replace('/cis/www', '', $page));
       return false;
     }
 
@@ -115,14 +115,17 @@ class MainController extends SharedController
     if (Gatekeeper::isLoggedIn()) {
       // check to see if the user has access to edit this page
       if (!$this->alreadyMoshed() && PermissionsManager::userCanEditFile(Gatekeeper::getUsername(), $_SERVER['SCRIPT_NAME'])) {
+        $this->setSessionMessage(null, false, $_SERVER['SCRIPT_NAME']);
+        $fullFilePath = $_SERVER['SCRIPT_FILENAME'];
+
         if ($this->userWantsToEdit() || $this->userIsSaving()) {
           // let ourselves know that we have already moshed this request.
           $this->markMoshed();
           Filters::add('userBox', function($content) {
             // @todo make this remove concert stuff from the url
-            return $content . '<a href="?concert=stopedit" class="button red concertEditPage">Stop Editing</a>';
+            return $content . '<a href="?concert=stopEditing" class="button red concertEditPage">Stop Editing</a>';
           });
-          $editResult = $this->edit($_SERVER['SCRIPT_NAME']);
+          $editResult = $this->edit($fullFilePath);
           if ($editResult) {
             return [
               'action' => 'return',
@@ -130,11 +133,17 @@ class MainController extends SharedController
             ];
           }
         } else {
+          $fm = new FileManager($fullFilePath, $this->getLoggedInUsername());
+          if ($this->userWantsToStopEditing()) {
+            $fm->stopEditing();
+          }
+          if ($fm->userHasLock()) {
+            // user has a lock for this page.
+            $this->setSessionMessage('It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?', false, $_SERVER['SCRIPT_NAME']);
+          }
           Filters::add('userBox', function($content) {
             return $content . '<a href="?concert=edit" class="button red concertEditPage">Edit Page</a>';
           });
-          $fm = new FileManager($_SERVER['SCRIPT_NAME'], $this->getLoggedInUsername());
-          $fm->stopEditing();
         }
       }
     }
@@ -171,6 +180,16 @@ class MainController extends SharedController
   private function userWantsToEdit()
   {
     return (isset($_GET['concert']) && $_GET['concert'] === 'edit');
+  }
+
+  /**
+   * Checks to see if the user wants to edit the page
+   *
+   * @return boolean
+   */
+  private function userWantsToStopEditing()
+  {
+    return (isset($_GET['concert']) && $_GET['concert'] === 'stopEditing');
   }
 
   /**

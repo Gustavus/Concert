@@ -65,7 +65,7 @@ class PermissionsManager
    *   If a wildcard or directory is found in both rules, excludedFiles will override includedFiles for this file.
    *
    * @param  string $username Username to check
-   * @param  string $filePath Absolute path to the file in question
+   * @param  string $filePath Absolute path from the doc root to the file in question
    * @return boolean
    */
   public static function userCanEditFile($username, $filePath)
