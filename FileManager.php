@@ -105,6 +105,7 @@ class FileManager
    * Breaks the file up into configurable parts.
    *   Separates php content from other content types
    *
+   * @throws RuntimeException If no file exists to build the configuration for
    * @return Array  Array of Arrays keyed by content and phpcontent. They each contain arrays with indexes of the order they appear in the file.
    */
   private function buildFileConfigurationArray()
@@ -254,6 +255,7 @@ class FileManager
    * Builds the file name to use for drafts. This is the hash of the filePath hash with the username of the current user added onto it
    *
    * @param  string $username Username to get the draft file name for
+   * @param  boolean Whether we want to get the full path to the draft or not
    * @return string
    */
   public function getDraftFileName($username = null, $fromDraftDir = false)
@@ -308,6 +310,7 @@ class FileManager
    *
    * @todo  should a lock be kept open if a draft has been created?
    * @param string $type Draft type (private, pendingPublish, public)
+   * @param array $additionalUsers Additional users to assign to this draft
    * @return string|boolean String of the draft file. False if saving a draft failed.
    */
   public function saveDraft($type, array $additionalUsers = null)
@@ -533,7 +536,7 @@ class FileManager
   /**
    * Finds all the drafts the current user has access to edit
    *
-   * @param  string $draft Draft filename to get
+   * @param  string $draftFileName Filename of the draft to get
    * @return array|null
    */
   public function findDraftsForCurrentUser($draftFileName = null)
@@ -579,10 +582,9 @@ class FileManager
   /**
    * Throws a file into a staging state waiting to be moved to it's actual location
    *
-   * @param boolean $asDraft Whether to stage the file as a draft or not
    * @return boolean True on success, false on failure.
    */
-  public function stageFile($asDraft = false)
+  public function stageFile()
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
@@ -710,6 +712,7 @@ class FileManager
    * Marks a staged file as published
    *   <strong>Note:</strong> This should only be called by publishFile.
    *
+   * @param  string $stagedFilePath Path of the staged file to mark as published
    * @return boolean
    */
   private function markStagedFileAsPublished($stagedFilePath)
@@ -826,6 +829,8 @@ class FileManager
 
   /**
    * Sets a flag so we know that the user is editing a public draft
+   *
+   * @return  void
    */
   public function setUserIsEditingPublicDraft()
   {

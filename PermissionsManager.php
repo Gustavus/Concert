@@ -313,7 +313,7 @@ class PermissionsManager
   /**
    * Gets the permissions that the specified user has for a site.
    *
-   * @todo  Should this guess the site root?
+   * @param  string $username Username of the user to get permissions for
    * @param  string $siteRoot Root path of the site
    * @param  boolean $refreshCache Whether to refresh the cache or not
    * @return array|null Array if the user has permissions for the site, null otherwise
