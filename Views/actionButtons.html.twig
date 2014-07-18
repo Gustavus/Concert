@@ -1,0 +1,30 @@
+{% spaceless %}
+{% set reviewButton %}<a id="concertPublish" class="concert button">{% if userCanPublishFile %}Publish{% else %}Submit for Review{% endif %}</a>{% endset %}
+
+{% set buttons = {
+  'publish': reviewButton,
+  'savePrivateDraft': '<a id="concertSavePrivateDraft" class="concert button">Save a Private Draft</a>',
+  'savePublicDraft': '<a id="concertSavePublicDraft" class="concert button">Save a Public Draft</a>',
+  'discardDraft': '<a id="concertDiscardDraft" class="concert button red">Discard Draft</a>',
+  'saveDraft': '<a id="concertSavePublicDraft" class="concert button">Save Draft</a>',
+} %}
+{% set totalButtonCount = visibleButtons|length + additionalButtons|length %}
+{%- if totalButtonCount > 1 -%}
+  <p class="buttonbar">
+{%- endif -%}
+
+{%- for value in visibleButtons -%}
+  {{ buttons[value]|raw }}
+{%- endfor -%}
+{%- for value in additionalButtons -%}
+  <a href="{{ value['url'] }}" id="{{ value['id'] }}" class="concert button">{{ value['text'] }}</a>
+{%- endfor -%}
+
+{%- if totalButtonCount > 1 -%}
+  </p>
+{%- else -%}
+  <br/>
+{%- endif -%}
+<br/>
+<a href="#" class="button" id="toggleShowingEditableContent" data-show="false">Show editable areas</a>
+{% endspaceless %}

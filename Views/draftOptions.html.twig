@@ -1,0 +1,23 @@
+{% spaceless %}
+<h2>Please select a draft to view</h2>
+
+<table class="fancy sortable">
+  <head>
+    <tr>
+      <th>Draft Type</th>
+      <th>Draft Owner</th>
+      <th></th>
+    </tr>
+  </head>
+  <body>
+  {% for draft in drafts %}
+    <tr>
+      <td>{{ draft.type|title }}</td>
+      <td>{{ draft.username }}</td>
+      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFileName }}" class="button">View Draft</a></td>
+    </tr>
+  {% endfor %}
+  </body>
+</table>
+
+{% endspaceless %}
