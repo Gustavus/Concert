@@ -6,6 +6,8 @@
 
 namespace Gustavus\Concert;
 
+use Gustavus\Concourse\RoutingUtil;
+
 /**
  * Configuration class
  *
@@ -72,7 +74,67 @@ class Config
   /**
    * How long a file can be locked without touching it before the lock is released
    */
-  const LOCK_DURATION = 86400; // 60*60*24
+  const LOCK_DURATION = 86400; // 60*60*24 = 86400
+
+  /**
+   * Base template page
+   */
+  const TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+
+  /**
+   * Private draft type identifier
+   */
+  const PRIVATE_DRAFT = 'private';
+
+  /**
+   * Public draft type identifier
+   */
+  const PUBLIC_DRAFT = 'public';
+
+  /**
+   * Draft type identifier for drafts waiting to be published
+   */
+  const PENDING_PUBLISH_DRAFT = 'pendingPublish';
+
+  /**
+   * Message to display to people who can't edit pages
+   */
+  const NOT_ALLOWED_TO_EDIT_MESSAGE = 'It looks like you aren\'t able to edit this page.';
+
+  /**
+   * Message to display to people who can't get a lock for a page
+   */
+  const LOCK_NOT_AQUIRED_MESSAGE = 'It looks like we couldn\'t acquire a lock to edit this page.';
+
+  /**
+   * Note to let people know they are looking at a draft
+   */
+  const DRAFT_NOTE = 'Note: You are viewing a draft and not a published page.';
+
+  // Access Levels
+  /**
+   * Public access level. Used whenever a "public" item is being edited.
+   */
+  const PUBLIC_ACCESS_LEVEL = 'public';
+  /**
+   * Admin access level. This person is an administrator for this site.
+   */
+  const ADMIN_ACCESS_LEVEL  = 'admin';
+  /**
+   * Super User access level. This person is a global administrator for all sites.
+   */
+  const SUPER_USER  = 'superUser';
+
+  /**
+   * Global permissions for super users
+   *
+   * @var array
+   */
+  public static $superUserPermissions = [
+    'accessLevel'   => [self::SUPER_USER],
+    'includedFiles' => null,
+    'excludedFiles' => null,
+  ];
 
   /**
    * Directory drafts are saved in
@@ -80,6 +142,13 @@ class Config
    * @var string
    */
   public static $draftDir = '/cis/www-etc/lib/Gustavus/Concert/drafts/';
+
+  /**
+   * Directory editable drafts are saved in
+   *
+   * @var string
+   */
+  public static $editableDraftDir = '/cis/www-etc/lib/Gustavus/Concert/editableDrafts/';
 
   /**
    * Directory staged files waiting to be published are saved in
@@ -125,6 +194,29 @@ class Config
   public static $nonEditableAccessLevels = [];
 
   /**
+   * AccessLevels that can't publish files
+   *
+   * @var array
+   */
+  public static $nonPublishingAccessLevels = [];
+
+  /**
+   * AccessLevels that can't create new files
+   *
+   * @var array
+   */
+  public static $nonCreationAccessLevels = [];
+
+  /**
+   * AccessLevels that can publish drafts for other people
+   *
+   * @var array
+   */
+  public static $publishPendingDraftsAccessLevels = [
+    'admin'
+  ];
+
+  /**
    * Template parts that are editable
    *   Note: These should all be lowercase
    *
@@ -147,7 +239,20 @@ class Config
    * @var array
    */
   public static $nonEditablePartsByAccessLevel = [
-    'admin' => ['focusbox'],
+    'admin'  => ['focusbox'],
+    'public' => ['focusbox'],
+  ];
+
+  /**
+   * Default buttons to show when inserting editing resources
+   *
+   * @var array
+   */
+  public static $defaultEditingButtons = [
+    'publish',
+    'savePrivateDraft',
+    'savePublicDraft',
+    'discardDraft',
   ];
 
   /**
@@ -177,5 +282,32 @@ class Config
   public static function getUploadThumbLocation()
   {
     return '/cis/www/concert/thumbs/';
+  }
+
+  /**
+   * Removes the doc root from the file path
+   *
+   * @param  string $filePath File path to remove doc root from
+   * @return string
+   */
+  public static function removeDocRootFromPath($filePath)
+  {
+    return str_replace($_SERVER['DOCUMENT_ROOT'], '', $filePath);
+  }
+
+  /**
+   * Checks to see if the user is editing a public draft
+   *
+   * @param  string $requestURI The uri to the page the user is sitting at
+   * @return boolean
+   */
+  public static function userIsEditingPublicDraft($requestURI)
+  {
+    $editDraftUrl = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => basename($requestURI)]);
+
+    if ((isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], $editDraftUrl) !== false) || strpos($requestURI, $editDraftUrl) !== false) {
+      return true;
+    }
+    return false;
   }
 }

@@ -255,7 +255,7 @@ class FileManager
    * Builds the file name to use for drafts. This is the hash of the filePath hash with the username of the current user added onto it
    *
    * @param  string $username Username to get the draft file name for
-   * @param  boolean Whether we want to get the full path to the draft or not
+   * @param  boolean $fromDraftDir Whether we want to get the full path to the draft or not
    * @return string
    */
   public function getDraftFileName($username = null, $fromDraftDir = false)
@@ -454,7 +454,7 @@ class FileManager
    * @param  string $username Username to get the draft for
    * @return array
    */
-  private function getDraftForUser($username)
+  public function getDraftForUser($username)
   {
     $dbal = $this->getDBAL();
 
@@ -525,10 +525,6 @@ class FileManager
    */
   public function userHasOpenDraft()
   {
-    if (!$this->acquireLock()) {
-      return false;
-    }
-
     $draft = $this->getDraftForUser($this->username);
     return !empty($draft);
   }

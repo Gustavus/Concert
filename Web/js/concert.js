@@ -14,6 +14,12 @@ Gustavus.Concert = {
   baseUrl: '/concert/',
 
   /**
+   * File path of the page we are editing
+   * @type {String}
+   */
+  filePath: '',
+
+  /**
    * TinyMCE configuration
    * @type {Array}
    */
@@ -91,6 +97,7 @@ Gustavus.Concert = {
       convert_urls: false, // prevent messing with URLs
       allow_script_urls: false,
       relative_urls: false,
+      forced_root_block : '',
       //invalid_elements http://www.tinymce.com/wiki.php/Configuration:invalid_elements
       //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
       //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
@@ -193,23 +200,72 @@ Gustavus.Concert = {
 
   /**
    * Sends a post request with the edited contents
+   * @param {string} action Action we are saving for
    * @return {undefined}
    */
-  saveEdits: function() {
+  saveEdits: function(action) {
     var edits = this.buildEditsObject();
     edits.concertAction = 'save';
+    edits.saveAction = action;
+    edits.filePath = this.filePath;
     $.ajax({
       type: 'POST',
-      url: window.location.href,
+      //url: window.location.href,
+      url : this.baseUrl,
       data: edits,
+      dataType: 'json',
       success: function(data) {
-        console.log('saved');
-        //location.reload();
+        if (data.error) {
+          alert(data.reason);
+        } else {
+          if (data.redirectUrl) {
+            window.location = data.redirectUrl;
+          } else {
+            window.location = Gustavus.Concert.filePath + '?concert=stopEditing';
+          }
+        }
       },
       error: function() {
         // @todo add a failed message
         console.log('failed');
       }
+    });
+  },
+
+  /**
+   * Releases the lock for the current file
+   * @return {jqXHR} jQuery XMLHttpRequest (jqXHR) object
+   */
+  releaseLock: function() {
+    var data = {
+      'concertAction': 'stopEditing',
+      'filePath': this.filePath,
+    };
+
+    return $.ajax({
+      type: 'POST',
+      url : this.baseUrl,
+      data: data,
+      dataType: 'json',
+    });
+  },
+
+  /**
+   * Checks to see if the current file has a shared draft attached to the current user
+   * @return {jqXHR} jQuery XMLHttpRequest (jqXHR) object
+   */
+  hasSharedDraft: function() {
+    var data = {
+      'concertAction': 'query',
+      'query': 'hasSharedDraft',
+      'filePath': this.filePath,
+    }
+
+    return $.ajax({
+      type: 'POST',
+      url : this.baseUrl,
+      data: data,
+      dataType: 'json',
     });
   },
 
@@ -254,9 +310,51 @@ Gustavus.Concert = {
   }
 };
 
-$('button#concertSave').on('click', function(e) {
+$('#concertPublish').on('click', function(e) {
   e.preventDefault();
-  Gustavus.Concert.saveEdits();
+  Gustavus.Concert.saveEdits('publish');
+})
+
+$('#concertSavePrivateDraft').on('click', function(e) {
+  e.preventDefault();
+  var req = Gustavus.Concert.hasSharedDraft();
+  req.done(function(data) {
+    if (data) {
+      if (confirm('This draft is shared. Converting it to a private draft will remove any sharing functionality')) {
+        Gustavus.Concert.saveEdits('savePrivateDraft');
+      }
+    } else {
+      Gustavus.Concert.saveEdits('savePrivateDraft');
+    }
+  })
+
+  req.fail(function() {
+    // something happened.
+    alert('The draft was not successfully saved');
+  })
+})
+
+$('#concertSavePublicDraft').on('click', function(e) {
+  e.preventDefault();
+  Gustavus.Concert.saveEdits('savePublicDraft');
+})
+
+$('#concertDiscardDraft').on('click', function(e) {
+  e.preventDefault();
+  Gustavus.Concert.saveEdits('discardDraft');
+})
+
+$('#concertStopEditing').on('click', function(e) {
+    //e.preventDefault();
+  var req = Gustavus.Concert.releaseLock();
+  req.done(function(data) {
+    if (!data) {
+      e.preventDefault();
+    }
+  })
+  req.fail(function() {
+    e.preventDefault();
+  })
 })
 
 $('#toggleShowingEditableContent').on('click', function(e) {

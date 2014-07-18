@@ -42,6 +42,7 @@ class TestBase extends TestEM
     'Permissions' => '\Gustavus\Concert\Setup\GeneratedEntities\Permissions',
     'Locks'       => '\Gustavus\Concert\Setup\GeneratedEntities\Locks',
     'StagedFiles' => '\Gustavus\Concert\Setup\GeneratedEntities\StagedFiles',
+    'Drafts'      => '\Gustavus\Concert\Setup\GeneratedEntities\Drafts',
   ];
 
   /**
@@ -59,10 +60,11 @@ class TestBase extends TestEM
    */
   public function setUp()
   {
-    Config::$stagingDir = self::$testFileDir . '/staging/';
-    Config::$draftDir   = self::$testFileDir . '/drafts/';
+    Config::$stagingDir       = self::$testFileDir . '/staging/';
+    Config::$draftDir         = self::$testFileDir . '/drafts/';
+    Config::$editableDraftDir = self::$testFileDir . '/editableDrafts/';
     $this->set('PermissionsManager', 'dbal', DBAL::getDBAL('testDB', $this->getDBH()));
-    $this->set('PermissionsManager', 'cache', (new ArrayFactoryWorker())->buildDataStore());
+    $this->setUpCaches();
   }
 
   /**
@@ -86,12 +88,21 @@ class TestBase extends TestEM
   }
 
   /**
+   * Sets up caches to use for testing
+   * @return  void
+   */
+  protected function setUpCaches()
+  {
+    $this->set('PermissionsManager', 'cache', (new ArrayFactoryWorker())->buildDataStore());
+  }
+
+  /**
    * Recursively removes files
    *
    * @param  string $dir Directory to remove files from
    * @return void
    */
-  private static function removeFiles($dir)
+  protected static function removeFiles($dir)
   {
     $files = scandir($dir);
     foreach ($files as $file) {

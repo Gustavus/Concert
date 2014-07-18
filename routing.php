@@ -34,4 +34,7 @@ return [
     'handler'   => 'Gustavus\Concert\Controllers\DraftController:editPublicDraft',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
+  'stopEditingPublicDraft' => [
+    'handler' => 'Gustavus\Concert\Controllers\DraftController:stopEditingPublicDraft',
+  ],
 ];
