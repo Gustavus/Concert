@@ -2,6 +2,8 @@
 
 namespace Gustavus\Concert\Setup\GeneratedEntities;
 
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * Permissions
  *

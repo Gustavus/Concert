@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `concert-beta`.`stagedFiles` (
   `srcFilename` VARCHAR(40) CHARACTER SET 'utf8' COLLATE 'utf8_unicode_ci' NOT NULL,
   `username` VARCHAR(32) CHARACTER SET 'utf8' COLLATE 'utf8_unicode_ci' NOT NULL,
   `date` DATETIME NOT NULL,
-  `movedDate` DATETIME NULL DEFAULT NULL,
+  `publishedDate` DATETIME NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `srcFilepath` (`srcFilename` ASC))
 ENGINE = InnoDB

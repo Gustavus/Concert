@@ -2,6 +2,8 @@
 
 namespace Gustavus\Concert\Setup\GeneratedEntities;
 
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * Locks
  *
@@ -11,13 +13,13 @@ namespace Gustavus\Concert\Setup\GeneratedEntities;
 class Locks
 {
     /**
-     * @var integer
+     * @var string
      *
      * @Column(name="filepathHash", type="string", length=32, nullable=false)
      * @Id
      * @GeneratedValue(strategy="IDENTITY")
      */
-    private $filepathHash;
+    private $filepathhash;
 
     /**
      * @var string
@@ -42,13 +44,13 @@ class Locks
 
 
     /**
-     * Get filepathHash
+     * Get filepathhash
      *
-     * @return integer
+     * @return string
      */
-    public function getId()
+    public function getFilepathhash()
     {
-        return $this->filepathHash;
+        return $this->filepathhash;
     }
 
     /**

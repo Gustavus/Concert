@@ -2,10 +2,12 @@
 
 namespace Gustavus\Concert\Setup\GeneratedEntities;
 
+use Doctrine\ORM\Mapping as ORM;
+
 /**
- * Pendingupdates
+ * Stagedfiles
  *
- * @Table(name="stagedFiles", indexes={@Index(name="srcFilename", columns={"srcFilename"})})
+ * @Table(name="stagedFiles", indexes={@Index(name="srcFilepath", columns={"srcFilename"})})
  * @Entity
  */
 class StagedFiles
@@ -48,11 +50,11 @@ class StagedFiles
     private $date;
 
     /**
-     * @var boolean
+     * @var \DateTime
      *
-     * @Column(name="movedDate", type="datetime", nullable=true)
+     * @Column(name="publishedDate", type="datetime", nullable=true)
      */
-    private $movedDate = '0';
+    private $publisheddate;
 
 
     /**
@@ -69,7 +71,7 @@ class StagedFiles
      * Set destfilepath
      *
      * @param string $destfilepath
-     * @return Pendingupdates
+     * @return Stagedfiles
      */
     public function setDestfilepath($destfilepath)
     {
@@ -89,33 +91,33 @@ class StagedFiles
     }
 
     /**
-     * Set srcfilepath
+     * Set srcfilename
      *
-     * @param string $srcfilepath
-     * @return Pendingupdates
+     * @param string $srcfilename
+     * @return Stagedfiles
      */
-    public function setSrcfilepath($srcfilepath)
+    public function setSrcfilename($srcfilename)
     {
-        $this->srcfilepath = $srcfilepath;
+        $this->srcfilename = $srcfilename;
 
         return $this;
     }
 
     /**
-     * Get srcfilepath
+     * Get srcfilename
      *
      * @return string
      */
-    public function getSrcfilepath()
+    public function getSrcfilename()
     {
-        return $this->srcfilepath;
+        return $this->srcfilename;
     }
 
     /**
      * Set username
      *
      * @param string $username
-     * @return Pendingupdates
+     * @return Stagedfiles
      */
     public function setUsername($username)
     {
@@ -135,33 +137,10 @@ class StagedFiles
     }
 
     /**
-     * Set groupname
-     *
-     * @param string $groupname
-     * @return Pendingupdates
-     */
-    public function setGroupname($groupname)
-    {
-        $this->groupname = $groupname;
-
-        return $this;
-    }
-
-    /**
-     * Get groupname
-     *
-     * @return string
-     */
-    public function getGroupname()
-    {
-        return $this->groupname;
-    }
-
-    /**
      * Set date
      *
      * @param \DateTime $date
-     * @return Pendingupdates
+     * @return Stagedfiles
      */
     public function setDate($date)
     {
@@ -181,25 +160,25 @@ class StagedFiles
     }
 
     /**
-     * Set moved
+     * Set publisheddate
      *
-     * @param boolean $moved
-     * @return Pendingupdates
+     * @param \DateTime $publisheddate
+     * @return Stagedfiles
      */
-    public function setMoved($moved)
+    public function setPublisheddate($publisheddate)
     {
-        $this->moved = $moved;
+        $this->publisheddate = $publisheddate;
 
         return $this;
     }
 
     /**
-     * Get moved
+     * Get publisheddate
      *
-     * @return boolean
+     * @return \DateTime
      */
-    public function getMoved()
+    public function getPublisheddate()
     {
-        return $this->moved;
+        return $this->publisheddate;
     }
 }
