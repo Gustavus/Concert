@@ -29,6 +29,12 @@ class FileManager
   private $filePath;
 
   /**
+   * Location of the source file we are basing our new file off of
+   * @var string
+   */
+  private $srcFilePath;
+
+  /**
    * Username of the person editing the file
    * @var string
    */
@@ -60,15 +66,26 @@ class FileManager
   private $dbal;
 
   /**
+   * Flag that lets us know if the user is editing a public draft or not
+   *
+   * @var boolean
+   */
+  private $userIsEditingPublicDraft = false;
+
+  /**
    * Object constructor
    *
-   * @param string $filePath Path to the file we are trying to edit
    * @param string $username Username of the person trying to edit the file
+   * @param string $filePath Path to the file we are trying to edit
+   * @param string $srcFilePath Path to the file we are creating a file from
+   * @param Connection $dbal Doctrine connection to use
    */
-  public function __construct($filePath, $username)
+  public function __construct($username, $filePath, $srcFilePath = null, $dbal = null)
   {
     $this->filePath = $filePath;
     $this->username = $username;
+    $this->srcFilePath = $srcFilePath;
+    $this->dbal = $dbal;
   }
 
   /**
@@ -92,8 +109,13 @@ class FileManager
    */
   private function buildFileConfigurationArray()
   {
-    // lock acquired.
-    $contents = file_get_contents($this->filePath);
+    if (isset($this->srcFilePath) && file_exists($this->srcFilePath)) {
+      $contents = file_get_contents($this->srcFilePath);
+    } else if (file_exists($this->filePath)) {
+      $contents = file_get_contents($this->filePath);
+    } else {
+      throw new RuntimeException(sprintf('filePath: %s or srcFilePath: %s do not exist', $this->filePath, $this->srcFilePath));
+    }
 
     $matches = [];
 
@@ -209,21 +231,6 @@ class FileManager
   }
 
   /**
-   * Saves the current file
-   *
-   * @todo  should this exist?
-   * @return boolean
-   */
-  private function save()
-  {
-    if (!$this->acquireLock()) {
-      // user doesn't have a lock on this file. They shouldn't be able to do anything.
-      return false;
-    }
-    return $this->saveFile($this->filePath, $this->assembleFile(false));
-  }
-
-  /**
    * Saves a file to the destination
    *
    * @param  string $destination Destination of the saved file
@@ -241,12 +248,31 @@ class FileManager
     }
   }
 
+  // Draft Functionality
+
+  /**
+   * Builds the file name to use for drafts. This is the hash of the filePath hash with the username of the current user added onto it
+   *
+   * @param  string $username Username to get the draft file name for
+   * @return string
+   */
+  public function getDraftFileName($username = null, $fromDraftDir = false)
+  {
+    if ($username === null) {
+      $username = $this->username;
+    }
+    $fileName = $this->getFilePathHash(sprintf('%s-%s', $this->getFilePathHash(), $username));
+
+    return ($fromDraftDir) ? Config::$draftDir . $fileName : $fileName;
+  }
+
   /**
    * Makes and saves a draft file
    *
+   * @param boolean $fromExistingDraft Whether to make an editable draft from an existing draft or not
    * @return string|boolean String of the draft file. False if saving a draft failed.
    */
-  public function makeEditableDraft()
+  public function makeEditableDraft($fromExistingDraft = false)
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
@@ -254,11 +280,24 @@ class FileManager
     }
     $this->setUpCheckEditableFilter();
 
-    // @todo make use of the file hash and store drafts in the DB.
-    //$fileName = str_replace($_SERVER['DOCUMENT_ROOT'], '', $this->filePath);
-    $fileName = sprintf('%s/%s-%s', Config::$draftDir, str_replace('/', '_', str_replace($_SERVER['DOCUMENT_ROOT'], '', $this->filePath)), $this->username);
+    // save the draft in our editable draft folder
+    if (!is_dir(Config::$editableDraftDir)) {
+      mkdir(Config::$editableDraftDir);
+    }
 
-    if ($this->saveFile($fileName, $this->assembleFile(true))) {
+    $fileName = Config::$editableDraftDir . $this->getDraftFileName();
+
+    if ($fromExistingDraft && $this->draftExists()) {
+      $result = $this->getDraftForUser($this->username);
+      $draftFilePath = $this->getDraftFileName();
+
+      $fm = new FileManager($this->username, Config::$draftDir . $draftFilePath);
+      $fileContents = $fm->assembleFile(true);
+    } else {
+      $fileContents = $this->assembleFile(true);
+    }
+
+    if ($this->saveFile($fileName, $fileContents)) {
       return $fileName;
     }
     return false;
@@ -268,30 +307,282 @@ class FileManager
    * Saves a draft
    *
    * @todo  should a lock be kept open if a draft has been created?
+   * @param string $type Draft type (private, pendingPublish, public)
    * @return string|boolean String of the draft file. False if saving a draft failed.
    */
-  public function saveDraft()
+  public function saveDraft($type, array $additionalUsers = null)
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
       return false;
     }
 
-    // @todo make use of the file hash and store drafts in the DB.
-    $fileName = sprintf('%s/%s-%s', Config::$draftDir, str_replace('/', '_', str_replace($_SERVER['DOCUMENT_ROOT'], '', $this->filePath)), $this->username);
-
-    if ($this->saveFile($fileName, $this->assembleFile(false))) {
-      return $fileName;
+    if ($this->userIsEditingPublicDraft) {
+      // we simply want to save our current configuration
+      return $this->saveFile($this->filePath, $this->assembleFile(false));
     }
+
+    // @todo make use of the file hash and store drafts in the DB.
+    $draftName = $this->getFilePathHash();
+    $draftFileName = $this->getDraftFileName();
+    $dbal = $this->getDBAL();
+
+    if ($additionalUsers !== null && $additionalUsers !== false) {
+      $additionalUsers = implode(',', $additionalUsers);
+    }
+
+    $properties = [
+      'draftFileName'   => $draftFileName,
+      'destFilepath'    => $this->filePath,
+      'draftName'       => $draftName,
+      'username'        => $this->username,
+      'type'            => $type,
+      'date'            => new DateTime,
+    ];
+
+    $propertyTypes = [
+      null,
+      null,
+      null,
+      null,
+      null,
+      'datetime',
+    ];
+
+    if (!empty($additionalUsers)) {
+      // if additionalUsers is false, it means we want to remove them
+      $properties['additionalUsers'] = ($additionalUsers !== false) ? $additionalUsers : null;
+      $propertyTypes[] = null;
+    }
+
+    $draft = $this->getDraftForUser($this->username);
+    if (!empty($draft)) {
+      $result = $dbal->update('drafts', $properties, ['draftFileName' => $draft['draftFileName']], $propertyTypes);
+    } else {
+      $result = $dbal->insert('drafts', $properties, $propertyTypes);
+    }
+    if ($result) {
+      // now we just have to save the draft
+      if (!is_dir(Config::$draftDir)) {
+        mkdir(Config::$draftDir);
+      }
+      $fileName = Config::$draftDir . $draftFileName;
+
+      if ($this->saveFile($fileName, $this->assembleFile(false))) {
+        return $fileName;
+      }
+    }
+    // something failed
     return false;
   }
 
   /**
+   * Destroys any draft leftovers for the current file
+   *
+   * @param  string $draftFileName Draft to destroy
+   * @return void
+   */
+  public function destroyDraft($draftFileName = null)
+  {
+    if ($draftFileName === null) {
+      $draftFileName = $this->getDraftFileName();
+    }
+    $draft = $this->getDraft($draftFileName);
+
+    $dbal = $this->getDBAL();
+
+    $dbal->delete('drafts', ['draftFileName' => $draftFileName]);
+    foreach ([Config::$draftDir, Config::$editableDraftDir] as $draftDir) {
+      $fileName = $draftDir . $draftFileName;
+      if (file_exists($fileName)) {
+        unlink($fileName);
+      }
+    }
+  }
+
+  /**
+   * Gets all the drafts for the current file
+   *   Filters by type if $type is specified
+   *
+   * @param  string $type Type of drafts to get
+   * @return array
+   */
+  private function getDrafts($type = null)
+  {
+    $dbal = $this->getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('destFilepath')
+      ->addSelect('draftFileName')
+      ->addSelect('type')
+      ->addSelect('username')
+      ->addSelect('additionalUsers')
+      ->from('drafts', 'd')
+      ->where('draftName = ?')
+      ->andWhere('publishedDate IS NULL')
+      ->orderBy('date', 'DESC');
+
+    $properties = [$this->getFilePathHash()];
+    $propertyTypes = [null];
+
+    if ($type !== null) {
+      if (is_array($type)) {
+        $qb->andWhere('type IN (?)');
+        $propertyTypes[] = \Doctrine\DBAL\Connection::PARAM_STR_ARRAY;
+      } else {
+        $qb->andWhere('type = ?');
+        $propertyTypes[] = null;
+      }
+      $properties[] = $type;
+    }
+
+    $result = $dbal->fetchAll($qb->getSQL(), $properties, $propertyTypes);
+    foreach ($result as &$resultPiece) {
+      if (!empty($resultPiece['additionalUsers'])) {
+        $resultPiece['additionalUsers'] = explode(',', $resultPiece['additionalUsers']);
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Gets the current draft for the specified user
+   *
+   * @param  string $username Username to get the draft for
+   * @return array
+   */
+  private function getDraftForUser($username)
+  {
+    $dbal = $this->getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('destFilepath')
+      ->addSelect('draftFileName')
+      ->addSelect('type')
+      ->addSelect('username')
+      ->addSelect('additionalUsers')
+      ->from('drafts', 'd')
+      ->where('draftFileName = :draftFileName')
+      ->andWhere('publishedDate IS NULL');
+
+    $result = $dbal->fetchAssoc($qb->getSQL(), [':draftFileName' => $this->getDraftFileName($username)]);
+    if (!empty($result['additionalUsers'])) {
+      $result['additionalUsers'] = explode(',', $result['additionalUsers']);
+    }
+    return $result;
+  }
+
+  /**
+   * Gets the specified public draft
+   *
+   * @param  string $draftFileName Name of the draft to get
+   * @return array
+   */
+  public function getDraft($draftFileName)
+  {
+    $dbal = $this->getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('destFilepath')
+      ->addSelect('draftFileName')
+      ->addSelect('type')
+      ->addSelect('username')
+      ->addSelect('additionalUsers')
+      ->from('drafts', 'd')
+      ->where('draftFileName = :draftFileName')
+      ->andWhere('publishedDate IS NULL');
+
+    $result =  $dbal->fetchAssoc($qb->getSQL(), [':draftFileName' => $draftFileName]);
+    if (!empty($result['additionalUsers'])) {
+      $result['additionalUsers'] = explode(',', $result['additionalUsers']);
+    }
+    return $result;
+  }
+
+  /**
+   * Checks to see if a draft exists for the current file
+   *
+   * @return boolean
+   */
+  public function draftExists()
+  {
+    $result = $this->getDrafts();
+
+    if (empty($result)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  /**
+   * Checks to see if the user has a draft open for this file
+   *
+   * @return boolean
+   */
+  public function userHasOpenDraft()
+  {
+    if (!$this->acquireLock()) {
+      return false;
+    }
+
+    $draft = $this->getDraftForUser($this->username);
+    return !empty($draft);
+  }
+
+  /**
+   * Finds all the drafts the current user has access to edit
+   *
+   * @param  string $draft Draft filename to get
+   * @return array|null
+   */
+  public function findDraftsForCurrentUser($draftFileName = null)
+  {
+    $drafts = [];
+    $userDraft = $this->getDraftForUser($this->username);
+    if (!empty($userDraft)) {
+      // add the current user's draft
+      $userDraft['username'] = $this->username;
+      $drafts = array_merge($drafts, [$userDraft]);
+    }
+
+    if (PermissionsManager::userCanPublishPendingDrafts($this->username, $this->filePath)) {
+      // user has access to publish pending drafts
+      $pendingDrafts = $this->getDrafts([Config::PENDING_PUBLISH_DRAFT, Config::PUBLIC_DRAFT]);
+      if (!empty($pendingDrafts)) {
+        // add drafts the user can publish as well as all public ones
+        $drafts = array_merge($drafts, $pendingDrafts);
+      }
+    } else {
+      //now add all public drafts
+      $publicDrafts = $this->getDrafts(Config::PUBLIC_DRAFT);
+      if (!empty($publicDrafts)) {
+        $drafts = array_merge($drafts, $publicDrafts);
+      }
+    }
+
+    if (!empty($draftFileName)) {
+      foreach ($drafts as $draft) {
+        if ($this->getDraftFileName($draft['username']) === $draftFileName) {
+          return [$draft];
+        }
+      }
+      // person was requesting a specific draft, but that draft doesn't exist in any drafts they have access to.
+      return null;
+    }
+
+    return (!empty($drafts)) ? $drafts : null;
+  }
+
+  // Staging and publishing functionality
+
+  /**
    * Throws a file into a staging state waiting to be moved to it's actual location
    *
+   * @param boolean $asDraft Whether to stage the file as a draft or not
    * @return boolean True on success, false on failure.
    */
-  public function stageFile()
+  public function stageFile($asDraft = false)
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
@@ -341,7 +632,13 @@ class FileManager
       throw new RuntimeException('Only root can publish files');
     }
 
+    // get stagedFile waiting to be published
     $result = $this->getStagedFileEntry();
+
+    if (empty($result)) {
+      // nothing to publish
+      return false;
+    }
 
     if (count($result) > 1) {
       $stagedUsername = null;
@@ -353,7 +650,6 @@ class FileManager
           throw new RuntimeException(sprintf('More than one staged file entry for the file: "%s" was found for different users', basename($this->filePath)));
         }
       }
-      // @todo add check to see if the other results are for the same person. If they are, let's use the last result.
     }
 
     $result = reset($result);
@@ -382,6 +678,7 @@ class FileManager
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
         trigger_error(sprintf('The file: "%s" was moved to "%s", but could not be marked as published in the DB', $srcFilePath, $destination));
       }
+      $this->destroyDraft();
       $this->destroyLock();
       return true;
     }
@@ -403,7 +700,7 @@ class FileManager
       ->addSelect('username')
       ->from('stagedFiles', 'sf')
       ->where('srcFilename = :srcFilename')
-      ->andWhere('movedDate IS NULL')
+      ->andWhere('publishedDate IS NULL')
       ->orderBy('date', 'DESC');
 
     return $dbal->fetchAll($qb->getSQL(), [':srcFilename' => basename($this->filePath)]);
@@ -421,12 +718,24 @@ class FileManager
 
     $qb = $dbal->createQueryBuilder();
     $qb->update('stagedFiles')
-      ->set('movedDate', ':movedDate')
+      ->set('publishedDate', ':publishedDate')
       ->where('username = :username')
       ->andWhere('srcFilename = :srcFilename')
-      ->andWhere('movedDate IS NULL');
+      ->andWhere('publishedDate IS NULL');
 
-    return $dbal->executeUpdate($qb->getSQL(), [':movedDate' => new \DateTime, ':username' => $this->username, ':srcFilename' => basename($stagedFilePath)], [':movedDate' => 'datetime', ':username' => null, ':srcFilename' => null]);
+    return $dbal->executeUpdate(
+        $qb->getSQL(),
+        [
+          ':publishedDate' => new \DateTime,
+          ':username'      => $this->username,
+          ':srcFilename'   => basename($stagedFilePath),
+        ],
+        [
+          ':publishedDate' => 'datetime',
+          ':username'      => null,
+          ':srcFilename'   => null,
+        ]
+    );
   }
 
   /**
@@ -490,12 +799,55 @@ class FileManager
    */
   public function userCanEditPart($partName)
   {
-    if (strpos($this->filePath, '/cis/www') === 0) {
-      $filePath = substr($this->filePath, 8);
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+    if (strpos($this->filePath, $docRoot) === 0) {
+      $filePath = substr($this->filePath, strlen($docRoot));
     } else {
       $filePath = $this->filePath;
     }
+    if (($accessLevel = $this->forceAccessLevel())) {
+      return PermissionsManager::accessLevelCanEditPart($accessLevel, $partName);
+    }
     return PermissionsManager::userCanEditPart($this->username, $filePath, $partName);
+  }
+
+  /**
+   * Checks to see if we should force an access level or not
+   *
+   * @return string|boolean String of the access level to force. False otherwise
+   */
+  private function forceAccessLevel()
+  {
+    if ($this->userIsEditingPublicDraft) {
+      return Config::PUBLIC_ACCESS_LEVEL;
+    }
+    return false;
+  }
+
+  /**
+   * Sets a flag so we know that the user is editing a public draft
+   */
+  public function setUserIsEditingPublicDraft()
+  {
+    $this->userIsEditingPublicDraft = true;
+  }
+
+  /**
+   * Checks to see if the user has permission to edit this file
+   * @return boolean
+   */
+  private function userCanEditFile()
+  {
+    if ($this->userIsEditingPublicDraft) {
+      return true;
+    }
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+    if (strpos($this->filePath, $docRoot) === 0) {
+      $filePath = substr($this->filePath, strlen($docRoot));
+    } else {
+      $filePath = $this->filePath;
+    }
+    return PermissionsManager::userCanEditFile($this->username, $filePath);
   }
 
   /**
@@ -526,6 +878,7 @@ class FileManager
    */
   private function setUpCheckEditableFilter()
   {
+    //https://beta.gac.edu/concert/drafts/edit/a146af36e57c6a7c5103e9335a2c2388
     Filters::add('concertCMSCheckEditable', function($content, $tag) {
       if (!$this->userCanEditPart($tag)) {
         // strip editable piece
@@ -539,25 +892,12 @@ class FileManager
   /**
    * Builds a hash from the current filename
    *
+   * @param  string $filePath File path to hash instead of the default
    * @return string
    */
-  private function getFilePathHash()
+  private function getFilePathHash($filePath = null)
   {
-    return md5($this->filePath);
-  }
-
-  /**
-   * Checks to see if the user has permission to edit this file
-   * @return boolean
-   */
-  private function userCanEditFile()
-  {
-    if (strpos($this->filePath, '/cis/www') === 0) {
-      $filePath = substr($this->filePath, 8);
-    } else {
-      $filePath = $this->filePath;
-    }
-    return PermissionsManager::userCanEditFile($this->username, $filePath);
+    return (!empty($filePath)) ? md5($filePath) : md5($this->filePath);
   }
 
   // Lock functions
@@ -724,7 +1064,7 @@ class FileManager
 
       if ($minutes > Config::LOCK_DURATION) {
         // we first need to destroy the expired lock.
-        (new FileManager($this->filePath, $lock['username']))->stopEditing();
+        (new FileManager($lock['username'], $this->filePath, null, $this->getDBAL()))->stopEditing();
         // now we can create a new one.
         $this->lockAcquired = $this->createLock();
         return $this->lockAcquired;
