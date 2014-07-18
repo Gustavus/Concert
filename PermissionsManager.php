@@ -152,6 +152,108 @@ class PermissionsManager
   }
 
   /**
+   * Checks to see if the specified user can create new pages or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanCreatePage($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (is_array($sitePerms['accessLevel'])) {
+      // make sure the array contains non-empty values
+      $sitePerms['accessLevel'] = array_filter($sitePerms['accessLevel']);
+    }
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits creating new pages.
+    foreach ($sitePerms['accessLevel'] as $accessLevel) {
+      if (in_array($accessLevel, Config::$nonCreationAccessLevels)) {
+        // the current user's access level doesn't allow creating
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Checks to see if the specified user can create new pages or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanPublishPendingDrafts($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (is_array($sitePerms['accessLevel'])) {
+      // make sure the array contains non-empty values
+      $sitePerms['accessLevel'] = array_filter($sitePerms['accessLevel']);
+    }
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits publishing drafts for people.
+    foreach ($sitePerms['accessLevel'] as $accessLevel) {
+      if (in_array($accessLevel, Config::$publishPendingDraftsAccessLevels)) {
+        // the current user's access level doesn't allow creating
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks to see if the specified user can create new pages or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanPublishFile($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (is_array($sitePerms['accessLevel'])) {
+      // make sure the array contains non-empty values
+      $sitePerms['accessLevel'] = array_filter($sitePerms['accessLevel']);
+    }
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits creating new pages.
+    foreach ($sitePerms['accessLevel'] as $accessLevel) {
+      if (in_array($accessLevel, Config::$nonPublishingAccessLevels)) {
+        // the current user's access level doesn't allow creating
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Adjusts permissions so they are all uniform to make checking easier
    *
    * @param  array $files array of files to check
@@ -220,10 +322,47 @@ class PermissionsManager
   {
     $perms = self::getAllPermissionsForUser($username, $refreshCache);
 
+    if (empty($perms)) {
+      return null;
+    }
+
+    if (self::isUserSuperUser($perms)) {
+      return Config::$superUserPermissions;
+    }
     if (isset($perms[$siteRoot])) {
       return $perms[$siteRoot];
     }
+
     return null;
+  }
+
+  /**
+   * Checks to see if the user is a super user.
+   *
+   * @param  array   $permissions Permissions of the user
+   * @return boolean
+   */
+  private static function isUserSuperUser(array $permissions)
+  {
+    $accessLevels = self::getAccessLevelsFromPermissions($permissions);
+    return in_array(Config::SUPER_USER, $accessLevels);
+  }
+
+  /**
+   * Gets the access levels a person has from all permissions
+   *
+   * @param  array  $permissions Permissions array
+   * @return array
+   */
+  private static function getAccessLevelsFromPermissions(array $permissions)
+  {
+    $accessLevels = [];
+    foreach ($permissions as $permission) {
+      foreach ((array) $permission['accessLevel'] as $accessLevel) {
+        $accessLevels[] = $accessLevel;
+      }
+    }
+    return $accessLevels;
   }
 
   /**
@@ -246,15 +385,13 @@ class PermissionsManager
   /**
    * Checks to see if the current user can edit this part
    *
-   * @param  string $partName
+   * @param string $username Username to check
+   * @param strilg $filePath Path to the file to check
+   * @param string $partName Name of the template piece to check
    * @return boolean
    */
   public static function userCanEditPart($username, $filePath, $partName)
   {
-    $partName = strtolower($partName);
-
-    $editableParts = Config::$editableParts;
-
     $siteRoot = self::findUsersSiteForFile($username, $filePath);
     if (empty($siteRoot)) {
       return false;
@@ -273,11 +410,28 @@ class PermissionsManager
       return false;
     }
 
+    return self::accessLevelCanEditPart($accessLevels, $partName);
+  }
+
+  /**
+   * Checks to see if an access level or levels have access to edit a specific page part.
+   *
+   * @param array|string $accessLevels AccessLevels to check
+   * @param string $partName Name of the template piece to check
+   * @return boolean
+   */
+  public static function accessLevelCanEditPart($accessLevels, $partName)
+  {
+    $partName = strtolower($partName);
+
+    $editableParts = Config::$editableParts;
     $nonEditableParts = [];
     $hasNonRestrictiveLevel = false;
-    foreach ($accessLevels as $accessLevel) {
+    foreach ((array) $accessLevels as $accessLevel) {
       if (isset(Config::$nonEditablePartsByAccessLevel[$accessLevel])) {
-        $nonEditableParts = Config::$nonEditablePartsByAccessLevel[$accessLevel];
+        foreach (Config::$nonEditablePartsByAccessLevel[$accessLevel] as $part) {
+          $nonEditableParts[] = $part;
+        }
       } else {
         $hasNonRestrictiveLevel = true;
         break;
@@ -372,7 +526,33 @@ class PermissionsManager
     return $returnArray;
   }
 
-  // Saving actions
+  // DB actions
+
+  /**
+   * Delete user from site
+   *
+   * @param  string $username Username of the user to delete
+   * @param  string $siteRoot Root of the site to delete the user from
+   * @return boolean
+   */
+  public static function deleteUserFromSite($username, $siteRoot)
+  {
+    $siteId = self::getSiteId($siteRoot);
+
+    if ($siteId === null) {
+      // the specified site root doesn't exist. There can't be a user here.
+      return true;
+    }
+
+    $dbal = self::getDBAL();
+    $result = $dbal->delete('permissions', ['site_id' => $siteId, 'username' => $username]);
+
+    if ($result > 0) {
+      self::getCache()->clearValue(self::buildCacheKey($username));
+      return true;
+    }
+    return false;
+  }
 
   /**
    * Saves the specified permissions for the specified user
@@ -441,14 +621,12 @@ class PermissionsManager
   }
 
   /**
-   * Saves a new site if it doesn't yet exist.
+   * Gets the site id for the requested site root
    *
-   * @param  string $siteRoot Base url of the site to create
-   *
-   * @throws  RuntimeException If something failed when inserting
-   * @return string|boolean  ID of the already existing site or a newly one. False if something failed.
+   * @param  string $siteRoot Base url of the site to get the id for
+   * @return string|null String of the id if found. Null otherwise
    */
-  private static function saveNewSiteIfNeeded($siteRoot)
+  private static function getSiteId($siteRoot)
   {
     $dbal = self::getDBAL();
 
@@ -462,7 +640,26 @@ class PermissionsManager
 
     if (isset($result['id'])) {
       return $result['id'];
+    }
+    return null;
+  }
+
+  /**
+   * Saves a new site if it doesn't yet exist.
+   *
+   * @param  string $siteRoot Base url of the site to create
+   *
+   * @throws  RuntimeException If something failed when inserting
+   * @return string|boolean  ID of the already existing site or a newly one. False if something failed.
+   */
+  private static function saveNewSiteIfNeeded($siteRoot)
+  {
+    $id = self::getSiteId($siteRoot);
+
+    if ($id !== null) {
+      return $id;
     } else {
+      $dbal = self::getDBAL();
       // we need to create this site.
       $insertResult = $dbal->insert('sites', ['siteRoot' => $siteRoot]);
       if ($insertResult) {
