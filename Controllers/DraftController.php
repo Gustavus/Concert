@@ -10,7 +10,10 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
   Gustavus\Utility\PageUtil,
-  Gustavus\Concert\PermissionsManager;
+  Gustavus\Concert\PermissionsManager,
+  Gustavus\FormBuilderMk2\ElementRenderers\TwigElementRenderer,
+  Gustavus\FormBuilderMk2\FormElement,
+  Gustavus\Resources\Resource;
 
 /**
  * Handles draft actions
@@ -26,7 +29,7 @@ class DraftController extends SharedController
   /**
    * Shows a draft
    *
-   * @param  array $param       Array of parameters
+   * @param  array $params Array of parameters
    * @return boolean
    */
   public function showDraft($params)
@@ -45,8 +48,9 @@ class DraftController extends SharedController
       return $this->redirect($filePathFromDocRoot);
       exit;
     }
+    $this->addMoshMenu();
 
-    $fm = new FileManager($this->getLoggedInUsername(), $params['filePath']);
+    $fm = new FileManager($this->getLoggedInUsername(), $params['filePath'], null, $this->getDB());
 
     $drafts = $fm->findDraftsForCurrentUser($draft);
 
@@ -64,13 +68,13 @@ class DraftController extends SharedController
     $this->addSessionMessage(sprintf('%s<br/>This draft will live at "%s" when published.', Config::DRAFT_NOTE, Config::removeDocRootFromPath($draft['destFilepath'])), false);
 
 
-    $draftFileName = $fm->getDraftFileName($draft['username'], true);
+    $draftFilename = $fm->getDraftFileName($draft['username'], true);
 
-    if (!$draftFileName || !file_exists($draftFileName)) {
+    if (!$draftFilename || !file_exists($draftFilename)) {
       return $this->renderErrorPage('Oops! It appears as if the draft could not be found.');
     }
 
-    return (new File($draftFileName))->loadAndEvaluate();
+    return (new File($draftFilename))->loadAndEvaluate();
   }
 
   /**
@@ -94,9 +98,9 @@ class DraftController extends SharedController
   {
     assert('isset($params["draftName"])');
     $draftName = $params['draftName'];
+    $this->addMoshMenu();
 
-
-    $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('drafts', ['draftName' => '']));
+    $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('drafts', ['draftName' => '']), null, $this->getDB());
 
     $draft = $fm->getDraft($draftName);
 
@@ -107,8 +111,8 @@ class DraftController extends SharedController
     }
 
     $messageAdditions = '';
-    if ((!empty($draft['additionalUsers']) && in_array($this->getLoggedInUsername(), $draft['additionalUsers'])) || $this->getLoggedInUsername() === $draft['username']) {
-      $messageAdditions = sprintf('<br/><a href="%s" class="button">Edit Draft</a>', $this->buildUrl('editDraft', ['draftName' => $draft['draftFileName']]));
+    if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
+      $messageAdditions = sprintf('<br/><a href="%s" class="button">Edit Draft</a>', $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]));
     }
 
     $this->addSessionMessage(sprintf('%s<br/>This draft will live at "%s" when published.%s', Config::DRAFT_NOTE, Config::removeDocRootFromPath($draft['destFilepath']), $messageAdditions), false);
@@ -124,38 +128,40 @@ class DraftController extends SharedController
    */
   public function editPublicDraft(array $params)
   {
+    $this->addMoshMenu();
     $draftName = $params['draftName'];
 
-    $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('editDraft', ['draftName' => '']));
+    $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('editDraft', ['draftName' => '']), null, $this->getDB());
 
     // we've got our draft.
     $draft = $fm->getDraft($draftName);
 
+    if (empty($draft)) {
+      return $this->renderErrorPage('Oops! It looks like the specified draft doesn\'t exist.');
+    }
+
     $draftFilePath = Config::$draftDir . $draftName;
 
     // now we need to make a fileManager to edit the current draft
-    $draftFM = new FileManager($this->getLoggedInUsername(), $draftFilePath);
-    $draftFM->setUserIsEditingPublicDraft();
+    $draftFM = new FileManager($this->getLoggedInUsername(), $draftFilePath, null, $this->getDB());
+    $draftFM->setUserIsEditingDraft();
 
-    $fm = new FileManager($this->getLoggedInUsername(), $draft['destFilepath']);
-    $fm->setUserIsEditingPublicDraft();
-
-    // we need to create a lock on the draft file as well as the file the draft represents
-    if (!$draftFM->acquireLock() || !$fm->acquireLock()) {
-      return $this->renderErrorPage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.');
+    if (!PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
+      return $this->renderErrorPage('Oops! It looks like you don\'t have access to edit this draft.');
     }
 
-    if ($this->getMethod() === 'POST') {
-      // trying to save an edit
-      if ($draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
-        $draftFM->stopEditing();
-        $fm->stopEditing();
-        return [
-          'action' => 'return',
-          'value'  => true,
-          'redirectUrl' => $this->buildUrl('drafts', ['draftName' => $draftName]),
-        ];
-      }
+    // we need to create a lock on the draft file as well as the file the draft represents
+    if (!$draftFM->acquireLock()) {
+      return $this->renderErrorPage(Config::LOCK_NOT_AQUIRED_MESSAGE);
+    }
+
+    if ($this->getMethod() === 'POST' && $draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
+      $draftFM->stopEditing();
+      return [
+        'action' => 'return',
+        'value'  => true,
+        'redirectUrl' => $this->buildUrl('drafts', ['draftName' => $draftName]),
+      ];
     }
 
     $additionalButtons = [
@@ -168,13 +174,13 @@ class DraftController extends SharedController
 
     $this->insertEditingResources($this->buildUrl('editDraft', ['draftName' => $draftName]), ['saveDraft'], $additionalButtons);
 
-    $draftFileName = $draftFM->makeEditableDraft();
+    $draftFilename = $draftFM->makeEditableDraft();
 
-    if ($draftFileName === false) {
-      return $this->renderErrorPage('Something happened');
+    if ($draftFilename === false) {
+      return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return (new File($draftFileName))->loadAndEvaluate();
+    return (new File($draftFilename))->loadAndEvaluate();
   }
 
   /**
@@ -195,7 +201,11 @@ class DraftController extends SharedController
       return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
     }
 
-    $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
+
+    if (!$fm->acquireLock()) {
+      return $this->renderErrorPage(Config::LOCK_NOT_AQUIRED_MESSAGE);
+    }
 
     if ($fm->editFile($_POST)) {
       $draftType = ($this->userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
@@ -218,7 +228,7 @@ class DraftController extends SharedController
       return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
     }
 
-    $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath);
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
     if (!$fm->acquireLock()) {
       // lock couldn't be acquired
@@ -245,7 +255,7 @@ class DraftController extends SharedController
       return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
     }
 
-    $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
     if (!$fm->userHasOpenDraft()) {
       // user doesn't have a draft they can delete. Nothing needs to happen.
       return true;
@@ -268,7 +278,11 @@ class DraftController extends SharedController
       return ['action' => 'return', 'value' => $this->showDraft($params)];
     } else if (Config::userIsEditingPublicDraft($params['filePath'])) {
       $params['draftName'] = basename($params['filePath']);
-      return ['action' => 'return', 'value' => $this->editPublicDraft($params)];
+      $result = $this->editPublicDraft($params);
+      if (is_array($result)) {
+        return $result;
+      }
+      return ['action' => 'return', 'value' => $result];
     } else if ($this->userIsSavingDraft()) {
       return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];
     } else if ($this->userIsDeletingDraft()) {
@@ -290,22 +304,110 @@ class DraftController extends SharedController
     $draftName = basename($filePath);
     $filePath  = Config::$draftDir . $draftName;
 
-    $draftFM = new FileManager($this->getLoggedInUsername(), $filePath);
+    $draftFM = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    $draftFM->setUserIsEditingPublicDraft();
-    $draft = $draftFM->getDraft($draftName);
-
+    $draftFM->setUserIsEditingDraft();
     $draftFM->stopEditing();
-
-    // release the lock on the file the draft represents
-    $fm = new FileManager($this->getLoggedInUsername(), $draft['destFilepath']);
-    $fm->setUserIsEditingPublicDraft();
-    $fm->stopEditing();
 
     return [
       'action' => 'return',
       'value'  => true,
     ];
+  }
+
+  /**
+   * Adds users to a draft
+   *
+   * @param array $params Parameters from router
+   */
+  public function addUsersToDraft($params)
+  {
+    $draftName = $params['draftName'];
+
+    $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('addUsersToDraft', ['draftName' => $draftName]), null, $this->getDB());
+
+    $draft = $fm->getDraft($draftName);
+
+    if (!$draft) {
+      return $this->renderErrorPage('Oops! It looks like this draft doesn\'t exist.');
+    }
+
+    if ($draft['username'] !== $this->getLoggedInUsername()) {
+      return $this->renderErrorPage('Oops! It looks like you don\'t own this draft. Please have the owner add users.');
+    }
+
+    // we don't want this form to be persisted
+    $this->flushForm('concertAddUsersToDraft');
+
+    $form = $this->buildForm('concertAddUsersToDraft', ['\Gustavus\Concert\Forms\ShareDraft', 'getConfig'], [$draft], 1);
+
+    if ($this->getMethod() === 'POST' && $form->validate()) {
+      $additionalUsers = [];
+      foreach ($form->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
+        if ($child->getName() === 'person') {
+          $additionalUsers[] = $child->getChildElement('username')->getValue();
+        }
+      }
+      $additionalUsers = array_unique($additionalUsers);
+      if ($fm->addUsersToDraft($draftName, $additionalUsers)) {
+        if (!isset($_GET['barebones'])) {
+          return $this->redirect($this->buildUrl('addUsersToDraft', ['draftName' => $draftName]));
+        }
+        return true;
+      }
+    }
+
+    $additionalScripts = [['path' => Config::WEB_DIR . 'js/autocompleteUser.js', 'version' => Config::AUTOCOMPLETE_JS_VERSION]];
+    $renderer = new TwigElementRenderer();
+
+    if (isset($_GET['barebones'])) {
+      // we aren't rendering this in the template
+      $resources = $renderer->getExternalResources();
+      $r = '';
+      if (!empty($resources['css'])) {
+        $r .= sprintf('<link rel="stylesheet" type="text/css" href="%s"/>',
+            Resource::renderCSS($resources['css'])
+        );
+      }
+      if (!empty($resources['js'])) {
+        $additionalScripts = array_merge($resources['js'], $additionalScripts);
+      }
+
+      // now we need to add formBuilder, autocomplete, and colorbox submission javascripts
+      $r .= sprintf(
+          '<script type="text/javascript">
+            Modernizr.load({
+              load: "%s",
+              complete: function() {
+                $(function() {
+                  Extend.apply(\'autocompleteUser\');
+                });
+              }
+            });
+            $(\'.concertSubmitAddUsers\').click(function(e) {
+              e.preventDefault();
+              var form = $(this).parents(\'form\');
+
+              var url = form.attr(\'action\');
+              var data = form.serialize();
+              $.post(url, data, function() {
+                $(\'.concertSubmitAddUsers\').colorbox.close();
+              })
+            })
+          </script>',
+          Resource::renderResource($additionalScripts)
+      );
+      $r .= $renderer->render($form);
+      return $r;
+    } else {
+
+      $this->addMoshMenu();
+
+      $this->addFormResources($renderer, null, $additionalScripts);
+
+      $this->setContent($renderer->render($form));
+      return $this->renderPage();
+    }
   }
 
   /**
