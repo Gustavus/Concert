@@ -1,0 +1,3 @@
+#!/bin/bash
+
+logrotate /cis/lib/Gustavus/Concert/Scripts/rotateWatcher.conf

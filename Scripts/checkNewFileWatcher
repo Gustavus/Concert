@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Script to make sure the newFileWatcher is running.
+# This can be executed via a cronjob or anything similar.
+
+# Takes the absolute directory of the newFileWatcher script's location as the only argument
+if [ `ps aux | grep newFileWatcher | wc -l` -lt '2' ]
+  then
+    /cis/lib/Gustavus/Concert/Scripts/newFileWatcher
+fi
