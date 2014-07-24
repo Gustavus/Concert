@@ -10,6 +10,7 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
   Gustavus\Utility\PageUtil,
+  Gustavus\Utility\String,
   Gustavus\Concert\PermissionsManager,
   Gustavus\FormBuilderMk2\ElementRenderers\TwigElementRenderer,
   Gustavus\FormBuilderMk2\FormElement,
@@ -50,7 +51,7 @@ class DraftController extends SharedController
     }
     $this->addMoshMenu();
 
-    $fm = new FileManager($this->getLoggedInUsername(), $params['filePath'], null, $this->getDB());
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     $drafts = $fm->findDraftsForCurrentUser($draft);
 
@@ -65,7 +66,12 @@ class DraftController extends SharedController
 
     $draft = reset($drafts);
 
-    $this->addSessionMessage(sprintf('%s<br/>This draft will live at "%s" when published.', Config::DRAFT_NOTE, Config::removeDocRootFromPath($draft['destFilepath'])), false);
+    if ($this->isRequestFromConcertRoot()) {
+      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
+    } else {
+      $messageAdditions = '';
+    }
+    $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
 
     $draftFilename = $fm->getDraftFileName($draft['username'], true);
@@ -112,10 +118,19 @@ class DraftController extends SharedController
 
     $messageAdditions = '';
     if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
-      $messageAdditions = sprintf('<br/><a href="%s" class="button">Edit Draft</a>', $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]));
+      if ($this->isRequestFromConcertRoot()) {
+        $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
+      } else {
+        $url = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'editDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
+      }
+      $messageAdditions = sprintf('<br/><a href="%s" class="button">Edit Draft</a>', $url);
     }
 
-    $this->addSessionMessage(sprintf('%s<br/>This draft will live at "%s" when published.%s', Config::DRAFT_NOTE, Config::removeDocRootFromPath($draft['destFilepath']), $messageAdditions), false);
+
+    if ($this->isRequestFromConcertRoot()) {
+      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Config::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
+    }
+    $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
     return (new File(Config::$draftDir . $draftName))->loadAndEvaluate();
   }
@@ -155,18 +170,24 @@ class DraftController extends SharedController
       return $this->renderErrorPage(Config::LOCK_NOT_AQUIRED_MESSAGE);
     }
 
+    if ($this->isRequestFromConcertRoot()) {
+      $buttonUrl = $this->buildUrl('drafts', ['draftName' => $draftName]);
+    } else {
+      $buttonUrl = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
+    }
+
     if ($this->getMethod() === 'POST' && $draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
       $draftFM->stopEditing();
       return [
         'action' => 'return',
         'value'  => true,
-        'redirectUrl' => $this->buildUrl('drafts', ['draftName' => $draftName]),
+        'redirectUrl' => $buttonUrl,
       ];
     }
 
     $additionalButtons = [
       [
-        'url'  => $this->buildUrl('drafts', ['draftName' => $draftName]),
+        'url'  => $buttonUrl,
         'id'   => 'concertStopEditing',
         'text' => 'Stop editing draft',
       ]
@@ -273,11 +294,14 @@ class DraftController extends SharedController
    */
   public function handleDraftActions(array $params)
   {
-    if ($this->userWantsToViewDraft()) {
+    if ($this->userIsViewingPublicDraft($params['filePath'])) {
+      $params['draftName'] = $this->guessDraftName();
+      return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
+    } else if ($this->userWantsToViewDraft()) {
       $params['draft'] = $this->getDraftFromRequest();
       return ['action' => 'return', 'value' => $this->showDraft($params)];
-    } else if (Config::userIsEditingPublicDraft($params['filePath'])) {
-      $params['draftName'] = basename($params['filePath']);
+    } else if ($this->userIsEditingPublicDraft($_SERVER['REQUEST_URI'])) {
+      $params['draftName'] = $this->guessDraftName($params['filePath']);
       $result = $this->editPublicDraft($params);
       if (is_array($result)) {
         return $result;
@@ -332,7 +356,7 @@ class DraftController extends SharedController
       return $this->renderErrorPage('Oops! It looks like this draft doesn\'t exist.');
     }
 
-    if ($draft['username'] !== $this->getLoggedInUsername()) {
+    if (!PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
       return $this->renderErrorPage('Oops! It looks like you don\'t own this draft. Please have the owner add users.');
     }
 
@@ -408,19 +432,6 @@ class DraftController extends SharedController
       $this->setContent($renderer->render($form));
       return $this->renderPage();
     }
-  }
-
-  /**
-   * Gets the requested draft from the url
-   *
-   * @return string|null
-   */
-  private function getDraftFromRequest()
-  {
-    if (isset($_GET['concertDraft'])) {
-      return $_GET['concertDraft'];
-    }
-    return null;
   }
 
   /**
