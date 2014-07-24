@@ -5,35 +5,21 @@ namespace Gustavus\Concert\Setup\GeneratedEntities;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Stagedfiles
+ * Drafts
  *
- * @Table(name="stagedFiles", indexes={@Index(name="srcFilepath", columns={"srcFilename"})})
+ * @Table(name="drafts")
  * @Entity
  */
-class StagedFiles
+class Drafts
 {
     /**
-     * @var integer
+     * @var string
      *
-     * @Column(name="id", type="integer", nullable=false)
+     * @Column(name="draftFilename", type="string", length=40, nullable=false)
      * @Id
-     * @GeneratedValue(strategy="IDENTITY")
+     * @GeneratedValue(strategy="NONE")
      */
-    private $id;
-
-    /**
-     * @var string
-     *
-     * @Column(name="destFilepath", type="string", length=2048, nullable=false)
-     */
-    private $destfilePath;
-
-    /**
-     * @var string
-     *
-     * @Column(name="srcFilename", type="string", length=40, nullable=false)
-     */
-    private $srcfilename;
+    private $draftFilename;
 
     /**
      * @var string
@@ -43,11 +29,39 @@ class StagedFiles
     private $username;
 
     /**
+     * @var string
+     *
+     * @Column(name="destFilepath", type="string", length=2048, nullable=false)
+     */
+    private $destfilepath;
+
+    /**
+     * @var string
+     *
+     * @Column(name="draftName", type="string", length=40, nullable=false)
+     */
+    private $draftName;
+
+    /**
+     * @var string
+     *
+     * @Column(name="type", type="string", length=32, nullable=false)
+     */
+    private $type;
+
+    /**
      * @var \DateTime
      *
      * @Column(name="date", type="datetime", nullable=false)
      */
     private $date;
+
+    /**
+     * @var string
+     *
+     * @Column(name="additionalUsers", type="string", length=256, nullable=true)
+     */
+    private $additionalUsers;
 
     /**
      * @var \DateTime
@@ -58,20 +72,33 @@ class StagedFiles
 
 
     /**
-     * Get id
+     * Set username
      *
-     * @return integer
+     * @param string $username
+     * @return Drafts
      */
-    public function getId()
+    public function setUsername($username)
     {
-        return $this->id;
+        $this->username = $username;
+
+        return $this;
+    }
+
+    /**
+     * Get username
+     *
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->username;
     }
 
     /**
      * Set destfilepath
      *
      * @param string $destfilepath
-     * @return Stagedfiles
+     * @return Drafts
      */
     public function setDestfilepath($destfilepath)
     {
@@ -94,7 +121,7 @@ class StagedFiles
      * Set srcfilename
      *
      * @param string $srcfilename
-     * @return Stagedfiles
+     * @return Drafts
      */
     public function setSrcfilename($srcfilename)
     {
@@ -114,33 +141,33 @@ class StagedFiles
     }
 
     /**
-     * Set username
+     * Set type
      *
-     * @param string $username
-     * @return Stagedfiles
+     * @param string $type
+     * @return Drafts
      */
-    public function setUsername($username)
+    public function setType($type)
     {
-        $this->username = $username;
+        $this->type = $type;
 
         return $this;
     }
 
     /**
-     * Get username
+     * Get type
      *
      * @return string
      */
-    public function getUsername()
+    public function getType()
     {
-        return $this->username;
+        return $this->type;
     }
 
     /**
      * Set date
      *
      * @param \DateTime $date
-     * @return Stagedfiles
+     * @return Drafts
      */
     public function setDate($date)
     {
@@ -163,7 +190,7 @@ class StagedFiles
      * Set publisheddate
      *
      * @param \DateTime $publisheddate
-     * @return Stagedfiles
+     * @return Drafts
      */
     public function setPublisheddate($publisheddate)
     {

@@ -8,6 +8,8 @@
 namespace Gustavus\Concert\Test;
 
 use Gustavus\Test\TestEM,
+  Gustavus\Test\TestObject,
+  Gustavus\Concert\FileManager,
   Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
   Gustavus\GACCache\Workers\ArrayFactoryWorker;
@@ -22,6 +24,12 @@ use Gustavus\Test\TestEM,
 class TestBase extends TestEM
 {
   /**
+   * Doctrine DBAL test instance to use in forwarded classes
+   * @var Doctrine\DBAL\Connection
+   */
+  public static $pdo;
+
+  /**
    * Location for test files to live
    * @var string
    */
@@ -32,6 +40,12 @@ class TestBase extends TestEM
    * @var string
    */
   protected $wrappedEditableIdentifier = 'div class="editable"';
+
+  /**
+   * FileManager object to do our testing on
+   * @var FileManager
+   */
+  protected $fileManager;
 
   /**
    * Mapping of Generated Entities to their namespace for testing
@@ -75,6 +89,10 @@ class TestBase extends TestEM
   public function tearDown()
   {
     $this->set('PermissionsManager', 'dbal', null);
+    $cache = $this->call('PermissionsManager', 'getCache');
+    if (is_object($cache)) {
+      $cache->clearAllValues();
+    }
     $this->set('PermissionsManager', 'cache', null);
   }
 
@@ -117,6 +135,18 @@ class TestBase extends TestEM
       }
       unlink($file);
     }
+  }
+
+  /**
+   * Builds the FileManager object to use for testing
+   * @param  string $file Filename
+   * @param  string $user username
+   * @return void
+   */
+  protected function buildFileManager($user, $file, $srcFilePath = null)
+  {
+    $this->fileManager = new TestObject(new FileManager($user, $file, $srcFilePath));
+    $this->fileManager->dbal = DBAL::getDBAL('testDB', $this->getDBH());
   }
 
   /**
@@ -312,7 +342,7 @@ more html
    */
   protected function buildDB()
   {
-    $this->constructDB(['Locks', 'UserPermissions', 'Sites', 'PendingUpdates']);
+    $this->constructDB(['Locks', 'Permissions', 'Sites', 'StagedFiles', 'Drafts']);
   }
 
   /**
@@ -331,6 +361,14 @@ more html
   protected function set($class, $property, $value)
   {
     parent::set('\Gustavus\Concert\\' . $class, $property, $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function get($class, $property)
+  {
+    parent::get('\Gustavus\Concert\\' . $class, $property);
   }
 
   /**

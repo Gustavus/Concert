@@ -9,8 +9,10 @@ namespace Gustavus\Concert\Controllers;
 use Gustavus\Concourse\Controller as ConcourseController,
   Gustavus\Resources\Resource,
   Gustavus\Concert\Config,
+  Gustavus\Concert\FileManager,
+  Gustavus\Concert\PermissionsManager,
   Gustavus\Extensibility\Filters,
-  Gustavus\Concert\PermissionsManager;
+  Gustavus\Concourse\RoutingUtil;
 
 /**
  * Controller to handle shared functionality for other controllers
@@ -29,6 +31,13 @@ class SharedController extends ConcourseController
   protected $applicationTitle = 'Concert';
 
   /**
+   * Flag to determine if we have already added our mosh menu
+   *
+   * @var boolean
+   */
+  private static $moshMenuAdded = false;
+
+  /**
    * {@inheritdoc}
    */
   protected function getLocalNavigation()
@@ -45,26 +54,13 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Gets Doctrine's entity manager for Concert
+   * Gets Doctrine's DBAL connection for Concert
    *
-   * @param  boolean $new whether to use a new entitymanager or not
-   * @return \Doctrine\ORM\EntityManager
+   * @return \Doctrine\DBAL\Connection
    */
-  protected function getDoctrine($new = false)
+  protected function getDB()
   {
-    return $this->getEM('/cis/lib/Gustavus/Concert', Config::DB, $new);
-  }
-
-  /**
-   * Gets the repository for the specified entity
-   *
-   * @param  string $name
-   * @param  boolean $new whether to use a new entitymanager or not
-   * @return \Doctrine\ORM\EntityRepository
-   */
-  protected function getRepository($name, $new = false)
-  {
-    return $this->getDoctrine($new)->getRepository('\Gustavus\Concert\Entities\\' . $name);
+    return $this->getDBAL(Config::DB);
   }
 
   /**
@@ -117,6 +113,7 @@ class SharedController extends ConcourseController
    *
    * @param string $filePath FilePath of the file we are editing
    * @param  array $visibleButtons Array of buttons that we want to display
+   * @param  array $additionalButtons Array of arrays of additional buttons to add. Sub-arrays must have indexes of 'url', 'id', and 'text'.
    * @return void
    */
   protected function insertEditingResources($filePath, array $visibleButtons = null, array $additionalButtons = null)
@@ -165,6 +162,56 @@ class SharedController extends ConcourseController
           ]
       );
     }, 9999);
+  }
+
+  /**
+   * Adds action buttons for moshing
+   *
+   * @param  string $filePath Path to the file we are moshing for
+   * @return  void
+   *
+   * @todo  do we need this or want it?
+   */
+  // protected function addMoshingActions($filePath)
+  // {
+  //   if ($this->userWantsToEdit() || $this->userIsSaving()) {
+  //     Filters::add('userBox', function($content) {
+  //       // @todo make this remove concert stuff from the url
+  //       return $content . '<a href="?concert=stopEditing" class="button red concertEditPage">Stop Editing</a>';
+  //     });
+  //   } else {
+  //     Filters::add('userBox', function($content) {
+  //       return $content . '<a href="?concert=edit" class="button red concertEditPage">Edit Page</a>';
+  //     });
+  //   }
+  // }
+
+  /**
+   * Adds the menu to interact with Concert
+   *
+   * @return  void
+   */
+  protected function addMoshMenu()
+  {
+    if (!self::$moshMenuAdded) {
+      $result = $this->forward('menus', ['forReferer' => false]);
+      if (!empty($result)) {
+        Filters::add('userBox', function($content) {
+          return sprintf('%s<a href="%s" class="button red concertMenu thickbox">Concert</a>', $content, $this->buildUrl('menus'));
+        });
+      }
+      self::$moshMenuAdded = true;
+    }
+  }
+
+  /**
+   * This forces our doc root so we aren't building urls to the error handler for creating new pages, etc.
+   *
+   * {@inheritdoc}
+   */
+  public function buildUrl($alias, array $parameters = array(), $baseDir = '', $fullUrl = false)
+  {
+    return parent::buildUrl($alias, $parameters, Config::WEB_DIR, $fullUrl);
   }
 
   // Action checks
@@ -270,13 +317,23 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Checks to see if the user is editing a draft
+   *
+   * @return boolean
+   */
+  protected function userIsEditingDraft()
+  {
+    return (isset($_GET['concert']) && $_GET['concert'] === 'editDraft');
+  }
+
+  /**
    * Checks to see if the user is wanting to do things with drafts
    *
    * @return boolean
    */
   protected function isDraftRequest()
   {
-    return ($this->userWantsToViewDraft() || $this->userIsSavingDraft() || $this->userIsDeletingDraft());
+    return ($this->userWantsToViewDraft() || $this->userIsSavingDraft() || $this->userIsDeletingDraft() || $this->userIsEditingDraft());
   }
 
   /**
@@ -299,11 +356,138 @@ class SharedController extends ConcourseController
     return (isset($_POST['concertAction']) && $_POST['concertAction'] === 'query');
   }
 
+  /**
+   * Gets the query that is being requested from POST
+   *
+   * @return string|null String if the query request is found, null otherwise
+   */
   protected function getQueryFromRequest()
   {
     if ($this->isRequestingQuery() && isset($_POST['query'])) {
       return $_POST['query'];
     }
     return null;
+  }
+
+  /**
+   * Checks to see if the user is viewing a public draft from the specified requestURI
+   *
+   * @param  string $requestURI
+   * @return boolean
+   */
+  protected function userIsViewingPublicDraft($requestURI)
+  {
+    $viewPublicDraftUrl = $this->buildUrl('drafts', ['draft' => basename($requestURI)]);
+
+    if (strpos($requestURI, $viewPublicDraftUrl) !== false) {
+      // user is viewing a public draft from concert root
+      return true;
+    } else if ($this->userWantsToViewDraft()) {
+      // we need to do some extra checks to see if the user is viewing a public draft.
+      $draftName = $this->getDraftFromRequest();
+
+      if (empty($draftName)) {
+        return false;
+      }
+
+      $fm = new FileManager($this->getLoggedInUsername(), $requestURI, null, $this->getDB());
+      $draft = $fm->getDraft($draftName);
+
+      return ($draft && $draft['type'] === Config::PUBLIC_DRAFT);
+    }
+    return false;
+  }
+
+  /**
+   * Checks to see if the user is editing a public draft
+   *
+   * @param  string $requestURI The uri to the page the user is sitting at
+   * @return boolean
+   */
+  protected function userIsEditingPublicDraft($requestURI)
+  {
+    $editDraftUrl = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => basename($requestURI)]);
+
+    if (strpos($requestURI, $editDraftUrl) !== false) {
+      return true;
+    } else if ($this->userIsEditingDraft()) {
+      // we need to do some extra checks to see if the user is viewing a public draft.
+      $draftName = $this->getDraftFromRequest();
+
+      if (empty($draftName)) {
+        return false;
+      }
+
+      $fm = new FileManager($this->getLoggedInUsername(), $requestURI, null, $this->getDB());
+      $draft = $fm->getDraft($draftName);
+
+      return ($draft && $draft['type'] === Config::PUBLIC_DRAFT);
+    }
+    return false;
+  }
+
+  /**
+   * Checks to see if the user is adding users to their public draft
+   *
+   * @param  string $requestURI
+   * @return boolean
+   */
+  protected function userIsAddingUsersToDraft($requestURI)
+  {
+    $addUsersToDraftUrl = $this->buildUrl('addUsersToDraft', ['draftName' => basename($requestURI)]);
+
+    return (($addUsersToDraftUrl === $requestURI) || (isset($_GET['concert']) && $_GET['concert'] === 'addUsers'));
+  }
+
+  /**
+   * Gets the requested draft from the url
+   *
+   * @return string|null
+   */
+  protected function getDraftFromRequest()
+  {
+    if (isset($_GET['concertDraft'])) {
+      return $_GET['concertDraft'];
+    }
+    return null;
+  }
+
+  /**
+   * Gets the draft name from the request
+   *
+   * @param  string $requestURI
+   * @return string
+   */
+  protected function guessDraftName($requestURI = null)
+  {
+    $draft = $this->getDraftFromRequest();
+
+    if (!$draft && $requestURI !== null) {
+      $parts = parse_url($requestURI);
+      $draft = basename($parts['path']);
+    }
+
+    if (!$draft && isset($_SERVER['REQUEST_URI'])) {
+      $parts = parse_url($_SERVER['REQUEST_URI']);
+      $draft = basename($parts['path']);
+    }
+    return $draft;
+  }
+
+  /**
+   * Checks to see if the request is coming from the concert root or not.
+   *
+   * @param  string $requestURI
+   * @return boolean
+   */
+  protected function isRequestFromConcertRoot($requestURI = null)
+  {
+    $concertRoot = $_SERVER['DOCUMENT_ROOT'] . Config::WEB_DIR;
+
+    if ($requestURI === null) {
+      $requestURI = $_SERVER['REQUEST_URI'];
+    }
+
+    return (strpos($requestURI, $concertRoot) === 0);
   }
 }

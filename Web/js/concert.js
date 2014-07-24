@@ -208,6 +208,7 @@ Gustavus.Concert = {
     edits.concertAction = 'save';
     edits.saveAction = action;
     edits.filePath = this.filePath;
+    // console.log(this.baseUrl);
     $.ajax({
       type: 'POST',
       //url: window.location.href,
@@ -215,10 +216,10 @@ Gustavus.Concert = {
       data: edits,
       dataType: 'json',
       success: function(data) {
-        if (data.error) {
+        if (data && data.error) {
           alert(data.reason);
         } else {
-          if (data.redirectUrl) {
+          if (data && data.redirectUrl) {
             window.location = data.redirectUrl;
           } else {
             window.location = Gustavus.Concert.filePath + '?concert=stopEditing';

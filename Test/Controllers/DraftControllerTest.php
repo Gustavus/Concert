@@ -10,84 +10,13 @@ namespace Gustavus\Concert\Test\Controllers;
 use Gustavus\Test\TestObject,
   Gustavus\Concert\Test\TestBase,
   Gustavus\Concert\Controllers\DraftController,
+  Gustavus\Concert\Test\Controllers\DraftControllerTestController,
   Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
-  Gustavus\FormBuilderMK2\ElementRenderers\ElementRenderer,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
   Gustavus\Concourse\RoutingUtil;
-
-/**
- * Test controller for DraftController
- *
- * @package Concert
- * @subpackage Test
- * @author  Billy Visto
- */
-class TestDraftController extends DraftController
-{
-  /**
-   * overloads renderPage so it doesn't try to start outbut buffers
-   *
-   * @return array
-   */
-  protected function renderPage()
-  {
-    $this->addSessionMessages();
-    return [
-      'title'           => $this->getTitle(),
-      'subtitle'        => $this->getSubtitle(),
-      'content'         => $this->getContent(),
-      'localNavigation' => $this->getLocalNavigation(),
-      'focusBox'        => $this->getFocusBox(),
-      'stylesheets'     => $this->getStylesheets(),
-      'javascripts'     => $this->getJavascripts(),
-    ];
-  }
-
-  /**
-   * overloads redirect so it doesn't try to redirect when called
-   * @param  string $path
-   * @param  integer $statusCode Redirection status code
-   * @return void
-   */
-  protected function redirect($path = '/', $statusCode = 303)
-  {
-    $_POST = null;
-    return ['redirect' => $path];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function addFormBuilderResources(ElementRenderer $renderer, array $extraCSSResources = null, array $extraJSResources = null)
-  {
-    $this->setStylesheets('');
-    $this->setJavascripts('');
-  }
-
-  /**
-   * Adds css and js needed for filtering
-   *
-   * @return  void
-   */
-  protected function addFilteringJsAndCss()
-  {
-    $this->setStylesheets('');
-    $this->setJavascripts('');
-  }
-
-  // /**
-  //  * Forwards specifying the test controller to forward to
-  //  *
-  //  * {@inheritdoc}
-  //  */
-  // protected function forward($alias, array $parameters = array())
-  // {
-  //   return RouterTestUtil::forward($this->getRoutingConfiguration(), $alias, $parameters, ['Gustavus\StudentOrgs\Controller\EmailController' => 'Gustavus\StudentOrgs\Test\Controller\EmailControllerTestController']);
-  // }
-}
 
 /**
  * @package Concert
@@ -139,7 +68,7 @@ class DraftControllerTest extends TestBase
   public function tearDown()
   {
     unset($this->controller);
-    //self::removeFiles(self::$testFileDir);
+
     parent::tearDown();
     $_POST = [];
     $_GET = [];
@@ -184,7 +113,7 @@ class DraftControllerTest extends TestBase
    */
   private function setUpController()
   {
-    $this->controller = new TestObject(new TestDraftController);
+    $this->controller = new TestObject(new DraftControllerTestController);
 
     $this->controller->dbal = DBAL::getDBAL('testDB', $this->getDBH());
   }

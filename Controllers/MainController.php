@@ -9,9 +9,8 @@ namespace Gustavus\Concert\Controllers;
 use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
-  Gustavus\Resources\Resource,
-  Gustavus\Extensibility\Filters,
   Gustavus\Concert\PermissionsManager,
+  Campus\Utility\Autocomplete,
   InvalidArgumentException;
 
 /**
@@ -31,16 +30,14 @@ class MainController extends SharedController
    * @param  string $page Page we are trying to edit
    * @return string|boolean String of the rendered edit page or boolean on save
    */
-  public function edit($page = null)
+  private function edit($filePath)
   {
-    if ($page === null && !isset($_GET['page'])) {
-      return $this->renderErrorPage('Oops! It looks like there was no page specified to edit.');
-    }
-    if ($page === null) {
-      $page = $_SERVER['DOCUMENT_ROOT'] . '/' . $_GET['page'];
-    }
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    $fm = new FileManager($this->getLoggedInUsername(), $page);
+    if (!$fm->userCanEditFile()) {
+      $this->addSessionMessage('Oops! It appears that you don\'t have access to edit this file');
+      return false;
+    }
 
     if (!$fm->acquireLock()) {
       $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
@@ -59,22 +56,40 @@ class MainController extends SharedController
       $editDraft = false;
     }
 
-    if ($this->getMethod() === 'POST') {
+    if ($this->getMethod() === 'POST' && $fm->editFile($_POST)) {
       // trying to save an edit
-      if ($fm->editFile($_POST) && PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($page)) && $fm->stageFile()) {
+      $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+      if ($userCanPublish && $fm->stageFile()) {
         return true;
+      } else if (!$userCanPublish) {
+        return $this->savePendingDraft($fm);
       }
     }
 
-    $this->insertEditingResources($page);
+    $this->insertEditingResources($filePath);
 
-    $draftFileName = $fm->makeEditableDraft($editDraft);
+    $draftFilename = $fm->makeEditableDraft($editDraft);
 
-    if ($draftFileName === false) {
-      return $this->renderErrorPage('Something happened');
+    if ($draftFilename === false) {
+      return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return (new File($draftFileName))->loadAndEvaluate();
+    return (new File($draftFilename))->loadAndEvaluate();
+  }
+
+  /**
+   * Saves a draft waiting to be published
+   *
+   * @param  FileManager $fileManager FileManager instance to save the draft for
+   * @return boolean
+   */
+  private function savePendingDraft($fileManager)
+  {
+    if ($fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT)) {
+      // @todo we need to send an email alerting the site admin of a pending draft
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -90,7 +105,12 @@ class MainController extends SharedController
       $fromFilePath = Config::TEMPLATE_PAGE;
     }
 
-    $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath);
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
+
+    if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+      $this->addSessionMessage('Oops! It appears that you don\'t have access to create this page.');
+      return false;
+    }
 
     if (!$fm->acquireLock()) {
       $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
@@ -103,23 +123,20 @@ class MainController extends SharedController
       $editDraft = false;
     }
 
-    if ($this->getMethod() === 'POST') {
+    if ($this->getMethod() === 'POST' && $fm->editFile($_POST) && $fm->stageFile()) {
       // trying to save a new page
-
-      if ($fm->editFile($_POST) && PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath)) && $fm->stageFile()) {
-        return true;
-      }
+      return true;
     }
 
     $this->insertEditingResources($filePath);
 
-    $draftFileName = $fm->makeEditableDraft($editDraft);
+    $draftFilename = $fm->makeEditableDraft($editDraft);
 
-    if ($draftFileName === false) {
-      return $this->renderErrorPage('Something happened');
+    if ($draftFilename === false) {
+      return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return (new File($draftFileName))->loadAndEvaluate();
+    return (new File($draftFilename))->loadAndEvaluate();
   }
 
   /**
@@ -162,11 +179,11 @@ class MainController extends SharedController
 
       $isEditingPublicDraft = false;
       // check if it is a draft request
-      if ($this->isDraftRequest() || ($isEditingPublicDraft = Config::userIsEditingPublicDraft($filePath))) {
+      if ($this->isDraftRequest() || ($isEditingPublicDraft = $this->userIsEditingPublicDraft($filePath))) {
         if (!$isEditingPublicDraft) {
-          $this->addMoshingActions($filePath);
+          $this->addMoshMenu();
         }
-        // use is trying to view a draft.
+        // pass onto draft controller to process this request
         return $this->forward('handleDraftActions', ['filePath' => $filePath]);
       }
 
@@ -174,7 +191,7 @@ class MainController extends SharedController
       // check to see if the user has access to edit this page
       if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
 
-        $this->addMoshingActions($filePath);
+        //$this->addMoshMenu();
         $this->setSessionMessage(null, false);
 
         if (!file_exists($filePath) && PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $filePathFromDocRoot)) {
@@ -196,28 +213,40 @@ class MainController extends SharedController
           if ($this->userWantsToStopEditing()) {
             return $this->stopEditing($filePath);
           }
-          $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+          $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
           if ($fm->userHasLock()) {
             // user has a lock for this page.
             $this->addSessionMessage('It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?', false);
           }
         }
       }
+    } else if (!$this->alreadyMoshed() && $this->userIsViewingPublicDraft($filePath)) {
+      // let ourselves know that we have already moshed this request.
+      $this->markMoshed();
+      return $this->forward('handleDraftActions', ['filePath' => $filePath]);
     }
     return [
       'action' => 'none',
     ];
   }
 
+  /**
+   * Handles requests for querying for information
+   *
+   * @param  string $filePath Path to the file we are wanting information for
+   * @return boolean
+   */
   private function handleQueryRequest($filePath)
   {
     $query = $this->getQueryFromRequest();
 
     switch ($query) {
       case 'hasSharedDraft':
-        $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+        $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
         $draft = $fm->getDraftForUser($this->getLoggedInUsername());
           return ($draft['type'] === Config::PUBLIC_DRAFT && !empty($draft['additionalUsers']));
+      default:
+          return false;
     }
   }
 
@@ -229,13 +258,13 @@ class MainController extends SharedController
    */
   private function stopEditing($filePath)
   {
-    if (Config::userIsEditingPublicDraft($filePath)) {
+    if ($this->userIsEditingPublicDraft($filePath)) {
       return $this->forward('stopEditingPublicDraft', ['filePath' => $filePath]);
     }
 
-    $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    $this->addMoshingActions($filePath);
+    $this->addMoshMenu();
     $fm->stopEditing();
 
     return [
@@ -253,7 +282,7 @@ class MainController extends SharedController
   private function handleNewPageRequest($filePath)
   {
     if ($this->userWantsToStopEditing()) {
-      $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+      $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
       $fm->stopEditing();
 
       if ($fm->userHasOpenDraft() && ($draft = $this->forward('showDraft', ['filePath' => $filePath, 'showSingle' => true]))) {
@@ -262,8 +291,9 @@ class MainController extends SharedController
           'value'  => $draft,
         ];
       }
-    } else if ($this->userWantsToEdit()) {
+    } else if ($this->userWantsToEdit() || $this->userIsSaving()) {
       // @todo this isn't finished
+      // @todo copy functionality should also live here?
       $creationResult = $this->createNewPage($filePath);
       if ($creationResult) {
         return [
@@ -272,34 +302,16 @@ class MainController extends SharedController
         ];
       } else {
         // something happened in the request. Probably failed to acquire a lock.
-        $fm = new FileManager($this->getLoggedInUsername(), $filePath);
+        $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
         if ($fm->userHasOpenDraft() && ($draft = $this->forward('showDraft', ['filePath' => $filePath, 'showSingle' => true]))) {
           return [
             'action' => 'return',
             'value'  => $draft,
           ];
+        } else {
+          // @todo should anything happen here?
         }
       }
-    }
-  }
-
-  /**
-   * Adds action buttons for moshing
-   *
-   * @param  string $filePath Path to the file we are moshing for
-   * @return  void
-   */
-  private function addMoshingActions($filePath)
-  {
-    if ($this->userWantsToEdit() || $this->userIsSaving()) {
-      Filters::add('userBox', function($content) {
-        // @todo make this remove concert stuff from the url
-        return $content . '<a href="?concert=stopEditing" class="button red concertEditPage">Stop Editing</a>';
-      });
-    } else {
-      Filters::add('userBox', function($content) {
-        return $content . '<a href="?concert=edit" class="button red concertEditPage">Edit Page</a>';
-      });
     }
   }
 
@@ -320,5 +332,31 @@ class MainController extends SharedController
     if (isset($moshActions['action'], $moshActions['value']) && $moshActions['action'] === 'return') {
       return $moshActions['value'];
     }
+  }
+
+  /**
+   * Handles autocomplete results for user names
+   *
+   * @param  array $args Array from routing
+   * @return string
+   */
+  public function autocompleteUser($args)
+  {
+    $value = $args['value'];
+
+    $results = Autocomplete::executeQuery($value, 'FirstName,LastName,Username',
+      ['Employee', 'Faculty', 'Administrator', 'Support Staff', 'Student'], 'Username,FirstName,LastName', null, false);
+
+    $return = [];
+    foreach ($results as $result) {
+      if (isset($result->FirstName, $result->LastName, $result->Username)) {
+        $return[] = [
+          'label' => sprintf('%s %s (%s)', $result->FirstName, $result->LastName, $result->Username),
+          'value' => $result->Username,
+        ];
+      }
+    }
+
+    return json_encode($return);
   }
 }

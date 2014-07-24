@@ -7,8 +7,7 @@
 
 namespace Gustavus\Concert\Test;
 
-use Gustavus\Test\TestObject,
-  Gustavus\Concert\FileManager,
+use Gustavus\Concert\FileManager,
   Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Concert\Config,
@@ -25,12 +24,6 @@ use Gustavus\Test\TestObject,
  */
 class FileManagerTest extends TestBase
 {
-  /**
-   * FileManager object to do our testing on
-   * @var FileManager
-   */
-  private $fileManager;
-
   /**
    * Sets up environment for every test
    *
@@ -59,18 +52,6 @@ class FileManagerTest extends TestBase
   {
     unset($this->fileManager);
     parent::tearDown();
-  }
-
-  /**
-   * Builds the FileManager object to use for testing
-   * @param  string $file Filename
-   * @param  string $user username
-   * @return void
-   */
-  private function buildFileManager($user, $file, $srcFilePath = null)
-  {
-    $this->fileManager = new TestObject(new FileManager($user, $file, $srcFilePath));
-    $this->fileManager->dbal = DBAL::getDBAL('testDB', $this->getDBH());
   }
 
   /**
@@ -414,8 +395,8 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $expected = [
       [
-        'destFilePath'    => self::$testFileDir . 'index.php',
-        'draftFileName'   => $this->fileManager->getDraftFileName(),
+        'destFilepath'    => self::$testFileDir . 'index.php',
+        'draftFilename'   => $this->fileManager->getDraftFileName(),
         'type'            => Config::PRIVATE_DRAFT,
         'username'        => 'testUser',
         'additionalUsers' => ['jerry', 'testUser1'],
@@ -427,6 +408,109 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $expected[0]['type'] = Config::PUBLIC_DRAFT;
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
     $this->assertSame($expected, $this->fileManager->getDrafts());
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getDraftNotAllowed()
+  {
+    self::removeFiles(self::$testFileDir);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $fileName = $this->fileManager->saveDraft(Config::PRIVATE_DRAFT, ['jerry', 'testUser1']);
+
+    $this->assertTrue(false !== $fileName);
+
+    $this->buildFileManager('arst', self::$testFileDir . 'index.php');
+    $this->assertFalse($this->fileManager->getDraft(basename($fileName)));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function addUsersToDraft()
+  {
+    self::removeFiles(self::$testFileDir);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry', 'testUser1']);
+
+    $this->assertTrue($draftFilePath !== false);
+
+    $this->assertTrue($this->fileManager->addUsersToDraft(basename($draftFilePath), ['bvisto']));
+
+    $draft = $this->fileManager->getDraft(basename($draftFilePath));
+    $this->assertSame(['bvisto'], $draft['additionalUsers']);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function addUsersToDraftNotOwned()
+  {
+    self::removeFiles(self::$testFileDir);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry', 'testUser1']);
+
+    $this->assertTrue($draftFilePath !== false);
+
+    $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
+
+    $this->assertFalse($this->fileManager->addUsersToDraft(basename($draftFilePath), ['bvisto']));
+
+    $draft = $this->fileManager->getDraft(basename($draftFilePath));
+    $this->assertSame(['jerry', 'testUser1'], $draft['additionalUsers']);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function addUsersToPrivateDraft()
+  {
+    self::removeFiles(self::$testFileDir);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PRIVATE_DRAFT, ['jerry', 'testUser1']);
+
+    $this->assertTrue($draftFilePath !== false);
+
+    $this->assertFalse($this->fileManager->addUsersToDraft(basename($draftFilePath), ['bvisto']));
+
+    $draft = $this->fileManager->getDraft(basename($draftFilePath));
+    $this->assertSame(['jerry', 'testUser1'], $draft['additionalUsers']);
+
     $this->destructDB();
   }
 
@@ -565,7 +649,7 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['adminUser', self::$testFileDir, 'admin']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['adminUser', self::$testFileDir, 'siteAdmin']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
@@ -578,6 +662,32 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->fileManager->username = 'adminUser';
     // admin user now has a draft
     $this->fileManager->saveDraft(Config::PRIVATE_DRAFT);
+
+    $this->assertSame(2, count($this->fileManager->findDraftsForCurrentUser()));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findDraftsForCurrentUserMultiplePublicDrafts()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['adminUser', self::$testFileDir, 'admin']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    // simulate new file manager for the admin user
+    $this->fileManager->username = 'adminUser';
+    // admin user now has a draft
+    $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
     $this->assertSame(2, count($this->fileManager->findDraftsForCurrentUser()));
     $this->destructDB();
@@ -643,8 +753,8 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->assertSame(1, count($result));
 
     $expected = [[
-      'destFilePath'    => self::$testFileDir . 'index.php',
-      'draftFileName'   => $this->fileManager->getDraftFileName('testUser1'),
+      'destFilepath'    => self::$testFileDir . 'index.php',
+      'draftFilename'   => $this->fileManager->getDraftFileName('testUser1'),
       'type'            => Config::PUBLIC_DRAFT,
       'username'        => 'testUser1',
       'additionalUsers' => null,
@@ -708,8 +818,8 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->assertSame(1, count($result));
 
     $expected = [[
-      'destFilePath'    => self::$testFileDir . 'index.php',
-      'draftFileName'   => $this->fileManager->getDraftFileName('testUser1'),
+      'destFilepath'    => self::$testFileDir . 'index.php',
+      'draftFilename'   => $this->fileManager->getDraftFileName('testUser1'),
       'type'            => Config::PUBLIC_DRAFT,
       'username'        => 'testUser1',
       'additionalUsers' => null,
@@ -990,64 +1100,89 @@ echo $config["content"];';
    */
   public function userCanEditFilePublicDraft()
   {
+    $this->constructDB(['Drafts', 'Permissions', 'Sites', 'Locks']);
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', ['admin', 'test']]);
+
     $this->buildFileManager('jerry', '/billy/files/testFile');
-    if (Config::userIsEditingPublicDraft('/billy/files/testFile')) {
-      $this->fileManager->setUserIsEditingPublicDraft();
-    }
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->assertTrue($draftFilePath !== false);
+
+    $this->buildFileManager('jerry', $draftFilePath);
+
+
+    $this->fileManager->setUserIsEditingDraft();
+
+
+    $draft = $this->fileManager->getDraft($this->fileManager->getDraftFileName());
+
     $this->assertTrue($this->fileManager->userCanEditFile());
+    $this->destructDB();
   }
 
   /**
    * @test
    */
-  public function userIsEditingPublicDraft()
+  public function userCanEditFilePublicDraftFalse()
   {
+    $this->constructDB(['Drafts', 'Permissions', 'Sites', 'Locks']);
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', ['admin', 'test']]);
 
-    $this->assertTrue(Config::userIsEditingPublicDraft('/billy/files/testFile'));
+    $this->buildFileManager('jerry', '/billy/files/testFile');
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->assertTrue($draftFilePath !== false);
+
+    $this->buildFileManager('bvisto', $draftFilePath);
+
+
+    $this->fileManager->setUserIsEditingDraft();
+
+
+    $draft = $this->fileManager->getDraft($this->fileManager->getDraftFileName());
+
+    $this->assertFalse($this->fileManager->userCanEditFile());
+    $this->destructDB();
   }
 
   /**
    * @test
    */
-  public function userIsEditingPublicDraftFalse()
+  public function userCanEditFilePublicDraftShared()
   {
-    $_SERVER['REQUEST_URI'] = 'nothing';
+    $this->constructDB(['Drafts', 'Permissions', 'Sites', 'Locks']);
+    $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', ['admin', 'test']]);
 
-    $this->assertFalse(Config::userIsEditingPublicDraft('/billy/files/testFile'));
-  }
+    $this->buildFileManager('jerry', '/billy/files/testFile');
 
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraftFromFilePath()
-  {
-    $_SERVER['REQUEST_URI'] = 'nothing';
-    $filePath = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+    $this->fileManager->fileConfiguration = $configuration;
 
-    $this->assertTrue(Config::userIsEditingPublicDraft($filePath));
-  }
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
 
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraftFromFilePathFalse()
-  {
-    $_SERVER['REQUEST_URI'] = 'nothing';
-    $filePath = '/cis/www/billy/testFile';
+    $this->assertTrue($draftFilePath !== false);
 
-    $this->assertFalse(Config::userIsEditingPublicDraft($filePath));
-  }
+    $this->buildFileManager('bvisto', $draftFilePath);
 
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraftExtraQueryParams()
-  {
-    $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']) . '?concert=test';
 
-    $this->assertTrue(Config::userIsEditingPublicDraft('/billy/files/testFile'));
+    $this->fileManager->setUserIsEditingDraft();
+
+
+    $draft = $this->fileManager->getDraft($this->fileManager->getDraftFileName());
+
+    $this->assertTrue($this->fileManager->userCanEditFile());
+    $this->destructDB();
   }
 
   /**
@@ -1086,9 +1221,9 @@ echo $config["content"];';
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']) . '?concert=test';
 
     $this->buildFileManager('jerry', '/billy/files/testFile');
-    if (Config::userIsEditingPublicDraft('/billy/files/testFile')) {
-      $this->fileManager->setUserIsEditingPublicDraft();
-    }
+
+    $this->fileManager->setUserIsEditingDraft();
+
     $this->assertSame(Config::PUBLIC_ACCESS_LEVEL, $this->fileManager->forceAccessLevel());
   }
 
@@ -1108,10 +1243,14 @@ echo $config["content"];';
    */
   public function userCanEditPartPublicAccessLevel()
   {
+    $this->constructDB(['Sites', 'Permissions']);
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']) . '?concert=test';
 
     $this->buildFileManager('bvisto', '/billy/files/testFile');
+    $this->assertFalse($this->fileManager->userCanEditPart('Title'));
+    $this->fileManager->setUserIsEditingDraft();
     $this->assertTrue($this->fileManager->userCanEditPart('Title'));
+    $this->destructDB();
   }
 
   /**
@@ -1257,6 +1396,7 @@ echo $config["content"];';
   public function acquireLockNew()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test']);
 
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->assertTrue($this->fileManager->acquireLock());
@@ -1281,6 +1421,129 @@ echo $config["content"];';
 
     $this->buildFileManager('testUser', '/billy/files/private.php');
     $this->assertTrue($this->fileManager->acquireLock());
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function acquireLockDraft()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry', 'testUser']);
+
+    $this->assertTrue($draftFilePath !== false);
+
+    $this->buildFileManager('testUser', $draftFilePath);
+    $this->fileManager->setUserIsEditingDraft();
+
+    $draft = $this->fileManager->getDraft(basename($draftFilePath));
+
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $fileName = $draft['destFilepath'];
+
+    $this->buildFileManager('testUser', $fileName);
+    $this->assertNotSame($fileName, $draftFilePath);
+    $lock = $this->fileManager->getLockFromDB();
+    // make sure lock has been acquired for the file the draft represents
+    $this->assertNotEmpty($lock);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function acquireLockSharedDraft()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
+
+    $this->assertTrue($draftFilePath !== false);
+    $this->fileManager->stopEditing();
+
+    $this->buildFileManager('jerry', $draftFilePath);
+    $this->fileManager->setUserIsEditingDraft();
+    $this->assertTrue($this->fileManager->userIsEditingDraft);
+
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $draft = $this->fileManager->getDraft(basename($draftFilePath));
+
+    $fileName = $draft['destFilepath'];
+
+    // hang onto this file manager so we can test releasing the locks
+    $fm1 = $this->fileManager;
+
+    $this->buildFileManager('jerry', $fileName);
+    $this->assertNotSame($fileName, $draftFilePath);
+    $lock = $this->fileManager->getLockFromDB();
+    // make sure lock has been acquired for the file the draft represents
+    $this->assertNotEmpty($lock);
+
+    $fm1->stopEditing();
+
+    $lock = $fm1->getLockFromDB();
+    $this->assertEmpty($lock);
+
+    $lock = $this->fileManager->getLockFromDB();
+    $this->assertEmpty($lock);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function acquireLockSharedDraftNotSettingIsEditingDraft()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
+
+    $this->assertTrue($draftFilePath !== false);
+    $this->fileManager->stopEditing();
+
+    $this->buildFileManager('jerry', $draftFilePath);
+
+    $draft = $this->fileManager->getDraft(basename($draftFilePath));
+
+    // we didn't set that the user is editing a draft. This person shouldn't have access.
+    $this->assertFalse($this->fileManager->acquireLock());
+
+    $fileName = $draft['destFilepath'];
+
+    $this->buildFileManager('jerry', $fileName);
+    $this->assertNotSame($fileName, $draftFilePath);
+    $lock = $this->fileManager->getLockFromDB();
+    // make sure lock has not been acquired for the file the draft represents
+    $this->assertEmpty($lock);
 
     $this->destructDB();
   }
@@ -1316,7 +1579,7 @@ echo $config["content"];';
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
     $this->assertTrue($this->fileManager->acquireLock());
-    $this->assertContains(self::$testFileDir, $this->fileManager->stageFile());
+    $this->assertTrue($this->fileManager->stageFile());
 
      $expected = '<?php
 // use template getter...
@@ -1380,13 +1643,15 @@ echo $config["content"];';
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
-    $result = $this->fileManager->stageFile();
+    $this->assertTrue($this->fileManager->stageFile());
 
-    $this->buildFileManager('bvisto', $result);
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->buildFileManager('bvisto', $filePath);
     $stagedEntry = $this->fileManager->getStagedFileEntry();
     $this->assertNotEmpty($stagedEntry);
 
-    $this->fileManager->markStagedFileAsPublished($result);
+    $this->fileManager->markStagedFileAsPublished($filePath);
 
     $stagedEntry = $this->fileManager->getStagedFileEntry();
     $this->assertEmpty($stagedEntry);
@@ -1407,12 +1672,14 @@ echo $config["content"];';
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
 
     // file is staged, now we can publish it.
     // re-create our fileManager with the staged file
-    $this->buildFileManager('bvisto', $result);
+    $this->buildFileManager('bvisto', $filePath);
     try {
       $this->fileManager->publishFile();
     } catch (\RuntimeException $e) {
@@ -1439,18 +1706,20 @@ echo $config["content"];';
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
     $this->assertTrue($this->fileManager->acquireLock());
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
 
     // file is staged, now we can publish it.
     // re-create our fileManager with the staged file
-    $this->buildFileManager('root', $result);
+    $this->buildFileManager('root', $filePath);
 
-    $this->assertTrue(file_exists($result));
+    $this->assertTrue(file_exists($filePath));
 
     $this->assertTrue($this->fileManager->publishFile());
 
-    $this->assertFalse(file_exists($result));
+    $this->assertFalse(file_exists($filePath));
     $this->assertTrue(file_exists(self::$testFileDir . 'index.php'));
     $this->destructDB();
   }
@@ -1470,20 +1739,26 @@ echo $config["content"];';
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
     $this->assertTrue($this->fileManager->acquireLock());
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
+
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
 
     $this->assertTrue($this->fileManager->destroyLock());
 
     $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
+
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
 
     // file is staged, now we can publish it.
     // re-create our fileManager with the staged file
-    $this->buildFileManager('root', $result);
+    $this->buildFileManager('root', $filePath);
 
-    $this->assertTrue(file_exists($result));
+    $this->assertTrue(file_exists($filePath));
 
     try {
       $this->fileManager->publishFile();
@@ -1508,21 +1783,26 @@ echo $config["content"];';
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
     $this->assertTrue($this->fileManager->acquireLock());
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
 
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
 
     // file is staged, now we can publish it.
     // re-create our fileManager with the staged file
-    $this->buildFileManager('root', $result);
+    $this->buildFileManager('root', $filePath);
 
-    $this->assertTrue(file_exists($result));
+    $this->assertTrue(file_exists($filePath));
 
     $this->assertTrue($this->fileManager->publishFile());
 
-    $this->assertFalse(file_exists($result));
+    $this->assertFalse(file_exists($filePath));
     $this->assertTrue(file_exists(self::$testFileDir . 'index.php'));
     $this->destructDB();
   }
@@ -1553,13 +1833,15 @@ echo $config["content"];';
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
-    $result = $this->fileManager->stageFile();
-    $this->assertContains(self::$testFileDir, $result);
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
     PermissionsManager::deleteUserFromSite('bvisto', self::$testFileDir);
 
     // file is staged, now we can publish it.
     // re-create our fileManager with the staged file
-    $this->buildFileManager('root', $result);
+    $this->buildFileManager('root', $filePath);
 
     $this->assertFalse($this->fileManager->publishFile());
     $this->destructDB();

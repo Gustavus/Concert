@@ -6,8 +6,6 @@
 
 namespace Gustavus\Concert;
 
-use Gustavus\Concourse\RoutingUtil;
-
 /**
  * Configuration class
  *
@@ -50,6 +48,11 @@ class Config
    * JS version
    */
   const JS_VERSION = 1;
+
+  /**
+   * Autocomplete JS version
+   */
+  const AUTOCOMPLETE_JS_VERSION = 1;
 
   /**
    * tinyMCE version
@@ -107,6 +110,11 @@ class Config
   const LOCK_NOT_AQUIRED_MESSAGE = 'It looks like we couldn\'t acquire a lock to edit this page.';
 
   /**
+   * Generic message to display if something unexpected happens
+   */
+  const GENERIC_ERROR_MESSAGE = 'Oops! Something unexpected happened. Please try your request again, or contact <a href="mailto:web@gustavus.edu">web@gustavus.edu</a>.';
+
+  /**
    * Note to let people know they are looking at a draft
    */
   const DRAFT_NOTE = 'Note: You are viewing a draft and not a published page.';
@@ -119,9 +127,13 @@ class Config
   /**
    * Admin access level. This person is an administrator for this site.
    */
+  const SITE_ADMIN_ACCESS_LEVEL  = 'siteAdmin';
+  /**
+   * Admin access level. This person is a global administrator for all sites.
+   */
   const ADMIN_ACCESS_LEVEL  = 'admin';
   /**
-   * Super User access level. This person is a global administrator for all sites.
+   * Super User access level. This person is a global administrator for all sites with access to edit pages and drafts.
    */
   const SUPER_USER  = 'superUser';
 
@@ -134,6 +146,47 @@ class Config
     'accessLevel'   => [self::SUPER_USER],
     'includedFiles' => null,
     'excludedFiles' => null,
+  ];
+
+  /**
+   * Global permissions for super users
+   *
+   * @var array
+   */
+  public static $adminPermissions = [
+    'accessLevel'   => [self::ADMIN_ACCESS_LEVEL],
+    'includedFiles' => null,
+    'excludedFiles' => null,
+  ];
+
+  /**
+   * AccessLevels that can't edit files
+   *
+   * @var array
+   */
+  public static $nonEditableAccessLevels = [];
+
+  /**
+   * AccessLevels that can't publish files
+   *
+   * @var array
+   */
+  public static $nonPublishingAccessLevels = [];
+
+  /**
+   * AccessLevels that can't create new files
+   *
+   * @var array
+   */
+  public static $nonCreationAccessLevels = [];
+
+  /**
+   * AccessLevels that can publish drafts for other people
+   *
+   * @var array
+   */
+  public static $publishPendingDraftsAccessLevels = [
+    'siteAdmin'
   ];
 
   /**
@@ -184,36 +237,6 @@ class Config
    */
   public static $editablePHPExprTypes = [
     'Scalar_String',
-  ];
-
-  /**
-   * AccessLevels that can't edit files
-   *
-   * @var array
-   */
-  public static $nonEditableAccessLevels = [];
-
-  /**
-   * AccessLevels that can't publish files
-   *
-   * @var array
-   */
-  public static $nonPublishingAccessLevels = [];
-
-  /**
-   * AccessLevels that can't create new files
-   *
-   * @var array
-   */
-  public static $nonCreationAccessLevels = [];
-
-  /**
-   * AccessLevels that can publish drafts for other people
-   *
-   * @var array
-   */
-  public static $publishPendingDraftsAccessLevels = [
-    'admin'
   ];
 
   /**
@@ -293,21 +316,5 @@ class Config
   public static function removeDocRootFromPath($filePath)
   {
     return str_replace($_SERVER['DOCUMENT_ROOT'], '', $filePath);
-  }
-
-  /**
-   * Checks to see if the user is editing a public draft
-   *
-   * @param  string $requestURI The uri to the page the user is sitting at
-   * @return boolean
-   */
-  public static function userIsEditingPublicDraft($requestURI)
-  {
-    $editDraftUrl = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => basename($requestURI)]);
-
-    if ((isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], $editDraftUrl) !== false) || strpos($requestURI, $editDraftUrl) !== false) {
-      return true;
-    }
-    return false;
   }
 }
