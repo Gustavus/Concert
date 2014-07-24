@@ -326,7 +326,10 @@ class PermissionsManager
       return null;
     }
 
-    if (self::isUserSuperUser($perms)) {
+    if (self::isUserSuperUser($username)) {
+      return Config::$superUserPermissions;
+    }
+    if (self::isUserAdmin($username)) {
       return Config::$superUserPermissions;
     }
     if (isset($perms[$siteRoot])) {
@@ -339,13 +342,35 @@ class PermissionsManager
   /**
    * Checks to see if the user is a super user.
    *
-   * @param  array   $permissions Permissions of the user
+   * @param  string   $username Username to check
    * @return boolean
    */
-  private static function isUserSuperUser(array $permissions)
+  private static function isUserSuperUser($username)
   {
-    $accessLevels = self::getAccessLevelsFromPermissions($permissions);
+    $perms = self::getAllPermissionsForUser($username);
+
+    if (empty($perms)) {
+      return false;
+    }
+    $accessLevels = self::getAccessLevelsFromPermissions($perms);
     return in_array(Config::SUPER_USER, $accessLevels);
+  }
+
+  /**
+   * Checks to see if the user is a super user.
+   *
+   * @param  string   $username Username to check
+   * @return boolean
+   */
+  private static function isUserAdmin($username)
+  {
+    $perms = self::getAllPermissionsForUser($username);
+
+    if (empty($perms)) {
+      return false;
+    }
+    $accessLevels = self::getAccessLevelsFromPermissions($perms);
+    return in_array(Config::ADMIN_ACCESS_LEVEL, $accessLevels);
   }
 
   /**
@@ -524,6 +549,35 @@ class PermissionsManager
     self::getCache()->setValue(self::buildCacheKey($username), $returnArray, $ttl);
 
     return $returnArray;
+  }
+
+  /**
+   * Checks if a user can edit the specified draft
+   *
+   * @param  string $username Username of the user to check
+   * @param  array  $draft    Draft to check
+   * @return boolean
+   */
+  public static function userCanEditDraft($username, $draft)
+  {
+    if ((!empty($draft['additionalUsers']) && in_array($username, $draft['additionalUsers']) && $draft['type'] === Config::PUBLIC_DRAFT) || $username === $draft['username']) {
+      // user either owns the draft or has access to edit this public draft.
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Checks to see if the specified username is the owner of the draft
+   *
+   * @param  string $username Username of the user to check
+   * @param  array  $draft    Draft to check
+   * @return boolean
+   */
+  public static function userOwnsDraft($username, $draft)
+  {
+    return ($draft['username'] === $username);
   }
 
   // DB actions

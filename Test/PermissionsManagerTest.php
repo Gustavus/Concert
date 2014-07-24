@@ -216,11 +216,11 @@ class PermissionsManagerTest extends TestBase
   public function getUserPermissionsForSite()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'admin']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'siteAdmin']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*', 'private/*']);
 
-    $expected = ['accessLevel' => ['admin'], 'includedFiles' => null, 'excludedFiles' => null];
+    $expected = ['accessLevel' => ['siteAdmin'], 'includedFiles' => null, 'excludedFiles' => null];
 
     $this->assertSame($expected, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
 
@@ -276,7 +276,7 @@ class PermissionsManagerTest extends TestBase
   public function userCanEditFileSpecificFileExcluded()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*,files/private.php']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*', 'private/*,files/private.php']);
 
     $this->assertFalse(PermissionsManager::userCanEditFile('bvisto', '/arst/files/private.php'));
 
@@ -302,7 +302,7 @@ class PermissionsManagerTest extends TestBase
   public function userCanEditFileExcluded()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*,secure']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*', 'private/*,secure']);
 
     $this->assertFalse(PermissionsManager::userCanEditFile('bvisto', '/arst/private/public.php'));
 
@@ -496,9 +496,9 @@ class PermissionsManagerTest extends TestBase
   public function userCanPublishPendingDrafts()
   {
     $origPublishPendingDraftsAL = Config::$publishPendingDraftsAccessLevels;
-    Config::$publishPendingDraftsAccessLevels = ['admin'];
+    Config::$publishPendingDraftsAccessLevels = ['siteAdmin'];
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*,private/files', 'private/*,secure']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertTrue(PermissionsManager::userCanPublishPendingDrafts('bvisto', '/arst/protected/arst.php'));
 
@@ -676,21 +676,38 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
-  public function isUserSuperUser()
+  public function userCanEditDraft()
   {
-    $perms = [
-      '/billy/concert' => [
-        'accessLevel'   => ['admin'],
-        'includedFiles' => null,
-        'excludedFiles' => null,
-      ],
-      '*' => [
-        'accessLevel'   => [Config::SUPER_USER],
-        'includedFiles' => null,
-        'excludedFiles' => null,
-      ]
+    $draft = [
+      'username'        => 'bvisto',
+      'additionalUsers' => ['jerry'],
+      'type'            => Config::PUBLIC_DRAFT,
     ];
 
-    $this->assertTrue($this->call('PermissionsManager', 'isUserSuperUser', [$perms]));
+    $this->assertTrue(PermissionsManager::userCanEditDraft('jerry', $draft));
+  }
+
+  /**
+   * @test
+   */
+  public function isUserSuperUser()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', Config::SUPER_USER]);
+
+    $this->assertTrue($this->call('PermissionsManager', 'isUserSuperUser', ['bvisto']));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function isUserAdmin()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', Config::ADMIN_ACCESS_LEVEL]);
+
+    $this->assertTrue($this->call('PermissionsManager', 'isUserAdmin', ['bvisto']));
+    $this->destructDB();
   }
 }
