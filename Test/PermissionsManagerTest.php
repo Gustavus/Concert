@@ -247,6 +247,42 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function getSitesFromBase()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $actual = $this->call('PermissionsManager', 'getSitesFromBase', ['/arst']);
+
+    $this->assertSame(['/arst/private/', '/arst/private/arst/'], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersSiteForFileSuperUser()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', Config::SUPER_USER]);
+
+    $this->assertSame('/arst/private/', $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/private/public.php']));
+
+
+    $this->assertSame('/arst/private/arst/', $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/private/arst/public.php']));
+    $this->assertSame(null, $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/public.php']));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function userCanEditFileNoExcludes()
   {
     $this->constructDB(['Sites', 'Permissions']);

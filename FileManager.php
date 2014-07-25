@@ -583,7 +583,7 @@ class FileManager
       $drafts[$userDraft['draftFilename']] = $userDraft;
     }
 
-    if (PermissionsManager::userCanPublishPendingDrafts($this->username, $this->filePath)) {
+    if (PermissionsManager::userCanPublishPendingDrafts($this->username, Config::removeDocRootFromPath($this->filePath))) {
       // user has access to publish pending drafts
       $pendingDrafts = $this->getDrafts([Config::PENDING_PUBLISH_DRAFT, Config::PUBLIC_DRAFT]);
       if (!empty($pendingDrafts)) {
@@ -620,14 +620,21 @@ class FileManager
   /**
    * Throws a file into a staging state waiting to be moved to it's actual location
    *
+   * @param string $destFilePath  Destination file path
    * @return boolean True on success, false on failure.
    */
-  public function stageFile()
+  public function stageFile($action = null)
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
       return false;
     }
+
+    if ($action === null) {
+      // set the dest file path to the current file path if nothing is specified
+      $action = Config::PUBLISH_STAGE;
+    }
+
     // throw the new file into the pending updates table and throw the file in the staging directory
     $fileHash = $this->getFilePathHash();
     $dbal = $this->getDBAL();
@@ -636,10 +643,12 @@ class FileManager
       'destFilepath' => $this->filePath,
       'srcFilename'  => $fileHash,
       'username'     => $this->username,
+      'action'       => $action,
       'date'         => new DateTime,
     ];
 
     $propertyTypes = [
+      null,
       null,
       null,
       null,
@@ -694,11 +703,17 @@ class FileManager
 
     $result = reset($result);
 
+    if ($result['action'] === Config::DELETE_STAGE) {
+      // we are trying to delete this file
+      return $this->deleteFile();
+    }
+
     // now we set our current username to be the username that staged the file, so we can check permissions and publish it for them
     $this->username = $result['username'];
     // this->filePath will more than likely live in a site that no one has access to.
     $srcFilePath = $this->filePath;
     $destination = $result['destFilepath'];
+
     $this->filePath = $destination;
 
     if (!$this->acquireLock()) {
@@ -727,6 +742,171 @@ class FileManager
   }
 
   /**
+   * Stages a file for deletion
+   *
+   * @return boolean
+   */
+  public function stageForDeletion()
+  {
+    return $this->stageFile(Config::DELETE_STAGE);
+  }
+
+  /**
+   * Deletes a file
+   *
+   * @throws RuntimeException If the current user is not root
+   * @return boolean
+   */
+  private function deleteFile()
+  {
+    if ($this->username !== 'root') {
+      throw new RuntimeException('Only root can publish files');
+    }
+
+    // get stagedFile waiting to be published
+    $result = $this->getStagedFileEntry();
+
+    if (empty($result)) {
+      // nothing to delete
+      return false;
+    }
+
+    if (count($result) > 1) {
+      $stagedUsername = null;
+      foreach ($result as $resultPiece) {
+        if ($stagedUsername === null) {
+          // initial set.
+          $stagedUsername = $resultPiece['username'];
+        } else if ($stagedUsername !== $resultPiece['username']) {
+          throw new RuntimeException(sprintf('More than one staged file entry for the file: "%s" was found for different users', basename($this->filePath)));
+        }
+      }
+    }
+
+    $result = reset($result);
+
+    if ($result['action'] !== Config::DELETE_STAGE) {
+      // the latest staging for this file isn't a delete.
+      return false;
+    }
+
+    $srcFilePath = $this->filePath;
+    $this->filePath = $result['destFilepath'];
+
+    // now we set our current username to be the username that staged the file, so we can check permissions and delete it for them
+    $this->username = $result['username'];
+
+    if (!$this->acquireLock()) {
+      // current user doesn't have a lock on this file. They shouldn't be able to do anything.
+      return false;
+    }
+
+    // now to delete the file
+    // if (is_dir($file)) {
+    //   // @todo can we delete directories
+    // }
+
+    if ($this->removeFile()) {
+      unlink($srcFilePath);
+      if (!$this->markStagedFileAsPublished($srcFilePath)) {
+        trigger_error(sprintf('The file: "%s" was moved to "%s", but could not be marked as published in the DB', $srcFilePath, $this->filePath));
+      }
+      return true;
+    } else {
+      unlink($srcFilePath);
+      return false;
+    }
+  }
+
+  /**
+   * Removes the specified file.
+   *   Safe check in place to not delete the site
+   *
+   * @param  string $site Site we are removing the file from
+   * @return boolean
+   */
+  private function removeFile()
+  {
+    $site = PermissionsManager::findUsersSiteForFile($this->username, Config::removeDocRootFromPath($this->filePath));
+
+    if (empty($site) || strpos($this->filePath, $site) === false) {
+      // we can't find a site for the file to remove.
+      // Don't do anything
+      return false;
+    }
+    if (substr($site, -1) !== '/') {
+      $site = dirname($site);
+    }
+
+    if ($this->filePath === $site) {
+      // we are at the base of our site. We don't want to delete this.
+      return false;
+    }
+
+    if (is_dir($this->filePath)) {
+      if (self::removeFiles($this->filePath)) {
+        return self::removeEmptyParentDirectories($this->filePath, $site);
+      }
+    } else {
+      if (unlink($this->filePath)) {
+        // we also need to remove the directory if this was the only file here.
+        return self::removeEmptyParentDirectories($this->filePath, $site);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Recursively removes empty parent directories up to the specified site
+   *
+   * @param  string $file File or Directory to remove the parents for.
+   * @param  string $site Site the operations are being run for
+   * @return boolean
+   */
+  private static function removeEmptyParentDirectories($file, $site)
+  {
+    if (is_dir($file)) {
+      $dir = $file;
+    } else {
+      $dir = dirname($file);
+    }
+
+    if (rtrim($dir, '/') === rtrim($site, '/')) {
+      // we are at the base of our site. We don't want to delete this.
+      return true;
+    }
+
+    if (count(scandir($dir)) === 2) {
+      rmdir($dir);
+      return self::removeEmptyParentDirectories(dirname($dir), $site);
+    }
+    return true;
+  }
+
+  /**
+   * Removes all files from a directory, but not the directory itself
+   * @param  string $dir Directory to remove files from
+   * @return boolean
+   */
+  private static function removeFiles($dir)
+  {
+    $files = scandir($dir);
+    foreach ($files as $file) {
+      if ($file === '.' || $file === '..') {
+        continue;
+      }
+      $file = $dir . '/' . $file;
+      if (is_dir($file)) {
+        self::removeFiles($file);
+        $result = rmdir($file);
+        continue;
+      }
+      $result = unlink($file);
+    }
+    return $result;
+  }
+
+  /**
    * Gets the stagedFile entry from the DB
    *   <strong>Note:</strong> This should only be called by publishFile.
    *
@@ -739,6 +919,7 @@ class FileManager
     $qb = $dbal->createQueryBuilder();
     $qb->addSelect('destFilepath')
       ->addSelect('username')
+      ->addSelect('action')
       ->from('stagedFiles', 'sf')
       ->where('srcFilename = :srcFilename')
       ->andWhere('publishedDate IS NULL')
@@ -841,15 +1022,10 @@ class FileManager
    */
   public function userCanEditPart($partName)
   {
-    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
-    if (strpos($this->filePath, $docRoot) === 0) {
-      $filePath = substr($this->filePath, strlen($docRoot));
-    } else {
-      $filePath = $this->filePath;
-    }
     if (($accessLevel = $this->forceAccessLevel())) {
       return PermissionsManager::accessLevelCanEditPart($accessLevel, $partName);
     }
+    $filePath = Config::removeDocRootFromPath($this->filePath);
     return PermissionsManager::userCanEditPart($this->username, $filePath, $partName);
   }
 
@@ -903,12 +1079,8 @@ class FileManager
 
       return PermissionsManager::userCanEditDraft($this->username, $draft);
     }
-    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
-    if (strpos($this->filePath, $docRoot) === 0) {
-      $filePath = substr($this->filePath, strlen($docRoot));
-    } else {
-      $filePath = $this->filePath;
-    }
+
+    $filePath = Config::removeDocRootFromPath($this->filePath);
     return PermissionsManager::userCanEditFile($this->username, $filePath);
   }
 

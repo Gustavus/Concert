@@ -43,6 +43,13 @@ class StagedFiles
     private $username;
 
     /**
+     * @var string
+     *
+     * @Column(name="action", type="string", length=32, nullable=false)
+     */
+    private $action;
+
+    /**
      * @var \DateTime
      *
      * @Column(name="date", type="datetime", nullable=false)

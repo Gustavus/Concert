@@ -227,6 +227,18 @@ class MenuController extends SharedController
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)){
       return;
     }
+
+    if (PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
+      $query['concert'] = 'delete';
+      $this->menu[] = [
+        'id'       => 'deletePage',
+        'text'     => 'Delete Page',
+        'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+        'thickbox' => true,
+        'classes'  => 'red',
+      ];
+    }
+
     if ($this->userWantsToEdit() || $this->userIsSaving()) {
       $query['concert'] = 'stopEditing';
       $this->menu[] = [

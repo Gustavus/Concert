@@ -9,6 +9,8 @@ namespace Gustavus\Concert\Controllers;
 use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
+  Gustavus\Utility\String,
+  Gustavus\Utility\PageUtil,
   Gustavus\Concert\PermissionsManager,
   Campus\Utility\Autocomplete,
   InvalidArgumentException;
@@ -140,6 +142,87 @@ class MainController extends SharedController
   }
 
   /**
+   * Handles deleting a file
+   *
+   * @param  string $filePath Path to the file to delete
+   * @return string|boolean String for confirmation, boolean otherwise
+   */
+  private function deleteFile($filePath)
+  {
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
+
+    if (!file_exists($filePath)) {
+      return $this->redirect(dirname(Config::removeDocRootFromPath($filePath)));
+    }
+
+    if (!$fm->userCanEditFile()) {
+      $this->addSessionMessage('Oops! It appears that you don\'t have access to edit this file');
+      return false;
+    }
+
+    if (!$fm->acquireLock()) {
+      $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      return false;
+    }
+
+    if ($fm->draftExists()) {
+      // someone has a draft open for this page.
+      $this->addSessionMessage('someone has a draft open for this page.', false);
+    }
+
+    if ($this->getMethod() === 'POST' && isset($_POST['filePath'], $_POST['concertAction'], $_POST['deleteAction'])) {
+
+      if ($_POST['deleteAction'] === 'confirmDelete' && urldecode($_POST['filePath']) === $filePath && $fm->stageForDeletion()) {
+        if (isset($_GET['barebones'])) {
+          $url = (new String(Config::removeDocRootFromPath(dirname($filePath))))->getValue();
+          // @todo what should we do here?
+          return ['action' => 'return', 'value' => true];
+        } else {
+          return PageUtil::renderPageNotFound(true);
+        }
+      } else if ($_POST['deleteAction'] === 'cancelDelete') {
+        $fm->stopEditing();
+        $url = (new String(Config::removeDocRootFromPath(dirname($filePath))))->getValue();
+        if (isset($_GET['barebones'])) {
+          return true;
+        } else {
+          return $this->redirect($url);
+        }
+      }
+    }
+
+    if (isset($_GET['barebones'])) {
+      $scripts = '<script type="text/javascript">
+            $(\'#concertDelete .deleteAction\').click(function(e) {
+              e.preventDefault();
+              var form = $(this).parents(\'form\');
+              var action = $(this).attr(\'value\');
+
+              var url  = form.attr(\'action\');
+              var data = form.serialize();
+              data += \'&deleteAction=\' + action;
+              $.post(url, data, function(response) {
+                $(\'#concertDelete .deleteAction\').colorbox.close();
+
+                if (response) {
+                  alert(\'This page has been deleted.\');
+                }
+              }, \'json\')
+            })
+          </script>';
+    } else {
+      $scripts = '';
+    }
+
+    // confirmation form
+    $return = [
+      'action' => 'return',
+      'value'  => $this->renderTemplate('confirmDelete.html.twig', ['actionUrl' => $_SERVER['REQUEST_URI'], 'filePath' => urlencode($filePath), 'scripts' => $scripts]),
+    ];
+    return $return;
+  }
+
+  /**
    * Checks for any requests for users already working in Concert and also checks to see if it can add anything into the Template such as edit options or other actions.
    * Returns an array of actions to take.
    * Return Values:
@@ -177,6 +260,10 @@ class MainController extends SharedController
         return $this->stopEditing($filePath);
       }
 
+      if ($this->userIsDeleting()) {
+        return $this->deleteFile($filePath);
+      }
+
       $isEditingPublicDraft = false;
       // check if it is a draft request
       if ($this->isDraftRequest() || ($isEditingPublicDraft = $this->userIsEditingPublicDraft($filePath))) {
@@ -191,7 +278,7 @@ class MainController extends SharedController
       // check to see if the user has access to edit this page
       if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
 
-        //$this->addMoshMenu();
+        $this->addMoshMenu();
         $this->setSessionMessage(null, false);
 
         if (!file_exists($filePath) && PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $filePathFromDocRoot)) {

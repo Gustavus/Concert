@@ -8,7 +8,8 @@ namespace Gustavus\Concert;
 
 use Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
-  Gustavus\GACCache\GlobalCache;
+  Gustavus\GACCache\GlobalCache,
+  Gustavus\Utility\Set;
 
 /**
  * Class for managing a specific file
@@ -192,6 +193,40 @@ class PermissionsManager
    * @param  string $filePath Absolute path from the doc root to the file in question
    * @return boolean
    */
+  public static function userCanDeletePage($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (is_array($sitePerms['accessLevel'])) {
+      // make sure the array contains non-empty values
+      $sitePerms['accessLevel'] = array_filter($sitePerms['accessLevel']);
+    }
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits creating new pages.
+    foreach ($sitePerms['accessLevel'] as $accessLevel) {
+      if (in_array($accessLevel, Config::$nonDeletionAccessLevels)) {
+        // the current user's access level doesn't allow creating
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Checks to see if the specified user can create new pages or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
   public static function userCanPublishPendingDrafts($username, $filePath)
   {
     $site = self::findUsersSiteForFile($username, $filePath);
@@ -280,9 +315,17 @@ class PermissionsManager
    * @param  string $filePath Path to the file we are searching for a site for.
    * @return string|null String if a site is found, null otherwise.
    */
-  private static function findUsersSiteForFile($username, $filePath)
+  public static function findUsersSiteForFile($username, $filePath)
   {
-    $sites = self::getUsersSites($username);
+    $filePathArray = explode('/', str_replace('//', '/', $filePath));
+
+    if (self::isUserAdmin($username) || self::isUserSuperUser($username)) {
+      // user might not have a site for this file, but they have global access to all sites.
+      // We need to find sites for them
+      $sites = self::getSitesFromBase($filePathArray[0]);
+    } else {
+      $sites = self::getUsersSites($username);
+    }
     if (empty($sites)) {
       return null;
     }
@@ -293,7 +336,6 @@ class PermissionsManager
       $adjustedSites[$key] = str_replace('//', '/', $site);
     }
 
-    $filePathArray = explode('/', str_replace('//', '/', $filePath));
     // used to build the file path back together while searching for sites that match.
     $filePathSearch = '/';
     $foundSite = null;
@@ -483,6 +525,25 @@ class PermissionsManager
       self::$dbal = DBAL::getDBAL(Config::DB);
     }
     return self::$dbal;
+  }
+
+  /**
+   * Gets all the sites that exist inside the base site specified
+   *
+   * @param  string $siteBase Base directory to search for sites in
+   * @return array
+   */
+  private static function getSitesFromBase($siteBase)
+  {
+    $dbal = self::getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->select('s.siteRoot')
+      ->from('sites', 's')
+      ->where('s.siteRoot LIKE :siteBase');
+
+    $result = $dbal->fetchAll($qb->getSQL(), [':siteBase' => $siteBase . '%%']);
+    return (new Set($result))->flattenValues()->getValue();
   }
 
   /**

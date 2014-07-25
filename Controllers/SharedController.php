@@ -440,6 +440,18 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Checks to see if the user is trying to delete a file
+   *
+   * @return boolean
+   */
+  protected function userIsDeleting()
+  {
+    // var_dump($_GET);
+    // exit;
+    return ((isset($_GET['concert']) && $_GET['concert'] === 'delete') || (isset($_POST['concertAction']) && $_POST['concertAction']) === 'delete');
+  }
+
+  /**
    * Gets the requested draft from the url
    *
    * @return string|null

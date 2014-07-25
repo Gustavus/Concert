@@ -179,9 +179,16 @@ class MenuControllerTest extends TestBase
 
     $expected = [
       [
+        'id'       => 'deletePage',
+        'text'     => 'Delete Page',
+        'url'      => 'https://bart.gac.edu/billy/concert/newPage.php?concert=delete',
+        'thickbox' => true,
+        'classes'  => 'red',
+      ],
+      [
         'id'       => 'startEditing',
         'text'     => 'Edit Page',
-        'url'      => 'https://' . $_SERVER['HOSTNAME'] . '/concert/billy/concert/newPage.php?concert=edit',
+        'url'      => 'https://' . $_SERVER['HOSTNAME'] . '/billy/concert/newPage.php?concert=edit',
         'thickbox' => false,
         'classes'  => 'blue',
       ],
@@ -250,9 +257,16 @@ class MenuControllerTest extends TestBase
 
     $expected = [
       [
+        'id'       => 'deletePage',
+        'text'     => 'Delete Page',
+        'url'      => 'https://bart.gac.edu/billy/concert/newPage.php?concert=delete',
+        'thickbox' => true,
+        'classes'  => 'red',
+      ],
+      [
         'id'       => 'stopEditing',
         'text'     => 'Stop Editing',
-        'url'      => 'https://' . $_SERVER['HOSTNAME'] . '/concert/billy/concert/newPage.php?concert=stopEditing',
+        'url'      => 'https://' . $_SERVER['HOSTNAME'] . '/billy/concert/newPage.php?concert=stopEditing',
         'thickbox' => false,
         'classes'  => 'red',
       ],

@@ -52,6 +52,7 @@ class FileManagerTest extends TestBase
   {
     unset($this->fileManager);
     parent::tearDown();
+    self::removeFiles(self::$testFileDir);
   }
 
   /**
@@ -324,7 +325,6 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
   public function makeEditableDraftDraftDirNotExists()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
-    self::removeFiles(self::$testFileDir);
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
@@ -382,7 +382,6 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
    */
   public function saveAndGetDraft()
   {
-    self::removeFiles(self::$testFileDir);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
@@ -416,7 +415,6 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
    */
   public function getDraftNotAllowed()
   {
-    self::removeFiles(self::$testFileDir);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
@@ -439,7 +437,6 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
    */
   public function addUsersToDraft()
   {
-    self::removeFiles(self::$testFileDir);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
@@ -465,7 +462,6 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
    */
   public function addUsersToDraftNotOwned()
   {
-    self::removeFiles(self::$testFileDir);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
@@ -493,7 +489,6 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
    */
   public function addUsersToPrivateDraft()
   {
-    self::removeFiles(self::$testFileDir);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
@@ -1662,6 +1657,60 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function stageForDeletion()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stageForDeletion());
+
+     $expected = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?>
+<p>This is some html content</p>
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+
+    $modifiedFile = file_get_contents(self::$testFileDir . 'index.php');
+
+    $this->assertSame($expected, $modifiedFile);
+
+    $this->buildFileManager('bvisto', Config::$stagingDir . $this->fileManager->getFilePathHash());
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'index.php', 'username' => 'bvisto', 'action' => Config::DELETE_STAGE]], $stagedEntry);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function publishFileNotRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
@@ -1850,6 +1899,154 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function deleteFile()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stageForDeletion());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    $this->assertTrue($this->fileManager->deleteFile());
+
+    $this->assertFalse(file_exists(self::$testFileDir . 'index.php'));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   * @expectedException RuntimeException
+   */
+  public function deleteFileNotRoot()
+  {
+    $this->buildFileManager('arst', 'arst.php');
+
+    $this->fileManager->deleteFile();
+    $this->assertFalse(true);
+  }
+
+  /**
+   * @test
+   */
+  public function deleteFileNothingStaged()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    //$this->assertTrue($this->fileManager->stageForDeletion());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertFalse($this->fileManager->deleteFile());
+
+    $this->assertTrue(file_exists(self::$testFileDir . 'index.php'));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deleteFileMultipleStagedEntries()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, ['admin', 'test']]);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    $this->assertTrue($this->fileManager->destroyLock());
+
+    $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    try {
+      $this->fileManager->deleteFile();
+    } catch (\RuntimeException $e) {
+      $this->destructDB();
+      return;
+    }
+    $this->assertTrue(false, 'Exception was supposed to be thrown');
+  }
+
+  /**
+   * @test
+   */
+  public function deleteFileFromPublish()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stageForDeletion());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    $this->assertTrue($this->fileManager->publishFile());
+
+    $this->assertFalse(file_exists(self::$testFileDir . 'index.php'));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function getGroupForFile()
   {
     $filename = self::$testFileDir . 'index.php';
@@ -1914,5 +2111,210 @@ echo $config["content"];';
 
     $this->fileManager->ensureDirectoryExists($dir, $owner, 'www');
     $this->assertTrue(is_dir($dir));
+  }
+
+  /**
+   * @test
+   */
+  public function removeFilesTest()
+  {
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    mkdir($dir, 0777, true);
+    file_put_contents($dir . 'test.php', 'arst');
+    file_put_contents($dir . 'test2.php', 'arst2');
+    $this->assertSame(4, count(scandir($dir)));
+
+    $result = $this->call('FileManager', 'removeFiles', [$dir]);
+    $this->assertTrue($result);
+
+    $this->assertTrue(file_exists($dir));
+    $this->assertSame(2, count(scandir($dir)));
+
+  }
+
+  /**
+   * @test
+   */
+  public function removeFilesDirs()
+  {
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    mkdir($dir, 0777, true);
+    file_put_contents($dir . 'test.php', 'arst');
+    file_put_contents($dir . 'test2.php', 'arst2');
+
+    $subDir = $dir . '/directory/';
+    mkdir($subDir);
+    file_put_contents($subDir . 'test.php', 'arst');
+    file_put_contents($subDir . 'test2.php', 'arst2');
+    $this->assertSame(5, count(scandir($dir)));
+    $this->assertSame(4, count(scandir($subDir)));
+
+    $result = $this->call('FileManager', 'removeFiles', [$dir]);
+    $this->assertTrue($result);
+
+    $this->assertTrue(file_exists($dir));
+    $this->assertSame(2, count(scandir($dir)));
+    $this->assertFalse(file_exists($subDir));
+  }
+
+  /**
+   * @test
+   */
+  public function removeEmptyParentDirectories()
+  {
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    mkdir($dir, 0777, true);
+    $file = $dir . 'test.php';
+
+    $site = self::$testFileDir;
+
+    $result = $this->call('FileManager', 'removeEmptyParentDirectories', [$file, $site]);
+
+    $this->assertFalse(file_exists(self::$testFileDir . 'directory'));
+    $this->assertTrue(file_exists(self::$testFileDir));
+  }
+
+  /**
+   * @test
+   */
+  public function removeEmptyParentDirectoriesToSite()
+  {
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    mkdir($dir, 0777, true);
+    $file = $dir . 'test.php';
+
+    $site = self::$testFileDir . 'directory/arst/';
+
+    $result = $this->call('FileManager', 'removeEmptyParentDirectories', [$file, $site]);
+
+    $this->assertFalse(file_exists($dir));
+    $this->assertTrue(file_exists(self::$testFileDir . 'directory/arst/'));
+    $this->assertTrue(file_exists(self::$testFileDir));
+  }
+
+  /**
+   * @test
+   */
+  public function removeEmptyParentDirectoriesNotAllEmpty()
+  {
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    mkdir($dir, 0777, true);
+    $file = $dir . 'test.php';
+    file_put_contents($file, 'arst');
+
+    $subDir = $dir . '/directory/';
+    mkdir($subDir);
+
+    $site = self::$testFileDir;
+
+    $this->assertTrue(file_exists($subDir));
+
+    $result = $this->call('FileManager', 'removeEmptyParentDirectories', [$subDir, $site]);
+
+    $this->assertFalse(file_exists($subDir));
+    $this->assertTrue(file_exists($dir));
+    $this->assertTrue(file_exists(self::$testFileDir));
+  }
+
+  /**
+   * @test
+   */
+  public function removeFile()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', $dir, ['admin', 'test']]);
+
+    mkdir($dir, 0777, true);
+    $file = $dir . 'test.php';
+    file_put_contents($file, 'arst');
+
+    $subDir = $dir . '/directory/';
+    mkdir($subDir);
+
+    $site = self::$testFileDir;
+
+    $this->assertTrue(file_exists($subDir));
+
+    $this->buildFileManager('bvisto', $file);
+
+    $result = $this->fileManager->removeFile();
+
+    $this->assertTrue($result);
+
+    $this->assertFalse(file_exists($file));
+    $this->assertTrue(file_exists($subDir));
+    $this->assertTrue(file_exists($dir));
+    $this->assertTrue(file_exists(self::$testFileDir));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function removeFileAdmin()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir . 'directory/arst/', ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', [Config::SUPER_USER]]);
+
+    mkdir($dir, 0777, true);
+    $file = $dir . 'test.php';
+    file_put_contents($file, 'arst');
+
+    $site = self::$testFileDir;
+
+    $this->buildFileManager('bvisto', $file);
+
+    $result = $this->fileManager->removeFile();
+
+    $this->assertTrue($result);
+
+    $this->assertFalse(file_exists($file));
+    $this->assertFalse(file_exists($dir));
+    $this->assertTrue(file_exists(self::$testFileDir . 'directory/arst/'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function removeFileNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    $dir = self::$testFileDir . 'directory/arst/arst/';
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', [Config::SUPER_USER]]);
+
+    mkdir($dir, 0777, true);
+    $file = $dir . 'test.php';
+    file_put_contents($file, 'arst');
+
+    $site = self::$testFileDir;
+
+    $this->buildFileManager('bvisto', $file);
+
+    $result = $this->fileManager->removeFile();
+
+    $this->assertFalse($result);
+
+    $this->assertTrue(file_exists($file));
+    $this->assertTrue(file_exists($dir));
+    $this->assertTrue(file_exists(self::$testFileDir . 'directory/arst/'));
+
+    $this->destructDB();
   }
 }
