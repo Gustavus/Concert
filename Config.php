@@ -119,7 +119,19 @@ class Config
    */
   const DRAFT_NOTE = 'Note: You are viewing a draft and not a published page.';
 
+  /**
+   * Stage for specifing a deletion
+   */
+  const DELETE_STAGE = 'delete';
+
+  /**
+   * Stage for specifing a publish stage
+   */
+  const PUBLISH_STAGE = 'publish';
+
+
   // Access Levels
+
   /**
    * Public access level. Used whenever a "public" item is being edited.
    */
@@ -179,6 +191,13 @@ class Config
    * @var array
    */
   public static $nonCreationAccessLevels = [];
+
+  /**
+   * AccessLevels that can't delete files
+   *
+   * @var array
+   */
+  public static $nonDeletionAccessLevels = [];
 
   /**
    * AccessLevels that can publish drafts for other people
@@ -315,6 +334,11 @@ class Config
    */
   public static function removeDocRootFromPath($filePath)
   {
-    return str_replace($_SERVER['DOCUMENT_ROOT'], '', $filePath);
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+    if (strpos($filePath, $docRoot) === 0) {
+      return substr($filePath, strlen($docRoot));
+    } else {
+      return $filePath;
+    }
   }
 }
