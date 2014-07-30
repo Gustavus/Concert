@@ -105,6 +105,11 @@ class Config
   const NOT_ALLOWED_TO_EDIT_MESSAGE = 'It looks like you aren\'t able to edit this page.';
 
   /**
+   * Message to display to people who can't edit pages
+   */
+  const NO_SITE_ACCESS_MESSAGE = 'Oops! It looks like you aren\'t able to edit this site.';
+
+  /**
    * Message to display to people who can't get a lock for a page
    */
   const LOCK_NOT_AQUIRED_MESSAGE = 'It looks like we couldn\'t acquire a lock to edit this page.';
@@ -298,6 +303,15 @@ class Config
   ];
 
   /**
+   * Defines all of the possible templates a person can create a page from
+   *
+   * @var array
+   */
+  public static $templates = [
+    'default' => self::TEMPLATE_PAGE,
+  ];
+
+  /**
    * Builds the upload location for the current user and page being edited
    *
    * @return string
@@ -337,6 +351,22 @@ class Config
     $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
     if (strpos($filePath, $docRoot) === 0) {
       return substr($filePath, strlen($docRoot));
+    } else {
+      return $filePath;
+    }
+  }
+
+  /**
+   * Adds the doc root from the file path
+   *
+   * @param  string $filePath File path to add the doc root to
+   * @return string
+   */
+  public static function addDocRootToPath($filePath)
+  {
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+    if (strpos($filePath, $docRoot) !== 0) {
+      return str_replace('//', '/', $docRoot . DIRECTORY_SEPARATOR . $filePath);
     } else {
       return $filePath;
     }
