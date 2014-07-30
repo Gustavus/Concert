@@ -25,12 +25,13 @@ class ShareDraft
    * @param  array $draft Draft we are sharing
    * @return array
    */
-  public static function getConfig($draft)
+  public static function getConfig($draft, $actionUrl)
   {
+    // note: this form must post to a concert url in case the file we are editing doesn't exist and we lose our post data from the error page redirect
     $config = [
       'name'            => 'addusers',
       'type'            => 'form',
-      'action'          => $_SERVER['REQUEST_URI'],
+      'action'          => $actionUrl,
       'method'          => 'post',
       'container-class' => 'grid_20 alpha omega',
       'children'        => self::buildChildren($draft),
@@ -75,7 +76,7 @@ class ShareDraft
       $return[] = [
         'name'            => 'person',
         'type'            => 'section',
-        'container-class' => 'grid_17 prefix_1 suffix_1 alpha omega',
+        'container-class' => 'grid_16 prefix_1 suffix_1 alpha omega',
         'duplicatable'    => true,
         'children'        => [
           [
@@ -83,7 +84,7 @@ class ShareDraft
             'type'               => 'text',
             'title'              => 'User Name',
             'subtitle'           => 'First part of Gustavus E-mail',
-            'container-class'    => 'grid_12',
+            'container-class'    => 'grid_11',
             'element-class'      => 'autocompleteUser',
             'element-attributes' => [
               'data-autocompletepath' => $autocompletePath,
@@ -98,7 +99,7 @@ class ShareDraft
         $return[] = [
           'name'            => 'person',
           'type'            => 'section',
-          'container-class' => 'grid_17 prefix_1 suffix_1 alpha omega',
+          'container-class' => 'grid_16 prefix_1 suffix_1 alpha omega',
           'duplicatable'    => true,
           'children'        => [
             [
@@ -107,7 +108,7 @@ class ShareDraft
               'type'               => 'text',
               'title'              => 'User Name',
               'subtitle'           => 'First part of Gustavus E-mail',
-              'container-class'    => 'grid_12',
+              'container-class'    => 'grid_11',
               'element-class'      => 'autocompleteUser',
               'element-attributes' => [
                 'data-autocompletepath' => $autocompletePath,
@@ -126,6 +127,15 @@ class ShareDraft
       'name'            => 'submit',
       'container-class' => 'alpha grid_4',
       'element-class'   => 'concertSubmitAddUsers'
+    ];
+
+    // now add all of this into a section
+    $return = [
+      'name'            => 'adduserssection',
+      'type'            => 'section',
+      'title'           => 'Add users to your draft',
+      'container-class' => 'grid_18 alpha omega prefix_1 suffix_1',
+      'children'        => $return,
     ];
     return $return;
   }
