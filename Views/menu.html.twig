@@ -1,10 +1,15 @@
+{% import _self as self %}
 {% spaceless %}
   <div class="grid_16 alpha omega center">
     <h2>Concert Menu</h2>
     <p>
       {%- for item in menu -%}
-          <a href="{{ item.url }}" class="grid_15 concert menu button{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}" id="{{ item.id }}">{{ item.text }}</a>
+        <a href="{{ item.url }}" class="grid_15 concert menu button{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}" id="{{ item.id }}"{{ self.renderThickboxData(item) }}>{{ item.text }}</a>
       {%- endfor -%}
     </p>
   </div>
 {% endspaceless %}
+
+{% macro renderThickboxData(item) %}
+  {%- for datum,value in item.thickboxData %} data-thickbox-{{ datum }}="{{ value }}"{% endfor -%}
+{% endmacro renderThickboxData %}

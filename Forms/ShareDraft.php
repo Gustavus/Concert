@@ -23,6 +23,7 @@ class ShareDraft
    * Builds the configuration for public email forms
    *
    * @param  array $draft Draft we are sharing
+   * @param  string $actionUrl Url the form posts to
    * @return array
    */
   public static function getConfig($draft, $actionUrl)

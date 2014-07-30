@@ -50,6 +50,16 @@ return [
     'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderMenu',
     //'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
+  'newPageMenu' => [
+    'route'     => '/menus/newPage',
+    'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderNewPageForm',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'newPageMenuFiles' => [
+    'route'     => '/menus/newPage/{fileTree=toFile|fromFile}',
+    'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderNewPageForm',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
   // autocompletion
   'autocompleteUser' => [
     'route'   => '/autocompleteUser/{value}',
