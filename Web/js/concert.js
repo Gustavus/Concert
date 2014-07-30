@@ -220,9 +220,10 @@ Gustavus.Concert = {
           alert(data.reason);
         } else {
           if (data && data.redirectUrl) {
-            window.location = data.redirectUrl;
+            //window.location = data.redirectUrl;
           } else {
-            window.location = Gustavus.Concert.filePath + '?concert=stopEditing';
+            //console.log('Saved. Redirecting to: ' + Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.filePath, {'concert': 'stopEditing'}));
+            window.location = Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.filePath, {'concert': 'stopEditing'});
           }
         }
       },
@@ -320,10 +321,20 @@ $('#concertSavePrivateDraft').on('click', function(e) {
   e.preventDefault();
   var req = Gustavus.Concert.hasSharedDraft();
   req.done(function(data) {
+    console.log(data);
     if (data) {
-      if (confirm('This draft is shared. Converting it to a private draft will remove any sharing functionality')) {
-        Gustavus.Concert.saveEdits('savePrivateDraft');
-      }
+      $('#confirmPrivateDraft').dialog({
+        modal: true,
+        buttons: {
+          'Save private draft': function() {
+            Gustavus.Concert.saveEdits('savePrivateDraft');
+            $(this).dialog('close');
+          },
+          Cancel: function() {
+            $(this).dialog('close');
+          }
+        }
+      });
     } else {
       Gustavus.Concert.saveEdits('savePrivateDraft');
     }

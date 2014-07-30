@@ -3,8 +3,8 @@
 
 {% set buttons = {
   'publish': reviewButton,
-  'savePrivateDraft': '<a id="concertSavePrivateDraft" class="concert button">Save a Private Draft</a>',
-  'savePublicDraft': '<a id="concertSavePublicDraft" class="concert button">Save a Public Draft</a>',
+  'savePrivateDraft': '<a id="concertSavePrivateDraft" class="concert button">Save private draft</a>',
+  'savePublicDraft': '<a id="concertSavePublicDraft" class="concert button">Save shared draft</a>',
   'discardDraft': '<a id="concertDiscardDraft" class="concert button red">Discard Draft</a>',
   'saveDraft': '<a id="concertSavePublicDraft" class="concert button">Save Draft</a>',
 } %}
@@ -27,4 +27,8 @@
 {%- endif -%}
 <br/>
 <a href="#" class="button" id="toggleShowingEditableContent" data-show="false">Show editable areas</a>
+
+<div id="confirmPrivateDraft" title="Save Private Draft" class="nodisplay">
+  <p>This draft is shared. Converting it to a private draft will remove any sharing functionality.</p>
+</div>
 {% endspaceless %}
