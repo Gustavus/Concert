@@ -1,14 +1,19 @@
 RewriteEngine On
 
 RewriteRule js/.+\.js$ - [L]
+RewriteRule js/.+\.css$ - [L]
+RewriteRule js/.+\.gif$ - [L]
+
 # allow tinymce fonts
 RewriteRule js/tinymce.+$ - [L]
 RewriteRule css/.+\.css$ - [L]
 RewriteRule images/.+\.jpg - [L]
 RewriteRule images/.+\.png - [L]
 RewriteRule .+\.html - [L]
+
 # allow filemanager
 RewriteRule filemanager/.+ - [L]
+
 # allow
 RewriteRule thumbs/.+ - [L]
 RewriteRule files/.+ - [L]

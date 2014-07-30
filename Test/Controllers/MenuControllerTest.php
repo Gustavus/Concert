@@ -19,6 +19,8 @@ use Gustavus\Test\TestObject,
  * @package Concert
  * @subpackage Test
  * @author  Billy Visto
+ *
+ * @todo remove skipping tests
  */
 class MenuControllerTest extends TestBase
 {

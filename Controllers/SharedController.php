@@ -123,6 +123,8 @@ class SharedController extends ConcourseController
             '<script type="text/javascript">
               Modernizr.load({
                 load: [
+                  "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
+                  "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
                   "%s",
                   "%s"
                 ],
@@ -132,7 +134,7 @@ class SharedController extends ConcourseController
               });
             </script>',
             Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => 0]),
-            Resource::renderResource(['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]),
+            Resource::renderResource(['urlutil', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
             Config::removeDocRootFromPath($filePath)
         );
         return $content . $script;
@@ -327,13 +329,23 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Checks to see if the user is editing the site nav
+   *
+   * @return boolean
+   */
+  protected function userIsEditingSiteNav()
+  {
+    return (isset($_GET['concert']) && $_GET['concert'] === 'editSiteNav');
+  }
+
+  /**
    * Checks to see if the user is wanting to do things with drafts
    *
    * @return boolean
    */
   protected function isDraftRequest()
   {
-    return ($this->userWantsToViewDraft() || $this->userIsSavingDraft() || $this->userIsDeletingDraft() || $this->userIsEditingDraft());
+    return ($this->userWantsToViewDraft() || $this->userIsSavingDraft() || $this->userIsDeletingDraft() || $this->userIsEditingDraft() || $this->userIsAddingUsersToDraft());
   }
 
   /**
@@ -432,9 +444,9 @@ class SharedController extends ConcourseController
    * @param  string $requestURI
    * @return boolean
    */
-  protected function userIsAddingUsersToDraft($requestURI)
+  protected function userIsAddingUsersToDraft($requestURI = null)
   {
-    $addUsersToDraftUrl = $this->buildUrl('addUsersToDraft', ['draftName' => basename($requestURI)]);
+    $addUsersToDraftUrl = $this->buildUrl('addUsersToDraft', ['draftName' => $this->guessDraftName($requestURI)]);
 
     return (($addUsersToDraftUrl === $requestURI) || (isset($_GET['concert']) && $_GET['concert'] === 'addUsers'));
   }
@@ -494,12 +506,23 @@ class SharedController extends ConcourseController
    */
   protected function isRequestFromConcertRoot($requestURI = null)
   {
-    $concertRoot = $_SERVER['DOCUMENT_ROOT'] . Config::WEB_DIR;
+    $concertRoot = Config::addDocRootToPath(Config::WEB_DIR);
 
     if ($requestURI === null) {
       $requestURI = $_SERVER['REQUEST_URI'];
     }
+    $requestURI = Config::addDocRootToPath($requestURI);
 
     return (strpos($requestURI, $concertRoot) === 0);
+  }
+
+  /**
+   * Checks to see if the request is a barebone request or not
+   *
+   * @return boolean
+   */
+  protected function isBareboneRequest()
+  {
+    return isset($_GET['barebones']);
   }
 }

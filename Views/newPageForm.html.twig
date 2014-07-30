@@ -1,0 +1,76 @@
+{% spaceless %}
+<link rel="stylesheet" type="text/css" href="{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css'}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}" />
+<script type="text/javascript">
+  Modernizr.load({
+    load: [
+      Gustavus.baseSrc,
+      "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
+      "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
+      "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}",
+      "/concert/js/fileTree/jqueryFileTree.js"
+    ],
+    complete: function() {
+
+      $(function() {
+        var newFile = '';
+        var fromFile = '';
+
+        $('#toFileTreeSelector').fileTree({
+          root: '{{ site }}',
+          script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'toFile'}) }}'
+        }, function (file) {
+          newFile = file;
+          console.log('new filename ' + newFile)
+        });
+
+        $('#fromFileTreeSelector').fileTree({
+          root: '{{ site }}',
+          script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'fromFile'}) }}'
+        }, function (file) {
+          fromFile = file;
+          console.log('from filename ' + fromFile)
+        });
+
+        $('#createNewPage').on('click', function(e) {
+          e.preventDefault();
+          window.location = Gustavus.Utility.URLUtil.urlify(newFile, {'concert': 'edit', 'srcFilePath': encodeURIComponent(fromFile)});
+        });
+      });
+    }
+  });
+
+  // $('#newPageSelect .createPage').click(function(e) {
+  //   e.preventDefault();
+
+  //   var newFile = $('#newPageSelect #theFile').val();
+
+  //   console.log(newFile);
+
+  //   $('#concertDelete .deleteAction').colorbox.close();
+  // })
+</script>
+
+
+<div class="grid_30 alpha omega">
+  <div class="grid_15 alpha">
+    <h2>Please select a location for the new file.</h2>
+    <div id="toFileTreeSelector" class="fileTreeSelector"></div>
+  </div>
+
+  <div class="grid_15 omega">
+    <h2>Please select a page to copy or a default starter page.</h2>
+    <div id="fromFileTreeSelector" class="fileTreeSelector"></div>
+  </div>
+
+  <p class="grid_30 alpha omega">
+    <a href="#" id="createNewPage" class="button">Create new page</a>
+  </p>
+</div>
+
+<div id="newFileNameDialog" class="nodisplay">
+  <form>
+    <input id="theFile" type="text" name="theFile" style="width: 100%;" />
+    <button id="newFileNameSubmit" type="submit" class="nodisplay">Create a new file</button>
+  </form>
+</div>
+{% endspaceless %}

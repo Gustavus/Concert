@@ -10,7 +10,8 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Utility\PageUtil,
-  Gustavus\Utility\String;
+  Gustavus\Utility\String,
+  Gustavus\Utility\File;
 
 /**
  * Handles menu actions
@@ -99,7 +100,7 @@ class MenuController extends SharedController
   /**
    * Adds draft editing buttons to the current menu
    *
-   * @param
+   * @return void
    */
   private function addPublicDraftButtons()
   {
@@ -149,7 +150,7 @@ class MenuController extends SharedController
   /**
    * Adds draft editing buttons to the current menu
    *
-   * @param
+   * @return void
    */
   private function addDraftButtons()
   {
@@ -166,7 +167,7 @@ class MenuController extends SharedController
 
     if (!empty($draft) && $draft['type'] === Config::PUBLIC_DRAFT) {
       if ($this->userIsAddingUsersToDraft(Config::removeDocRootFromPath($this->filePath))) {
-        if ($this->isRequestFromConcertRoot()) {
+        if ($this->isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
@@ -181,7 +182,7 @@ class MenuController extends SharedController
           'thickbox' => false,
         ];
       } else {
-        if ($this->isRequestFromConcertRoot()) {
+        if ($this->isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('addUsersToDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
@@ -190,10 +191,11 @@ class MenuController extends SharedController
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $this->menu[] = [
-          'id'      => 'addUsersToDraft',
-          'text'    => 'Add users to your draft',
-          'url'     => $url,
-          'classes' => 'green',
+          'id'           => 'addUsersToDraft',
+          'text'         => 'Add users to your draft',
+          'url'          => $url,
+          'classes'      => 'green',
+          'thickboxData' => ['height' => '400px'],
         ];
       }
     }
@@ -224,8 +226,18 @@ class MenuController extends SharedController
   {
     $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
-    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)){
+    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
       return;
+    }
+
+    if (PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
+      $this->menu[] = [
+        'id'            => 'createPage',
+        'text'          => 'Create New Page',
+        'url'           => $this->buildUrl('newPageMenu'),
+        'thickbox'      => true,
+        'thickboxData' => ['height' => '400px'],
+      ];
     }
 
     if (PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
@@ -253,12 +265,11 @@ class MenuController extends SharedController
       $draft = $this->getFileManager()->getDraftForUser($this->getLoggedInUsername());
 
       if (!empty($draft) && PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
-        if ($this->isRequestFromConcertRoot()) {
+        if ($this->isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
-          $query['concert'] = 'editDraft';
-          $query['concertDraft'] = $draft['draftFilename'];
+          $query['concert'] = 'edit';
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $this->menu[] = [
@@ -277,6 +288,129 @@ class MenuController extends SharedController
           'classes'  => 'blue',
         ];
       }
+    }
+  }
+
+  /**
+   * Renders the html for our file tree plugin
+   *
+   * @param  boolean $forSrcFile Whether this is a tree for the src file or not.
+   * @return string
+   */
+  private function renderFileTree($forSrcFile = false)
+  {
+    $this->analyzeReferer();
+
+    if (isset($_GET['dir'])) {
+      $dir = urldecode($_GET['dir']);
+    } else {
+      $dir = dirname(Config::removeDocRootFromPath($this->filePath));
+    }
+
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    $absDir = $root . $dir;
+    $return = '';
+
+    $newIndexFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s">index.php</a></li>', htmlentities($dir . 'index.php'));
+
+    $newFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s">+newFile</a></li>', htmlentities($dir . 'concertNewFile'));
+
+    $newFolderHTML = sprintf('<li class="directory collapsed"><a href="#" rel="%s">+newFolder</a></li>', htmlentities($dir . 'concertNewFolder/'));
+
+    if (file_exists($absDir)) {
+      $foundFiles = scandir($absDir);
+      $files = [];
+      foreach ($foundFiles as $file) {
+        if (substr($file, strlen($file) - 4) === '.php' || is_dir($absDir . $file)) {
+          $files[] = $file;
+        }
+      }
+      // @todo do we need this? scandir sorts them by default
+      //natcasesort($files);
+      // The 2 accounts for . and ..
+      if (count($files) > 2) {
+        $return .= '<ul class="jqueryFileTree" style="display: none;">';
+        if ($forSrcFile && (rtrim($this->filePath, '/') === rtrim($absDir, '/') || rtrim(dirname($this->filePath), '/') === rtrim($absDir, '/'))) {
+          // we want our default templates on top
+          foreach (Config::$templates as $templateName => $template) {
+            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s">%s Template</a></li>', htmlentities($template), (new String($templateName))->titleCase()->getValue());
+          }
+        }
+        // All dirs
+        foreach ($files as $file) {
+          if (file_exists($absDir . $file) && $file != '.' && $file != '..' && is_dir($absDir . $file)) {
+            $return .= sprintf('<li class="directory collapsed"><a href="#" rel="%s" />%s</a></li>', htmlentities($dir . $file), htmlentities($file));
+          }
+        }
+        // All files
+        foreach ($files as $file) {
+          if (file_exists($absDir . $file) && $file != '.' && $file != '..' && !is_dir($absDir . $file)) {
+            $ext = preg_replace('/^.*\./', '', $file);
+            if ($forSrcFile) {
+              $return .= sprintf('<li class="file ext_%s"><a href="#" rel="%s">%s</a></li>', $ext, htmlentities($dir . $file), htmlentities($file));
+            } else {
+              $return .= sprintf('<li class="file ext_%s disabled">%s</li>', $ext, htmlentities($file));
+            }
+          }
+        }
+        if (!$forSrcFile) {
+          $return .= $newFileHTML;
+          $return .= $newFolderHTML;
+        }
+        $return .= '</ul>';
+      }
+    } else {
+      if (!$forSrcFile) {
+        $return = sprintf('<ul class="jqueryFileTree" style="display: none;">%s%s%s</ul>', $newIndexFileHTML, $newFileHTML, $newFolderHTML);
+      }
+    }
+    return $return;
+  }
+
+  /**
+   * Renders the form for creating a new page.
+   *
+   * @param  array $params array of params from router
+   * @return string
+   */
+  public function renderNewPageForm($params = null)
+  {
+    // @todo should we abstract this out?
+    if (!empty($params) && isset($params['fileTree']) && ($params['fileTree'] === 'toFile' || $params['fileTree'] === 'fromFile')) {
+      return $this->renderFileTree($params['fileTree'] === 'fromFile');
+    }
+
+    if ($this->isBareboneRequest()) {
+      $this->analyzeReferer();
+    } else {
+      $this->analyzeReferer(false);
+    }
+
+    // $fm = new FileManager($this->getLoggedInUsername(), $this->filePath, null, $this->getDB());
+
+    // if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($this->filePath))) {
+    //   $this->addSessionMessage('Oops! It appears that you don\'t have access to create this page.');
+    //   return false;
+    // }
+    //@todo remove this
+    //$this->filePath = '/cis/www/billy/concert/arst.php';
+    $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($this->filePath));
+    if (empty($siteBase)) {
+      // user doesn't have access to this site.
+      if ($this->isBareboneRequest()) {
+        return false;
+      } else {
+        return $this->renderErrorPage(Config::NO_SITE_ACCESS_MESSAGE);
+      }
+    }
+
+    $view = $this->renderView('newPageForm.html.twig', ['site' => $siteBase, 'cssVersion' => Config::CSS_VERSION]);
+
+    if ($this->isBareboneRequest()) {
+      return $view;
+    } else {
+      $this->setContent($view);
+      return $this->renderPage();
     }
   }
 

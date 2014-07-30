@@ -29,7 +29,7 @@ class MainController extends SharedController
   /**
    * Handles editing a page
    *
-   * @param  string $page Page we are trying to edit
+   * @param  string $filePath Path to the file we are trying to edit
    * @return string|boolean String of the rendered edit page or boolean on save
    */
   private function edit($filePath)
@@ -205,6 +205,7 @@ class MainController extends SharedController
                 $(\'#concertDelete .deleteAction\').colorbox.close();
 
                 if (response) {
+                  // @todo finish this
                   alert(\'This page has been deleted.\');
                 }
               }, \'json\')
@@ -246,10 +247,8 @@ class MainController extends SharedController
     if ($this->isLoggedIn() && !$this->alreadyMoshed()) {
       // let ourselves know that we have already moshed this request.
       $this->markMoshed();
-      if (strpos($filePath, $_SERVER['DOCUMENT_ROOT']) === false) {
-        // we want to force our doc root.
-        $filePath = str_replace('//', '/', $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $filePath);
-      }
+
+      $filePath = Config::addDocRootToPath($filePath);
 
       if ($this->isRequestingQuery()) {
         return ['action' => 'return', 'value' => $this->handleQueryRequest($filePath)];
@@ -331,7 +330,7 @@ class MainController extends SharedController
       case 'hasSharedDraft':
         $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
         $draft = $fm->getDraftForUser($this->getLoggedInUsername());
-          return ($draft['type'] === Config::PUBLIC_DRAFT && !empty($draft['additionalUsers']));
+          return ($draft['type'] === Config::PUBLIC_DRAFT);
       default:
           return false;
     }
@@ -379,9 +378,13 @@ class MainController extends SharedController
         ];
       }
     } else if ($this->userWantsToEdit() || $this->userIsSaving()) {
-      // @todo this isn't finished
-      // @todo copy functionality should also live here?
-      $creationResult = $this->createNewPage($filePath);
+      if (isset($_GET['srcFilePath'])) {
+        $fromFilePath = Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
+      } else {
+        $fromFilePath = null;
+      }
+
+      $creationResult = $this->createNewPage($filePath, $fromFilePath);
       if ($creationResult) {
         return [
           'action' => 'return',
@@ -432,7 +435,7 @@ class MainController extends SharedController
     $value = $args['value'];
 
     $results = Autocomplete::executeQuery($value, 'FirstName,LastName,Username',
-      ['Employee', 'Faculty', 'Administrator', 'Support Staff', 'Student'], 'Username,FirstName,LastName', null, false);
+        ['Employee', 'Faculty', 'Administrator', 'Support Staff', 'Student'], 'Username,FirstName,LastName', null, false);
 
     $return = [];
     foreach ($results as $result) {

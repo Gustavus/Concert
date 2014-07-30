@@ -5,3 +5,15 @@ div.editable {
 div.editable.show {
   outline: 1px dashed #BBB;
 }
+
+.ui-widget-overlay {
+  background: #000 !important;
+}
+
+.fileTreeSelector .selected {
+  background: #aaa;
+}
+
+.fileTreeSelector .disabled {
+  opacity: 0.5;
+}
