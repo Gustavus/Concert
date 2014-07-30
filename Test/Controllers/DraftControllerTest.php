@@ -45,7 +45,7 @@ class DraftControllerTest extends TestBase
    */
   public function setUp()
   {
-    $_SERVER['REQUEST_URI'] = 'testing';
+    $_SERVER['REQUEST_URI']  = 'testing';
     $_SERVER['HTTP_REFERER'] = 'https://beta.gac.edu/billy/concert/newPage.php?concert=edit';
 
 
@@ -1053,9 +1053,11 @@ class DraftControllerTest extends TestBase
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $_POST = [
       'addusers' => [
-        'person' => [
-          ['username' => 'bvisto'],
-          ['username' => 'jerry'],
+        'adduserssection' => [
+          'person' => [
+            ['username' => 'bvisto'],
+            ['username' => 'jerry'],
+          ],
         ],
       ],
     ];
@@ -1097,9 +1099,11 @@ class DraftControllerTest extends TestBase
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $_POST = [
       'addusers' => [
-        'person' => [
-          ['username' => 'bvisto'],
-          ['username' => 'jerry'],
+        'adduserssection' => [
+          'person' => [
+            ['username' => 'bvisto'],
+            ['username' => 'jerry'],
+          ],
         ],
       ],
     ];

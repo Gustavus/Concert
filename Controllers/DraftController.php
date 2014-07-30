@@ -66,10 +66,14 @@ class DraftController extends SharedController
 
     $draft = reset($drafts);
 
+    $messageAdditions = '';
+
+    if ($draft['type'] === Config::PUBLIC_DRAFT) {
+      $messageAdditions .= sprintf('This draft is a shared draft. Other users can see if by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
+    }
+
     if ($this->isRequestFromConcertRoot()) {
-      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
-    } else {
-      $messageAdditions = '';
+      $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
     }
     $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
@@ -114,6 +118,12 @@ class DraftController extends SharedController
 
     if ($draft['type'] !== Config::PUBLIC_DRAFT) {
       return PageUtil::renderPageNotFound(true);
+    }
+
+    $shouldRedirectToFullPath = true;
+    if ($this->isRequestFromConcertRoot() && $shouldRedirectToFullPath) {
+      // we are using this location as a url shortener
+      return $this->redirect((new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue());
     }
 
     $messageAdditions = '';
@@ -251,6 +261,14 @@ class DraftController extends SharedController
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
+    $draft = $fm->getDraftForUser($this->getLoggedInUsername());
+
+    if (!empty($draft)) {
+      $draftFilePath = Config::$draftDir . $draft['draftFilename'];
+      // user has an open draft. We need to create a new file from the current draft
+      $fm = new FileManager($this->getLoggedInUsername(), $filePath, $draftFilePath, $this->getDB());
+    }
+
     if (!$fm->acquireLock()) {
       // lock couldn't be acquired
       return json_encode(['error' => true, 'reason' => Config::LOCK_NOT_AQUIRED_MESSAGE]);
@@ -287,59 +305,6 @@ class DraftController extends SharedController
   }
 
   /**
-   * Handles draft requests
-   *
-   * @param  array  $params Params to pass onto the correct handler
-   * @return mixed
-   */
-  public function handleDraftActions(array $params)
-  {
-    if ($this->userIsViewingPublicDraft($params['filePath'])) {
-      $params['draftName'] = $this->guessDraftName();
-      return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
-    } else if ($this->userWantsToViewDraft()) {
-      $params['draft'] = $this->getDraftFromRequest();
-      return ['action' => 'return', 'value' => $this->showDraft($params)];
-    } else if ($this->userIsEditingPublicDraft($_SERVER['REQUEST_URI'])) {
-      $params['draftName'] = $this->guessDraftName($params['filePath']);
-      $result = $this->editPublicDraft($params);
-      if (is_array($result)) {
-        return $result;
-      }
-      return ['action' => 'return', 'value' => $result];
-    } else if ($this->userIsSavingDraft()) {
-      return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];
-    } else if ($this->userIsDeletingDraft()) {
-      return ['action' => 'return', 'value' => $this->deleteDraft($params['filePath'])];
-    }
-  }
-
-  /**
-   * Stops editing a public draft
-   *   This will release the lock on both the draft and the file the draft represents
-   *
-   * @param  array $params Params from router
-   * @return array
-   */
-  public function stopEditingPublicDraft($params)
-  {
-    $filePath = $params['filePath'];
-
-    $draftName = basename($filePath);
-    $filePath  = Config::$draftDir . $draftName;
-
-    $draftFM = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
-
-    $draftFM->setUserIsEditingDraft();
-    $draftFM->stopEditing();
-
-    return [
-      'action' => 'return',
-      'value'  => true,
-    ];
-  }
-
-  /**
    * Adds users to a draft
    *
    * @param array $params Parameters from router
@@ -363,11 +328,11 @@ class DraftController extends SharedController
     // we don't want this form to be persisted
     $this->flushForm('concertAddUsersToDraft');
 
-    $form = $this->buildForm('concertAddUsersToDraft', ['\Gustavus\Concert\Forms\ShareDraft', 'getConfig'], [$draft], 1);
+    $form = $this->buildForm('concertAddUsersToDraft', ['\Gustavus\Concert\Forms\ShareDraft', 'getConfig'], [$draft, $this->buildUrl('addUsersToDraft', ['draftName' => $draftName])], 1);
 
     if ($this->getMethod() === 'POST' && $form->validate()) {
       $additionalUsers = [];
-      foreach ($form->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
+      foreach ($form->getChildElement('adduserssection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
         if ($child->getName() === 'person') {
           $additionalUsers[] = $child->getChildElement('username')->getValue();
         }
@@ -435,12 +400,78 @@ class DraftController extends SharedController
   }
 
   /**
+   * Handles draft requests
+   *
+   * @param  array  $params Params to pass onto the correct handler
+   * @return mixed
+   */
+  public function handleDraftActions(array $params)
+  {
+    if ($this->userIsViewingPublicDraft($params['filePath'])) {
+      $params['draftName'] = $this->guessDraftName();
+      return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
+    } else if ($this->userWantsToViewDraft()) {
+      $params['draft'] = $this->getDraftFromRequest();
+      return ['action' => 'return', 'value' => $this->showDraft($params)];
+    } else if ($this->userIsEditingPublicDraft($_SERVER['REQUEST_URI'])) {
+      $params['draftName'] = $this->guessDraftName($params['filePath']);
+      $result = $this->editPublicDraft($params);
+      if (is_array($result)) {
+        return $result;
+      }
+      return ['action' => 'return', 'value' => $result];
+    } else if ($this->userIsSavingDraft()) {
+      return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];
+    } else if ($this->userIsDeletingDraft()) {
+      return ['action' => 'return', 'value' => $this->deleteDraft($params['filePath'])];
+    } else if ($this->userIsAddingUsersToDraft()) {
+      $params['draftName'] = $this->guessDraftName($params['filePath']);
+      return ['action' => 'return', 'value' => $this->addUsersToDraft($params)];
+    }
+  }
+
+  /**
+   * Stops editing a public draft
+   *   This will release the lock on both the draft and the file the draft represents
+   *
+   * @param  array $params Params from router
+   * @return array
+   */
+  public function stopEditingPublicDraft($params)
+  {
+    $filePath = $params['filePath'];
+
+    $draftName = basename($filePath);
+    $filePath  = Config::$draftDir . $draftName;
+
+    $draftFM = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
+
+    $draftFM->setUserIsEditingDraft();
+    $draftFM->stopEditing();
+
+    return [
+      'action' => 'return',
+      'value'  => true,
+    ];
+  }
+
+  /**
    * Gets the file path of the page we are trying to copy
    *
    * @return string
    */
   private function getFilePathToCopy()
   {
+    $referer = PageUtil::getReferer();
+
+    $parts = parse_url($referer);
+    if (isset($parts['query'])) {
+      // we need to see if the filePath to copy is set in the referer
+      $query = (new String($parts['query']))->splitQueryString()->getValue();
+      if (isset($query['srcFilePath'])) {
+        return Config::addDocRootToPath(urldecode($query['srcFilePath']));
+      }
+    }
     // @todo this needs to get the file to copy from the request
     return Config::TEMPLATE_PAGE;
   }
