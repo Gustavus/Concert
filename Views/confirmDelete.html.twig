@@ -1,0 +1,10 @@
+{% spaceless %}
+  {{ scripts|raw }}
+  Are you sure you want to delete this file?
+  <form action="{{ actionUrl }}" method="post" id="concertDelete">
+    <input type="hidden" name="filePath" value="{{ filePath }}" />
+    <input type="hidden" name="concertAction" value="delete"/>
+    <button type="submit" name="deleteAction" value="confirmDelete" class="negative deleteAction">Delete</button>
+    <button type="submit" name="deleteAction" value="cancelDelete deleteAction">Cancel</button>
+  </form>
+{% endspaceless %}
