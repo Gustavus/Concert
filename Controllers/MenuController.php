@@ -91,10 +91,21 @@ class MenuController extends SharedController
     $this->addPublicDraftButtons();
     $this->addEditButtons();
 
+
     if (!empty($this->menu)) {
+      ksort($this->menu);
+
       return $this->renderView('menu.html.twig', ['menu' => $this->menu]);
     }
     return '';
+  }
+
+  private function addMenuItem($item, $weight = 0)
+  {
+    if (!isset($this->menu[$weight])) {
+      $this->menu[$weight] = [];
+    }
+    $this->menu[$weight][] = $item;
   }
 
   /**
@@ -104,12 +115,15 @@ class MenuController extends SharedController
    */
   private function addPublicDraftButtons()
   {
+    if (self::isSiteNavRequest()) {
+      return false;
+    }
     if ($this->userIsViewingPublicDraft(Config::removeDocRootFromPath($this->filePath))) {
-      $draftName = $this->guessDraftName($this->filePath);
+      $draftName = self::guessDraftName($this->filePath);
       $draft = $this->getFileManager()->getDraft($draftName);
       if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
 
-        if ($this->isRequestFromConcertRoot($this->filePath)) {
+        if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
@@ -117,19 +131,21 @@ class MenuController extends SharedController
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
 
-        $this->menu[] = [
+        $item = [
           'id'       => 'concertEditDraft',
           'text'     => 'Edit Draft',
           'url'      => $url,
           'classes'  => 'blue',
           'thickbox' => false,
         ];
+
+        $this->addMenuItem($item);
       }
     } else if ($this->userIsEditingPublicDraft(Config::removeDocRootFromPath($this->filePath))) {
-      $draftName = $this->guessDraftName($this->filePath);
+      $draftName = self::guessDraftName($this->filePath);
       $draft = $this->getFileManager()->getDraft($draftName);
 
-      if ($this->isRequestFromConcertRoot($this->filePath)) {
+      if (self::isRequestFromConcertRoot($this->filePath)) {
         $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
       } else {
         $query = $this->queryParams;
@@ -137,13 +153,15 @@ class MenuController extends SharedController
         $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
       }
 
-      $this->menu[] = [
+      $item = [
         'id'       => 'concertStopEditingDraft',
         'text'     => 'Stop Editing Draft',
         'url'      => $url,
         'classes'  => 'red',
         'thickbox' => false,
       ];
+
+      $this->addMenuItem($item);
     }
   }
 
@@ -159,30 +177,35 @@ class MenuController extends SharedController
 
     if (empty($draft)) {
       // we might be viewing a public draft.
-      $currentDraft = $this->getFileManager()->getDraft($this->guessDraftName());
+      $currentDraft = $this->getFileManager()->getDraft(self::guessDraftName());
       if (!empty($currentDraft) && PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $currentDraft)) {
         $draft = $currentDraft;
       }
     }
 
     if (!empty($draft) && $draft['type'] === Config::PUBLIC_DRAFT) {
-      if ($this->userIsAddingUsersToDraft(Config::removeDocRootFromPath($this->filePath))) {
-        if ($this->isRequestFromConcertRoot($this->filePath)) {
+      if (self::userIsAddingUsersToDraft(Config::removeDocRootFromPath($this->filePath))) {
+        if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
           $query['concert'] = 'viewDraft';
           $query['concertDraft'] = $draft['draftFilename'];
+          if (self::isSiteNavRequest()) {
+            $query['concertAction'] = 'siteNav';
+          }
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
-        $this->menu[] = [
+        $item = [
           'id'       => 'viewDraft',
           'text'     => 'View Draft',
           'url'      => $url,
           'thickbox' => false,
         ];
-      } else {
-        if ($this->isRequestFromConcertRoot($this->filePath)) {
+
+        $this->addMenuItem($item);
+      } else if (!self::isSiteNavRequest()) {
+        if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('addUsersToDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
@@ -190,13 +213,15 @@ class MenuController extends SharedController
           $query['concertDraft'] = $draft['draftFilename'];
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
-        $this->menu[] = [
+        $item = [
           'id'           => 'addUsersToDraft',
           'text'         => 'Add users to your draft',
           'url'          => $url,
           'classes'      => 'green',
           'thickboxData' => ['height' => '400px'],
         ];
+
+        $this->addMenuItem($item);
       }
     }
 
@@ -205,15 +230,20 @@ class MenuController extends SharedController
     if (!empty($drafts)) {
       $query = $this->queryParams;
       $query['concert'] = 'viewDraft';
+      if (self::isSiteNavRequest()) {
+        $query['concertAction'] = 'siteNav';
+      }
 
       unset($query['concertDraft']);
       $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
 
-      $this->menu[] = [
+      $item = [
         'id'   => 'viewDrafts',
         'text' => 'View all drafts',
         'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
       ];
+
+      $this->addMenuItem($item);
     }
   }
 
@@ -231,63 +261,113 @@ class MenuController extends SharedController
     }
 
     if (PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
-      $this->menu[] = [
+      $item = [
         'id'            => 'createPage',
         'text'          => 'Create New Page',
         'url'           => $this->buildUrl('newPageMenu'),
         'thickbox'      => true,
         'thickboxData' => ['height' => '400px'],
       ];
+
+      $this->addMenuItem($item);
     }
 
     if (PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $query['concert'] = 'delete';
-      $this->menu[] = [
+      if (self::isSiteNavRequest()) {
+        $query['concertAction'] = 'siteNav';
+        $text = 'Delete Local Navigation';
+      } else {
+        $text = 'Delete Page';
+      }
+      $item = [
         'id'       => 'deletePage',
-        'text'     => 'Delete Page',
+        'text'     => $text,
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => true,
         'classes'  => 'red',
       ];
+
+      $this->addMenuItem($item);
     }
 
-    if ($this->userWantsToEdit() || $this->userIsSaving()) {
+    if (self::userIsEditing() || self::userIsSaving()) {
       $query['concert'] = 'stopEditing';
-      $this->menu[] = [
+      if (self::isSiteNavRequest()) {
+        $query['concertAction'] = 'siteNav';
+      }
+      $item = [
         'id'       => 'stopEditing',
         'text'     => 'Stop Editing',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
         'classes'  => 'red',
       ];
+
+      $this->addMenuItem($item);
     } else {
 
       $draft = $this->getFileManager()->getDraftForUser($this->getLoggedInUsername());
 
       if (!empty($draft) && PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
-        if ($this->isRequestFromConcertRoot($this->filePath)) {
+        if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
           $query['concert'] = 'edit';
+          if (self::isSiteNavRequest()) {
+            $query['concertAction'] = 'siteNav';
+          }
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
-        $this->menu[] = [
+        $item = [
           'id'       => 'editDraft',
           'text'     => 'Continue draft',
           'url'      => $url,
           'thickbox' => false,
         ];
+
+        $this->addMenuItem($item);
       } else {
         $query['concert'] = 'edit';
-        $this->menu[] = [
+        $item = [
           'id'       => 'startEditing',
           'text'     => 'Edit Page',
           'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
           'thickbox' => false,
           'classes'  => 'blue',
         ];
+
+        $this->addMenuItem($item);
       }
+    }
+
+    if (self::isSiteNavRequest() && !self::userIsEditing()) {
+      $query = $this->queryParams;
+      $query['concert'] = 'edit';
+      $query['concertAction'] = 'siteNav';
+      $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+      $item = [
+        'id'       => 'editSiteNav',
+        'text'     => 'Edit local navigation',
+        'url'      => $url,
+        'thickbox' => false,
+      ];
+
+      $this->addMenuItem($item, 20);
+    } else if (self::isSiteNavRequest()) {
+      $query = $this->queryParams;
+      $query['concertAction'] = 'siteNav';
+      $query['concert'] = 'stopEditing';
+      $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+      $item = [
+        'id'       => 'stopEditingSiteNav',
+        'text'     => 'Stop editing local navigation',
+        'url'      => $url,
+        'thickbox' => false,
+      ];
+
+      $this->addMenuItem($item, 20);
     }
   }
 
@@ -380,7 +460,7 @@ class MenuController extends SharedController
       return $this->renderFileTree($params['fileTree'] === 'fromFile');
     }
 
-    if ($this->isBareboneRequest()) {
+    if (self::isBareboneRequest()) {
       $this->analyzeReferer();
     } else {
       $this->analyzeReferer(false);
@@ -397,7 +477,7 @@ class MenuController extends SharedController
     $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($this->filePath));
     if (empty($siteBase)) {
       // user doesn't have access to this site.
-      if ($this->isBareboneRequest()) {
+      if (self::isBareboneRequest()) {
         return false;
       } else {
         return $this->renderErrorPage(Config::NO_SITE_ACCESS_MESSAGE);
@@ -406,7 +486,7 @@ class MenuController extends SharedController
 
     $view = $this->renderView('newPageForm.html.twig', ['site' => $siteBase, 'cssVersion' => Config::CSS_VERSION]);
 
-    if ($this->isBareboneRequest()) {
+    if (self::isBareboneRequest()) {
       return $view;
     } else {
       $this->setContent($view);
@@ -447,6 +527,14 @@ class MenuController extends SharedController
 
     // $parts['path'] will have a leading slash. We want to remove the trailing slash from the doc root
     $this->filePath = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . $parts['path'];
+
+
+    $origGET = $_GET;
+    $_GET = $this->queryParams;
+    if (self::isSiteNavRequest() && self::isForwardedFromSiteNav()) {
+      $this->filePath = $file = self::getSiteNavForFile($this->filePath);
+    }
+    $_GET = $origGET;
   }
 
   /**
