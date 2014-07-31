@@ -444,7 +444,7 @@ class FileManager
    * @param  string $type Type of drafts to get
    * @return array
    */
-  private function getDrafts($type = null)
+  public function getDrafts($type = null)
   {
     $dbal = $this->getDBAL();
 
@@ -811,9 +811,11 @@ class FileManager
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
         trigger_error(sprintf('The file: "%s" was moved to "%s", but could not be marked as published in the DB', $srcFilePath, $this->filePath));
       }
+      $this->destroyLock();
       return true;
     } else {
       unlink($srcFilePath);
+      $this->destroyLock();
       return false;
     }
   }

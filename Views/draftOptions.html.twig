@@ -14,7 +14,7 @@
     <tr>
       <td>{{ draft.type|title }}</td>
       <td>{{ draft.username }}</td>
-      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}" class="button">View Draft</a></td>
+      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}{% if siteNav %}&amp;concertAction=siteNav{% endif %}" class="button">View Draft</a></td>
     </tr>
   {% endfor %}
   </body>

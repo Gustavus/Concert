@@ -13,10 +13,14 @@ return [
   //   'handler' => 'Gustavus\Concert\Controllers\MainController:edit',
   //   //'visibleTo' => ['Concert', ['all', 'callbacks' => ['Gustavus\Concert\Config::canEditPage']]]
   // ],
-  'mosh' => [
+  'moshRequest' => [
     'route'   => '/',
     'handler' => 'Gustavus\Concert\Controllers\MainController:handleMoshRequest',
     //'visibleTo' => ['Concert', ['all', 'callbacks' => ['Gustavus\Concert\Config::canEditPage']]]
+  ],
+  // mosh action for forwarding
+  'mosh' => [
+    'handler' => 'Gustavus\Concert\Controllers\MainController:mosh',
   ],
   // draft functionality for forwarding requests
   'handleDraftActions' => [
@@ -64,5 +68,9 @@ return [
   'autocompleteUser' => [
     'route'   => '/autocompleteUser/{value}',
     'handler' => 'Gustavus\Concert\Controllers\MainController:autocompleteUser',
+  ],
+  // site nav actions
+  'handleSiteNavActions' => [
+    'handler' => 'Gustavus\Concert\Controllers\SiteNavController:handleSiteNavActions'
   ],
 ];
