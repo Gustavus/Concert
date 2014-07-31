@@ -74,9 +74,9 @@ class SiteNavController extends SharedController
       $fm = new FileManager($this->getLoggedInUsername(), $siteNav, null, $this->getDB());
       $draft = $fm->getDraftForUser($this->getLoggedInUsername());
       if (empty($draft)) {
-        $this->addSessionMessage('There was no site nav found in the current site. We created a blank one for you to edit.');
+        $this->addConcertMessage('There was no site nav found in the current site. We created a blank one for you to edit.');
       } else {
-        $this->addSessionMessage('There was no site nav found for the current site, but we did find a draft for you to edit.');
+        $this->addConcertMessage('There was no site nav found for the current site, but we did find a draft for you to edit.');
       }
     }
 
@@ -115,10 +115,10 @@ class SiteNavController extends SharedController
       unset($_GET['barebones']);
       // we need to set the local nav to be the draft
       if (isset($moshResult['action']) && $moshResult['action'] === 'return' && !empty($moshResult['value'])) {
-        $this->addSessionMessage(Config::SITE_NAV_DRAFT_NOTE, false);
+        $this->addConcertMessage(Config::SITE_NAV_DRAFT_NOTE);
         $this->setLocalNavigation($moshResult['value']);
       } else if (is_string($moshResult)) {
-        $this->addSessionMessage(Config::SITE_NAV_DRAFT_NOTE, false);
+        $this->addConcertMessage(Config::SITE_NAV_DRAFT_NOTE);
         $this->setLocalNavigation($moshResult);
       }
     } else {

@@ -37,13 +37,13 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!$fm->userCanEditFile()) {
-      $this->addSessionMessage('Oops! It appears that you don\'t have access to edit this file');
+      $this->addConcertMessage('Oops! It appears that you don\'t have access to edit this file');
       return false;
     }
 
     if (!$fm->acquireLock()) {
       // @todo change this to a base lock error message. With info on the lock owner?
-      $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      $this->addConcertMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
       return false;
     }
 
@@ -53,7 +53,7 @@ class MainController extends SharedController
 
       if (count($drafts) > 1 || reset($drafts)['username'] !== $this->getLoggedInUsername()) {
         // someone has a draft open for this page.
-        $this->addSessionMessage('someone has a draft open for this page.', false);
+        $this->addConcertMessage('someone has a draft open for this page.', false);
       }
     }
 
@@ -120,12 +120,12 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
     if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
-      $this->addSessionMessage('Oops! It appears that you don\'t have access to create this page.');
+      $this->addConcertMessage('Oops! It appears that you don\'t have access to create this page.');
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      $this->addConcertMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
       return false;
     }
 
@@ -166,18 +166,18 @@ class MainController extends SharedController
     }
 
     if (!$fm->userCanEditFile()) {
-      $this->addSessionMessage('Oops! It appears that you don\'t have access to edit this file');
+      $this->addConcertMessage('Oops! It appears that you don\'t have access to edit this file');
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      $this->addConcertMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
       return false;
     }
 
     if ($fm->draftExists()) {
       // someone has a draft open for this page.
-      $this->addSessionMessage('someone has a draft open for this page.', false);
+      $this->addConcertMessage('someone has a draft open for this page.', false);
     }
 
     if ($this->getMethod() === 'POST' && isset($_POST['filePath'], $_POST['concertAction'], $_POST['deleteAction'])) {
@@ -298,7 +298,7 @@ class MainController extends SharedController
       if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
 
         $this->addMoshMenu();
-        $this->setSessionMessage(null, false);
+        $this->setConcertMessage(null, false);
 
         if (!file_exists($filePath) && PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $filePathFromDocRoot)) {
           // we need to check to see if the user is trying to create a new page
@@ -322,7 +322,7 @@ class MainController extends SharedController
           $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
           if ($fm->userHasLock()) {
             // user has a lock for this page.
-            $this->addSessionMessage('It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?', false);
+            $this->addConcertMessage('It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?', false);
           }
         }
       }

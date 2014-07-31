@@ -77,7 +77,7 @@ class DraftController extends SharedController
       if (self::isRequestFromConcertRoot()) {
         $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
       }
-      $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
+      $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
     }
 
 
@@ -143,7 +143,7 @@ class DraftController extends SharedController
     if (self::isRequestFromConcertRoot()) {
       $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Config::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
     }
-    $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
+    $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
     return (new File(Config::$draftDir . $draftName))->loadAndEvaluate();
   }

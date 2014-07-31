@@ -217,7 +217,31 @@ class SharedController extends ConcourseController
     return parent::buildUrl($alias, $parameters, Config::WEB_DIR, $fullUrl);
   }
 
+  /**
+   * Adds a message to the page
+   *
+   * @param string  $message Message to add
+   * @param boolean $isError Whether it is an error message or not
+   */
+  protected function addConcertMessage($message, $isError = false)
+  {
+    $this->addSessionMessage($message, $isError);
+  }
+
+  /**
+   * Sets a message for the page
+   *
+   * @param string  $message Message to set
+   * @param boolean $isError Whether it is an error message or not
+   */
+  protected function setConcertMessage($message, $isError = false)
+  {
+    $this->setSessionMessage($message, $isError);
+  }
+
+
   // Action checks
+
 
   /**
    * Checks to see if we have already moshed in this request or not
@@ -382,19 +406,6 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Gets the query that is being requested from POST
-   *
-   * @return string|null String if the query request is found, null otherwise
-   */
-  protected static function getQueryFromRequest()
-  {
-    if (self::isRequestingQuery() && isset($_POST['query'])) {
-      return $_POST['query'];
-    }
-    return null;
-  }
-
-  /**
    * Checks to see if the user is viewing a public draft from the specified requestURI
    *
    * @param  string $requestURI
@@ -477,6 +488,38 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Checks to see if the request is coming from the concert root or not.
+   *
+   * @param  string $requestURI
+   * @return boolean
+   */
+  protected static function isRequestFromConcertRoot($requestURI = null)
+  {
+    $concertRoot = Config::addDocRootToPath(Config::WEB_DIR);
+
+    if ($requestURI === null) {
+      $requestURI = $_SERVER['REQUEST_URI'];
+    }
+    $requestURI = Config::addDocRootToPath($requestURI);
+
+    return (strpos($requestURI, $concertRoot) === 0);
+  }
+
+  /**
+   * Checks to see if the request is a barebone request or not
+   *
+   * @return boolean
+   */
+  protected static function isBareboneRequest()
+  {
+    return isset($_GET['barebones']);
+  }
+
+
+  // Functions to get things from the request
+
+
+  /**
    * Gets the requested draft from the url
    *
    * @return string|null
@@ -512,31 +555,16 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Checks to see if the request is coming from the concert root or not.
+   * Gets the query that is being requested from POST
    *
-   * @param  string $requestURI
-   * @return boolean
+   * @return string|null String if the query request is found, null otherwise
    */
-  protected static function isRequestFromConcertRoot($requestURI = null)
+  protected static function getQueryFromRequest()
   {
-    $concertRoot = Config::addDocRootToPath(Config::WEB_DIR);
-
-    if ($requestURI === null) {
-      $requestURI = $_SERVER['REQUEST_URI'];
+    if (self::isRequestingQuery() && isset($_POST['query'])) {
+      return $_POST['query'];
     }
-    $requestURI = Config::addDocRootToPath($requestURI);
-
-    return (strpos($requestURI, $concertRoot) === 0);
-  }
-
-  /**
-   * Checks to see if the request is a barebone request or not
-   *
-   * @return boolean
-   */
-  protected static function isBareboneRequest()
-  {
-    return isset($_GET['barebones']);
+    return null;
   }
 
   /**
