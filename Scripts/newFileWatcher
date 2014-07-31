@@ -9,6 +9,7 @@
       serverName=`uname -n`
 
       result=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/manageNewFile.php /cis/www-etc/lib/Gustavus/Concert/staging/$file $serverName`
-      message="New file: $file was found. File handling result: $result"
+      date=`date --rfc-3339=seconds`
+      message="New file: $file was found on $date. File handling result: $result"
       echo $message >> /cis/lib/Gustavus/Concert/Scripts/Logs/watcher_log
     done
