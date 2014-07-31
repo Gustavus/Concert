@@ -114,7 +114,7 @@ class MainController extends SharedController
   public function createNewPage($filePath, $fromFilePath = null)
   {
     if ($fromFilePath === null) {
-      $fromFilePath = Config::TEMPLATE_PAGE;
+      $fromFilePath = (self::isForwardedFromSiteNav()) ? Config::SITE_NAV_TEMPLATE : Config::TEMPLATE_PAGE;
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
@@ -306,7 +306,7 @@ class MainController extends SharedController
           if ($result) {
             return $result;
           }
-        } else if (self::userWantsToEdit() || self::userIsSaving()) {
+        } else if (self::userIsEditing() || self::userIsSaving()) {
           // user is editing or saving
           $editResult = $this->edit($filePath);
           if ($editResult) {
@@ -316,7 +316,7 @@ class MainController extends SharedController
             ];
           }
         } else {
-          if (self::userWantsToStopEditing()) {
+          if (self::userIsDoneEditing()) {
             return $this->stopEditing($filePath);
           }
           $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
@@ -387,7 +387,7 @@ class MainController extends SharedController
    */
   private function handleNewPageRequest($filePath)
   {
-    if (self::userWantsToStopEditing()) {
+    if (self::userIsDoneEditing()) {
       $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
       $fm->stopEditing();
 
@@ -397,7 +397,7 @@ class MainController extends SharedController
           'value'  => $draft,
         ];
       }
-    } else if (self::userWantsToEdit() || self::userIsSaving()) {
+    } else if (self::userIsEditing() || self::userIsSaving()) {
       if (isset($_GET['srcFilePath'])) {
         $fromFilePath = Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
       } else {

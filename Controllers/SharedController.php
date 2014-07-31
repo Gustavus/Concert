@@ -177,7 +177,7 @@ class SharedController extends ConcourseController
    */
   // protected function addMoshingActions($filePath)
   // {
-  //   if (self::userWantsToEdit() || self::userIsSaving()) {
+  //   if (self::userIsEditing() || self::userIsSaving()) {
   //     Filters::add('userBox', function($content) {
   //       // @todo make this remove concert stuff from the url
   //       return $content . '<a href="?concert=stopEditing" class="button red concertEditPage">Stop Editing</a>';
@@ -244,7 +244,7 @@ class SharedController extends ConcourseController
    *
    * @return boolean
    */
-  protected static function userWantsToEdit()
+  protected static function userIsEditing()
   {
     return (isset($_GET['concert']) && $_GET['concert'] === 'edit');
   }
@@ -254,7 +254,7 @@ class SharedController extends ConcourseController
    *
    * @return boolean
    */
-  protected static function userWantsToStopEditing()
+  protected static function userIsDoneEditing()
   {
     return (isset($_GET['concert']) && $_GET['concert'] === 'stopEditing');
   }
@@ -304,7 +304,7 @@ class SharedController extends ConcourseController
    *
    * @return boolean
    */
-  protected static function userWantsToViewDraft()
+  protected static function userIsViewingDraft()
   {
     return (isset($_GET['concert']) && $_GET['concert'] === 'viewDraft');
   }
@@ -334,26 +334,6 @@ class SharedController extends ConcourseController
    *
    * @return boolean
    */
-  protected static function userIsEditingSiteNav()
-  {
-    return ((isset($_GET['concert']) && $_GET['concert'] === 'editSiteNav') || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'editSiteNav'));
-  }
-
-  /**
-   * Checks to see if the user is editing the site nav
-   *
-   * @return boolean
-   */
-  protected static function userIsViewingSiteNavDraft()
-  {
-    return ((isset($_GET['concert']) && $_GET['concert'] === 'siteNavDraft') || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNavDraft'));
-  }
-
-  /**
-   * Checks to see if the user is editing the site nav
-   *
-   * @return boolean
-   */
   protected static function isForwardedFromSiteNav()
   {
     return (isset($_GET['forwardedFrom']) && $_GET['forwardedFrom'] === 'siteNav');
@@ -365,7 +345,10 @@ class SharedController extends ConcourseController
    */
   protected static function isSiteNavRequest()
   {
-    return (self::userIsEditingSiteNav() || self::userIsViewingSiteNavDraft());
+    if (isset($_POST['filePath']) && strpos($_POST['filePath'], 'concertAction=siteNav') !== false) {
+      return true;
+    }
+    return ((isset($_GET['concert']) && $_GET['concert'] === 'siteNav') || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav'));
   }
 
   /**
@@ -375,7 +358,7 @@ class SharedController extends ConcourseController
    */
   protected static function isDraftRequest()
   {
-    return (self::userWantsToViewDraft() || self::userIsSavingDraft() || self::userIsDeletingDraft() || self::userIsEditingDraft() || self::userIsAddingUsersToDraft());
+    return (self::userIsViewingDraft() || self::userIsSavingDraft() || self::userIsDeletingDraft() || self::userIsEditingDraft() || self::userIsAddingUsersToDraft());
   }
 
   /**
@@ -424,7 +407,7 @@ class SharedController extends ConcourseController
     if (strpos($requestURI, $viewPublicDraftUrl) !== false) {
       // user is viewing a public draft from concert root
       return true;
-    } else if (self::userWantsToViewDraft()) {
+    } else if (self::userIsViewingDraft()) {
       // we need to do some extra checks to see if the user is viewing a public draft.
       $draftName = self::getDraftFromRequest();
 

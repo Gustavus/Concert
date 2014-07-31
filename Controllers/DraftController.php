@@ -66,16 +66,19 @@ class DraftController extends SharedController
 
     $draft = reset($drafts);
 
-    $messageAdditions = '';
+    if (!self::isForwardedFromSiteNav()) {
+      // we don't want to add any messages if working on a site nav
+      $messageAdditions = '';
 
-    if ($draft['type'] === Config::PUBLIC_DRAFT) {
-      $messageAdditions .= sprintf('This draft is a shared draft. Other users can see if by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
-    }
+      if ($draft['type'] === Config::PUBLIC_DRAFT) {
+        $messageAdditions .= sprintf('This draft is a shared draft. Other users can see if by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
+      }
 
-    if (self::isRequestFromConcertRoot()) {
-      $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
+      if (self::isRequestFromConcertRoot()) {
+        $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
+      }
+      $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
     }
-    $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
 
     $draftFilename = $fm->getDraftFileName($draft['username'], true);
@@ -95,7 +98,7 @@ class DraftController extends SharedController
    */
   private function renderMultipleDraftOptions($drafts)
   {
-    return $this->renderTemplate('draftOptions.html.twig', ['drafts' => $drafts, 'editSiteNav' => self::userIsEditingSiteNav(), 'siteNavDraft' => self::userIsViewingSiteNavDraft()]);
+    return $this->renderTemplate('draftOptions.html.twig', ['drafts' => $drafts, 'siteNav' => self::isForwardedFromSiteNav()]);
   }
 
   /**
@@ -308,6 +311,7 @@ class DraftController extends SharedController
    * Adds users to a draft
    *
    * @param array $params Parameters from router
+   * @return  string|array
    */
   public function addUsersToDraft($params)
   {
@@ -411,7 +415,7 @@ class DraftController extends SharedController
       $params['draftName'] = self::guessDraftName();
       return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
 
-    } else if (self::userWantsToViewDraft()) {
+    } else if (self::userIsViewingDraft()) {
       $params['draft'] = self::getDraftFromRequest();
       return ['action' => 'return', 'value' => $this->showDraft($params)];
 
