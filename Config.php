@@ -80,9 +80,14 @@ class Config
   const LOCK_DURATION = 86400; // 60*60*24 = 86400
 
   /**
-   * Base template page
+   * Base template
    */
   const TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+
+  /**
+   * Base site_nav template
+   */
+  const SITE_NAV_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/site_nav.php';
 
   /**
    * Private draft type identifier
