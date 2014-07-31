@@ -125,6 +125,11 @@ class Config
   const DRAFT_NOTE = 'Note: You are viewing a draft and not a published page.';
 
   /**
+   * Note to let people know they are looking at a draft
+   */
+  const SITE_NAV_DRAFT_NOTE = 'Note: You are viewing a draft of the site nav and not a published site nav.';
+
+  /**
    * Stage for specifing a deletion
    */
   const DELETE_STAGE = 'delete';
@@ -274,6 +279,7 @@ class Config
     'subtitle',
     'body',
     'content',
+    'localnavigation',
   ];
 
   /**
