@@ -562,7 +562,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => basename($draftName)]);
+    $_SERVER['REQUEST_URI'] = $this->controller->buildUrl('editDraft', ['draftName' => basename($draftName)]);
 
     $actual = $this->controller->handleDraftActions(['filePath' => $draftName]);
 
@@ -591,7 +591,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => basename($draftName)]);
+    $_SERVER['REQUEST_URI'] = $this->controller->buildUrl('editDraft', ['draftName' => basename($draftName)]);
     $_SERVER['REQUEST_METHOD'] = 'POST';
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];

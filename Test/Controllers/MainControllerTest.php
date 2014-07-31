@@ -254,6 +254,34 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
+    $this->assertEmpty(PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function editOpenDraftOtherUser()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $this->buildFileManager('bvisto', $filePath);
+    $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
+
     $this->assertContains('draft open for this page', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
 
     $this->unauthenticate();
@@ -1025,8 +1053,8 @@ class MainControllerTest extends TestBase
    */
   public function userIsEditingPublicDraft()
   {
-    $requestURI = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
     $this->setUpController();
+    $requestURI = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']);
 
     $this->assertTrue($this->controller->userIsEditingPublicDraft($requestURI));
   }
@@ -1048,8 +1076,8 @@ class MainControllerTest extends TestBase
   public function userIsEditingPublicDraftFromFilePath()
   {
     $_SERVER['REQUEST_URI'] = 'nothing';
-    $filePath = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
     $this->setUpController();
+    $filePath = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']);
 
     $this->assertTrue($this->controller->userIsEditingPublicDraft($filePath));
   }
@@ -1072,8 +1100,8 @@ class MainControllerTest extends TestBase
    */
   public function userIsEditingPublicDraftExtraQueryParams()
   {
-    $requestURI = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']) . '?concert=test';
     $this->setUpController();
+    $requestURI = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']) . '?concert=test';
 
     $this->assertTrue($this->controller->userIsEditingPublicDraft($requestURI));
   }

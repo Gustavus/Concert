@@ -42,14 +42,19 @@ class MainController extends SharedController
     }
 
     if (!$fm->acquireLock()) {
+      // @todo change this to a base lock error message. With info on the lock owner?
       $this->addSessionMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
       return false;
     }
 
     if ($fm->draftExists()) {
-      // someone has a draft open for this page.
-      $this->addSessionMessage('someone has a draft open for this page.', false);
-      // @todo if a user has a draft open, should we treat this as a "lock"?
+      // @todo should this look for all drafts? or only for the drafts the user has access to?
+      $drafts = $fm->getDrafts();
+
+      if (count($drafts) > 1 || reset($drafts)['username'] !== $this->getLoggedInUsername()) {
+        // someone has a draft open for this page.
+        $this->addSessionMessage('someone has a draft open for this page.', false);
+      }
     }
 
     if ($fm->draftExists() && $fm->userHasOpenDraft()) {
@@ -66,6 +71,11 @@ class MainController extends SharedController
       } else if (!$userCanPublish) {
         return $this->savePendingDraft($fm);
       }
+    }
+
+    $redirectPath = self::getEditRedirectPath();
+    if (!empty($redirectPath)) {
+      $filePath = $redirectPath;
     }
 
     $this->insertEditingResources($filePath);
@@ -244,28 +254,38 @@ class MainController extends SharedController
    */
   public function mosh($filePath)
   {
-    if ($this->isLoggedIn() && !$this->alreadyMoshed()) {
+    if (is_array($filePath)) {
+      $filePath = reset($filePath);
+    }
+
+    if ($this->isLoggedIn() && !self::alreadyMoshed()) {
       // let ourselves know that we have already moshed this request.
-      $this->markMoshed();
+      self::markMoshed();
 
       $filePath = Config::addDocRootToPath($filePath);
 
-      if ($this->isRequestingQuery()) {
+      if (self::isSiteNavRequest() && !self::isForwardedFromSiteNav()) {
+        // this has to happen before anything, because it will forward back to here and then everything else will get ran.
+        $this->addMoshMenu();
+        return $this->forward('handleSiteNavActions', ['filePath' => $filePath]);
+      }
+
+      if (self::isRequestingQuery()) {
         return ['action' => 'return', 'value' => $this->handleQueryRequest($filePath)];
       }
 
       // Check if the user wants to stop editing
-      if ($this->isRequestingLockRelease()) {
+      if (self::isRequestingLockRelease()) {
         return $this->stopEditing($filePath);
       }
 
-      if ($this->userIsDeleting()) {
+      if (self::userIsDeleting()) {
         return $this->deleteFile($filePath);
       }
 
       $isEditingPublicDraft = false;
       // check if it is a draft request
-      if ($this->isDraftRequest() || ($isEditingPublicDraft = $this->userIsEditingPublicDraft($filePath))) {
+      if (self::isDraftRequest() || ($isEditingPublicDraft = $this->userIsEditingPublicDraft($filePath))) {
         if (!$isEditingPublicDraft) {
           $this->addMoshMenu();
         }
@@ -286,7 +306,7 @@ class MainController extends SharedController
           if ($result) {
             return $result;
           }
-        } else if ($this->userWantsToEdit() || $this->userIsSaving()) {
+        } else if (self::userWantsToEdit() || self::userIsSaving()) {
           // user is editing or saving
           $editResult = $this->edit($filePath);
           if ($editResult) {
@@ -296,7 +316,7 @@ class MainController extends SharedController
             ];
           }
         } else {
-          if ($this->userWantsToStopEditing()) {
+          if (self::userWantsToStopEditing()) {
             return $this->stopEditing($filePath);
           }
           $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
@@ -306,9 +326,9 @@ class MainController extends SharedController
           }
         }
       }
-    } else if (!$this->alreadyMoshed() && $this->userIsViewingPublicDraft($filePath)) {
+    } else if (!self::alreadyMoshed() && $this->userIsViewingPublicDraft($filePath)) {
       // let ourselves know that we have already moshed this request.
-      $this->markMoshed();
+      self::markMoshed();
       return $this->forward('handleDraftActions', ['filePath' => $filePath]);
     }
     return [
@@ -324,7 +344,7 @@ class MainController extends SharedController
    */
   private function handleQueryRequest($filePath)
   {
-    $query = $this->getQueryFromRequest();
+    $query = self::getQueryFromRequest();
 
     switch ($query) {
       case 'hasSharedDraft':
@@ -367,7 +387,7 @@ class MainController extends SharedController
    */
   private function handleNewPageRequest($filePath)
   {
-    if ($this->userWantsToStopEditing()) {
+    if (self::userWantsToStopEditing()) {
       $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
       $fm->stopEditing();
 
@@ -377,7 +397,7 @@ class MainController extends SharedController
           'value'  => $draft,
         ];
       }
-    } else if ($this->userWantsToEdit() || $this->userIsSaving()) {
+    } else if (self::userWantsToEdit() || self::userIsSaving()) {
       if (isset($_GET['srcFilePath'])) {
         $fromFilePath = Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
       } else {

@@ -72,7 +72,7 @@ class DraftController extends SharedController
       $messageAdditions .= sprintf('This draft is a shared draft. Other users can see if by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
     }
 
-    if ($this->isRequestFromConcertRoot()) {
+    if (self::isRequestFromConcertRoot()) {
       $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
     }
     $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
@@ -95,7 +95,7 @@ class DraftController extends SharedController
    */
   private function renderMultipleDraftOptions($drafts)
   {
-    return $this->renderTemplate('draftOptions.html.twig', ['drafts' => $drafts]);
+    return $this->renderTemplate('draftOptions.html.twig', ['drafts' => $drafts, 'editSiteNav' => self::userIsEditingSiteNav(), 'siteNavDraft' => self::userIsViewingSiteNavDraft()]);
   }
 
   /**
@@ -121,14 +121,14 @@ class DraftController extends SharedController
     }
 
     $shouldRedirectToFullPath = true;
-    if ($this->isRequestFromConcertRoot() && $shouldRedirectToFullPath) {
+    if (self::isRequestFromConcertRoot() && $shouldRedirectToFullPath) {
       // we are using this location as a url shortener
       return $this->redirect((new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue());
     }
 
     $messageAdditions = '';
     if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
-      if ($this->isRequestFromConcertRoot()) {
+      if (self::isRequestFromConcertRoot()) {
         $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
       } else {
         $url = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'editDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
@@ -137,7 +137,7 @@ class DraftController extends SharedController
     }
 
 
-    if ($this->isRequestFromConcertRoot()) {
+    if (self::isRequestFromConcertRoot()) {
       $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Config::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
     }
     $this->addSessionMessage(Config::DRAFT_NOTE . $messageAdditions, false);
@@ -180,7 +180,7 @@ class DraftController extends SharedController
       return $this->renderErrorPage(Config::LOCK_NOT_AQUIRED_MESSAGE);
     }
 
-    if ($this->isRequestFromConcertRoot()) {
+    if (self::isRequestFromConcertRoot()) {
       $buttonUrl = $this->buildUrl('drafts', ['draftName' => $draftName]);
     } else {
       $buttonUrl = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
@@ -239,7 +239,7 @@ class DraftController extends SharedController
     }
 
     if ($fm->editFile($_POST)) {
-      $draftType = ($this->userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
+      $draftType = (self::userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
       if ($fm->saveDraft($draftType)) {
         return true;
       }
@@ -275,7 +275,7 @@ class DraftController extends SharedController
     }
 
     if ($fm->editFile($_POST)) {
-      $draftType = ($this->userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
+      $draftType = (self::userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
       if ($fm->saveDraft($draftType)) {
         return true;
       }
@@ -408,24 +408,29 @@ class DraftController extends SharedController
   public function handleDraftActions(array $params)
   {
     if ($this->userIsViewingPublicDraft($params['filePath'])) {
-      $params['draftName'] = $this->guessDraftName();
+      $params['draftName'] = self::guessDraftName();
       return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
-    } else if ($this->userWantsToViewDraft()) {
-      $params['draft'] = $this->getDraftFromRequest();
+
+    } else if (self::userWantsToViewDraft()) {
+      $params['draft'] = self::getDraftFromRequest();
       return ['action' => 'return', 'value' => $this->showDraft($params)];
+
     } else if ($this->userIsEditingPublicDraft($_SERVER['REQUEST_URI'])) {
-      $params['draftName'] = $this->guessDraftName($params['filePath']);
+      $params['draftName'] = self::guessDraftName($params['filePath']);
       $result = $this->editPublicDraft($params);
       if (is_array($result)) {
         return $result;
       }
       return ['action' => 'return', 'value' => $result];
-    } else if ($this->userIsSavingDraft()) {
+
+    } else if (self::userIsSavingDraft()) {
       return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];
-    } else if ($this->userIsDeletingDraft()) {
+
+    } else if (self::userIsDeletingDraft()) {
       return ['action' => 'return', 'value' => $this->deleteDraft($params['filePath'])];
-    } else if ($this->userIsAddingUsersToDraft()) {
-      $params['draftName'] = $this->guessDraftName($params['filePath']);
+
+    } else if (self::userIsAddingUsersToDraft()) {
+      $params['draftName'] = self::guessDraftName($params['filePath']);
       return ['action' => 'return', 'value' => $this->addUsersToDraft($params)];
     }
   }
