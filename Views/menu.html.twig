@@ -1,14 +1,56 @@
 {% import _self as self %}
 {% spaceless %}
-  <div class="grid_16 alpha omega center">
-    <h2>Concert Menu</h2>
-    <p>
-      {%- for weight in menu -%}
-        {%- for item in weight -%}
-          <a href="{{ item.url }}" class="grid_15 concert menu button{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}" id="{{ item.id }}"{{ self.renderThickboxData(item) }}>{{ item.text }}</a>
+  {%- set showMenuTitle = 'Show Concert Menu' -%}
+  {%- set hideMenuTitle = 'Hide Concert Menu' -%}
+  <div id="concertMenu">
+    <div id="showConcertMenu"><a href="#" id="showConcertMenuLink" title="{% if not showMenu %}{{ showMenuTitle }}{% else %}{{ hideMenuTitle }}{% endif %}"><img src="/images/iconic/raster/gray_light/cog_alt_16x16.png" alt="Open/Close Concert Menu" /></a></div>
+    <div id="concertMenuItems" class="left{% if not showMenu %} hidden{% endif %}">
+      <ul id="concertMenuBar" class="left">
+        {%- for groupName,group in menu -%}
+          <li class="concertMenuGroup">
+            <span class="concertMenuShowGroup">{{ groupName|un_camel_case|title }}</span>
+            <div class="concertItemGroupContainer">
+              <div class="concertItemGroup">
+                {%- for weight in group -%}
+                  <ul>
+                    {%- for item in weight -%}
+                      <li><a href="{{ item.url }}" class="concertMenuItem{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}" id="{{ item.id }}"{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endfor -%}
+              </div>
+            </div>
+          </li>
         {%- endfor -%}
-      {%- endfor -%}
-    </p>
+      </ul>
+      <div id="concertMessages" class="left"></div>
+    </div>
+    <div class="clear"></div>
+    <script>
+{#--#} Modernizr.load({
+{#--#}   load: Gustavus.baseSrc,
+{#--#}   complete: function() {
+{#--#}     $('#showConcertMenuLink').on('click', function(e) {
+{#--#}       e.preventDefault();
+{#--#}       var $concertMenu = $('#concertMenuItems');
+{#--#}       if ($concertMenu.hasClass('hidden')) {
+{#--#}         $(this).attr('title', '{{ hideMenuTitle }}');
+{#--#}         $concertMenu.removeClass('hidden');
+{#--#}       } else {
+{#--#}         $(this).attr('title', '{{ showMenuTitle }}');
+{#--#}         $concertMenu.addClass('hidden');
+{#--#}       }
+{#--#}     });
+{#--#}
+{#--#}     Extend.add('page', function() {
+{#--#}       $('#cancelEditSiteNavMessage').on('click', function(e) {
+{#--#}         e.preventDefault();
+{#--#}         $(this).colorbox.close();
+{#--#}       });
+{#--#}     });
+{#--#}   }
+{#--#} });
+    </script>
   </div>
 {% endspaceless %}
 
