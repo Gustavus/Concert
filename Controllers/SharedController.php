@@ -907,6 +907,9 @@ class SharedController extends ConcourseController
   protected static function isSiteNavShared($siteNav)
   {
     $currDir         = dirname($siteNav);
+    if (!is_dir($currDir)) {
+      return false;
+    }
     $currDirContents = scandir($currDir);
 
     if (count($currDirContents) > 3) {
