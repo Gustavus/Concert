@@ -104,10 +104,24 @@ class Config
    */
   const PENDING_PUBLISH_DRAFT = 'pendingPublish';
 
+
+  // Messages
+
+
   /**
    * Message to display to people who can't edit pages
    */
-  const NOT_ALLOWED_TO_EDIT_MESSAGE = 'It looks like you aren\'t able to edit this page.';
+  const NOT_ALLOWED_TO_EDIT_MESSAGE = 'Oops! It appears that you don\'t have access to edit this page.';
+
+  /**
+   * Message to display to people who can't edit pages
+   */
+  const NOT_ALLOWED_TO_DELETE_MESSAGE = 'It looks like you aren\'t able to delete this page.';
+
+  /**
+   * Message to display to people who are trying to create new pages, but can't
+   */
+  const NOT_ALLOWED_TO_CREATE_MESSAGE = 'Oops! It appears that you don\'t have access to create this page.';
 
   /**
    * Message to display to people who can't edit pages
@@ -116,8 +130,14 @@ class Config
 
   /**
    * Message to display to people who can't get a lock for a page
+   *   Usually followed by the user who currently owns the lock
    */
-  const LOCK_NOT_AQUIRED_MESSAGE = 'It looks like we couldn\'t acquire a lock to edit this page.';
+  const LOCK_NOT_ACQUIRED_MESSAGE = 'Oops! We couldn\'t acquire a lock for this page.';
+
+  /**
+   * Message to display to people who can't get a lock because they can't edit pages
+   */
+  const NOT_ALLOWED_TO_EDIT_MESSAGE_FOR_LOCK = 'It appears that you don\'t have access to edit this page.';
 
   /**
    * Generic message to display if something unexpected happens
@@ -135,6 +155,29 @@ class Config
   const SITE_NAV_DRAFT_NOTE = 'Note: You are viewing a draft of the site nav and not a published site nav.';
 
   /**
+   * Message to display if the draft doesn't exist.
+   */
+  const DRAFT_NON_EXISTENT = 'Oops! It looks like this draft doesn\'t exist.';
+
+  /**
+   * Message to display if someone is editing a site nav that is being inherited
+   */
+  const EDITING_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are editing a site nav that will be shared by other pages and directories in';
+
+  /**
+   * Message to display if someone is creating a site nav that is being shared by
+   */
+  const CREATE_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are creating a site nav that will be shared with other pages and directories in';
+
+  /**
+   * Message to display to people who didn't modify a starter page before saving
+   */
+  const DEFAULT_PAGE_SAVED_MESSAGE = 'Oops! It looks like you didn\'t modify the template before saving.';
+
+  // Staged file stages
+
+
+  /**
    * Stage for specifing a deletion
    */
   const DELETE_STAGE = 'delete';
@@ -146,6 +189,8 @@ class Config
 
 
   // Access Levels
+  // Note: When adding an access level, make sure to add it to the appropriate arrays below
+
 
   /**
    * Public access level. Used whenever a "public" item is being edited.
@@ -213,6 +258,17 @@ class Config
    * @var array
    */
   public static $nonDeletionAccessLevels = [];
+
+  /**
+   * AccessLevels that can't edit the site nav
+   *
+   * @var array
+   */
+  public static $siteNavAccessLevels = [
+    self::SITE_ADMIN_ACCESS_LEVEL,
+    self::ADMIN_ACCESS_LEVEL,
+    self::SUPER_USER,
+  ];
 
   /**
    * AccessLevels that can publish drafts for other people
@@ -381,5 +437,18 @@ class Config
     } else {
       return $filePath;
     }
+  }
+
+  /**
+   * Builds a message for editing or creating a shared site nav
+   *
+   * @param  string  $siteNavDir Directory the site nav we are creating or editing lives in
+   * @param  boolean $creation   Whether we are creating a new site nav or editing a curren one
+   * @return string
+   */
+  public static function buildSharedSiteNavNote($siteNavDir, $creation = false)
+  {
+    $messageStart = ($creation) ? self::CREATE_SHARED_SITE_NAV_NOTE_START : self::EDITING_SHARED_SITE_NAV_NOTE_START;
+    return sprintf('%s "%s/".', $messageStart, self::removeDocRootFromPath($siteNavDir));
   }
 }
