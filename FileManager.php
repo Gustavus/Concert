@@ -211,7 +211,15 @@ class FileManager
    */
   public function assembleFile($forEditing = false)
   {
-    return $this->getFileConfiguration()->buildFile($forEditing);
+    $file = $this->getFileConfiguration()->buildFile($forEditing);
+
+    // remove things the template adds in.
+    $file = preg_replace('`\<\!\-\-templateInsertion\-\-\>.+?\<\!\-\-endTemplateInsertion\-\-\>`', '', $file);
+
+    $file = preg_replace('`(class=.+?)currentPage(.+?)`', '$1$2', $file);
+    $file = str_replace(' class=""', '', $file);
+
+    return $file;
   }
 
   // File modifications
@@ -332,7 +340,6 @@ class FileManager
       return $this->saveFile($this->filePath, $this->assembleFile(false));
     }
 
-    // @todo make use of the file hash and store drafts in the DB.
     $draftName = $this->getFilePathHash();
     $draftFilename = $this->getDraftFileName();
     $dbal = $this->getDBAL();
@@ -1237,6 +1244,22 @@ class FileManager
       ->where('filepathHash = :filepathHash');
 
     return $dbal->fetchAssoc($qb->getSQL(), [':filepathHash' => $this->getFilePathHash()]);
+  }
+
+  /**
+   * Gets the username of the person who owns the current lock
+   *
+   * @return string|boolean Username of the owner or false if there is no lock
+   */
+  public function getLockOwner()
+  {
+    $lock = $this->getLockFromDB();
+
+    if ($lock) {
+      return $lock['username'];
+    } else {
+      return false;
+    }
   }
 
   /**
