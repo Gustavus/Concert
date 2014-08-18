@@ -601,6 +601,65 @@ class PermissionsManagerTest extends TestBase
     $this->destructDB();
   }
 
+  /**
+   * @test
+   */
+  public function userCanEditSiteNavNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanEditSiteNav('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditSiteNavNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanEditSiteNav('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditSiteNavFalse()
+  {
+    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
+    Config::$siteNavAccessLevels = ['admin'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanEditSiteNav('bvisto', '/arst/protected/arst.php'));
+
+    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditSiteNav2()
+  {
+    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
+    Config::$siteNavAccessLevels = ['admin'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanEditSiteNav('bvisto', '/arst/protected/arst.php'));
+
+    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    $this->destructDB();
+  }
+
 
   /**
    * @test
