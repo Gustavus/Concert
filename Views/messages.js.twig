@@ -1,0 +1,38 @@
+{% spaceless %}
+<script>
+Modernizr.load({
+  load: Gustavus.baseSrc,
+  complete: function() {
+    $(function() {
+      var $messages         = $('#concertMessages');
+      var $concertMenuItems = $('#concertMenuItems');
+      var $concertMenuBar   = $('#concertMenuBar');
+      var heightAdditions   = 0;
+
+      // add messages in
+      $messages.html(decodeURIComponent("{{ messages|url_encode }}"));
+
+      // make sure the width is enough to fit the messages
+      if ($concertMenuBar.outerWidth() + $messages.outerWidth() > $concertMenuItems.outerWidth()) {
+        // we need to add some height to our new height below
+        heightAdditions = $concertMenuBar.outerHeight();
+        // we also might need to strip some of the width off of the menuItems in case the message is too wide.
+        $concertMenuItems.css('max-width', $concertMenuItems.outerWidth() - $concertMenuItems.offset().left);
+      }
+      // make sure the height is high enough
+      if ($messages.outerHeight() > $concertMenuItems.height()) {
+        $concertMenuItems.animate({'height': heightAdditions + $messages.outerHeight() + 'px'}, 1, 'swing', function() {
+          setTimeout(function() {
+            $messages.css('display', 'inline-block')
+              .animate({'opacity': '1'}, 1);
+          });
+        });
+      } else {
+        $messages.css('display', 'inline-block')
+          .animate({'opacity': '1'}, 1);
+      }
+    });
+  }
+});
+</script>
+{% endspaceless %}

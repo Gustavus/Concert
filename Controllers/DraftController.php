@@ -87,7 +87,7 @@ class DraftController extends SharedController
       return $this->renderErrorPage('Oops! It appears as if the draft could not be found.');
     }
 
-    return (new File($draftFilename))->loadAndEvaluate();
+    return $this->displayPage($draftFilename, true);
   }
 
   /**
@@ -145,7 +145,7 @@ class DraftController extends SharedController
     }
     $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
-    return (new File(Config::$draftDir . $draftName))->loadAndEvaluate();
+    return $this->displayPage(Config::$draftDir . $draftName, true);
   }
 
   /**
@@ -180,7 +180,7 @@ class DraftController extends SharedController
 
     // we need to create a lock on the draft file as well as the file the draft represents
     if (!$draftFM->acquireLock()) {
-      return $this->renderErrorPage(Config::LOCK_NOT_AQUIRED_MESSAGE);
+      return $this->renderErrorPage($this->renderLockNotAcquiredMessage($draftFM));
     }
 
     if (self::isRequestFromConcertRoot()) {
@@ -206,7 +206,7 @@ class DraftController extends SharedController
       ]
     ];
 
-    $this->insertEditingResources($this->buildUrl('editDraft', ['draftName' => $draftName]), ['saveDraft'], $additionalButtons);
+    $this->insertEditingResources($this->buildUrl('editDraft', ['draftName' => $draftName]), null, ['saveDraft'], $additionalButtons);
 
     $draftFilename = $draftFM->makeEditableDraft();
 
@@ -214,7 +214,7 @@ class DraftController extends SharedController
       return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return (new File($draftFilename))->loadAndEvaluate();
+    return $this->displayPage($draftFilename, true);
   }
 
   /**
@@ -238,7 +238,7 @@ class DraftController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!$fm->acquireLock()) {
-      return $this->renderErrorPage(Config::LOCK_NOT_AQUIRED_MESSAGE);
+      return $this->renderErrorPage($this->renderLockNotAcquiredMessage($fm));
     }
 
     if ($fm->editFile($_POST)) {
@@ -274,7 +274,7 @@ class DraftController extends SharedController
 
     if (!$fm->acquireLock()) {
       // lock couldn't be acquired
-      return json_encode(['error' => true, 'reason' => Config::LOCK_NOT_AQUIRED_MESSAGE]);
+      return json_encode(['error' => true, 'reason' => $this->renderLockNotAcquiredMessage($fm)]);
     }
 
     if ($fm->editFile($_POST)) {
@@ -322,10 +322,11 @@ class DraftController extends SharedController
     $draft = $fm->getDraft($draftName);
 
     if (!$draft) {
-      return $this->renderErrorPage('Oops! It looks like this draft doesn\'t exist.');
+      return $this->renderErrorPage(Config::DRAFT_NON_EXISTENT);
     }
 
     if (!PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
+      // @todo should we have the owner of this draft be displayed?
       return $this->renderErrorPage('Oops! It looks like you don\'t own this draft. Please have the owner add users.');
     }
 
@@ -399,7 +400,7 @@ class DraftController extends SharedController
       $this->addFormResources($renderer, null, $additionalScripts);
 
       $this->setContent($renderer->render($form));
-      return $this->renderPage();
+      return $this->displayPage();
     }
   }
 
@@ -411,31 +412,32 @@ class DraftController extends SharedController
    */
   public function handleDraftActions(array $params)
   {
-    if ($this->userIsViewingPublicDraft($params['filePath'])) {
-      $params['draftName'] = self::guessDraftName();
-      return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
+    switch (true) {
+      case $this->userIsViewingPublicDraft($params['filePath']):
+        $params['draftName'] = self::guessDraftName();
+          return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
 
-    } else if (self::userIsViewingDraft()) {
-      $params['draft'] = self::getDraftFromRequest();
-      return ['action' => 'return', 'value' => $this->showDraft($params)];
+      case self::userIsViewingDraft():
+        $params['draft'] = self::getDraftFromRequest();
+          return ['action' => 'return', 'value' => $this->showDraft($params)];
 
-    } else if ($this->userIsEditingPublicDraft($_SERVER['REQUEST_URI'])) {
-      $params['draftName'] = self::guessDraftName($params['filePath']);
-      $result = $this->editPublicDraft($params);
-      if (is_array($result)) {
-        return $result;
-      }
-      return ['action' => 'return', 'value' => $result];
+      case $this->userIsEditingPublicDraft($_SERVER['REQUEST_URI']):
+        $params['draftName'] = self::guessDraftName($params['filePath']);
+        $result = $this->editPublicDraft($params);
+        if (is_array($result)) {
+          return $result;
+        }
+          return ['action' => 'return', 'value' => $result];
 
-    } else if (self::userIsSavingDraft()) {
-      return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];
+      case self::userIsSavingDraft():
+          return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];
 
-    } else if (self::userIsDeletingDraft()) {
-      return ['action' => 'return', 'value' => $this->deleteDraft($params['filePath'])];
+      case self::userIsDeletingDraft():
+          return ['action' => 'return', 'value' => $this->deleteDraft($params['filePath'])];
 
-    } else if (self::userIsAddingUsersToDraft()) {
-      $params['draftName'] = self::guessDraftName($params['filePath']);
-      return ['action' => 'return', 'value' => $this->addUsersToDraft($params)];
+      case self::userIsAddingUsersToDraft():
+        $params['draftName'] = self::guessDraftName($params['filePath']);
+          return ['action' => 'return', 'value' => $this->addUsersToDraft($params)];
     }
   }
 
@@ -471,6 +473,10 @@ class DraftController extends SharedController
    */
   private function getFilePathToCopy()
   {
+    if (isset($_GET['srcFilePath']) && self::isInternalForward()) {
+      // we want a specific path
+      return $_GET['srcFilePath'];
+    }
     $referer = PageUtil::getReferer();
 
     $parts = parse_url($referer);
@@ -481,7 +487,6 @@ class DraftController extends SharedController
         return Config::addDocRootToPath(urldecode($query['srcFilePath']));
       }
     }
-    // @todo this needs to get the file to copy from the request
     return Config::TEMPLATE_PAGE;
   }
 }

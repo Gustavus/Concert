@@ -13,7 +13,10 @@ use Gustavus\Concourse\Controller as ConcourseController,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Extensibility\Filters,
   Gustavus\Concourse\RoutingUtil,
-  Gustavus\Utility\File;
+  Campus,
+  Gustavus\Utility\File,
+  Gustavus\Utility\Number,
+  Gustavus\Utility\Set;
 
 /**
  * Controller to handle shared functionality for other controllers
@@ -36,7 +39,29 @@ class SharedController extends ConcourseController
    *
    * @var boolean
    */
-  private static $moshMenuAdded = false;
+  protected static $moshMenuAdded = false;
+
+  /**
+   * Resources that have been added to the page so far
+   *
+   * @var array
+   */
+  private static $addedResources = [];
+
+  /**
+   * Message to display to the user
+   *
+   * @var string
+   */
+  private static $message = '';
+
+  /**
+   * Array of visible buttons to show when inserting editing resources.
+   *   Note: this will override anything passed into insertEditingResources().
+   *
+   * @var array
+   */
+  protected static $visibleEditingButtons = null;
 
   /**
    * {@inheritdoc}
@@ -74,39 +99,50 @@ class SharedController extends ConcourseController
     return parent::renderView('/cis/lib/Gustavus/Concert/Views/' . $template, $args, $modifyEnvironment);
   }
 
-  /**
-   * Adds JS to page
-   *
-   * @todo  remove this. Or convert to tinymce.
-   *
-   * @return  void
-   */
-  protected function addJS()
-  {
-    $this->addJavascripts(sprintf(
-        '<script type="text/javascript">
-          var CKEDITOR_BASEPATH = \'/js/ckeditor/\';
-          Modernizr.load([
-            "%s",
-          ]);
-        </script>',
-        Resource::renderResource([['path' => '/js/ckeditor/ckeditor.js'], ['path' => '/js/ckeditor/adapters/jquery.js'], ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]])
-    ));
-  }
+  // /**
+  //  * Adds JS to page
+  //  *
+  //  * @todo  remove this. Or convert to tinymce.
+  //  *
+  //  * @return  void
+  //  */
+  // protected function addJS()
+  // {
+  //   $this->addJavascripts(sprintf(
+  //       '<script type="text/javascript">
+  //         var CKEDITOR_BASEPATH = \'/js/ckeditor/\';
+  //         Modernizr.load([
+  //           "%s",
+  //         ]);
+  //       </script>',
+  //       Resource::renderResource([['path' => '/js/ckeditor/ckeditor.js'], ['path' => '/js/ckeditor/adapters/jquery.js'], ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]])
+  //   ));
+  // }
+
+  // /**
+  //  * Adds CSS to page
+  //  *
+  //  * @return  void
+  //  */
+  // protected function addCSS()
+  // {
+  //   $this->addStylesheets(
+  //       sprintf(
+  //           '<link rel="stylesheet" type="text/css" href="%s" />',
+  //           Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION])
+  //       )
+  //   );
+  // }
 
   /**
-   * Adds CSS to page
+   * Overrides visible buttons inserted by insertEditingResources
    *
-   * @return  void
+   * @param  array $visibleButtons Array of buttons that we want to be visible
+   * @return void
    */
-  protected function addCSS()
+  protected static function overrideVisibleEditingButtons($visibleButtons)
   {
-    $this->addStylesheets(
-        sprintf(
-            '<link rel="stylesheet" type="text/css" href="%s" />',
-            Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION])
-        )
-    );
+    self::$visibleEditingButtons = $visibleButtons;
   }
 
   /**
@@ -117,37 +153,63 @@ class SharedController extends ConcourseController
    * @param  array $additionalButtons Array of arrays of additional buttons to add. Sub-arrays must have indexes of 'url', 'id', and 'text'.
    * @return void
    */
-  protected function insertEditingResources($filePath, array $visibleButtons = null, array $additionalButtons = null)
+  protected function insertEditingResources($filePath, $redirectPath = null, array $visibleButtons = null, array $additionalButtons = null)
   {
-    Filters::add('scripts', function($content) use ($filePath) {
+    if (empty($redirectPath)) {
+      $redirectPath = $filePath;
+    }
+    $redirectPath = Config::removeDocRootFromPath($redirectPath);
+
+    if (!empty(self::$visibleEditingButtons)) {
+      $visibleButtons = self::$visibleEditingButtons;
+      // reset this back to null
+      self::$visibleEditingButtons = null;
+    }
+
+    $resources = [
+      'js' => [
+        '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
+        '/js/jquery/ui/current/minified/jquery.ui.button.min.js',
+        Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => 0]),
+        Resource::renderResource(['urlutil', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
+      ],
+    ];
+
+    Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources) {
         $script = sprintf(
             '<script type="text/javascript">
               Modernizr.load({
                 load: [
-                  "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
-                  "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
-                  "%s",
                   "%s"
                 ],
                 complete: function() {
                   Gustavus.Concert.filePath = "%s"
+                  Gustavus.Concert.redirectPath = "%s"
                 }
               });
             </script>',
-            Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => 0]),
-            Resource::renderResource(['urlutil', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
-            Config::removeDocRootFromPath($filePath)
+            implode('","', $resources['js']),
+            Config::removeDocRootFromPath($filePath),
+            $redirectPath
         );
         return $content . $script;
     }, 11);
 
-    Filters::add('head', function($content) {
-        $css = sprintf(
-            '<link rel="stylesheet" type="text/css" href="%s" />',
-            Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION])
-        );
-        return $content . $css;
-    }, 11);
+    self::markResourcesAdded($resources['js']);
+
+
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+    if (!self::isResourceAdded($cssResource, 'css')) {
+      Filters::add('head', function($content) use ($cssResource) {
+          $css = sprintf(
+              '<link rel="stylesheet" type="text/css" href="%s" />',
+              $cssResource
+          );
+          return $content . $css;
+      }, 11);
+
+      self::markResourcesAdded([$cssResource], 'css');
+    }
 
     $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
 
@@ -165,6 +227,50 @@ class SharedController extends ConcourseController
           ]
       );
     }, 9999);
+  }
+
+  /**
+   * Marks a resource as added
+   *
+   * @param  array $resources Array of resources that have been added
+   * @param  string $type     Type of resources we are marking
+   * @return void
+   */
+  private static function markResourcesAdded($resources, $type = 'js')
+  {
+    if (!isset(self::$addedResources[$type]) || !is_array(self::$addedResources[$type])) {
+      self::$addedResources[$type] = $resources;
+    } else {
+      self::$addedResources[$type] = array_merge(self::$addedResources[$type], $resources);
+    }
+  }
+
+  /**
+   * Checks to see if the current resource has been added or not
+   *
+   * @param  string  $resource Resource to check
+   * @param  string  $type     Type of resource to check
+   * @return boolean
+   */
+  private static function isResourceAdded($resource, $type = 'js')
+  {
+    return (isset(self::$addedResources[$type]) && in_array($resource, self::$addedResources[$type]));
+  }
+
+  /**
+   * Displays the page.
+   *   It either calls loadAndEvaluate from File or $this->renderPage()
+   *
+   * @param  string  $page     Page to evaluate. Ignored if not evaluating.
+   * @param  boolean $evaluate Whether to evaluate this page or not.
+   * @return string
+   */
+  protected function displayPage($page = null, $evaluate = false)
+  {
+    if (!$evaluate) {
+      return $this->renderPage();
+    }
+    return (new File($page))->loadAndEvaluate();
   }
 
   /**
@@ -197,14 +303,46 @@ class SharedController extends ConcourseController
   protected function addMoshMenu()
   {
     if (!self::$moshMenuAdded) {
+      // add messages to the menu
+      Filters::add('scripts', function($content) {
+        return $content . $this->renderView('messages.js.twig', ['messages' => $this->getConcertMessage()]);
+      });
+
       $result = $this->forward('menus', ['forReferer' => false]);
       if (!empty($result)) {
-        Filters::add('userBox', function($content) {
-          return sprintf('%s<a href="%s" class="button red concertMenu thickbox">Concert</a>', $content, $this->buildUrl('menus'));
-        });
+        $this->addStylesheets(
+            sprintf('<link')
+        );
+        $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+        if (!self::isResourceAdded($cssResource, 'css')) {
+          Filters::add('head', function($content) use ($cssResource) {
+              $css = sprintf(
+                  '<link rel="stylesheet" type="text/css" href="%s" />',
+                  $cssResource
+              );
+              return $content . $css;
+          }, 11);
+
+          self::markResourcesAdded([$cssResource], 'css');
+        }
+        self::addTemplatePref(['globalNotice' => ['notice' => ['notice' => $result, 'dismissable' => false]]]);
+
+        // disabled thickbox version.
+        // Filters::add('userBox', function($content) {
+        //   return sprintf('%s<a href="%s" class="button red concertMenu thickbox">Concert</a>', $content, $this->buildUrl('menus'));
+        // });
       }
       self::$moshMenuAdded = true;
     }
+  }
+
+  private static function addTemplatePref($pref)
+  {
+    global $templatePreferences;
+    if (!is_array($templatePreferences)) {
+      $templatePreferences = [];
+    }
+    $templatePreferences = array_merge($templatePreferences, $pref);
   }
 
   /**
@@ -218,6 +356,16 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Gets the messages we have accumulated this request
+   *
+   * @return string
+   */
+  public function getConcertMessage()
+  {
+    return self::$message;
+  }
+
+  /**
    * Adds a message to the page
    *
    * @param string  $message Message to add
@@ -225,7 +373,9 @@ class SharedController extends ConcourseController
    */
   protected function addConcertMessage($message, $isError = false)
   {
-    $this->addSessionMessage($message, $isError);
+    if (!empty($message)) {
+      self::$message .= sprintf('<p class="%s">%s</p>', ($isError ? 'error' : 'message'), $message);
+    }
   }
 
   /**
@@ -236,7 +386,110 @@ class SharedController extends ConcourseController
    */
   protected function setConcertMessage($message, $isError = false)
   {
-    $this->setSessionMessage($message, $isError);
+    if (!empty($message)) {
+      $message = sprintf('<p class="%s">%s</p>', ($isError ? 'error' : 'message'), $message);
+    }
+    self::$message = $message;
+  }
+
+  /**
+   * Sets $_GET to the specified array
+   *   Re-marks as moshed if we have already moshed.
+   *
+   * @param  array $newGET array of GET parameters
+   * @return void
+   */
+  protected static function setGET($newGET)
+  {
+    $markMoshed = self::alreadyMoshed();
+
+    $_GET = $newGET;
+    if ($markMoshed) {
+      self::markMoshed();
+    }
+  }
+
+  /**
+   * Renders a message when someone cannot acquire a lock
+   *
+   * @param  string|FileManager $file Path to the file they couldn't get a lock for, or a FileManager representing the file.
+   * @return string
+   */
+  protected function renderLockNotAcquiredMessage($file)
+  {
+    $message = Config::LOCK_NOT_ACQUIRED_MESSAGE;
+
+    if ($file instanceof FileManager) {
+      $fm = $file;
+    } else {
+      $fm = new FileManager($this->getLoggedInUsername(), $file, null, $this->getDB());
+    }
+
+    if (!$fm->userCanEditFile()) {
+      $message .= ' ' . Config::NOT_ALLOWED_TO_EDIT_MESSAGE_FOR_LOCK;
+    } else {
+
+      $owner = $fm->getLockOwner();
+      if ($owner && $owner !== $this->getLoggedInUsername()) {
+        $peoplePuller = Campus::People($this->getApiKey());
+        $peoplePuller->setUsername($owner);
+        $person = $peoplePuller->current();
+        if (is_object($person)) {
+          $name = $person->getFullName();
+        } else {
+          $name = $owner;
+        }
+
+        $message = sprintf('%s %s currently holds the lock.', $message, $name);
+        // lock couldn't be acquired due to lack of permissions or something else.
+      }
+    }
+
+    return $message;
+  }
+
+  /**
+   * Renders a message for alerting a user that another user has a draft open for this page
+   *
+   * @param  string|FileManager $file Path to the file or FileManager representing the file
+   * @return string
+   */
+  protected function renderOpenDraftMessage($file)
+  {
+    if ($file instanceof FileManager) {
+      $fm = $file;
+    } else {
+      $fm = new FileManager($this->getLoggedInUsername(), $file, null, $this->getDB());
+    }
+
+    $openDrafts = $fm->getDrafts();
+    $draftCount = count($openDrafts);
+
+    if ($draftCount === 1 && reset($openDrafts)['username'] === $this->getLoggedInUsername()) {
+      return '';
+    }
+
+    $draftUsers = [];
+    $forceHave = false;
+    foreach ($openDrafts as $openDraft) {
+      if ($openDraft['username'] !== $this->getLoggedInUsername()) {
+        $peoplePuller = Campus::People($this->getApiKey());
+        $peoplePuller->setUsername($openDraft['username']);
+        $person = $peoplePuller->current();
+        if (is_object($person)) {
+          $name = $person->getFullName();
+        } else {
+          // user couldn't be found in the campus api.
+          $name = $openDraft['username'];
+        }
+      } else {
+        $forceHave = true;
+        $name = count($draftUsers) === 0 ? 'You' : 'you';
+      }
+      $draftUsers[] = $name;
+    }
+    $verb = ($forceHave && $draftCount === 1) ? 'have' : (new Number($draftCount))->toQuantity('has', 'have');
+    return sprintf('%s %s a draft open for this page.', (new Set($draftUsers))->toSentence(), $verb);
   }
 
 
@@ -358,9 +611,9 @@ class SharedController extends ConcourseController
    *
    * @return boolean
    */
-  protected static function isForwardedFromSiteNav()
+  protected static function userIsCreatingSiteNav()
   {
-    return (isset($_GET['forwardedFrom']) && $_GET['forwardedFrom'] === 'siteNav');
+    return (isset($_GET['concert']) && $_GET['concert'] === 'createSiteNav');
   }
 
   /**
@@ -369,10 +622,20 @@ class SharedController extends ConcourseController
    */
   protected static function isSiteNavRequest()
   {
-    if (isset($_POST['filePath']) && strpos($_POST['filePath'], 'concertAction=siteNav') !== false) {
+    if (isset($_POST['filePath']) && (strpos($_POST['filePath'], 'site_nav.php') !== false || strpos($_POST['filePath'], 'concertAction=siteNav') !== false)) {
       return true;
     }
     return ((isset($_GET['concert']) && $_GET['concert'] === 'siteNav') || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav'));
+  }
+
+  /**
+   * Checks to see if the current site nav is the global site nav or not
+   * @param  string $siteNav Site nav to check
+   * @return boolean
+   */
+  protected static function isGlobalNav($siteNav)
+  {
+    return (Config::addDocRootToPath($siteNav) === Config::addDocRootToPath('site_nav.php'));
   }
 
   /**
@@ -413,6 +676,15 @@ class SharedController extends ConcourseController
    */
   protected function userIsViewingPublicDraft($requestURI)
   {
+    if (strpos($requestURI, '?') !== false) {
+      // we need to break the requestURI up
+      $parts = parse_url($requestURI);
+      if (isset($parts['path'])) {
+        // we only need the path as we aren'd doing anything with query params here.
+        $requestURI = $parts['path'];
+      }
+    }
+
     $viewPublicDraftUrl = $this->buildUrl('drafts', ['draft' => basename($requestURI)]);
 
     if (strpos($requestURI, $viewPublicDraftUrl) !== false) {
@@ -442,6 +714,15 @@ class SharedController extends ConcourseController
    */
   protected function userIsEditingPublicDraft($requestURI)
   {
+    if (strpos($requestURI, '?') !== false) {
+      // we need to break the requestURI up
+      $parts = parse_url($requestURI);
+      if (isset($parts['path'])) {
+        // we only need the path as we aren'd doing anything with query params here.
+        $requestURI = $parts['path'];
+      }
+    }
+
     $editDraftUrl = $this->buildUrl('editDraft', ['draftName' => basename($requestURI)]);
 
     if (strpos($requestURI, $editDraftUrl) !== false) {
@@ -482,8 +763,6 @@ class SharedController extends ConcourseController
    */
   protected static function userIsDeleting()
   {
-    // var_dump($_GET);
-    // exit;
     return ((isset($_GET['concert']) && $_GET['concert'] === 'delete') || (isset($_POST['concertAction']) && $_POST['concertAction']) === 'delete');
   }
 
@@ -513,6 +792,26 @@ class SharedController extends ConcourseController
   protected static function isBareboneRequest()
   {
     return isset($_GET['barebones']);
+  }
+
+  /**
+   * Checks to see if the user is editing the site nav
+   *
+   * @return boolean
+   */
+  protected static function isForwardedFromSiteNav()
+  {
+    return (isset($_GET['forwardedFrom']) && $_GET['forwardedFrom'] === 'siteNav');
+  }
+
+  /**
+   * Checks to see if we are forwarding internally
+   *
+   * @return boolean
+   */
+  protected static function isInternalForward()
+  {
+    return (self::isForwardedFromSiteNav());
   }
 
 
@@ -570,13 +869,14 @@ class SharedController extends ConcourseController
   /**
    * Gets the path to redirect to if we want to change it.
    *
-   * @return boolean
+   * @return string|null Null if we couldn't find one
    */
-  protected static function getEditRedirectPath()
+  protected static function findRedirectPath()
   {
     if (self::isForwardedFromSiteNav()) {
       return $_SERVER['REQUEST_URI'];
     }
+    return null;
   }
 
   /**
@@ -587,6 +887,32 @@ class SharedController extends ConcourseController
    */
   protected static function getSiteNavForFile($filePath)
   {
-    return (new File('site_nav.php'))->find(dirname($filePath), false, 5)->getValue();
+    if (strpos($filePath, 'site_nav.php') !== false) {
+      // the file in question is a site nav file.
+      return $filePath;
+    }
+    if (!is_dir($filePath)) {
+      // we only want the dirname if we aren't already looking at a directory
+      $filePath = dirname($filePath);
+    }
+    return (new File('site_nav.php'))->find($filePath, false, 5)->getValue();
+  }
+
+  /**
+   * Checks to see if the site nav could currently be shared by other pages in this directory
+   *
+   * @param  string  $siteNav Path to the site nav we want to check.
+   * @return boolean
+   */
+  protected static function isSiteNavShared($siteNav)
+  {
+    $currDir         = dirname($siteNav);
+    $currDirContents = scandir($currDir);
+
+    if (count($currDirContents) > 3) {
+      // 2 for . and .. and 1 more for the current page we are viewing
+      return true;
+    }
+    return false;
   }
 }

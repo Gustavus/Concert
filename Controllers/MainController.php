@@ -37,24 +37,17 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!$fm->userCanEditFile()) {
-      $this->addConcertMessage('Oops! It appears that you don\'t have access to edit this file');
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE);
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      // @todo change this to a base lock error message. With info on the lock owner?
-      $this->addConcertMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
       return false;
     }
 
     if ($fm->draftExists()) {
-      // @todo should this look for all drafts? or only for the drafts the user has access to?
-      $drafts = $fm->getDrafts();
-
-      if (count($drafts) > 1 || reset($drafts)['username'] !== $this->getLoggedInUsername()) {
-        // someone has a draft open for this page.
-        $this->addConcertMessage('someone has a draft open for this page.', false);
-      }
+      $this->addConcertMessage($this->renderOpenDraftMessage($fm), false);
     }
 
     if ($fm->draftExists() && $fm->userHasOpenDraft()) {
@@ -73,12 +66,7 @@ class MainController extends SharedController
       }
     }
 
-    $redirectPath = self::getEditRedirectPath();
-    if (!empty($redirectPath)) {
-      $filePath = $redirectPath;
-    }
-
-    $this->insertEditingResources($filePath);
+    $this->insertEditingResources($filePath, self::findRedirectPath());
 
     $draftFilename = $fm->makeEditableDraft($editDraft);
 
@@ -86,7 +74,7 @@ class MainController extends SharedController
       return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return (new File($draftFilename))->loadAndEvaluate();
+    return $this->displayPage($draftFilename, true);
   }
 
   /**
@@ -111,21 +99,21 @@ class MainController extends SharedController
    * @param  string $fromFilePath   Absolute path to a file to create the new file from
    * @return boolean
    */
-  public function createNewPage($filePath, $fromFilePath = null)
+  private function createNewPage($filePath, $fromFilePath = null)
   {
     if ($fromFilePath === null) {
-      $fromFilePath = (self::isForwardedFromSiteNav()) ? Config::SITE_NAV_TEMPLATE : Config::TEMPLATE_PAGE;
+      $fromFilePath = Config::TEMPLATE_PAGE;
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
     if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
-      $this->addConcertMessage('Oops! It appears that you don\'t have access to create this page.');
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE);
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addConcertMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
       return false;
     }
 
@@ -140,7 +128,7 @@ class MainController extends SharedController
       return true;
     }
 
-    $this->insertEditingResources($filePath);
+    $this->insertEditingResources($filePath, self::findRedirectPath());
 
     $draftFilename = $fm->makeEditableDraft($editDraft);
 
@@ -148,7 +136,7 @@ class MainController extends SharedController
       return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return (new File($draftFilename))->loadAndEvaluate();
+    return $this->displayPage($draftFilename, true);
   }
 
   /**
@@ -157,7 +145,7 @@ class MainController extends SharedController
    * @param  string $filePath Path to the file to delete
    * @return string|boolean String for confirmation, boolean otherwise
    */
-  private function deleteFile($filePath)
+  private function deletePage($filePath)
   {
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
@@ -165,19 +153,19 @@ class MainController extends SharedController
       return $this->redirect(dirname(Config::removeDocRootFromPath($filePath)));
     }
 
-    if (!$fm->userCanEditFile()) {
-      $this->addConcertMessage('Oops! It appears that you don\'t have access to edit this file');
+    if (!PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_DELETE_MESSAGE);
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addConcertMessage('Oops! We were unable to create a lock for this file. Someone else must currently be editing it. Please try back later.', false);
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
       return false;
     }
 
     if ($fm->draftExists()) {
       // someone has a draft open for this page.
-      $this->addConcertMessage('someone has a draft open for this page.', false);
+      $this->setSessionMessage($this->renderOpenDraftMessage($fm), false);
     }
 
     if ($this->getMethod() === 'POST' && isset($_POST['filePath'], $_POST['concertAction'], $_POST['deleteAction'])) {
@@ -185,14 +173,16 @@ class MainController extends SharedController
       if ($_POST['deleteAction'] === 'confirmDelete' && urldecode($_POST['filePath']) === $filePath && $fm->stageForDeletion()) {
         if (isset($_GET['barebones'])) {
           $url = (new String(Config::removeDocRootFromPath(dirname($filePath))))->getValue();
-          // @todo what should we do here?
-          return ['action' => 'return', 'value' => true];
+          // @todo what should we do here? Return something that tells our javascript to set a timeout and then redirect to the parent site
+          return ['action' => 'return', 'value' => json_encode(['redirectUrl' => $url])];
         } else {
           return PageUtil::renderPageNotFound(true);
         }
       } else if ($_POST['deleteAction'] === 'cancelDelete') {
         $fm->stopEditing();
-        $url = (new String(Config::removeDocRootFromPath(dirname($filePath))))->getValue();
+        $redirectPath = self::findRedirectPath();
+
+        $url = (!empty($redirectPath)) ? $redirectPath : Config::removeDocRootFromPath($filePath);
         if (isset($_GET['barebones'])) {
           return true;
         } else {
@@ -215,8 +205,9 @@ class MainController extends SharedController
                 $(\'#concertDelete .deleteAction\').colorbox.close();
 
                 if (response) {
-                  // @todo finish this
-                  alert(\'This page has been deleted.\');
+                  setTimeout(function() {
+                    window.location = response.redirectUrl;
+                  }, 2000);
                 }
               }, \'json\')
             })
@@ -238,13 +229,14 @@ class MainController extends SharedController
    * Returns an array of actions to take.
    * Return Values:
    * <ul>
-   *   <li>action: {boolean} Whether any action is require or not. PossibleValues:
+   *   <li>action: {boolean} Whether any action is required or not. PossibleValues:
    *     <ul>
-   *       <li>action: {string} Action needed to take. Possible keys: 'return' and 'none'.</li>
-   *       <li>value: {string} Value to return if the action is "return".</li>
+   *       <li>return: This tells us that we need to return the value</li>
+   *       <li>none: Nothing needs to happen</li>
    *     </ul>
    *   </li>
    *   <li>value: {string} Value for caller to return or add into the Template.</li>
+   *   <li>redirectUrl: {string} URL to redirect to.</li>
    * </ul>
    *
    * @param  string $filePath Filepath to mosh on
@@ -256,6 +248,11 @@ class MainController extends SharedController
   {
     if (is_array($filePath)) {
       $filePath = reset($filePath);
+    }
+
+    if (strpos($filePath, '.php') === false) {
+      // make sure our filePath is a file
+      $filePath = str_replace('//', '/', $filePath . DIRECTORY_SEPARATOR . 'index.php');
     }
 
     if ($this->isLoggedIn() && !self::alreadyMoshed()) {
@@ -280,7 +277,7 @@ class MainController extends SharedController
       }
 
       if (self::userIsDeleting()) {
-        return $this->deleteFile($filePath);
+        return $this->deletePage($filePath);
       }
 
       $isEditingPublicDraft = false;
@@ -298,11 +295,15 @@ class MainController extends SharedController
       if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
 
         $this->addMoshMenu();
-        $this->setConcertMessage(null, false);
+        if (!self::isInternalForward()) {
+          // we don't want to clear any messages if we have forwarded back to here
+          $this->setConcertMessage(null, false);
+        }
 
         if (!file_exists($filePath) && PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $filePathFromDocRoot)) {
           // we need to check to see if the user is trying to create a new page
           $result = $this->handleNewPageRequest($filePath);
+
           if ($result) {
             return $result;
           }
@@ -387,11 +388,13 @@ class MainController extends SharedController
    */
   private function handleNewPageRequest($filePath)
   {
+    // Note: Setting this to true will show a draft of the page if one exists instead of the 404 page. We want the 404 page so the user knows that this page doesn't exist yet.
+    $showDraftInsteadOfErrorPage = false;
     if (self::userIsDoneEditing()) {
       $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
       $fm->stopEditing();
 
-      if ($fm->userHasOpenDraft() && ($draft = $this->forward('showDraft', ['filePath' => $filePath, 'showSingle' => true]))) {
+      if ($showDraftInsteadOfErrorPage && $fm->userHasOpenDraft() && ($draft = $this->forward('showDraft', ['filePath' => $filePath, 'showSingle' => true]))) {
         return [
           'action' => 'return',
           'value'  => $draft,
@@ -399,7 +402,8 @@ class MainController extends SharedController
       }
     } else if (self::userIsEditing() || self::userIsSaving()) {
       if (isset($_GET['srcFilePath'])) {
-        $fromFilePath = Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
+        $fromFilePath = self::isInternalForward() ? $_GET['srcFilePath'] : Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
+        // we will have an absolute path if we were internally forwarded
       } else {
         $fromFilePath = null;
       }
@@ -413,16 +417,18 @@ class MainController extends SharedController
       } else {
         // something happened in the request. Probably failed to acquire a lock.
         $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
-        if ($fm->userHasOpenDraft() && ($draft = $this->forward('showDraft', ['filePath' => $filePath, 'showSingle' => true]))) {
+        if ($showDraftInsteadOfErrorPage && $fm->userHasOpenDraft() && ($draft = $this->forward('showDraft', ['filePath' => $filePath, 'showSingle' => true]))) {
           return [
             'action' => 'return',
             'value'  => $draft,
           ];
-        } else {
-          // @todo should anything happen here?
         }
       }
     }
+    // nothing for us to do.
+    return [
+      'action' => 'none',
+    ];
   }
 
   /**

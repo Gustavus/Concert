@@ -247,6 +247,34 @@ class DraftControllerTest extends TestBase
   /**
    * @test
    */
+  public function showDraftFromConcertRoot()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->authenticate('testUser');
+
+    // make it look like the request is coming from the concert root
+    $_SERVER['REQUEST_URI'] = Config::WEB_DIR . 'index.php';
+
+    $this->setUpController();
+
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draft' => basename($draftName)]));
+    $this->assertContains('will live at', $this->controller->getConcertMessage());
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function handleDraftActionsShowSpecificDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
@@ -371,7 +399,39 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $sessionMessage = PageUtil::getSessionMessage($_SERVER['REQUEST_URI']);
+    $sessionMessage = $this->controller->getConcertMessage();
+    $this->assertContains('Edit Draft', $sessionMessage);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function renderPublicDraftEditableFromConcertRoot()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    // make it look like it is coming from the concert root
+    $_SERVER['REQUEST_URI'] = Config::WEB_DIR . 'index.php';
+
+    $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName)]);
+
+    // we are forcing people to view public drafts from the location that they will live at
+    $this->assertSame(['redirect' => 'https://beta.gac.edu/billy/concert/index.php?concert=viewDraft&concertDraft=edba98d222792b8363ebcdc9c56c67b8'], $actual);
+
+    $sessionMessage = $this->controller->getConcertMessage();
     $this->assertContains('Edit Draft', $sessionMessage);
     $this->unauthenticate();
     $this->destructDB();
@@ -477,7 +537,7 @@ class DraftControllerTest extends TestBase
 
     $actual = $this->controller->editPublicDraft(['draftName' => basename($draftName)]);
 
-    $this->assertContains(Config::LOCK_NOT_AQUIRED_MESSAGE, $actual['content']);
+    $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $actual['content']);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -657,7 +717,7 @@ class DraftControllerTest extends TestBase
 
     $actual = $this->controller->saveDraft($filePath);
 
-    $this->assertContains(Config::LOCK_NOT_AQUIRED_MESSAGE, $actual['content']);
+    $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $actual['content']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -766,7 +826,7 @@ class DraftControllerTest extends TestBase
 
     $actual = json_decode($this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE), true);
 
-    $this->assertContains(Config::LOCK_NOT_AQUIRED_MESSAGE, $actual['reason']);
+    $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $actual['reason']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -790,6 +850,40 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE);
 
     $this->assertTrue($actual);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveDraftForNewFileEditingDraft()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $_POST = ['1' => '<p>This is some edited html content</p>'];
+
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE);
+
+    $this->assertTrue($actual);
+
+
+    $_POST = ['1' => '<p>This is some more edited html content</p>'];
+
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE);
+    $this->assertTrue($actual);
+
+    $this->buildFileManager('testUser', $filePath);
+    $draft = $this->fileManager->getDraftForUser('testUser');
+    $draftContents = file_get_contents(Config::$draftDir . $draft['draftFilename']);
+    $this->assertContains($_POST['1'], $draftContents);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1118,5 +1212,111 @@ class DraftControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function addUsersToDraftSubmissionThroughHandleDraftActions()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', $filePath);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $_GET['concert'] = 'addUsers';
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'addusers' => [
+        'adduserssection' => [
+          'person' => [
+            ['username' => 'bvisto'],
+            ['username' => 'jerry'],
+          ],
+        ],
+      ],
+    ];
+
+    $actual = $this->controller->handleDraftActions(['filePath' => $draftFileName]);
+
+    $this->assertSame(['action', 'value'], array_keys($actual));
+    $this->assertSame(['redirect'], array_keys($actual['value']));
+
+    $draft = $this->fileManager->getDraft(basename($draftFileName));
+
+    $this->assertSame(['bvisto', 'jerry'], $draft['additionalUsers']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getFilePathToCopy()
+  {
+    $this->setUpController();
+
+    $_SERVER['HTTP_REFERER'] = 'arst?srcFilePath=' . urlencode('/billy/concert/index.php');
+
+    $result = $this->controller->getFilePathToCopy();
+
+    $this->assertSame($_SERVER['DOCUMENT_ROOT'] . 'billy/concert/index.php', $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getFilePathToCopyDefault()
+  {
+    $this->setUpController();
+
+    $result = $this->controller->getFilePathToCopy();
+
+    $this->assertSame(Config::TEMPLATE_PAGE, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getFilePathToCopyFromGetNotForwardedInternally()
+  {
+    $this->setUpController();
+
+    $origGet = $_GET;
+    $_GET['srcFilePath'] = Config::SITE_NAV_TEMPLATE;
+    $result = $this->controller->getFilePathToCopy();
+
+    $this->assertSame(Config::TEMPLATE_PAGE, $result);
+    $_GET = $origGet;
+  }
+
+  /**
+   * @test
+   */
+  public function getFilePathToCopyFromGet()
+  {
+    $this->setUpController();
+
+    $origGet = $_GET;
+    $_GET['srcFilePath'] = Config::SITE_NAV_TEMPLATE;
+    // mark that we are forwarded from site nav controller
+    $_GET['forwardedFrom'] = 'siteNav';
+    $result = $this->controller->getFilePathToCopy();
+
+    $this->assertSame(Config::SITE_NAV_TEMPLATE, $result);
+    $_GET = $origGet;
   }
 }
