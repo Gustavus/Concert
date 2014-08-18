@@ -2,6 +2,7 @@
 if(!window.Gustavus) {
   window.Gustavus = {};
 }
+
 /**
  * Concert pseudo namespace
  * @author Billy Visto
@@ -222,8 +223,8 @@ Gustavus.Concert = {
           if (data && data.redirectUrl) {
             //window.location = data.redirectUrl;
           } else {
-            //console.log('Saved. Redirecting to: ' + Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.filePath, {'concert': 'stopEditing'}));
-            window.location = Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.filePath, {'concert': 'stopEditing'});
+            console.log('Saved. Redirecting to: ' + Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'}));
+            //window.location = Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
           }
         }
       },

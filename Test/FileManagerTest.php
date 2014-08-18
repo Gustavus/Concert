@@ -1278,6 +1278,33 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function getLockOwner()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks']);
+
+    $this->buildFileManager('bvisto', '/billy/files/private.php');
+    $this->assertTrue($this->fileManager->createLock());
+    $this->assertSame('bvisto', $this->fileManager->getLockOwner());
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getLockOwnerNoLock()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks']);
+
+    $this->buildFileManager('bvisto', '/billy/files/private.php');
+    $this->assertFalse($this->fileManager->getLockOwner());
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function updateLock()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks']);

@@ -50,9 +50,9 @@ return [
   ],
   // menu functionality
   'menus' => [
-    'route'     => '/menus',
+    // we aren't using colorbox or anything to load the menu. Now.
+    //'route'     => '/menus',
     'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderMenu',
-    //'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
   'newPageMenu' => [
     'route'     => '/menus/newPage',

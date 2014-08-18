@@ -48,6 +48,12 @@ class TestBase extends TestEM
   protected $fileManager;
 
   /**
+   * Array of the original get properties to restore
+   * @var array
+   */
+  private $origGet;
+
+  /**
    * Mapping of Generated Entities to their namespace for testing
    * @var array
    */
@@ -79,6 +85,7 @@ class TestBase extends TestEM
     Config::$editableDraftDir = self::$testFileDir . '/editableDrafts/';
     $this->set('PermissionsManager', 'dbal', DBAL::getDBAL('testDB', $this->getDBH()));
     $this->setUpCaches();
+    $this->origGet = $_GET;
   }
 
   /**
@@ -94,6 +101,7 @@ class TestBase extends TestEM
       $cache->clearAllValues();
     }
     $this->set('PermissionsManager', 'cache', null);
+    $_GET = $this->origGet;
   }
 
   /**
@@ -360,6 +368,9 @@ more html
    */
   protected function set($class, $property, $value)
   {
+    if (is_object($class)) {
+      return parent::set($class, $property, $value);
+    }
     parent::set('\Gustavus\Concert\\' . $class, $property, $value);
   }
 
@@ -368,6 +379,9 @@ more html
    */
   protected function get($class, $property)
   {
+    if (is_object($class)) {
+      return parent::get($class, $property);
+    }
     parent::get('\Gustavus\Concert\\' . $class, $property);
   }
 

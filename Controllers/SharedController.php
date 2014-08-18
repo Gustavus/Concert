@@ -370,6 +370,7 @@ class SharedController extends ConcourseController
    *
    * @param string  $message Message to add
    * @param boolean $isError Whether it is an error message or not
+   * @return  void
    */
   protected function addConcertMessage($message, $isError = false)
   {
@@ -383,6 +384,7 @@ class SharedController extends ConcourseController
    *
    * @param string  $message Message to set
    * @param boolean $isError Whether it is an error message or not
+   * @return  void
    */
   protected function setConcertMessage($message, $isError = false)
   {
