@@ -20,79 +20,8 @@ use Gustavus\Test\TestObject,
   Gustavus\Concourse\RoutingUtil;
 
 /**
- * Test controller for MainController
+ * Tests for MainController
  *
- * @package Concert
- * @subpackage Test
- * @author  Billy Visto
- */
-class MainControllerTestController extends MainController
-{
-  /**
-   * overloads renderPage so it doesn't try to start outbut buffers
-   *
-   * @return array
-   */
-  protected function renderPage()
-  {
-    $this->addSessionMessages();
-    return [
-      'title'           => $this->getTitle(),
-      'subtitle'        => $this->getSubtitle(),
-      'content'         => $this->getContent(),
-      'localNavigation' => $this->getLocalNavigation(),
-      'focusBox'        => $this->getFocusBox(),
-      'stylesheets'     => $this->getStylesheets(),
-      'javascripts'     => $this->getJavascripts(),
-    ];
-  }
-
-  /**
-   * overloads redirect so it doesn't try to redirect when called
-   * @param  string $path
-   * @param  integer $statusCode Redirection status code
-   * @return void
-   */
-  protected function redirect($path = '/', $statusCode = 303)
-  {
-    $_POST = null;
-    return ['redirect' => $path];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function addFormBuilderResources(ElementRenderer $renderer, array $extraCSSResources = null, array $extraJSResources = null)
-  {
-    $this->setStylesheets('');
-    $this->setJavascripts('');
-  }
-
-  /**
-   * Adds css and js needed for filtering
-   *
-   * @return  void
-   */
-  protected function addFilteringJsAndCss()
-  {
-    $this->setStylesheets('');
-    $this->setJavascripts('');
-  }
-
-  /**
-   * Forwards specifying the test controller to forward to
-   *
-   * {@inheritdoc}
-   */
-  protected function forward($alias, array $parameters = array())
-  {
-    return RouterTestUtil::forward($this->getRoutingConfiguration(), $alias, $parameters, [
-          'Gustavus\Concert\Controllers\DraftController' => 'Gustavus\Concert\Test\Controllers\DraftControllerTestController',
-          'Gustavus\Concert\Controllers\MenuController' => 'Gustavus\Concert\Test\Controllers\MenuControllerTestController']);
-  }
-}
-
-/**
  * @package Concert
  * @subpackage Test
  * @author  Billy Visto
@@ -142,6 +71,9 @@ class MainControllerTest extends TestBase
    */
   public function tearDown()
   {
+    if (isset($this->controller)) {
+      $this->controller->setConcertMessage('');
+    }
     unset($this->controller);
     //self::removeFiles(self::$testFileDir);
     parent::tearDown();
@@ -206,7 +138,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->edit('billy/concert/index.php'));
 
-    $this->assertContains('don\'t have access', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertContains('don\'t have access', $this->controller->getConcertMessage());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -218,9 +150,9 @@ class MainControllerTest extends TestBase
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['arst', 'billy/concert/', 'test']);
 
-    $this->buildFileManager('bvisto', 'billy/concert/index.php');
+    $this->buildFileManager('arst', 'billy/concert/index.php');
     $this->assertTrue($this->fileManager->acquireLock());
 
     $this->authenticate('testUser');
@@ -229,7 +161,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->edit('billy/concert/index.php'));
 
-    $this->assertContains('unable to create a lock', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertContains('arst currently holds the lock', $this->controller->getConcertMessage());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -254,7 +186,7 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
-    $this->assertEmpty(PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertEmpty($this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -282,7 +214,7 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
-    $this->assertContains('draft open for this page', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertContains('draft open for this page', $this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -305,7 +237,7 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
-    $this->assertEmpty(PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertEmpty($this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -404,7 +336,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->createNewPage($filePath));
 
-    $this->assertContains('don\'t have access', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertContains('don\'t have access', $this->controller->getConcertMessage());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -417,9 +349,9 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['arst', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('bvisto', $filePath);
+    $this->buildFileManager('arst', $filePath);
     // create a lock on the file
     $this->assertTrue($this->fileManager->acquireLock());
 
@@ -429,7 +361,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->createNewPage($filePath));
 
-    $this->assertContains('unable to create a lock', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertContains('arst currently', $this->controller->getConcertMessage());
     $this->unauthenticate();
     $this->destructDB();
     self::removeFiles(self::$testFileDir);
@@ -559,6 +491,263 @@ class MainControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageNonExistent()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $this->assertSame(['redirect' => dirname($filePath)], $this->controller->deletePage($filePath));
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageNotAllowedToDelete()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $this->assertFalse($this->controller->deletePage($filePath));
+
+    $this->assertContains(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, $this->controller->getConcertMessage());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageNoLock()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser1', self::$testFileDir, 'test']);
+
+    $this->buildFileManager('testUser1', $filePath);
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $this->assertFalse($this->controller->deletePage($filePath));
+
+    $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $this->controller->getConcertMessage());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageWithDraft()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser1', self::$testFileDir, 'test']);
+
+    $this->buildFileManager('testUser1', $filePath);
+    $this->assertTrue($this->fileManager->saveDraft(Config::PUBLIC_DRAFT) !== false);
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $result = $this->controller->deletePage($filePath);
+
+    $this->assertSame(['action', 'value'], array_keys($result));
+    $this->assertContains('<form', $result['value']['content']);
+
+    $this->assertContains('testUser1', $result['value']['content']);
+    $this->assertContains('draft open', $result['value']['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageBarebones()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $origGet = $_GET;
+    $_GET['barebones'] = true;
+
+    $result = $this->controller->deletePage($filePath);
+
+    $this->assertSame(['action', 'value'], array_keys($result));
+    $this->assertContains('<script', $result['value']['content']);
+    $this->assertContains('<form', $result['value']['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+    $_GET = $origGet;
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageSubmissionCancel()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'filePath'      => $filePath,
+      'deleteAction'  => 'cancelDelete',
+      'concertAction' => 'delete',
+    ];
+
+    $result = $this->controller->deletePage($filePath);
+
+    $this->assertSame(['redirect' => $filePath], $result);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageSubmissionBarebonesCancel()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'filePath'     => $filePath,
+      'deleteAction' => 'cancelDelete',
+      'concertAction' => 'delete',
+    ];
+    $origGet = $_GET;
+    $_GET['barebones'] = true;
+
+    $result = $this->controller->deletePage($filePath);
+
+    $this->assertTrue($result);
+
+    $this->unauthenticate();
+    $this->destructDB();
+    $_GET = $origGet;
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageSubmission()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'filePath'      => $filePath,
+      'deleteAction'  => 'confirmDelete',
+      'concertAction' => 'delete',
+    ];
+
+    $result = $this->controller->deletePage($filePath);
+
+    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testUser', self::$testFileDir . $this->fileManager->getFilePathHash());
+    $stagedFile = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame('renderPageNotFound', $result);
+    $this->assertSame('delete', $stagedFile[0]['action']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageSubmissionBarebones()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'arst');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'filePath'      => $filePath,
+      'deleteAction'  => 'confirmDelete',
+      'concertAction' => 'delete',
+    ];
+    $origGet = $_GET;
+    $_GET['barebones'] = true;
+
+    $result = $this->controller->deletePage($filePath);
+
+    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testUser', self::$testFileDir . $this->fileManager->getFilePathHash());
+    $stagedFile = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame(['action' => 'return', 'value' => json_encode(['redirectUrl' => dirname($filePath)])], $result);
+    $this->assertSame('delete', $stagedFile[0]['action']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+    $_GET = $origGet;
   }
 
   /**
@@ -829,8 +1018,11 @@ class MainControllerTest extends TestBase
 
     $actual = $this->controller->mosh($filePath);
 
-    $this->assertSame(['action', 'value'], array_keys($actual));
-    $this->assertContains('Sub-Title', $actual['value']);
+    $this->assertSame(['action'], array_keys($actual));
+    $this->assertSame('none', $actual['action']);
+
+    // make sure our lock has been released
+    $this->assertFalse($this->fileManager->getLockFromDB());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -858,8 +1050,10 @@ class MainControllerTest extends TestBase
 
     $actual = $this->controller->handleNewPageRequest($filePath);
 
-    $this->assertSame(['action', 'value'], array_keys($actual));
-    $this->assertContains('Sub-Title', $actual['value']);
+    $this->assertSame(['action'], array_keys($actual));
+    $this->assertSame('none', $actual['action']);
+
+    $this->assertContains(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -949,7 +1143,7 @@ class MainControllerTest extends TestBase
 
     $this->assertSame(['action' => 'none'], $actual);
 
-    $this->assertContains('process of editing this page but left', PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertContains('process of editing this page but left', $this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -978,7 +1172,7 @@ class MainControllerTest extends TestBase
 
     $this->assertSame(['action' => 'none'], $actual);
 
-    $this->assertEmpty(PageUtil::getSessionMessage($_SERVER['REQUEST_URI']));
+    $this->assertEmpty($this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1047,63 +1241,4 @@ class MainControllerTest extends TestBase
     $actual = $this->controller->handleMoshRequest();
     $this->assertFalse(true);
   }
-
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraft()
-  {
-    $this->setUpController();
-    $requestURI = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']);
-
-    $this->assertTrue($this->controller->userIsEditingPublicDraft($requestURI));
-  }
-
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraftFalse()
-  {
-    $_SERVER['REQUEST_URI'] = 'nothing';
-    $this->setUpController();
-
-    $this->assertFalse($this->controller->userIsEditingPublicDraft('/billy/files/testFile'));
-  }
-
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraftFromFilePath()
-  {
-    $_SERVER['REQUEST_URI'] = 'nothing';
-    $this->setUpController();
-    $filePath = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']);
-
-    $this->assertTrue($this->controller->userIsEditingPublicDraft($filePath));
-  }
-
-  /**
-   * @test
-   */
-  public function userIsEditingPublicDraftFromFilePathFalse()
-  {
-    $_SERVER['REQUEST_URI'] = 'nothing';
-    $filePath = '/cis/www/billy/testFile';
-    $this->setUpController();
-
-    $this->assertFalse($this->controller->userIsEditingPublicDraft($filePath));
-  }
-
-  /**
-   * test
-   * @todo  add more tests for userIsEditingPublicDraft. Also for viewing public draft
-   */
-  public function userIsEditingPublicDraftExtraQueryParams()
-  {
-    $this->setUpController();
-    $requestURI = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']) . '?concert=test';
-
-    $this->assertTrue($this->controller->userIsEditingPublicDraft($requestURI));
-  }
-
 }
