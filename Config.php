@@ -401,6 +401,18 @@ class Config
   ];
 
   /**
+   * Array of posible GET keys used for navigating concert
+   * @var array
+   */
+  public static $concertGETKeys = [
+    'concertMoshed',
+    'concert',
+    'concertAction',
+    'forwardedFrom',
+    'concertDraft',
+  ];
+
+  /**
    * Builds the upload location for the current user and page being edited
    *
    * @return string

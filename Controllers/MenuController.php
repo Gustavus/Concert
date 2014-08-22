@@ -93,6 +93,7 @@ class MenuController extends SharedController
     $this->addPublicDraftButtons();
     $this->addEditButtons();
     $this->addSiteNavButtons();
+    $this->addMiscellaneousButtons();
 
     if (!empty($this->menu)) {
       ksort($this->menu);
@@ -115,6 +116,48 @@ class MenuController extends SharedController
       $this->menu[$group][$weight] = [];
     }
     $this->menu[$group][$weight][] = $item;
+  }
+
+  /**
+   * Adds miscellaneous buttons
+   *
+   * @return  void
+   */
+  private function addMiscellaneousButtons()
+  {
+    $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
+    $query = $this->queryParams;
+
+    if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
+      // @todo change this to our separate access level for revisions
+      $params = $query;
+      $params['concert'] = 'revisions';
+      $item = [
+        'id'       => 'viewRevisions',
+        'text'     => 'View page revisions',
+        'url'      => (new String($pathFromDocRoot))->addQueryString($params)->buildUrl()->getValue(),
+        'thickbox' => false,
+      ];
+
+      $this->addMenuItem($item);
+    }
+
+
+    if (isset($query['concert'])) {
+      // add quit button
+      foreach (Config::$concertGETKeys as $key) {
+        unset($query[$key]);
+      }
+
+      $item = [
+        'id'       => 'quitConcert',
+        'text'     => 'Quit Concert',
+        'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+        'thickbox' => false,
+      ];
+
+      $this->addMenuItem($item);
+    }
   }
 
   /**
