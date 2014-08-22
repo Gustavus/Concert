@@ -149,6 +149,7 @@ class SharedController extends ConcourseController
    * Injects resources required for editing pages
    *
    * @param string $filePath FilePath of the file we are editing
+   * @param string $redirectPath Path to redirect to on edit
    * @param  array $visibleButtons Array of buttons that we want to display
    * @param  array $additionalButtons Array of arrays of additional buttons to add. Sub-arrays must have indexes of 'url', 'id', and 'text'.
    * @return void
@@ -333,6 +334,11 @@ class SharedController extends ConcourseController
     }
   }
 
+  /**
+   * Adds a preference to the global template preference array
+   *
+   * @param array $pref Array of the new preference to add
+   */
   private static function addTemplatePref($pref)
   {
     global $templatePreferences;

@@ -131,7 +131,7 @@ class FileManager
   /**
    * Breaks apart the specified content into php pieces and normal content pieces
    *
-   * @param  string $content Content to separate
+   * @param  string $contents Content to separate
    * @return array  Array of Arrays keyed by content and phpcontent. They each contain arrays with indexes of the order they appear in the content.
    */
   public static function separateContentByType($contents)
@@ -334,7 +334,6 @@ class FileManager
   /**
    * Saves a draft
    *
-   * @todo  should a lock be kept open if a draft has been created?
    * @param string $type Draft type (private, pendingPublish, public)
    * @param array $additionalUsers Additional users to assign to this draft
    * @return string|boolean String of the draft file. False if saving a draft failed.
@@ -639,6 +638,7 @@ class FileManager
    * Throws a file into a staging state waiting to be moved to it's actual location
    *
    * @param string $destFilePath  Destination file path
+   * @param string $fileContents  Contents of the file to stage. <strong>Note:</strong> This should only be used for revisions.
    * @return boolean True on success, false on failure.
    */
   public function stageFile($action = null, $fileContents = null)
@@ -890,7 +890,6 @@ class FileManager
    * Removes the specified file.
    *   Safe check in place to not delete the site
    *
-   * @param  string $site Site we are removing the file from
    * @return boolean
    */
   private function removeFile()
