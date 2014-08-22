@@ -13,6 +13,9 @@ use Gustavus\Concert\Config,
   Gustavus\Utility\PageUtil,
   Gustavus\Concert\PermissionsManager,
   Campus\Utility\Autocomplete,
+  Gustavus\Extensibility\Actions,
+  Gustavus\Extensibility\Filters,
+  Gustavus\Revisions\API as RevisionsAPI,
   InvalidArgumentException;
 
 /**
@@ -225,6 +228,74 @@ class MainController extends SharedController
   }
 
   /**
+   * Handles revisions
+   *
+   * @param  string $filePath Path to the file to handle revisions for
+   * @return array
+   */
+  private function handleRevisions($filePath)
+  {
+    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->getDB());
+
+    $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
+
+    if (!$fm->userCanEditFile()) {
+      // @todo should we add a separate access level for revisions?
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE);
+      return false;
+    }
+
+    if (!$fm->acquireLock()) {
+      // @todo should a lock be required to look at revisions? Or only for restoring/undoing restorations?
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
+      return false;
+    }
+
+    Filters::add(RevisionsAPI::RENDER_REVISION_FILTER, function($content) {
+      $contentArr = FileManager::separateContentByType($content);
+      return implode("\n\r", $contentArr['content']);
+    });
+
+    Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm) {
+
+      switch ($restoreAction) {
+        case RevisionsAPI::UNDO_ACTION:
+          $action = Config::UNDO_RESTORE_STAGE;
+            break;
+        case RevisionsAPI::RESTORE_ACTION:
+        default:
+          $action = Config::RESTORE_STAGE;
+            break;
+      }
+
+      $fm->stageFile($action, $revisionContent);
+      $filePathFromDocRoot = Config::removeDocRootFromPath($filePath);
+      if ($restoreAction === RevisionsAPI::UNDO_ACTION) {
+        $_POST = null;
+
+        $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'revisions'])->buildUrl()->getValue();
+        return $this->redirectWithMessage($url, Config::UNDO_RESTORE_MESSAGE);
+
+      } else {
+        $_POST = null;
+
+        $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
+        return $this->redirectWithMessage($url, Config::RESTORED_MESSAGE);
+      }
+    });
+
+    $moshed = self::alreadyMoshed();
+    // revisions doesn't like concertMoshed being set in GET.
+    unset($_GET['concertMoshed']);
+    $this->setContent($revisionsAPI->render());
+    if ($moshed) {
+      self::markMoshed();
+    }
+
+    return ['action' => 'return', 'value' => $this->renderPage()];
+  }
+
+  /**
    * Checks for any requests for users already working in Concert and also checks to see if it can add anything into the Template such as edit options or other actions.
    * Returns an array of actions to take.
    * Return Values:
@@ -278,6 +349,11 @@ class MainController extends SharedController
 
       if (self::userIsDeleting()) {
         return $this->deletePage($filePath);
+      }
+
+      if (self::isRevisionRequest()) {
+        $this->addMoshMenu();
+        return $this->handleRevisions($filePath);
       }
 
       $isEditingPublicDraft = false;

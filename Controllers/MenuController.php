@@ -266,6 +266,7 @@ class MenuController extends SharedController
   {
     $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
+    unset($query['concertAction']);
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
       return;
     }

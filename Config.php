@@ -6,6 +6,8 @@
 
 namespace Gustavus\Concert;
 
+use Gustavus\Revisions\API as RevisionsAPI;
+
 /**
  * Configuration class
  *
@@ -174,6 +176,16 @@ class Config
    */
   const DEFAULT_PAGE_SAVED_MESSAGE = 'Oops! It looks like you didn\'t modify the template before saving.';
 
+  /**
+   * Message to display if the page has been restored from a previous revision
+   */
+  const RESTORED_MESSAGE = 'The page has been restored.';
+
+  /**
+   * Message to display if the page revision restoration has been undone
+   */
+  const UNDO_RESTORE_MESSAGE = 'The page restoration has been undone.';
+
   // Staged file stages
 
 
@@ -186,6 +198,16 @@ class Config
    * Stage for specifing a publish stage
    */
   const PUBLISH_STAGE = 'publish';
+
+  /**
+   * Stage for specifing a revision restore stage
+   */
+  const RESTORE_STAGE = 'restore';
+
+  /**
+   * Stage for specifing an undo restore stage
+   */
+  const UNDO_RESTORE_STAGE = 'undoRestore';
 
 
   // Access Levels
@@ -450,5 +472,29 @@ class Config
   {
     $messageStart = ($creation) ? self::CREATE_SHARED_SITE_NAV_NOTE_START : self::EDITING_SHARED_SITE_NAV_NOTE_START;
     return sprintf('%s "%s/".', $messageStart, self::removeDocRootFromPath($siteNavDir));
+  }
+
+  /**
+   * Gets the revisionsAPI for us to work with revisions
+   *
+   * @param  string $filePath Full path to the file
+   * @param  \Doctrine\DBAL\Connection $dbal     Doctrine connection to use
+   * @return API
+   */
+  public static function getRevisionsAPI($filePath, $dbal)
+  {
+    $filePathHash = md5($filePath);
+
+    $params = array(
+      'dbName'            => 'concert',
+      'revisionsTable'    => 'revision',
+      'revisionDataTable' => 'revisionData',
+      'table'             => $filePathHash,
+      'rowId'             => 0,
+      'splitStrategy'     => 'sentenceOrTag',
+      'dbal'              => $dbal,
+    );
+
+    return new RevisionsAPI($params);
   }
 }

@@ -125,6 +125,17 @@ class FileManager
       throw new RuntimeException(sprintf('filePath: %s or srcFilePath: %s do not exist', $this->filePath, $this->srcFilePath));
     }
 
+    return self::separateContentByType($contents);
+  }
+
+  /**
+   * Breaks apart the specified content into php pieces and normal content pieces
+   *
+   * @param  string $content Content to separate
+   * @return array  Array of Arrays keyed by content and phpcontent. They each contain arrays with indexes of the order they appear in the content.
+   */
+  public static function separateContentByType($contents)
+  {
     $matches = [];
 
     // finds any content between the php open/close tags and sets it to be named "phpcontent".
@@ -630,7 +641,7 @@ class FileManager
    * @param string $destFilePath  Destination file path
    * @return boolean True on success, false on failure.
    */
-  public function stageFile($action = null)
+  public function stageFile($action = null, $fileContents = null)
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
@@ -667,12 +678,36 @@ class FileManager
       if (!is_dir(Config::$stagingDir)) {
         mkdir(Config::$stagingDir, 0777, true);
       }
-      if ($this->saveFile(Config::$stagingDir . $fileHash, $this->assembleFile(false))) {
+      $fileContents = ($fileContents === null) ? $this->assembleFile(false) : $fileContents;
+      if ($this->saveFile(Config::$stagingDir . $fileHash, $fileContents)) {
         return true;
       }
     }
     // something happened
     return false;
+  }
+
+  /**
+   * Saves a revision for the current filePath
+   *
+   * @param  string $message  Message to put with the revision
+   * @return boolean
+   */
+  private function saveRevision($message = '')
+  {
+    $revisionAPI = Config::getRevisionsAPI($this->filePath, $this->getDBAL());
+
+    if (file_exists($this->filePath)) {
+      $content = file_get_contents($this->filePath);
+    } else {
+      $content = '';
+    }
+
+    $revisionInfo = [
+      'page' => $content,
+    ];
+
+    return $revisionAPI->saveRevision($revisionInfo, $message, $this->username);
   }
 
   /**
@@ -737,6 +772,7 @@ class FileManager
     if (rename($srcFilePath, $destination)) {
       chgrp($destination, $group);
       chown($destination, $owner);
+      $this->saveRevision(self::buildRevisionMessage($result['action']));
 
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
         trigger_error(sprintf('The file: "%s" was moved to "%s", but could not be marked as published in the DB', $srcFilePath, $destination));
@@ -746,6 +782,27 @@ class FileManager
       return true;
     }
     return false;
+  }
+
+  /**
+   * Builds the revision message based off of the action
+   *
+   * @param  string $action Action to build the message for.
+   * @return string
+   */
+  private static function buildRevisionMessage($action)
+  {
+    switch ($action) {
+      case Config::RESTORE_STAGE:
+          return 'File restored';
+      case Config::UNDO_RESTORE_STAGE:
+          return 'File restoration undone';
+      case Config::DELETE_STAGE:
+          return 'File deleted';
+      case Config::PUBLISH_STAGE:
+      default:
+          return 'File published';
+    }
   }
 
   /**
@@ -814,6 +871,8 @@ class FileManager
     // }
 
     if ($this->removeFile()) {
+      $this->saveRevision(self::buildRevisionMessage($result['action']));
+
       unlink($srcFilePath);
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
         trigger_error(sprintf('The file: "%s" was moved to "%s", but could not be marked as published in the DB', $srcFilePath, $this->filePath));

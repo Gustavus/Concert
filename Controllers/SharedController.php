@@ -310,9 +310,6 @@ class SharedController extends ConcourseController
 
       $result = $this->forward('menus', ['forReferer' => false]);
       if (!empty($result)) {
-        $this->addStylesheets(
-            sprintf('<link')
-        );
         $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
         if (!self::isResourceAdded($cssResource, 'css')) {
           Filters::add('head', function($content) use ($cssResource) {
@@ -766,6 +763,16 @@ class SharedController extends ConcourseController
   protected static function userIsDeleting()
   {
     return ((isset($_GET['concert']) && $_GET['concert'] === 'delete') || (isset($_POST['concertAction']) && $_POST['concertAction']) === 'delete');
+  }
+
+  /**
+   * Checks to see if a revision request has been requested
+   *
+   * @return boolean
+   */
+  protected static function isRevisionRequest()
+  {
+    return (isset($_GET['concert']) && $_GET['concert'] === 'revisions');
   }
 
   /**

@@ -13,7 +13,8 @@ use Gustavus\Concert\FileManager,
   Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
   Gustavus\Extensibility\Filters,
-  Gustavus\Concourse\RoutingUtil;
+  Gustavus\Concourse\RoutingUtil,
+  Gustavus\Revisions\API as RevisionsAPI;
 
 /**
  * Class to test FileManager class
@@ -53,6 +54,7 @@ class FileManagerTest extends TestBase
     unset($this->fileManager);
     parent::tearDown();
     self::removeFiles(self::$testFileDir);
+    Filters::clear(RevisionsAPI::RENDER_REVISION_FILTER);
   }
 
   /**
@@ -1773,7 +1775,7 @@ echo $config["content"];';
    */
   public function publishFile()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+    $this->buildDB();
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
@@ -1805,7 +1807,7 @@ echo $config["content"];';
    */
   public function publishFileMultipleStagedEntries()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+    $this->buildDB();
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
@@ -1850,7 +1852,7 @@ echo $config["content"];';
    */
   public function publishFileMultipleStagedEntriesSameUser()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+    $this->buildDB();
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
@@ -1928,7 +1930,7 @@ echo $config["content"];';
    */
   public function deleteFile()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+    $this->buildDB();
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
@@ -1971,7 +1973,7 @@ echo $config["content"];';
    */
   public function deleteFileNothingStaged()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+    $this->buildDB();
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
@@ -2045,7 +2047,7 @@ echo $config["content"];';
    */
   public function deleteFileFromPublish()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+    $this->buildDB();
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
@@ -2068,6 +2070,69 @@ echo $config["content"];';
     $this->assertTrue($this->fileManager->publishFile());
 
     $this->assertFalse(file_exists(self::$testFileDir . 'index.php'));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePublishFileRevisions()
+  {
+    $this->buildDB();
+
+    $file = self::$testFileDir . 'index.php';
+
+    file_put_contents($file, self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+
+    $this->buildFileManager('bvisto', $file);
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    $this->assertTrue($this->fileManager->publishFile());
+
+    $this->assertFalse(file_exists($filePath));
+    $this->assertTrue(file_exists($file));
+
+    // now for deletion
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stageForDeletion());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    $this->assertTrue($this->fileManager->publishFile());
+
+    $this->assertFalse(file_exists($file));
+
+
+    $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $this->assertSame('File published', $revisionsAPI->getRevision(1)->getRevisionMessage());
+    $this->assertSame(self::$indexContents, $revisionsAPI->getRevision(1)->getRevisionData('page')->getContent());
+
+    $this->assertSame('File deleted', $revisionsAPI->getRevision(2)->getRevisionMessage());
+    $this->assertSame('', $revisionsAPI->getRevision(2)->getRevisionData('page')->getContent());
+
     $this->destructDB();
   }
 
@@ -2341,6 +2406,61 @@ echo $config["content"];';
     $this->assertTrue(file_exists($file));
     $this->assertTrue(file_exists($dir));
     $this->assertTrue(file_exists(self::$testFileDir . 'directory/arst/'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveRevision()
+  {
+    $this->buildDB();
+
+    $file = self::$testFileDir . 'index.php';
+
+    $this->buildFileManager('bvisto', $file);
+
+    $result = $this->fileManager->saveRevision();
+
+    $this->assertTrue($result);
+
+    $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
+    $this->assertNull($revisionsAPI->getRevisionCount());
+
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveRevisionWithContent()
+  {
+    $this->buildDB();
+
+    $file = self::$testFileDir . 'index.php';
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+
+    file_put_contents($file, $fileContents);
+
+    $this->buildFileManager('bvisto', $file);
+
+    $result = $this->fileManager->saveRevision();
+    $this->assertTrue($result);
+
+    $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
+    $this->assertSame(1, $revisionsAPI->getRevisionCount());
+
+    Filters::add(RevisionsAPI::RENDER_REVISION_FILTER, function($content) {
+      $contentArr = FileManager::separateContentByType($content);
+      return implode("\n", $contentArr['content']);
+    });
+
+    $this->assertSame($fileContents, $revisionsAPI->getRevision(1)->getRevisionData('page')->getContent());
+
+    $this->assertSame("test contents\nmore", $revisionsAPI->getRevision(1)->getRevisionData('page')->getContent(false, null, true));
 
     $this->destructDB();
   }

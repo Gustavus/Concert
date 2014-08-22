@@ -63,6 +63,8 @@ class TestBase extends TestEM
     'Locks'       => '\Gustavus\Concert\Setup\GeneratedEntities\Locks',
     'StagedFiles' => '\Gustavus\Concert\Setup\GeneratedEntities\StagedFiles',
     'Drafts'      => '\Gustavus\Concert\Setup\GeneratedEntities\Drafts',
+    'Revision'    => '\Gustavus\Revisions\Test\Entities\Revision',
+    'RevisionData'=> '\Gustavus\Revisions\Test\Entities\RevisionData',
   ];
 
   /**
@@ -350,7 +352,7 @@ more html
    */
   protected function buildDB()
   {
-    $this->constructDB(['Locks', 'Permissions', 'Sites', 'StagedFiles', 'Drafts']);
+    $this->constructDB(['Locks', 'Permissions', 'Sites', 'StagedFiles', 'Drafts', 'Revision', 'RevisionData']);
   }
 
   /**
