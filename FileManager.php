@@ -1346,11 +1346,11 @@ class FileManager
   /**
    * Stops the edit process and releases the lock
    *
-   * @return void
+   * @return boolean
    */
   public function stopEditing()
   {
-    $this->destroyLock();
+    return $this->destroyLock();
   }
 
   /**
