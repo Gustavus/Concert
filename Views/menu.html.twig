@@ -14,7 +14,7 @@
                 {%- for weight in group -%}
                   <ul>
                     {%- for item in weight -%}
-                      <li><a href="{{ item.url }}" class="concertMenuItem{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}" id="{{ item.id }}"{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
+                      <li><a href="{{ item.url }}" class="concertMenuItem{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}"{% if item.id is defined %} id="{{ item.id }}"{% endif %}{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
                     {%- endfor -%}
                   </ul>
                 {%- endfor -%}
