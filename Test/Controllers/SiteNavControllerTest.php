@@ -15,6 +15,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Doctrine\DBAL,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
+  Gustavus\Utility\String,
   Gustavus\Concourse\RoutingUtil,
   Gustavus\Extensibility\Filters;
 
@@ -301,33 +302,275 @@ class SiteNavControllerTest extends TestBase
     $this->destructDB();
   }
 
-  // /**
-  //  * @test
-  //  */
-  // public function draftNoneFound()
-  // {
-  //   $filePath = self::$testFileDir . '/concert/index.php';
-  //   file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+  /**
+   * @test
+   */
+  public function stopEditing()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNavPath = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNavPath, 'site nav');
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
 
-  //   $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-  //   $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
-  //   $this->authenticate('testUser');
-  //   $this->setUpController();
-  //   $_GET['concert'] = 'viewDraft';
-  //   $_GET['concertAction'] = 'siteNav';
+    $this->authenticate('testUser');
+    $this->setUpController();
 
-  //   $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+    $fm = new FileManager('testUser', $siteNavPath, null, $this->controller->getDB());
+    $this->assertTrue($fm->acquireLock());
 
-  //   $scripts = '';
-  //   $scripts = Filters::apply('scripts', $scripts);
 
-  //   $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
-  //   $this->assertSame(['action', 'value'], array_keys($result));
-  //   // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
-  //   $this->assertContains('aren\'t any drafts to show', $result['value']['localNavigation']['content']);
+    $_GET['concert'] = 'stopEditing';
 
-  //   $this->unauthenticate();
-  //   $this->destructDB();
-  // }
+    $this->assertSame(['action' => 'none', 'value' => true], $this->controller->handleSiteNavActions(['filePath' => $filePath]));
+
+    $this->assertFalse($fm->userHasLock());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+
+
+  /**
+   * @test
+   */
+  public function handleRevisionsCantEdit()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $this->buildDB();
+
+    $this->authenticate('bvisto');
+    $this->setUpController();
+
+    $_GET['concert'] = 'revisions';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertFalse($actual);
+    $this->assertContains(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, $this->controller->getConcertMessage());
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsNoRevisions()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNav = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNav, 'siteNav contents');
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $_GET['concert'] = 'revisions';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisions()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNav = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNav, 'siteNav contents');
+
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $this->assertSame(1, $revisionsAPI->getRevisionCount());
+
+    $_GET['concert'] = 'revisions';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
+    $this->assertContains('revisionsForm', $actual['value']['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsViewSpecific()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNav = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNav, 'siteNav contents');
+
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $this->assertSame(1, $revisionsAPI->getRevisionCount());
+
+    $_GET['revisionNumber'] = 1;
+    $_GET['concert'] = 'revisions';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
+    $this->assertContains("test contents\n\rmore", $actual['value']['content']);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsRestore()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNav = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNav, 'siteNav contents');
+
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $_POST['revisionNumber'] = 1;
+    $_POST['restore'] = 1;
+    $_GET['concert'] = 'revisions';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertNull($actual['value']['content']);
+
+    $url = (new String($filePath))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
+
+    $this->assertSame(Config::RESTORED_MESSAGE, PageUtil::getSessionMessage($url));
+
+    $filePathHash = $this->fileManager->getFilePathHash();
+    $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
+    // publish the file to trigger a revision
+    $this->fileManager->publishFile();
+
+    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $this->assertSame(3, $revisionsAPI->getRevisionCount());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsRestoreUndo()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNav = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNav, 'siteNav contents');
+
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $_POST['revisionNumber'] = 1;
+    $_POST['restore'] = 1;
+    $_GET['concert'] = 'revisions';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertNull($actual['value']['content']);
+
+    $url = (new String($filePath))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
+
+    $this->assertSame(Config::RESTORED_MESSAGE, PageUtil::getSessionMessage($url));
+
+    $filePathHash = $this->fileManager->getFilePathHash();
+    $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
+    // publish the file to trigger a revision
+    $this->fileManager->publishFile();
+
+
+    $_POST['revisionsAction'] = 'undo';
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertNull($actual['value']['content']);
+
+    $url = (new String($filePath))->addQueryString(['concert' => 'revisions'])->buildUrl()->getValue();
+
+    $this->assertSame(Config::UNDO_RESTORE_MESSAGE, PageUtil::getSessionMessage($url));
+
+    $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
+    $this->fileManager->publishFile();
+
+    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+
+    $this->assertSame(4, $revisionsAPI->getRevisionCount());
+
+    $revThree = $revisionsAPI->getRevision(3);
+    $this->assertSame('File restored', $revThree->getRevisionMessage());
+
+    $revFour = $revisionsAPI->getRevision(4);
+    $this->assertSame('File restoration undone', $revFour->getRevisionMessage());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
 }

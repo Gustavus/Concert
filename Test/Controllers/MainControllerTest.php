@@ -826,6 +826,8 @@ class MainControllerTest extends TestBase
 
     $this->assertSame(['action' => 'none', 'value' => true], $this->controller->stopEditing($filePath));
 
+    $this->assertFalse($this->fileManager->userHasLock());
+
     $this->unauthenticate();
     $this->destructDB();
   }

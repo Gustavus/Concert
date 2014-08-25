@@ -155,8 +155,7 @@ class TestBase extends TestEM
    */
   protected function buildFileManager($user, $file, $srcFilePath = null)
   {
-    $this->fileManager = new TestObject(new FileManager($user, $file, $srcFilePath));
-    $this->fileManager->dbal = DBAL::getDBAL('testDB', $this->getDBH());
+    $this->fileManager = new TestObject(new FileManager($user, $file, $srcFilePath, DBAL::getDBAL('testDB', $this->getDBH())));
   }
 
   /**

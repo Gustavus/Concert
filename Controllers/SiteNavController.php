@@ -50,7 +50,7 @@ class SiteNavController extends SharedController
       $this->addConcertMessage(Config::buildSharedSiteNavNote(dirname($siteNav), false));
     }
 
-    $moshResult = $this->forward('mosh', [$siteNav]);
+    $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
 
     if (isset($moshResult['action']) && $moshResult['action'] === 'return') {
       $this->setLocalNavigation($moshResult['value']);
@@ -141,19 +141,8 @@ class SiteNavController extends SharedController
     $_GET['barebones']     = 'true';
     $_GET['concertMoshed'] = 'false';
 
-    // if ($this->getMethod() === 'POST') {
-    //   $fm = new FileManager($this->getLoggedInUsername(), $navToCreate, $navToCreateFrom, $this->getDB());
-    //   $fm->editFile($_POST);
-    //   var_dump(preg_replace('`\s+`', '', file_get_contents(Config::SITE_NAV_TEMPLATE)), preg_replace('`\s+`', '', $fm->assembleFile()));
-    //   exit;
-    //   if (preg_replace('`\s+`', '', file_get_contents(Config::SITE_NAV_TEMPLATE)) === preg_replace('`\s+`', '', $fm->assembleFile())) {
-    //     // the user tried to save a default template page. Not cool. They shouldn't be doing this.
-    //     return json_encode(['error' => true, 'reason' => Config::DEFAULT_PAGE_SAVED_MESSAGE]);
-    //   }
-    // }
-
     // forward onto mosh to have it create the page for us
-    $moshResult = $this->forward('mosh', [$navToCreate]);
+    $moshResult = $this->forward('mosh', ['filePath' => $navToCreate, 'dbal' => $this->getDB()]);
 
     if (isset($moshResult['action']) && $moshResult['action'] === 'return') {
       $this->setLocalNavigation($moshResult['value']);
@@ -236,7 +225,7 @@ class SiteNavController extends SharedController
   //   $_GET['barebones']     = 'true';
   //   $_GET['concertMoshed'] = 'false';
 
-  //   $moshResult = $this->forward('mosh', [$siteNav]);
+  //   $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
 
   //   // we don't want our temporary variables anymore
   //   self::setGET($origGet);
@@ -266,32 +255,40 @@ class SiteNavController extends SharedController
    *
    * @param  string $filePath FilePath to the file we want to delete the site nav for
    * @return string|array
+   *
+   * @todo  this needs to be updated to check permissions and not delete a site nav in the base of the site.
+   *
+   * Disabled. People don't need to delete local navs.
    */
-  private function delete($filePath)
-  {
-    $this->setTitle('Delete Local Navigation');
-    $siteNav = self::getSiteNavForFile($filePath);
+  // private function delete($filePath)
+  // {
+  //   $this->setTitle('Delete Local Navigation');
+  //   $siteNav = self::getSiteNavForFile($filePath);
 
-    $origGet = $_GET;
-    // set temporary variables for forwarding
-    $_GET['forwardedFrom'] = 'siteNav';
-    // we want the barebone version of the template but we need to check to see if it has already been set for later
-    $barebonesSet = isset($_GET['barebones']);
-    $_GET['barebones']     = 'true';
-    $_GET['concertMoshed'] = 'false';
+  //   $origGet = $_GET;
+  //   // set temporary variables for forwarding
+  //   $_GET['forwardedFrom'] = 'siteNav';
+  //   // we want the barebone version of the template but we need to check to see if it has already been set for later
+  //   $barebonesSet = isset($_GET['barebones']);
+  //   $_GET['barebones']     = 'true';
+  //   $_GET['concertMoshed'] = 'false';
 
-    $moshResult = $this->forward('mosh', [$siteNav]);
+  //   if (self::isSiteNavShared($navToCreate)) {
+  //     $this->addConcertMessage(Config::buildSharedSiteNavNote(dirname($navToCreate), true));
+  //   }
 
-    // we don't want our temporary variables anymore
-    self::setGET($origGet);
-    if (!$barebonesSet) {
-      // add the current file
-      $this->setContent((new File(Config::addDocRootToPath($filePath)))->loadAndEvaluate());
-    } else {
-      return $moshResult;
-    }
-    return ['action' => 'return', 'value' => $this->renderPage()];
-  }
+  //   $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
+
+  //   // we don't want our temporary variables anymore
+  //   self::setGET($origGet);
+  //   if (!$barebonesSet) {
+  //     // add the current file
+  //     $this->setContent((new File(Config::addDocRootToPath($filePath)))->loadAndEvaluate());
+  //   } else {
+  //     return $moshResult;
+  //   }
+  //   return ['action' => 'return', 'value' => $this->renderPage()];
+  // }
 
   /**
    * Stops editing the site nav. Forwards back to mosh.
@@ -302,13 +299,31 @@ class SiteNavController extends SharedController
   private function stopEditing($filePath)
   {
     $siteNav = self::getSiteNavForFile($filePath);
+    $origGet = $_GET;
     $_GET['forwardedFrom'] = 'siteNav';
     $_GET['concertMoshed'] = 'false';
     if (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav') {
       unset($_GET['concertAction']);
     }
-    $moshResult = $this->forward('mosh', [$siteNav]);
-    unset($_GET['forwardedFrom']);
+    $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
+    self::setGET($origGet);
+    return $moshResult;
+  }
+
+  /**
+   * Handles revisions for site navs
+   *
+   * @param  string $filePath Path to the current page to handle revisions for the site nav for
+   * @return array
+   */
+  private function handleRevisions($filePath)
+  {
+    $siteNav = self::getSiteNavForFile($filePath);
+    $origGet = $_GET;
+    $_GET['forwardedFrom'] = 'siteNav';
+    $_GET['concertMoshed'] = 'false';
+    $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB(), 'redirectPath' => Config::removeDocRootFromPath($filePath)]);
+    self::setGET($origGet);
     return $moshResult;
   }
 
@@ -328,11 +343,15 @@ class SiteNavController extends SharedController
       // case self::isDraftRequest():
       //     return $this->draft($params['filePath']);
 
-      case self::userIsDeleting():
-          return $this->delete($params['filePath']);
+      // Disabled. Users don't need to delete site navs
+      // case self::userIsDeleting():
+      //     return $this->delete($params['filePath']);
 
       case self::userIsDoneEditing():
           return $this->stopEditing($params['filePath']);
+
+      case self::isRevisionRequest():
+          return $this->handleRevisions($params['filePath']);
     }
   }
 

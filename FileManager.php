@@ -637,7 +637,7 @@ class FileManager
   /**
    * Throws a file into a staging state waiting to be moved to it's actual location
    *
-   * @param string $destFilePath  Destination file path
+   * @param string $action  Action we want the staged file to represent
    * @param string $fileContents  Contents of the file to stage. <strong>Note:</strong> This should only be used for revisions.
    * @return boolean True on success, false on failure.
    */

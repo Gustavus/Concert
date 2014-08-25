@@ -231,10 +231,14 @@ class MainController extends SharedController
    * Handles revisions
    *
    * @param  string $filePath Path to the file to handle revisions for
+   * @param  string $redirectPath URL to redirect to on revision actions if different than $filePath
    * @return array
    */
-  private function handleRevisions($filePath)
+  private function handleRevisions($filePath, $redirectPath = null)
   {
+    // we don't want this set anymore
+    unset($_GET['forwardedFrom']);
+
     $revisionsAPI = Config::getRevisionsAPI($filePath, $this->getDB());
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
@@ -256,7 +260,7 @@ class MainController extends SharedController
       return implode("\n\r", $contentArr['content']);
     });
 
-    Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm) {
+    Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm, $redirectPath) {
 
       switch ($restoreAction) {
         case RevisionsAPI::UNDO_ACTION:
@@ -269,17 +273,28 @@ class MainController extends SharedController
       }
 
       $fm->stageFile($action, $revisionContent);
-      $filePathFromDocRoot = Config::removeDocRootFromPath($filePath);
+      $redirectPath = ($redirectPath === null) ? $filePath : $redirectPath;
+
+      $redirectPath = Config::removeDocRootFromPath($redirectPath);
+
+      $query = [
+        'concert' => 'revisions',
+      ];
+      if (isset($_GET['concertAction'])) {
+        $query['concertAction'] = $_GET['concertAction'];
+      }
+
       if ($restoreAction === RevisionsAPI::UNDO_ACTION) {
         $_POST = null;
 
-        $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'revisions'])->buildUrl()->getValue();
+        $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
         return $this->redirectWithMessage($url, Config::UNDO_RESTORE_MESSAGE);
 
       } else {
         $_POST = null;
 
-        $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
+        $query['revisionsAction'] = 'thankYou';
+        $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
         return $this->redirectWithMessage($url, Config::RESTORED_MESSAGE);
       }
     });
@@ -310,15 +325,27 @@ class MainController extends SharedController
    *   <li>redirectUrl: {string} URL to redirect to.</li>
    * </ul>
    *
-   * @param  string $filePath Filepath to mosh on
+   * @param  string|array $params String of the filepath to mosh on, or an associative array of parameters for moshing
+   *   Possible keys:
+   *   <ul>
+   *     <li>filePath: Required. FilePath to mosh for</li>
+   *     <li>dbal: Internal. Doctrine connection to use</li>
+   *     <li>redirectPath: Internal. redirectPath to send to a few actions if needed</li>
    *
    * @throws InvalidArgumentException If $filePath is null and doesn't exist in $_POST
    * @return array Array containing actions the template render needs to take.
    */
-  public function mosh($filePath)
+  public function mosh($params)
   {
-    if (is_array($filePath)) {
-      $filePath = reset($filePath);
+    if (is_array($params)) {
+      if (isset($params['dbal'])) {
+        $this->setDBAL($params['dbal']);
+      }
+
+      assert('isset($params["filePath"])');
+      $filePath = $params['filePath'];
+    } else {
+      $filePath = $params;
     }
 
     if (strpos($filePath, '.php') === false) {
@@ -353,7 +380,8 @@ class MainController extends SharedController
 
       if (self::isRevisionRequest()) {
         $this->addMoshMenu();
-        return $this->handleRevisions($filePath);
+        $redirectUrl = isset($params['redirectPath']) ? $params['redirectPath'] : null;
+        return $this->handleRevisions($filePath, $redirectUrl);
       }
 
       $isEditingPublicDraft = false;

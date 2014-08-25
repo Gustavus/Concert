@@ -133,7 +133,6 @@ class MenuController extends SharedController
       $params = $query;
       $params['concert'] = 'revisions';
       $item = [
-        'id'       => 'viewRevisions',
         'text'     => 'View page revisions',
         'url'      => (new String($pathFromDocRoot))->addQueryString($params)->buildUrl()->getValue(),
         'thickbox' => false,
@@ -150,7 +149,6 @@ class MenuController extends SharedController
       }
 
       $item = [
-        'id'       => 'quitConcert',
         'text'     => 'Quit Concert',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
@@ -184,7 +182,6 @@ class MenuController extends SharedController
         }
 
         $item = [
-          'id'       => 'concertEditDraft',
           'text'     => 'Edit Draft',
           'url'      => $url,
           'classes'  => 'blue',
@@ -206,7 +203,6 @@ class MenuController extends SharedController
       }
 
       $item = [
-        'id'       => 'concertStopEditingDraft',
         'text'     => 'Stop Editing Draft',
         'url'      => $url,
         'classes'  => 'red',
@@ -245,7 +241,7 @@ class MenuController extends SharedController
           $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
-          $query['concert'] = 'viewDraft';
+          $query['concert']      = 'viewDraft';
           $query['concertDraft'] = $draft['draftFilename'];
           if (self::isSiteNavRequest()) {
             $query['concertAction'] = 'siteNav';
@@ -253,7 +249,6 @@ class MenuController extends SharedController
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
-          'id'       => 'viewDraft',
           'text'     => 'View Draft',
           'url'      => $url,
           'thickbox' => false,
@@ -270,7 +265,6 @@ class MenuController extends SharedController
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
-          'id'           => 'addUsersToDraft',
           'text'         => 'Add users to your draft',
           'url'          => $url,
           'classes'      => 'green',
@@ -291,7 +285,6 @@ class MenuController extends SharedController
       $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
 
       $item = [
-        'id'   => 'viewDrafts',
         'text' => 'View all drafts',
         'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
       ];
@@ -316,7 +309,6 @@ class MenuController extends SharedController
 
     if (PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $item = [
-        'id'            => 'createPage',
         'text'          => 'Create New Page',
         'url'           => $this->buildUrl('newPageMenu'),
         'thickbox'      => true,
@@ -329,7 +321,6 @@ class MenuController extends SharedController
     if (file_exists($this->filePath) && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $query['concert'] = 'delete';
       $item = [
-        'id'       => 'deletePage',
         'text'     => 'Delete Page',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => true,
@@ -342,7 +333,6 @@ class MenuController extends SharedController
     if (self::userIsEditing() || self::userIsSaving()) {
       $query['concert'] = 'stopEditing';
       $item = [
-        'id'       => 'stopEditing',
         'text'     => 'Stop Editing',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
@@ -363,7 +353,6 @@ class MenuController extends SharedController
           $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
-          'id'       => 'editDraft',
           'text'     => 'Continue draft',
           'url'      => $url,
           'thickbox' => false,
@@ -373,7 +362,6 @@ class MenuController extends SharedController
       } else {
         $query['concert'] = 'edit';
         $item = [
-          'id'       => 'startEditing',
           'text'     => 'Edit Page',
           'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
           'thickbox' => false,
@@ -424,6 +412,97 @@ class MenuController extends SharedController
 
     // user can edit or create a site nav.
 
+    if (self::isSiteNavRequest() && (self::userIsEditing() || self::userIsCreatingSiteNav())) {
+      $query = $this->queryParams;
+      // @todo with concertAction being siteNav, this will keep giving us site nav options. What to do since adding edit buttons doesn't do anything if it is a site-nav request
+      $query['concertAction'] = 'siteNav';
+      $query['concert']       = 'stopEditing';
+      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      $item = [
+        'text'     => 'Stop editing local navigation',
+        'url'      => $url,
+        'thickbox' => false,
+      ];
+
+      $this->addMenuItem($item, 'localNavigation', 20);
+      // disabled drafts for siteNavs
+      // } else if (($draft = $fm->getDraftForUser($this->getLoggedInUsername())) !== false) {
+      //   // the user has a draft of the site nav they can continue editing.
+      //   $query = $this->queryParams;
+      //   $query['concert'] = 'edit';
+      //   $query['concertAction'] = 'siteNav';
+      //   $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      //   $item = [
+      //     'text'     => 'Continue draft',
+      //     'url'      => $url,
+      //     'thickbox' => false,
+      //   ];
+
+      //   $this->addMenuItem($item, 'localNavigation', 20);
+    }
+
+    if (!self::isGlobalNav($siteNav) && !(self::userIsEditing() || self::userIsCreatingSiteNav())) {
+      // the site nav exists in the current site.
+      //
+      // give them the option to edit the current site nav or the inherited nav.
+      $query = $this->queryParams;
+      $query['concert']       = 'edit';
+      $query['concertAction'] = 'siteNav';
+      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+
+      $item = [
+        'text'     => $isInheritedNav ? 'Edit inherited local navigation' : 'Edit local navigation',
+        'url'      => $url,
+        'thickbox' => false,
+      ];
+
+      if (self::isSiteNavShared($siteNav)) {
+        // we need to verify that they know this is a shared site nav.
+        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Config::buildSharedSiteNavNote(dirname($siteNav), false), 'editUrl' => $url]);
+        $html = rawurlencode($html);
+        $item['thickbox'] = true;
+        $item['thickboxData'] = ['html' => $html];
+      }
+
+      $this->addMenuItem($item, 'localNavigation', 20);
+    }
+
+    if (!(self::userIsEditing() || self::userIsCreatingSiteNav()) && $isInheritedNav) {
+      $query = $this->queryParams;
+      $query['concert']       = 'createSiteNav';
+      $query['concertAction'] = 'siteNav';
+      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      $item = [
+        'text'     => 'Create local navigation',
+        'url'      => $url,
+        'thickbox' => false,
+      ];
+
+      if (self::isSiteNavShared($siteNav)) {
+        // we need to verify that they know this is a shared site nav.
+        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Config::buildSharedSiteNavNote(dirname($currentDirSiteNavFile), true), 'editUrl' => $url]);
+        $html = rawurlencode($html);
+        $item['thickbox'] = true;
+        $item['thickboxData'] = ['html' => $html];
+      }
+
+      $this->addMenuItem($item, 'localNavigation', 20);
+    }
+
+    if (!self::isRevisionRequest() || !self::isSiteNavRequest()) {
+      $query = $this->queryParams;
+      $query['concert']         = 'revisions';
+        $query['concertAction'] = 'siteNav';
+      $item = [
+        'text'     => $isInheritedNav ? 'View inherited local navigation revisions' : 'View local navigation revisions',
+        'url'      => (new String($pathFromDocRoot))->addQueryString($query),
+        'thickbox' => false,
+      ];
+      $this->addMenuItem($item, 'localNavigation', 20);
+    }
+
+
+
     // disabled since drafts are disabled
     // if ($isParentNav) {
     //   // the site nav lives outside of our current site. Lets see if they have a draft for their current file
@@ -432,7 +511,7 @@ class MenuController extends SharedController
     //   // the site nav lives inside our current site.
     //   $fm = new FileManager($this->getLoggedInUsername(), $siteNav, null, $this->getDB());
     // }
-    $query = $this->queryParams;
+    // $query = $this->queryParams;
 
     // disabled drafts for siteNavs
     // if ($this->isSiteNavRequest()) {
@@ -452,7 +531,6 @@ class MenuController extends SharedController
     //     $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
 
     //     $item = [
-    //       'id'   => 'viewDrafts',
     //       'text' => 'View all drafts',
     //       'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
     //     ];
@@ -461,116 +539,22 @@ class MenuController extends SharedController
     //   }
     // }
 
-    if (self::isSiteNavRequest() && (self::userIsEditing() || self::userIsCreatingSiteNav())) {
-      $query = $this->queryParams;
-      // @todo with concertAction being siteNav, this will keep giving us site nav options. What to do since adding edit buttons doesn't do anything if it is a site-nav request
-      $query['concertAction'] = 'siteNav';
-      $query['concert'] = 'stopEditing';
-      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
-      $item = [
-        'id'       => 'stopEditingSiteNav',
-        'text'     => 'Stop editing local navigation',
-        'url'      => $url,
-        'thickbox' => false,
-      ];
 
-      $this->addMenuItem($item, 'localNavigation', 20);
-    // disabled drafts for siteNavs
-    // } else if (($draft = $fm->getDraftForUser($this->getLoggedInUsername())) !== false) {
-    //   // the user has a draft of the site nav they can continue editing.
+    // Disabled. We aren't allowing people to delete site navs
+    // if ($siteBase . 'site_nav.php' !== $siteNavFromDocRoot && file_exists($siteNav) && $userCanEditSiteNav && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $siteNavFromDocRoot)) {
+    //   // the site nav isn't the base nav for this site, and the user has permissions, so give them the option
     //   $query = $this->queryParams;
-    //   $query['concert'] = 'edit';
+    //   $query['concert'] = 'delete';
     //   $query['concertAction'] = 'siteNav';
-    //   $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
     //   $item = [
-    //     'id'       => 'continueSiteNavDraft',
-    //     'text'     => 'Continue draft',
-    //     'url'      => $url,
-    //     'thickbox' => false,
-    //   ];
-
-    //   $this->addMenuItem($item, 'localNavigation', 20);
-    }
-
-    if (!(self::userIsEditing() || self::userIsCreatingSiteNav())) {
-      // the site nav exists in the current site.
-      $query = $this->queryParams;
-      $query['concert'] = 'edit';
-      $query['concertAction'] = 'siteNav';
-      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
-
-      $item = [
-        'id'       => 'editSiteNav',
-        'text'     => $isInheritedNav ? 'Edit inherited local navigation' : 'Edit local navigation',
-        'url'      => $url,
-        'thickbox' => false,
-      ];
-
-      if (self::isSiteNavShared($siteNav)) {
-        // we need to verify that they know this is a shared site nav.
-        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Config::buildSharedSiteNavNote(dirname($siteNav), false), 'editUrl' => $url]);
-        $html = rawurlencode($html);
-        $item['thickbox'] = true;
-        $item['thickboxData'] = ['html' => $html];
-      }
-
-      $this->addMenuItem($item, 'localNavigation', 20);
-    }
-
-    if (!(self::userIsEditing() || self::userIsCreatingSiteNav()) && $isInheritedNav) {
-      $query = $this->queryParams;
-      $query['concert'] = 'createSiteNav';
-      $query['concertAction'] = 'siteNav';
-      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
-      $item = [
-        'id'       => 'createSiteNav',
-        'text'     => 'Create local navigation',
-        'url'      => $url,
-        'thickbox' => false,
-      ];
-
-      if (self::isSiteNavShared($siteNav)) {
-        // we need to verify that they know this is a shared site nav.
-        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Config::buildSharedSiteNavNote(dirname($currentDirSiteNavFile), true), 'editUrl' => $url]);
-        $html = rawurlencode($html);
-        $item['thickbox'] = true;
-        $item['thickboxData'] = ['html' => $html];
-      }
-
-      $this->addMenuItem($item, 'localNavigation', 20);
-    }
-
-    // if ($isParentNav && !self::isGlobalNav($siteNav)) {
-    //   // Give them the option to edit the parent
-    //   $query = $this->queryParams;
-    //   $query['concert'] = 'edit';
-    //   $query['concertAction'] = 'editParentSiteNav';
-    //   $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
-    //   $item = [
-    //     'id'       => 'editParentSiteNav',
-    //     'text'     => 'Edit inherited local navigation',
-    //     'url'      => $url,
-    //     'thickbox' => false,
+    //     'text'     => 'Delete Local Navigation',
+    //     'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+    //     'thickbox' => true,
+    //     'classes'  => 'red',
     //   ];
 
     //   $this->addMenuItem($item, 'localNavigation', 20);
     // }
-
-    if ($siteBase . 'site_nav.php' !== $siteNavFromDocRoot && file_exists($siteNav) && $userCanEditSiteNav && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $siteNavFromDocRoot)) {
-      // the site nav isn't the base nav for this site, and the user has permissions, so give them the option
-      $query = $this->queryParams;
-      $query['concert'] = 'delete';
-      $query['concertAction'] = 'siteNav';
-      $item = [
-        'id'       => 'deletePage',
-        'text'     => 'Delete Local Navigation',
-        'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
-        'thickbox' => true,
-        'classes'  => 'red',
-      ];
-
-      $this->addMenuItem($item, 'localNavigation', 20);
-    }
   }
 
   /**
