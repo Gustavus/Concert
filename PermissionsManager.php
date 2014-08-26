@@ -12,9 +12,7 @@ use Gustavus\Concert\Config,
   Gustavus\Utility\Set;
 
 /**
- * Class for managing a specific file
- *
- * @todo  add functions to save to db and what not?
+ * Class for managing permissions
  *
  * @package Concert
  * @author  Billy Visto
