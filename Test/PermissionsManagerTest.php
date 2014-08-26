@@ -647,7 +647,7 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
-  public function userCanEditSiteNav2()
+  public function userCanEditSiteNav()
   {
     $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
     Config::$siteNavAccessLevels = ['admin'];
@@ -660,6 +660,64 @@ class PermissionsManagerTest extends TestBase
     $this->destructDB();
   }
 
+  /**
+   * @test
+   */
+  public function userCanEditRawHTMLNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditRawHTMLNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditRawHTMLFalse()
+  {
+    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
+    Config::$siteNavAccessLevels = ['admin'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/protected/arst.php'));
+
+    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditRawHTML()
+  {
+    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
+    Config::$siteNavAccessLevels = ['admin'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/protected/arst.php'));
+
+    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    $this->destructDB();
+  }
 
   /**
    * @test

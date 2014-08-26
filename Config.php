@@ -293,6 +293,16 @@ class Config
   ];
 
   /**
+   * AccessLevels that can't edit the site nav
+   *
+   * @var array
+   */
+  public static $editRawHTMLAccessLevels = [
+    self::ADMIN_ACCESS_LEVEL,
+    self::SUPER_USER,
+  ];
+
+  /**
    * AccessLevels that can publish drafts for other people
    *
    * @var array

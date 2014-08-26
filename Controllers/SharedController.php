@@ -176,7 +176,9 @@ class SharedController extends ConcourseController
       ],
     ];
 
-    Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources) {
+    $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+
+    Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources, $allowCode) {
         $script = sprintf(
             '<script type="text/javascript">
               Modernizr.load({
@@ -184,20 +186,24 @@ class SharedController extends ConcourseController
                   "%s"
                 ],
                 complete: function() {
-                  Gustavus.Concert.filePath = "%s"
-                  Gustavus.Concert.redirectPath = "%s"
+                  Gustavus.Concert.filePath = "%s";
+                  Gustavus.Concert.redirectPath = "%s";
+                  Gustavus.Concert.allowCode = %s;
+                  Gustavus.Concert.isAdmin = %s;
+                  Gustavus.Concert.init();
                 }
               });
             </script>',
             implode('","', $resources['js']),
             Config::removeDocRootFromPath($filePath),
-            $redirectPath
+            $redirectPath,
+            $allowCode,
+            (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername()))
         );
         return $content . $script;
     }, 11);
 
     self::markResourcesAdded($resources['js']);
-
 
     $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
     if (!self::isResourceAdded($cssResource, 'css')) {

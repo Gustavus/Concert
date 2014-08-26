@@ -323,6 +323,40 @@ class PermissionsManager
   }
 
   /**
+   * Checks to see if the specified user can edit raw html or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanEditRawHTML($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (is_array($sitePerms['accessLevel'])) {
+      // make sure the array contains non-empty values
+      $sitePerms['accessLevel'] = array_filter($sitePerms['accessLevel']);
+    }
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits creating new pages.
+    foreach ($sitePerms['accessLevel'] as $accessLevel) {
+      if (in_array($accessLevel, Config::$editRawHTMLAccessLevels)) {
+        // the current user's access level doesn't allow creating
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Adjusts permissions so they are all uniform to make checking easier
    *
    * @param  array $files array of files to check
@@ -421,7 +455,7 @@ class PermissionsManager
    * @param  string   $username Username to check
    * @return boolean
    */
-  private static function isUserSuperUser($username)
+  public static function isUserSuperUser($username)
   {
     $perms = self::getAllPermissionsForUser($username);
 
@@ -438,7 +472,7 @@ class PermissionsManager
    * @param  string   $username Username to check
    * @return boolean
    */
-  private static function isUserAdmin($username)
+  public static function isUserAdmin($username)
   {
     $perms = self::getAllPermissionsForUser($username);
 
