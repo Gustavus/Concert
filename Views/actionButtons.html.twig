@@ -7,6 +7,7 @@
   'savePublicDraft': '<a id="concertSavePublicDraft" class="concert button">Save shared draft</a>',
   'discardDraft': '<a id="concertDiscardDraft" class="concert button red">Discard Draft</a>',
   'saveDraft': '<a id="concertSavePublicDraft" class="concert button">Save Draft</a>',
+  'stopEditing': '<a id="concertStopEditing" class="concert button">Stop Editing</a>',
 } %}
 {% set totalButtonCount = visibleButtons|length + additionalButtons|length %}
 {%- if totalButtonCount > 1 -%}
@@ -28,6 +29,7 @@
 <br/>
 <a href="#" class="button" id="toggleShowingEditableContent" data-show="false">Show editable areas</a>
 
+{# html for the confirmation dialog for converting a shared draft to private #}
 <div id="confirmPrivateDraft" title="Save Private Draft" class="nodisplay">
   <p>This draft is shared. Converting it to a private draft will remove any sharing functionality.</p>
 </div>

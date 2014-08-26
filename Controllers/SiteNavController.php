@@ -22,7 +22,6 @@ use Gustavus\Concert\Config,
  * @subpackage Controller
  * @author  Billy Visto
  *
- * @todo  write tests
  * @todo  Add the ability to inherit or include a parent nav. (Potentially a bad idea as it might make for some crazy site navs. We don't want that. Maybe for some power users.)
  */
 class SiteNavController extends SharedController
@@ -70,7 +69,7 @@ class SiteNavController extends SharedController
   private function createOrEditSiteNav($filePath)
   {
     // we only want users to be able to publish
-    self::overrideVisibleEditingButtons(['publish']);
+    self::overrideVisibleEditingButtons(['publish', 'stopEditing']);
     // check to see if the site nav already exists.
     // if it is from a parent site, we want to give them the offer to copy their parent.
     // if it exists in a parent directory, we want to give them the option to create a new one for the current file's directory, or to edit the parent.
