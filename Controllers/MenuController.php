@@ -188,7 +188,7 @@ class MenuController extends SharedController
           'thickbox' => false,
         ];
 
-        $this->addMenuItem($item);
+        $this->addMenuItem($item, 'drafts');
       }
     } else if ($this->userIsEditingPublicDraft(Config::removeDocRootFromPath($this->filePath))) {
       $draftName = self::guessDraftName($this->filePath);
@@ -209,7 +209,7 @@ class MenuController extends SharedController
         'thickbox' => false,
       ];
 
-      $this->addMenuItem($item);
+      $this->addMenuItem($item, 'drafts');
     }
   }
 
@@ -254,7 +254,7 @@ class MenuController extends SharedController
           'thickbox' => false,
         ];
 
-        $this->addMenuItem($item);
+        $this->addMenuItem($item, 'drafts');
       } else if (!self::isSiteNavRequest()) {
         if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('addUsersToDraft', ['draftName' => $draft['draftFilename']]);
@@ -271,7 +271,7 @@ class MenuController extends SharedController
           'thickboxData' => ['height' => '400px'],
         ];
 
-        $this->addMenuItem($item);
+        $this->addMenuItem($item, 'drafts');
       }
     }
 
@@ -289,7 +289,7 @@ class MenuController extends SharedController
         'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
       ];
 
-      $this->addMenuItem($item);
+      $this->addMenuItem($item, 'drafts');
     }
   }
 
