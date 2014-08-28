@@ -114,12 +114,12 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'accessLevel'   => ['admin'],
+        'accessLevel'   => 'admin',
         'includedFiles' => null,
         'excludedFiles' => null,
       ],
       '/arst' => [
-        'accessLevel'   => ['admin'],
+        'accessLevel'   => 'admin',
         'includedFiles' => ['files/*'],
         'excludedFiles' => ['private/*'],
       ],
@@ -130,7 +130,7 @@ class PermissionsManagerTest extends TestBase
     // update one to verify that updates work
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'none']);
 
-    $expected['/billy']['accessLevel'] = ['none'];
+    $expected['/billy']['accessLevel'] = 'none';
 
     $actual = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
     $this->assertSame($expected, $actual);
@@ -143,13 +143,13 @@ class PermissionsManagerTest extends TestBase
   public function saveAndGetUserPermissionsArrays()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]));
+    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]));
 
     $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
 
     $expected = [
       '/billy' => [
-        'accessLevel'   => ['admin', 'test'],
+        'accessLevel'   => 'test',
         'includedFiles' => ['files/*', 'private/public/*'],
         'excludedFiles' => ['private/*', 'protected/*'],
       ],
@@ -173,12 +173,12 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'accessLevel'   => ['admin'],
+        'accessLevel'   => 'admin',
         'includedFiles' => ['files/*', 'images/*'],
         'excludedFiles' => ['secure/*', 'protected/private.php'],
       ],
       '/arst' => [
-        'accessLevel'   => ['admin'],
+        'accessLevel'   => 'admin',
         'includedFiles' => ['files/*'],
         'excludedFiles' => ['private/*'],
       ],
@@ -220,9 +220,48 @@ class PermissionsManagerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*', 'private/*']);
 
-    $expected = ['accessLevel' => ['siteAdmin'], 'includedFiles' => null, 'excludedFiles' => null];
+    $expected = ['accessLevel' => 'siteAdmin', 'includedFiles' => null, 'excludedFiles' => null];
 
     $this->assertSame($expected, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getUserPermissionsForSiteSuperUser()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', Config::SUPER_USER]);
+
+    $this->assertSame(Config::$superUserPermissions, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getUserPermissionsForSiteNoMatches()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test']);
+
+    $this->assertNull(PermissionsManager::getUserPermissionsForSite('bvisto', '/arst'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getUserPermissionsForSiteNone()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', Config::SUPER_USER]);
+
+    $this->assertNull(PermissionsManager::getUserPermissionsForSite('jerry', '/billy'));
 
     $this->destructDB();
   }
@@ -238,6 +277,47 @@ class PermissionsManagerTest extends TestBase
     $this->assertSame('/arst', $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/private/public.php']));
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/', 'admin', 'files/*']);
+
+    $this->assertSame('/arst/private/', $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/private/public.php']));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersSiteForFileNone()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+
+    $this->assertEmpty($this->call('PermissionsManager', 'findUsersSiteForFile', ['jerry', '/arst/private/public.php']));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersSiteForFileSitesExistButNoMatches()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert', 'test', 'files/*', 'private/*']);
+
+    $this->assertNull($this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/private/public.php']));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersSiteForFileMultipleSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/arst/', 'admin', 'files/*', 'private/*']);
 
     $this->assertSame('/arst/private/', $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/private/public.php']));
 
@@ -278,6 +358,90 @@ class PermissionsManagerTest extends TestBase
     $this->assertSame(null, $this->call('PermissionsManager', 'findUsersSiteForFile', ['bvisto', '/arst/public.php']));
 
     $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessNothingExcluded()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => null,
+      'includedFiles' => null,
+    ];
+
+    $this->assertTrue($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessExcluded()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/private/*'],
+      'includedFiles' => null,
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessIncluded()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/private/*'],
+      'includedFiles' => ['/private/arst/*'],
+    ];
+
+    $this->assertTrue($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessSpecificExcluded()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/private/*', '/private/arst/public.php'],
+      'includedFiles' => ['/private/arst/*'],
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessSpecificIncluded()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/private/*'],
+      'includedFiles' => ['/private/arst/public.php'],
+    ];
+
+    $this->assertTrue($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessExcludedWildCard()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/private/*'],
+      'includedFiles' => null,
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
   }
 
   /**
@@ -473,12 +637,94 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanCreatePageExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanCreatePage('bvisto', '/arst/private/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function userCanCreatePage()
   {
     $this->constructDB(['Sites', 'Permissions']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertTrue(PermissionsManager::userCanCreatePage('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanDeletePageNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanDeletePage('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanDeletePageNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanDeletePage('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanDeletePageNonDeletionAccessLevel()
+  {
+    $origNonDeletionAccessLevels = Config::$nonDeletionAccessLevels;
+    Config::$nonDeletionAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanDeletePage('bvisto', '/arst/protected/arst.php'));
+
+    Config::$nonDeletionAccessLevels = $origNonDeletionAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanDeletePageExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanDeletePage('bvisto', '/arst/private/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanDeletePage()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanDeletePage('bvisto', '/arst/protected/arst.php'));
 
     $this->destructDB();
   }
@@ -521,6 +767,22 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertFalse(PermissionsManager::userCanPublishPendingDrafts('bvisto', '/arst/protected/arst.php'));
+
+    Config::$publishPendingDraftsAccessLevels = $origPublishPendingDraftsAL;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanPublishPendingDraftsExcluded()
+  {
+    $origPublishPendingDraftsAL = Config::$publishPendingDraftsAccessLevels;
+    Config::$publishPendingDraftsAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanPublishPendingDrafts('bvisto', '/arst/private/arst.php'));
 
     Config::$publishPendingDraftsAccessLevels = $origPublishPendingDraftsAL;
     $this->destructDB();
@@ -588,6 +850,22 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanPublishFileExcluded()
+  {
+    $origNonPublishingAL = Config::$nonPublishingAccessLevels;
+    Config::$nonPublishingAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'arst', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanPublishFile('bvisto', '/arst/private/arst.php'));
+
+    Config::$nonPublishingAccessLevels = $origNonPublishingAL;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function userCanPublishFile()
   {
     $origNonPublishingAL = Config::$nonPublishingAccessLevels;
@@ -647,12 +925,28 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanEditSiteNavExcluded()
+  {
+    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
+    Config::$siteNavAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanEditSiteNav('bvisto', '/arst/private/arst.php'));
+
+    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function userCanEditSiteNav()
   {
     $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
-    Config::$siteNavAccessLevels = ['admin'];
+    Config::$siteNavAccessLevels = ['test'];
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*,private/files', 'private/*,secure']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertTrue(PermissionsManager::userCanEditSiteNav('bvisto', '/arst/protected/arst.php'));
 
@@ -692,14 +986,30 @@ class PermissionsManagerTest extends TestBase
    */
   public function userCanEditRawHTMLFalse()
   {
-    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
-    Config::$siteNavAccessLevels = ['admin'];
+    $origEditRawHTMLAccessLevels = Config::$editRawHTMLAccessLevels;
+    Config::$editRawHTMLAccessLevels = ['admin'];
     $this->constructDB(['Sites', 'Permissions']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertFalse(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/protected/arst.php'));
 
-    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    Config::$editRawHTMLAccessLevels = $origEditRawHTMLAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanEditRawHTMLExcluded()
+  {
+    $origEditRawHTMLAccessLevels = Config::$editRawHTMLAccessLevels;
+    Config::$editRawHTMLAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/private/arst.php'));
+
+    Config::$editRawHTMLAccessLevels = $origEditRawHTMLAccessLevels;
     $this->destructDB();
   }
 
@@ -708,14 +1018,14 @@ class PermissionsManagerTest extends TestBase
    */
   public function userCanEditRawHTML()
   {
-    $origSiteNavAccessLevels = Config::$siteNavAccessLevels;
-    Config::$siteNavAccessLevels = ['admin'];
+    $origEditRawHTMLAccessLevels = Config::$editRawHTMLAccessLevels;
+    Config::$editRawHTMLAccessLevels = ['test'];
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*,private/files', 'private/*,secure']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertTrue(PermissionsManager::userCanEditRawHTML('bvisto', '/arst/protected/arst.php'));
 
-    Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
+    Config::$editRawHTMLAccessLevels = $origEditRawHTMLAccessLevels;
     $this->destructDB();
   }
 
@@ -793,6 +1103,17 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanEditPartNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+
+    $this->assertFalse(PermissionsManager::userCanEditPart('bvisto', '/arst/test.php', 'title'));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function accessLevlCanEditPart()
   {
     $origNonEditablePartsByAccessLevel = Config::$nonEditablePartsByAccessLevel;
@@ -843,6 +1164,34 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanEditDraftFalse()
+  {
+    $draft = [
+      'username'        => 'bvisto',
+      'additionalUsers' => ['jerry'],
+      'type'            => Config::PUBLIC_DRAFT,
+    ];
+
+    $this->assertFalse(PermissionsManager::userCanEditDraft('testUser', $draft));
+  }
+
+  /**
+   * @test
+   */
+  public function userOwnsDraft()
+  {
+    $draft = [
+      'username'        => 'bvisto',
+      'additionalUsers' => ['jerry'],
+      'type'            => Config::PUBLIC_DRAFT,
+    ];
+
+    $this->assertTrue(PermissionsManager::userOwnsDraft('bvisto', $draft));
+  }
+
+  /**
+   * @test
+   */
   public function isUserSuperUser()
   {
     $this->constructDB(['Sites', 'Permissions']);
@@ -861,6 +1210,178 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', Config::ADMIN_ACCESS_LEVEL]);
 
     $this->assertTrue($this->call('PermissionsManager', 'isUserAdmin', ['bvisto']));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findSitesContainingFile()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+
+    $this->assertSame(['/billy/concert/', '/billy/'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findSitesContainingFileNoneFound()
+  {
+    $file = '/cis/www/arst/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arsts/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+
+    $this->assertEmpty($result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findSitesContainingFileNoSites()
+  {
+    $file = '/cis/www/arst/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+
+    $this->assertNull($result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function sortSitesByDepth()
+  {
+    $file = '/cis/www/billy/concert/test/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $sites = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+
+    $result = $this->call('PermissionsManager', 'sortSitesByDepth', [$sites]);
+
+    $this->assertNotSame($sites, $result);
+
+    $this->assertSame(['/billy/concert/test/', '/billy/concert/', '/billy/'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersForSiteByAccessLevel()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findUsersForSiteByAccessLevel', ['/billy/concert/', Config::$publishPendingDraftsAccessLevels]);
+
+    $this->assertSame(['bvisto'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersForSiteByAccessLevelSingleLevel()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findUsersForSiteByAccessLevel', ['/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $this->assertSame(['bvisto'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersForSiteByAccessLevelMultiple()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/concert/', Config::SITE_PUBLISHER_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findUsersForSiteByAccessLevel', ['/billy/concert/', Config::$publishPendingDraftsAccessLevels]);
+
+    $this->assertSame(['bvisto', 'jerry'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findPublishersForFile()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($file));
+
+    $this->assertSame(['bvisto'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findPublishersForFileNone()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SUPER_USER]);
+
+    $result = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($file));
+
+    $this->assertNull($result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findPublishersForFileMultiple()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/concert/', Config::SITE_PUBLISHER_ACCESS_LEVEL]);
+
+    $result = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($file));
+
+    $this->assertSame(['bvisto', 'jerry'], $result);
     $this->destructDB();
   }
 }
