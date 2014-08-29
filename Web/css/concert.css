@@ -81,11 +81,11 @@ ConcertMenu
   display: inline-block;
   min-height: 3em;
   max-height: 150px;
-  margin: 0 0 0 3em;
+  margin: 0;
   line-height: 3em;
   width: 100%;
-  transition: all .1s ease-in-out;
-  transition-delay: 0.0000001s;
+  transition: all .5s ease-in-out;
+  transition-delay: 0;
 }
 #concertMenuItems.hidden {
   min-height: 0px;
@@ -94,8 +94,7 @@ ConcertMenu
 }
 
 #concertMenuBar {
-
-  margin: 0;
+  margin: 0 0 0 3em;
   height: 3em;
 }
 
