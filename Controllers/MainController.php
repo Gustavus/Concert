@@ -110,7 +110,7 @@ class MainController extends SharedController
   private function createNewPage($filePath, $fromFilePath = null)
   {
     if ($fromFilePath === null) {
-      $fromFilePath = Config::TEMPLATE_PAGE;
+      $fromFilePath = Config::DEFAULT_TEMPLATE_PAGE;
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
@@ -511,8 +511,12 @@ class MainController extends SharedController
       }
     } else if (self::userIsEditing() || self::userIsSaving()) {
       if (isset($_GET['srcFilePath'])) {
-        $fromFilePath = self::isInternalForward() ? $_GET['srcFilePath'] : Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
-        // we will have an absolute path if we were internally forwarded
+        if (isset(Config::$templates[$_GET['srcFilePath']])) {
+          $fromFilePath = Config::$templates[$_GET['srcFilePath']]['location'];
+        } else {
+          $fromFilePath = self::isInternalForward() ? $_GET['srcFilePath'] : Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
+          // we will have an absolute path if we were internally forwarded
+        }
       } else {
         $fromFilePath = null;
       }

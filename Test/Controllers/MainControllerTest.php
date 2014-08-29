@@ -439,7 +439,7 @@ class MainControllerTest extends TestBase
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
     $this->authenticate('testUser');
@@ -854,7 +854,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
 
     $this->authenticate('testUser');
@@ -876,7 +876,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     //$this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
     $this->fileManager->acquireLock();
 
@@ -901,7 +901,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $draftName = basename($this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
 
     $this->authenticate('testUser');
@@ -1071,7 +1071,7 @@ class MainControllerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', 'test']);
 
 
-    $this->buildFileManager('bvisto', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('bvisto', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $draftName = basename($this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
 
     $this->authenticate('bvisto');
@@ -1105,7 +1105,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'noCreate']);
 
-    $this->buildFileManager('bvisto', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('bvisto', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $draftName = basename($this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
 
     $this->authenticate('bvisto');
@@ -1166,7 +1166,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'test']);
 
-    $this->buildFileManager('bvisto', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('bvisto', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $draftName = basename($this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
 
     $this->authenticate('bvisto');
@@ -1196,7 +1196,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'test']);
 
-    $this->buildFileManager('bvisto', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('bvisto', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->assertTrue($this->fileManager->acquireLock());
 
     $this->authenticate('bvisto');
@@ -1257,7 +1257,7 @@ class MainControllerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'test']);
 
-    $this->buildFileManager('bvisto', $filePath, Config::TEMPLATE_PAGE);
+    $this->buildFileManager('bvisto', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $draftName = basename($this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
 
     $_GET['concert'] = 'viewDraft';

@@ -587,7 +587,7 @@ class MenuController extends SharedController
       $foundFiles = scandir($absDir);
       $files = [];
       foreach ($foundFiles as $file) {
-        if (substr($file, strlen($file) - 4) === '.php' || is_dir($absDir . $file)) {
+        if ((substr($file, strlen($file) - 4) === '.php' && strpos($file, 'site_nav.php') === false) || is_dir($absDir . $file)) {
           $files[] = $file;
         }
       }
@@ -596,10 +596,10 @@ class MenuController extends SharedController
       // The 2 accounts for . and ..
       if (count($files) > 2) {
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
-        if ($forSrcFile && (rtrim($this->filePath, '/') === rtrim($absDir, '/') || rtrim(dirname($this->filePath), '/') === rtrim($absDir, '/'))) {
+        if ($forSrcFile) {
           // we want our default templates on top
-          foreach (Config::$templates as $templateName => $template) {
-            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s">%s Template</a></li>', htmlentities($template), (new String($templateName))->titleCase()->getValue());
+          foreach (Config::$templates as $templateIdentifier => $templateProperties) {
+            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
           }
         }
         // All dirs

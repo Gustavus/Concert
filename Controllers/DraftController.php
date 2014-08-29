@@ -502,6 +502,6 @@ class DraftController extends SharedController
         return Config::addDocRootToPath(urldecode($query['srcFilePath']));
       }
     }
-    return Config::TEMPLATE_PAGE;
+    return Config::DEFAULT_TEMPLATE_PAGE;
   }
 }

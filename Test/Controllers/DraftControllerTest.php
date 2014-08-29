@@ -824,7 +824,7 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = json_decode($this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE), true);
+    $actual = json_decode($this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE), true);
 
     $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $actual['reason']);
 
@@ -847,7 +847,7 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
 
     $this->assertTrue($actual);
 
@@ -870,14 +870,14 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
 
     $this->assertTrue($actual);
 
 
     $_POST = ['1' => '<p>This is some more edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->assertTrue($actual);
 
     $this->buildFileManager('testUser', $filePath);
@@ -1398,7 +1398,7 @@ class DraftControllerTest extends TestBase
 
     $result = $this->controller->getFilePathToCopy();
 
-    $this->assertSame(Config::TEMPLATE_PAGE, $result);
+    $this->assertSame(Config::DEFAULT_TEMPLATE_PAGE, $result);
   }
 
   /**
@@ -1412,7 +1412,7 @@ class DraftControllerTest extends TestBase
     $_GET['srcFilePath'] = Config::SITE_NAV_TEMPLATE;
     $result = $this->controller->getFilePathToCopy();
 
-    $this->assertSame(Config::TEMPLATE_PAGE, $result);
+    $this->assertSame(Config::DEFAULT_TEMPLATE_PAGE, $result);
     $_GET = $origGet;
   }
 

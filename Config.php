@@ -84,7 +84,12 @@ class Config
   /**
    * Base template
    */
-  const TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+  const DEFAULT_TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+
+  /**
+   * Base template
+   */
+  const DEFAULT_TEMPLATE_PAGE_IDENTIFIER = 'GustavusConcertDefaultTemplate';
 
   /**
    * Base site_nav template
@@ -409,11 +414,16 @@ class Config
 
   /**
    * Defines all of the possible templates a person can create a page from
+   *   Key is the identifier.
+   *   Value is an array with keys of name and location.
    *
    * @var array
    */
   public static $templates = [
-    'default' => self::TEMPLATE_PAGE,
+    self::DEFAULT_TEMPLATE_PAGE_IDENTIFIER => [
+      'name' => 'default',
+      'location' => self::DEFAULT_TEMPLATE_PAGE,
+    ],
   ];
 
   /**
