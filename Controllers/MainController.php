@@ -89,7 +89,12 @@ class MainController extends SharedController
   private function savePendingDraft($fileManager)
   {
     if ($fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT)) {
-      // @todo we need to send an email alerting the site admin of a pending draft
+      $pendingDraft = $fileManager->getDraft();
+
+      $publishers = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($pendingDraft['destFilepath']));
+
+      $this->forward('emailPendingDraft', ['draft' => $pendingDraft, 'publishers' => $publishers]);
+
       return true;
     }
     return false;

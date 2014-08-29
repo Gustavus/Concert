@@ -474,7 +474,7 @@ class PermissionsManager
    * Finds people who have access to publish pending drafts for the current file
    *
    * @param  string $filePath File to find publishers for
-   * @return array Array of publisher usernames
+   * @return array|null Array of publisher usernames or null if none found
    */
   public static function findPublishersForFile($filePath)
   {

@@ -82,6 +82,7 @@ class MainControllerTestController extends MainController
           'Gustavus\Concert\Controllers\DraftController' => 'Gustavus\Concert\Test\Controllers\DraftControllerTestController',
           'Gustavus\Concert\Controllers\MenuController' => 'Gustavus\Concert\Test\Controllers\MenuControllerTestController',
           'Gustavus\Concert\Controllers\SiteNavController' => 'Gustavus\Concert\Test\Controllers\SiteNavControllerTestController',
-          'Gustavus\Concert\Controllers\MainController' => 'Gustavus\Concert\Test\Controllers\MainControllerTestController']);
+          'Gustavus\Concert\Controllers\MainController' => 'Gustavus\Concert\Test\Controllers\MainControllerTestController',
+          'Gustavus\Concert\Controllers\EmailController' => 'Gustavus\Concert\Controllers\EmailController']);
   }
 }

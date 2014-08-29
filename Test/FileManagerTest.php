@@ -1013,7 +1013,7 @@ echo $config["content"];';
     Filters::clear('concertCMSCheckEditable');
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'admin', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
 
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->fileManager->setUpCheckEditableFilter();
@@ -1035,7 +1035,7 @@ echo $config["content"];';
     Filters::clear('concertCMSCheckEditable');
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
 
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->fileManager->setUpCheckEditableFilter();
@@ -1057,7 +1057,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->assertTrue($this->fileManager->userCanEditFile());
 
@@ -1071,7 +1071,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
     $this->buildFileManager('bvisto', $_SERVER['DOCUMENT_ROOT'] . '/billy/files/private.php');
     $this->assertTrue($this->fileManager->userCanEditFile());
 
@@ -1085,7 +1085,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
     $this->buildFileManager('jerry', '/billy/files/private.php');
     $this->assertFalse($this->fileManager->userCanEditFile());
 
@@ -1099,7 +1099,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Drafts', 'Permissions', 'Sites', 'Locks']);
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', 'test']);
 
     $this->buildFileManager('jerry', '/billy/files/testFile');
 
@@ -1129,7 +1129,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Drafts', 'Permissions', 'Sites', 'Locks']);
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', 'test']);
 
     $this->buildFileManager('jerry', '/billy/files/testFile');
 
@@ -1159,7 +1159,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Drafts', 'Permissions', 'Sites', 'Locks']);
     $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/files/testFile', 'test']);
 
     $this->buildFileManager('jerry', '/billy/files/testFile');
 
@@ -1189,7 +1189,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->assertTrue($this->fileManager->userCanEditPart('Title'));
 
@@ -1203,7 +1203,7 @@ echo $config["content"];';
   {
     $this->constructDB(['Sites', 'Permissions']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test'], ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]);
     $this->buildFileManager('bvisto', $_SERVER['DOCUMENT_ROOT'] . '/billy/files/private.php');
     $this->assertTrue($this->fileManager->userCanEditPart('Title'));
 
@@ -1598,7 +1598,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1646,7 +1646,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
 
@@ -1663,7 +1663,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1692,7 +1692,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1746,7 +1746,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1779,7 +1779,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1811,8 +1811,8 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1856,7 +1856,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1891,7 +1891,7 @@ echo $config["content"];';
   public function publishFileNoStagedFiles()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('root', self::$testFileDir . 'stagedFiles/arst');
     $this->assertFalse($this->fileManager->publishFile());
@@ -1907,7 +1907,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1934,7 +1934,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -1977,7 +1977,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -2006,8 +2006,8 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -2051,7 +2051,7 @@ echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
 
@@ -2084,7 +2084,7 @@ echo $config["content"];';
 
     file_put_contents($file, self::$indexContents);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', $file);
 
@@ -2322,7 +2322,7 @@ echo $config["content"];';
 
     $dir = self::$testFileDir . 'directory/arst/arst/';
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', $dir, ['admin', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', $dir, 'test']);
 
     mkdir($dir, 0777, true);
     $file = $dir . 'test.php';
@@ -2358,8 +2358,8 @@ echo $config["content"];';
 
     $dir = self::$testFileDir . 'directory/arst/arst/';
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir . 'directory/arst/', ['admin', 'test']]);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', [Config::SUPER_USER]]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir . 'directory/arst/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', Config::SUPER_USER]);
 
     mkdir($dir, 0777, true);
     $file = $dir . 'test.php';
@@ -2389,7 +2389,7 @@ echo $config["content"];';
 
     $dir = self::$testFileDir . 'directory/arst/arst/';
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', [Config::SUPER_USER]]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '*', Config::SUPER_USER]);
 
     mkdir($dir, 0777, true);
     $file = $dir . 'test.php';

@@ -289,6 +289,7 @@ class MainControllerTest extends TestBase
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'nonPub']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['publisherUser', self::$testFileDir, Config::SITE_PUBLISHER_ACCESS_LEVEL]);
 
     $this->authenticate('testUser');
 
@@ -304,6 +305,64 @@ class MainControllerTest extends TestBase
     $modifiedFile = file_get_contents(Config::$draftDir . $this->fileManager->getDraftFileName('testUser'));
 
     $this->assertContains('This is some edited html content', $modifiedFile);
+
+    $expectedTo = [];
+    foreach (Config::$adminEmails as $adminEmail) {
+      $expectedTo[$adminEmail] = null;
+    }
+
+    $this->checkSentEmailContents(
+        ['to' => $expectedTo],
+        'Unable to email publishers for: ' . $filePath,
+        'A publisher was found',
+        true
+    );
+
+    $this->unauthenticate();
+    $this->destructDB();
+    Config::$nonPublishingAccessLevels = $origNonPublishingAccessLevels;
+  }
+
+  /**
+   * @test
+   */
+  public function editSubmissionCantPublishNoPublishers()
+  {
+    $origNonPublishingAccessLevels = Config::$nonPublishingAccessLevels;
+    Config::$nonPublishingAccessLevels = ['nonPub'];
+
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'nonPub']);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = ['1' => '<p>This is some edited html content</p>'];
+
+    $this->assertTrue($this->controller->edit($filePath));
+
+    $this->buildFileManager('testUser', $filePath);
+
+    $modifiedFile = file_get_contents(Config::$draftDir . $this->fileManager->getDraftFileName('testUser'));
+
+    $this->assertContains('This is some edited html content', $modifiedFile);
+
+    $expectedTo = [];
+    foreach (Config::$adminEmails as $adminEmail) {
+      $expectedTo[$adminEmail] = null;
+    }
+
+    $this->checkSentEmailContents(
+        ['to' => $expectedTo],
+        'No publishers were found for ' . $filePath,
+        'testUser submitted a draft pending review',
+        true
+    );
 
     $this->unauthenticate();
     $this->destructDB();

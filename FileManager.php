@@ -459,7 +459,7 @@ class FileManager
    *   Filters by type if $type is specified
    *
    * @param  string $type Type of drafts to get
-   * @return array
+   * @return array Array of arrays with keys of destFilepath, draftFilename, type, username, and additionalUsers
    */
   public function getDrafts($type = null)
   {
@@ -503,7 +503,7 @@ class FileManager
    * Gets the current draft for the specified user
    *
    * @param  string $username Username to get the draft for
-   * @return array
+   * @return array Array with keys of destFilepath, draftFilename, type, username, and additionalUsers
    */
   public function getDraftForUser($username)
   {
@@ -529,11 +529,14 @@ class FileManager
   /**
    * Gets the specified public draft
    *
-   * @param  string $draftFilename Name of the draft to get
-   * @return array
+   * @param  string $draftFilename Name of the draft to get. If not specified, it will get the draft filename for the current file and user
+   * @return array Array with keys of destFilepath, draftFilename, type, username, and additionalUsers
    */
-  public function getDraft($draftFilename)
+  public function getDraft($draftFilename = null)
   {
+    if ($draftFilename === null) {
+      $draftFilename = $this->getDraftFileName();
+    }
     $dbal = $this->getDBAL();
 
     $qb = $dbal->createQueryBuilder();
@@ -768,6 +771,7 @@ class FileManager
 
     // make sure the destination directory exists in case someone is adding a directory
     $this->ensureDirectoryExists(dirname($destination), $owner, $group);
+    // @todo what to do if the destination is a symlink?
 
     if (rename($srcFilePath, $destination)) {
       chgrp($destination, $group);

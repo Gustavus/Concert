@@ -71,6 +71,13 @@ return [
   ],
   // site nav actions
   'handleSiteNavActions' => [
-    'handler' => 'Gustavus\Concert\Controllers\SiteNavController:handleSiteNavActions'
+    'handler' => 'Gustavus\Concert\Controllers\SiteNavController:handleSiteNavActions',
+  ],
+  // email actions
+  'emailSharedDraft' => [
+    'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyUsersOfSharedDraft',
+  ],
+  'emailPendingDraft' => [
+    'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyPublishersOfPendingDraft',
   ],
 ];

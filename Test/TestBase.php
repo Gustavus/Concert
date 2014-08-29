@@ -12,7 +12,8 @@ use Gustavus\Test\TestEM,
   Gustavus\Concert\FileManager,
   Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
-  Gustavus\GACCache\Workers\ArrayFactoryWorker;
+  Gustavus\GACCache\Workers\ArrayFactoryWorker,
+  Gustavus\GACMailer\Test\MockMailer;
 
 /**
  * Base class for testing
@@ -54,6 +55,12 @@ class TestBase extends TestEM
   private $origGet;
 
   /**
+   * MockMailer
+   * @var MockMailer
+   */
+  protected $mockMailer;
+
+  /**
    * Mapping of Generated Entities to their namespace for testing
    * @var array
    */
@@ -88,6 +95,7 @@ class TestBase extends TestEM
     $this->set('PermissionsManager', 'dbal', DBAL::getDBAL('testDB', $this->getDBH()));
     $this->setUpCaches();
     $this->origGet = $_GET;
+    $this->mockMailer = new MockMailer();
   }
 
   /**
@@ -104,6 +112,7 @@ class TestBase extends TestEM
     }
     $this->set('PermissionsManager', 'cache', null);
     $_GET = $this->origGet;
+    unset($this->mockMailer);
   }
 
   /**
@@ -156,6 +165,29 @@ class TestBase extends TestEM
   protected function buildFileManager($user, $file, $srcFilePath = null)
   {
     $this->fileManager = new TestObject(new FileManager($user, $file, $srcFilePath, DBAL::getDBAL('testDB', $this->getDBH())));
+  }
+
+  /**
+   * Checks to see if the contents of an email match the expected values
+   *
+   * @param  array $expectedRecipients Array of expected recipients keyed by recipient type. ie. 'bcc', 'cc', 'to'
+   * @param  string $expectedSubject   Expected subject
+   * @param  string $expectedBody      Expected Body
+   * @return void
+   */
+  protected function checkSentEmailContents($expectedRecipients, $expectedSubject, $expectedBody, $checkContains = false)
+  {
+    // get the "sent" message
+    $message = $this->mockMailer->popMessage();
+
+    $recipientTypes = array_keys($expectedRecipients);
+    foreach ($recipientTypes as $recipientType) {
+      $getter = 'get' . ucFirst($recipientType);
+      $this->assertSame($expectedRecipients[$recipientType], $message->{$getter}());
+    }
+    $assertion = $checkContains ? 'assertContains' : 'assertSame';
+    $this->{$assertion}($expectedSubject, $message->getSubject());
+    $this->{$assertion}($expectedBody, $message->getBody());
   }
 
   /**

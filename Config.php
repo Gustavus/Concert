@@ -223,6 +223,11 @@ class Config
    */
   const SITE_ADMIN_ACCESS_LEVEL  = 'siteAdmin';
   /**
+   * Admin access level. This person is an administrator for this site.
+   */
+  const SITE_PUBLISHER_ACCESS_LEVEL  = 'publisher';
+  // Global admins
+  /**
    * Admin access level. This person is a global administrator for all sites.
    */
   const ADMIN_ACCESS_LEVEL  = 'admin';
@@ -237,7 +242,7 @@ class Config
    * @var array
    */
   public static $superUserPermissions = [
-    'accessLevel'   => [self::SUPER_USER],
+    'accessLevel'   => self::SUPER_USER,
     'includedFiles' => null,
     'excludedFiles' => null,
   ];
@@ -248,7 +253,7 @@ class Config
    * @var array
    */
   public static $adminPermissions = [
-    'accessLevel'   => [self::ADMIN_ACCESS_LEVEL],
+    'accessLevel'   => self::ADMIN_ACCESS_LEVEL,
     'includedFiles' => null,
     'excludedFiles' => null,
   ];
@@ -308,7 +313,8 @@ class Config
    * @var array
    */
   public static $publishPendingDraftsAccessLevels = [
-    'siteAdmin'
+    self::SITE_ADMIN_ACCESS_LEVEL,
+    self::SITE_PUBLISHER_ACCESS_LEVEL,
   ];
 
   /**
@@ -412,6 +418,7 @@ class Config
 
   /**
    * Array of posible GET keys used for navigating concert
+   *
    * @var array
    */
   public static $concertGETKeys = [
@@ -420,6 +427,28 @@ class Config
     'concertAction',
     'forwardedFrom',
     'concertDraft',
+  ];
+
+  /**
+   * Emails that get emails for development purposes
+   *
+   * @var array
+   */
+  public static $devEmails = [
+    'bvisto+concert@gustavus.edu'
+  ];
+
+  /**
+   * Admin emails that get sent notifications for certain actions.
+   *   Notification actions include:
+   *     <ul>
+   *       <li>No publishers found for a site</li>
+   *     </ul>
+   *
+   * @var array
+   */
+  public static $adminEmails = [
+    'web+concert@gustavus.edu'
   ];
 
   /**

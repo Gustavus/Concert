@@ -342,8 +342,23 @@ class DraftController extends SharedController
           $additionalUsers[] = $child->getChildElement('username')->getValue();
         }
       }
-      $additionalUsers = array_unique($additionalUsers);
+      $additionalUsers = array_filter(array_unique($additionalUsers));
       if ($fm->addUsersToDraft($draftName, $additionalUsers)) {
+        if (!empty($draft['additionalUsers']) && is_array($draft['additionalUsers'])) {
+          $usersToEmail = [];
+
+          foreach ($additionalUsers as $additionalUser) {
+            if (!in_array($additionalUser, $draft['additionalUsers'])) {
+              $usersToEmail[] = $additionalUser;
+            }
+          }
+        } else {
+          $usersToEmail = $additionalUsers;
+        }
+        if (!empty($usersToEmail)) {
+          $this->forward('emailSharedDraft', ['draft' => $draft, 'usernames' => $usersToEmail]);
+        }
+
         if (!isset($_GET['barebones'])) {
           return $this->redirect($this->buildUrl('addUsersToDraft', ['draftName' => $draftName]));
         }
