@@ -51,7 +51,7 @@ class ShareDraft
   {
     $return = [];
 
-    $autocompletePath = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'autocompleteUser', ['value' => '{value}']);
+    $autocompletePath = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'autocompleteUser', ['value' => '{value}'], Config::WEB_DIR);
 
     $addButton = [
       'type'            => 'button',
