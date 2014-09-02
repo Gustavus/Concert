@@ -218,19 +218,6 @@ class Config
   // Access Levels
   // Note: When adding an access level, make sure to add it to the appropriate arrays below
 
-
-  /**
-   * Public access level. Used whenever a "public" item is being edited.
-   */
-  const PUBLIC_ACCESS_LEVEL = 'public';
-  /**
-   * Admin access level. This person is an administrator for this site.
-   */
-  const SITE_ADMIN_ACCESS_LEVEL  = 'siteAdmin';
-  /**
-   * Admin access level. This person is an administrator for this site.
-   */
-  const SITE_PUBLISHER_ACCESS_LEVEL  = 'publisher';
   // Global admins
   /**
    * Admin access level. This person is a global administrator for all sites.
@@ -240,6 +227,31 @@ class Config
    * Super User access level. This person is a global administrator for all sites with access to edit pages and drafts.
    */
   const SUPER_USER  = 'superUser';
+  // Other Access Levels
+  /**
+   * Public access level. Used whenever a "public" item is being edited.
+   */
+  const PUBLIC_ACCESS_LEVEL = 'public';
+  /**
+   * Admin access level. This person is an administrator for this site.
+   */
+  const SITE_ADMIN_ACCESS_LEVEL  = 'siteAdmin';
+  /**
+   * This person can publish pending drafts for this site.
+   */
+  const SITE_PUBLISHER_ACCESS_LEVEL  = 'publisher';
+  /**
+   * Access level that can only save drafts (non publishing)
+   */
+  const DRAFT_ACCESS_LEVEL = 'draft';
+  /**
+   * Access level that can't create new files
+   */
+  const NON_CREATION_ACCESS_LEVEL = 'noCreate';
+  /**
+   * Access level that can't delete files
+   */
+  const NON_DELETION_ACCESS_LEVEL = 'noDelete';
 
   /**
    * Global permissions for super users
@@ -247,7 +259,7 @@ class Config
    * @var array
    */
   public static $superUserPermissions = [
-    'accessLevel'   => self::SUPER_USER,
+    'accessLevel'   => [self::SUPER_USER],
     'includedFiles' => null,
     'excludedFiles' => null,
   ];
@@ -258,7 +270,7 @@ class Config
    * @var array
    */
   public static $adminPermissions = [
-    'accessLevel'   => self::ADMIN_ACCESS_LEVEL,
+    'accessLevel'   => [self::ADMIN_ACCESS_LEVEL],
     'includedFiles' => null,
     'excludedFiles' => null,
   ];
@@ -275,21 +287,27 @@ class Config
    *
    * @var array
    */
-  public static $nonPublishingAccessLevels = [];
+  public static $nonPublishingAccessLevels = [
+    self::DRAFT_ACCESS_LEVEL,
+  ];
 
   /**
    * AccessLevels that can't create new files
    *
    * @var array
    */
-  public static $nonCreationAccessLevels = [];
+  public static $nonCreationAccessLevels = [
+    self::NON_CREATION_ACCESS_LEVEL,
+  ];
 
   /**
    * AccessLevels that can't delete files
    *
    * @var array
    */
-  public static $nonDeletionAccessLevels = [];
+  public static $nonDeletionAccessLevels = [
+    self::NON_DELETION_ACCESS_LEVEL,
+  ];
 
   /**
    * AccessLevels that can't edit the site nav
