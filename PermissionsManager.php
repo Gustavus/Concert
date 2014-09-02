@@ -59,6 +59,9 @@ class PermissionsManager
 
   /**
    * Checks to see if the specified file is accessible from the sitePerms for the site
+   *   If a file is specified directly in excludedFiles, the file can't be touched.
+   *   If a file is specified directly in includedFiles, but not excludedFiles, the file can be edited.
+   *   If a wildcard or directory is found in both rules, excludedFiles will override includedFiles for this file.
    *
    * @param  string $filePath  Path of the file in question
    * @param  string $site      Site we are searching in
@@ -128,9 +131,6 @@ class PermissionsManager
 
   /**
    * Checks whether the user has access to edit the specified file.
-   *   If a file is specified directly in excludedFiles, the file can't be touched.
-   *   If a file is specified directly in includedFiles, but not excludedFiles, the file can be edited.
-   *   If a wildcard or directory is found in both rules, excludedFiles will override includedFiles for this file.
    *
    * @param  string $username Username to check
    * @param  string $filePath Absolute path from the doc root to the file in question
@@ -149,7 +149,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits editing.
-    if (in_array($sitePerms['accessLevel'], Config::$nonEditableAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonEditableAccessLevels)) {
       // the current user's access level doesn't allow editing
       return false;
     }
@@ -177,7 +177,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits creating new pages.
-    if (in_array($sitePerms['accessLevel'], Config::$nonCreationAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonCreationAccessLevels)) {
       // the current user's access level doesn't allow creating
       return false;
     }
@@ -204,7 +204,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits deleting pages.
-    if (in_array($sitePerms['accessLevel'], Config::$nonDeletionAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonDeletionAccessLevels)) {
       // the current user's access level doesn't allow deleting
       return false;
     }
@@ -231,7 +231,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits publishing drafts for people.
-    if (in_array($sitePerms['accessLevel'], Config::$publishPendingDraftsAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$publishPendingDraftsAccessLevels)) {
       return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
     }
     // the current user's access level doesn't allow publishing drafts
@@ -258,7 +258,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits publishing files.
-    if (in_array($sitePerms['accessLevel'], Config::$nonPublishingAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonPublishingAccessLevels)) {
       // the current user's access level doesn't allow publishing
       return false;
     }
@@ -285,7 +285,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits editing site navs.
-    if (in_array($sitePerms['accessLevel'], Config::$siteNavAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$siteNavAccessLevels)) {
       return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
     }
     // the current user's access level doesn't allow editing site navs
@@ -312,10 +312,27 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits editing raw html.
-    if (in_array($sitePerms['accessLevel'], Config::$editRawHTMLAccessLevels)) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$editRawHTMLAccessLevels)) {
       return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
     }
     // the current user's access level doesn't allow editing raw html.
+    return false;
+  }
+
+  /**
+   * Checks to see if the specified accessLevels can be found in $arrayToCheck
+   * @param  array $accessLevels AccessLevels to try finding in the specified array
+   * @param  array $arrayToCheck Array to search for accessLevels in
+   * @return boolean
+   */
+  private static function accessLevelExistsInArray(array $accessLevels, array $arrayToCheck)
+  {
+    foreach ($accessLevels as $accessLevel) {
+      if (in_array($accessLevel, $arrayToCheck)) {
+        // the user has an access level that exists in the specified array
+        return true;
+      }
+    }
     return false;
   }
 
@@ -450,23 +467,32 @@ class PermissionsManager
 
     $qb = $dbal->createQueryBuilder();
     $qb->select('p.username')
+      ->addSelect('p.accessLevel')
       ->from('permissions', 'p')
       ->innerJoin('p', 'sites', 's', 'p.site_id = s.id')
       ->where('s.siteRoot = :site');
 
     $params = [':site' => $site];
 
-    if (is_array($accessLevel)) {
-      foreach ($accessLevel as &$level) {
-        $level = sprintf('"%s"', $level);
-      }
-      $qb->andWhere($qb->expr()->in('p.accessLevel', $accessLevel));
-    } else {
-      $qb->andWhere('p.accessLevel = :accessLevel');
-      $params[':accessLevel'] = $accessLevel;
+    // we need accessLevel to be an array for below
+    $accessLevel = (array) $accessLevel;
+    $ors = [];
+    $i = 1;
+    foreach ($accessLevel as $level) {
+      $ors[] = $qb->expr()->like('p.accessLevel', ':accessLevel' . $i);
+      $params[':accessLevel' . $i++] = "%{$level}%";
     }
+    $qb->andWhere(call_user_func_array([$qb->expr(), 'orX'], $ors));
 
     $result = $dbal->fetchAll($qb->getSQL(), $params);
+
+    $usernames = [];
+    foreach ($result as $resultPiece) {
+      if (self::accessLevelExistsInArray(explode(',', $resultPiece['accessLevel']), $accessLevel)) {
+        $usernames[] = $resultPiece['username'];
+      }
+    }
+    return $usernames;
     return (new Set($result))->flattenValues()->getValue();
   }
 
@@ -709,10 +735,16 @@ class PermissionsManager
 
     foreach ($result as $sitePerms) {
       $returnArray[$sitePerms['siteRoot']] = [
-        'accessLevel'   => ($sitePerms['accessLevel']) ? $sitePerms['accessLevel'] : null,
         'includedFiles' => ($sitePerms['includedFiles']) ? explode(',', $sitePerms['includedFiles']) : null,
         'excludedFiles' => ($sitePerms['excludedFiles']) ? explode(',', $sitePerms['excludedFiles']) : null,
       ];
+      // now add accessLevels to our array
+      if ($sitePerms['accessLevel']) {
+        $accessLevels = array_filter(explode(',', $sitePerms['accessLevel']));
+        $returnArray[$sitePerms['siteRoot']]['accessLevel'] = !empty($accessLevels) ? $accessLevels : null;
+      } else {
+        $returnArray[$sitePerms['siteRoot']]['accessLevel'] = null;
+      }
     }
 
     self::getCache()->setValue(self::buildCacheKey($username), $returnArray, $ttl);
@@ -791,7 +823,6 @@ class PermissionsManager
    */
   public static function saveUserPermissions($username, $siteRoot, $accessLevel, $includedFiles = null, $excludedFiles = null)
   {
-    assert('is_string($accessLevel)');
     $siteId = self::saveNewSiteIfNeeded($siteRoot);
     if (!$siteId) {
       throw new UnexpectedValueException('$siteId doesn\'t appear to be a valid id.');
@@ -805,6 +836,10 @@ class PermissionsManager
     if (is_array($excludedFiles)) {
       // convert this to a comma separated string of filenames
       $excludedFiles = implode(',', $excludedFiles);
+    }
+
+    if (is_array($accessLevel)) {
+      $accessLevel = implode(',', $accessLevel);
     }
 
     $dbal = self::getDBAL();

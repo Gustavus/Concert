@@ -60,7 +60,7 @@ class PermissionsManagerTest extends TestBase
   public function saveUserPermissions()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'admin']));
+    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', ['admin', 'test']]));
     // nothing should happen here. This state already exists.
     $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'admin']));
     // new one would get created here.
@@ -114,14 +114,14 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'accessLevel'   => 'admin',
         'includedFiles' => null,
         'excludedFiles' => null,
+        'accessLevel'   => ['admin'],
       ],
       '/arst' => [
-        'accessLevel'   => 'admin',
         'includedFiles' => ['files/*'],
         'excludedFiles' => ['private/*'],
+        'accessLevel'   => ['admin'],
       ],
     ];
 
@@ -130,7 +130,7 @@ class PermissionsManagerTest extends TestBase
     // update one to verify that updates work
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'none']);
 
-    $expected['/billy']['accessLevel'] = 'none';
+    $expected['/billy']['accessLevel'] = ['none'];
 
     $actual = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
     $this->assertSame($expected, $actual);
@@ -149,9 +149,9 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'accessLevel'   => 'test',
         'includedFiles' => ['files/*', 'private/public/*'],
         'excludedFiles' => ['private/*', 'protected/*'],
+        'accessLevel'   => ['test'],
       ],
     ];
 
@@ -173,14 +173,14 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'accessLevel'   => 'admin',
         'includedFiles' => ['files/*', 'images/*'],
         'excludedFiles' => ['secure/*', 'protected/private.php'],
+        'accessLevel'   => ['admin'],
       ],
       '/arst' => [
-        'accessLevel'   => 'admin',
         'includedFiles' => ['files/*'],
         'excludedFiles' => ['private/*'],
+        'accessLevel'   => ['admin'],
       ],
     ];
 
@@ -220,7 +220,7 @@ class PermissionsManagerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*', 'private/*']);
 
-    $expected = ['accessLevel' => 'siteAdmin', 'includedFiles' => null, 'excludedFiles' => null];
+    $expected = ['includedFiles' => null, 'excludedFiles' => null, 'accessLevel' => ['siteAdmin']];
 
     $this->assertSame($expected, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
 
@@ -442,6 +442,28 @@ class PermissionsManagerTest extends TestBase
     ];
 
     $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function accessLevelExistsInArray()
+  {
+    $accessLevels = ['test', 'admin'];
+    $adminAccessLevels = ['admin', 'arst'];
+
+    $this->assertTrue($this->call('PermissionsManager', 'accessLevelExistsInArray', [$accessLevels, $adminAccessLevels]));
+  }
+
+  /**
+   * @test
+   */
+  public function accessLevelExistsInArrayFalse()
+  {
+    $accessLevels = ['test', 'admin'];
+    $adminAccessLevels = ['admins'];
+
+    $this->assertFalse($this->call('PermissionsManager', 'accessLevelExistsInArray', [$accessLevels, $adminAccessLevels]));
   }
 
   /**
@@ -1301,6 +1323,22 @@ class PermissionsManagerTest extends TestBase
     $result = $this->call('PermissionsManager', 'findUsersForSiteByAccessLevel', ['/billy/concert/', Config::$publishPendingDraftsAccessLevels]);
 
     $this->assertSame(['bvisto'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findUsersForSiteByAccessLevelCloseMatches()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', ['admins', 'test']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', ['administrator', 'test']]);
+
+    $result = $this->call('PermissionsManager', 'findUsersForSiteByAccessLevel', ['/billy/concert/', 'admin']);
+
+    $this->assertSame([], $result);
     $this->destructDB();
   }
 
