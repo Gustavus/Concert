@@ -218,7 +218,7 @@ class Config
   // Access Levels
   // Note: When adding an access level, make sure to add it to the appropriate arrays below
 
-  // Global admins
+  // Global access levels
   /**
    * Admin access level. This person is a global administrator for all sites.
    */
@@ -227,7 +227,7 @@ class Config
    * Super User access level. This person is a global administrator for all sites with access to edit pages and drafts.
    */
   const SUPER_USER  = 'superUser';
-  // Other Access Levels
+  // Per-Site access levels
   /**
    * Public access level. Used whenever a "public" item is being edited.
    */
@@ -243,7 +243,11 @@ class Config
   /**
    * Access level that can only save drafts (non publishing)
    */
-  const DRAFT_ACCESS_LEVEL = 'draft';
+  const AUTHOR_ACCESS_LEVEL = 'author';
+  /**
+   * Access level that can only view sites (non editing)
+   */
+  const VIEWER_ACCESS_LEVEL = 'viewer';
   /**
    * Access level that can't create new files
    */
@@ -252,6 +256,10 @@ class Config
    * Access level that can't delete files
    */
   const NON_DELETION_ACCESS_LEVEL = 'noDelete';
+  /**
+   * Access level that can't upload files
+   */
+  const NO_UPLOAD_ACCESS_LEVEL = 'noUpload';
 
   /**
    * Global permissions for super users
@@ -280,7 +288,9 @@ class Config
    *
    * @var array
    */
-  public static $nonEditableAccessLevels = [];
+  public static $nonEditableAccessLevels = [
+    self::VIEWER_ACCESS_LEVEL,
+  ];
 
   /**
    * AccessLevels that can't publish files
@@ -288,7 +298,7 @@ class Config
    * @var array
    */
   public static $nonPublishingAccessLevels = [
-    self::DRAFT_ACCESS_LEVEL,
+    self::AUTHOR_ACCESS_LEVEL,
   ];
 
   /**
@@ -307,6 +317,7 @@ class Config
    */
   public static $nonDeletionAccessLevels = [
     self::NON_DELETION_ACCESS_LEVEL,
+    self::AUTHOR_ACCESS_LEVEL,
   ];
 
   /**
@@ -338,6 +349,15 @@ class Config
   public static $publishPendingDraftsAccessLevels = [
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
+  ];
+
+  /**
+   * Access levels that can't upload files
+   *
+   * @var array
+   */
+  public static $nonUploadingAccessLevels = [
+    self::NO_UPLOAD_ACCESS_LEVEL,
   ];
 
   /**
