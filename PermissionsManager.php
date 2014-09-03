@@ -704,7 +704,7 @@ class PermissionsManager
    */
   public static function getAllPermissionsForUser($username, $refreshCache = false)
   {
-    if (!$refreshCache) {
+    if (!$refreshCache || (!isset($_GET['refresh']) || $_GET['refresh'] === 'false')) {
       $cachedResult = self::getCache()->getValue(self::buildCacheKey($username), $found);
       if ($found) {
         return $cachedResult;
