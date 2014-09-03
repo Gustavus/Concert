@@ -179,6 +179,12 @@ class SharedController extends ConcourseController
     $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
 
     Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources, $allowCode) {
+        if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
+          $isAdmin = 'true';
+        } else {
+          $isAdmin = 'false';
+        }
+
         $script = sprintf(
             '<script type="text/javascript">
               Modernizr.load({
@@ -197,8 +203,8 @@ class SharedController extends ConcourseController
             implode('","', $resources['js']),
             Config::removeDocRootFromPath($filePath),
             $redirectPath,
-            $allowCode,
-            (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername()))
+            $allowCode ? 'true' : 'false',
+            $isAdmin
         );
         return $content . $script;
     }, 11);
