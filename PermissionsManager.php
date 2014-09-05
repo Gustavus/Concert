@@ -493,7 +493,6 @@ class PermissionsManager
       }
     }
     return $usernames;
-    return (new Set($result))->flattenValues()->getValue();
   }
 
   /**
@@ -704,7 +703,7 @@ class PermissionsManager
    */
   public static function getAllPermissionsForUser($username, $refreshCache = false)
   {
-    if (!$refreshCache || (!isset($_GET['refresh']) || $_GET['refresh'] === 'false')) {
+    if (!$refreshCache && (!isset($_GET['refresh']) || $_GET['refresh'] === 'false')) {
       $cachedResult = self::getCache()->getValue(self::buildCacheKey($username), $found);
       if ($found) {
         return $cachedResult;

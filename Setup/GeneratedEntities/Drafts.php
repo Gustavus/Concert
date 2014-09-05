@@ -64,14 +64,6 @@ class Drafts
     private $additionalUsers;
 
     /**
-     * @var \DateTime
-     *
-     * @Column(name="publishedDate", type="datetime", nullable=true)
-     */
-    private $publisheddate;
-
-
-    /**
      * Set username
      *
      * @param string $username

@@ -77,6 +77,18 @@ class DraftControllerTestController extends DraftController
   }
 
   /**
+   * overloads redirect so it doesn't try to redirect when called
+   * @param  string $path
+   * @param  integer $statusCode Redirection status code
+   * @return void
+   */
+  protected function redirectWithMessage($path = '/', $message = '', $statusCode = 303)
+  {
+    $_POST = null;
+    return ['redirect' => $path, 'message' => $message];
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function addFormBuilderResources(ElementRenderer $renderer, array $extraCSSResources = null, array $extraJSResources = null)

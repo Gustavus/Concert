@@ -14,7 +14,8 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\PermissionsManager,
   Gustavus\FormBuilderMk2\ElementRenderers\TwigElementRenderer,
   Gustavus\FormBuilderMk2\FormElement,
-  Gustavus\Resources\Resource;
+  Gustavus\Resources\Resource,
+  Gustavus\Extensibility\Filters;
 
 /**
  * Handles draft actions
@@ -87,6 +88,11 @@ class DraftController extends SharedController
       return $this->renderErrorPage('Oops! It appears as if the draft could not be found.');
     }
 
+    if ($draft['type'] === Config::PENDING_PUBLISH_DRAFT && PermissionsManager::userCanPublishPendingDrafts($this->getLoggedInUsername(), $filePath)) {
+      // this draft is pending publish, and the user has access to publish drafts.
+      return $this->handlePendingDraft($draft, $fm);
+    }
+
     return $this->displayPage($draftFilename, true);
   }
 
@@ -99,6 +105,62 @@ class DraftController extends SharedController
   private function renderMultipleDraftOptions($drafts)
   {
     return $this->renderTemplate('draftOptions.html.twig', ['drafts' => $drafts, 'siteNav' => self::isForwardedFromSiteNav()]);
+  }
+
+  /**
+   * Handles pending draft actions
+   *
+   * @param  array $draft Array of the current draft
+   * @param  FileManager $fm FileManager representing the current file
+   * @return string
+   */
+  private function handlePendingDraft($draft, $fm)
+  {
+    $draftFilename = $fm->getDraftFileName($draft['username'], true);
+    if (isset($_POST['action'])) {
+
+      $message = (!empty($_POST['message'])) ? $_POST['message']: null;
+
+      if ($_POST['action'] === 'publish') {
+        // we want to publish the file.
+        if (!$fm->acquireLock()) {
+          $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
+          return $this->displayPage($draftFilename, true);
+        }
+
+        if ($fm->stagePublishPendingDraft($draft['username'])) {
+          // @todo should we send an email?
+          if (!$this->forward('emailPendingDraftPublished', ['draft' => $draft, 'message' => $message])){
+            return $this->redirectWithMessage(Config::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_PUBLISHED_NOT_SENT_MESSAGE);
+          }
+          return $this->redirect(Config::removeDocRootFromPath($draft['destFilepath']));
+        }
+      } else if ($_POST['action'] === 'reject') {
+        // @todo should we change the state of the draft? I don't think so
+        if (!$this->forward('emailPendingDraftRejected', ['draft' => $draft, 'message' => $message])) {
+          return $this->redirectWithMessage(Config::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_REJECTION_NOT_SENT_MESSAGE);
+        }
+        return $this->redirect(Config::removeDocRootFromPath($draft['destFilepath']));
+      }
+    } else {
+      $filePathFromDocRoot = Config::removeDocRootFromPath($draft['destFilepath']);
+      // Let's give them the option to publish the draft.
+      $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']]);
+
+      if (isset($_GET['confirmReject']) && $_GET['confirmReject'] === 'true') {
+        return $this->renderView('confirmPendingDraftAction.html.twig', ['url' => $url, 'forPublish' => false]);
+      } else if (isset($_GET['confirmPublish']) && $_GET['confirmPublish'] === 'true') {
+        return $this->renderView('confirmPendingDraftAction.html.twig', ['url' => $url, 'forPublish' => true]);
+      }
+
+      $this->addConcertMessage($this->renderView('publishPendingDraftActions.html.twig',
+          [
+            'url'     => $url,
+            'draftOwner' => $draft['username'],
+          ]
+      ), false, true);
+    }
+    return $this->displayPage($draftFilename, true);
   }
 
   /**

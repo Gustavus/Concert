@@ -191,24 +191,34 @@ class Config
    */
   const UNDO_RESTORE_MESSAGE = 'The page restoration has been undone.';
 
-  // Staged file stages
+  /**
+   * Message to display if the owner of a pending draft couldn't be contacted
+   */
+  const DRAFT_REJECTION_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been rejected.';
 
+  /**
+   * Message to display if the owner of a pending draft couldn't be contacted
+   */
+  const DRAFT_PUBLISHED_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been published.';
+
+  // Staged file stages
 
   /**
    * Stage for specifing a deletion
    */
   const DELETE_STAGE = 'delete';
-
   /**
    * Stage for specifing a publish stage
    */
   const PUBLISH_STAGE = 'publish';
-
+  /**
+   * Stage for specifing that a pending draft has been published
+   */
+  const PUBLISH_PENDING_STAGE = 'publishPending';
   /**
    * Stage for specifing a revision restore stage
    */
   const RESTORE_STAGE = 'restore';
-
   /**
    * Stage for specifing an undo restore stage
    */

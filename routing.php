@@ -80,4 +80,10 @@ return [
   'emailPendingDraft' => [
     'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyPublishersOfPendingDraft',
   ],
+  'emailPendingDraftPublished' => [
+    'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyPendingDraftOwnerOfPublish',
+  ],
+  'emailPendingDraftRejected' => [
+    'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyPendingDraftOwnerOfRejection',
+  ],
 ];

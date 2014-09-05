@@ -16,7 +16,8 @@ use Gustavus\Test\TestObject,
   Gustavus\Doctrine\DBAL,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
-  Gustavus\Concourse\RoutingUtil;
+  Gustavus\Concourse\RoutingUtil,
+  Gustavus\Extensibility\Filters;
 
 /**
  * @package Concert
@@ -1431,5 +1432,360 @@ class DraftControllerTest extends TestBase
 
     $this->assertSame(Config::SITE_NAV_TEMPLATE, $result);
     $_GET = $origGet;
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraft()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $actual = $this->controller->handlePendingDraft($draft, $this->fileManager);
+
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+
+    $this->assertContains('confirmPublish=true', $this->controller->getConcertMessage());
+    $this->assertContains('confirmReject=true', $this->controller->getConcertMessage());
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftConfirmReject()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    $_GET['confirmReject'] = 'true';
+
+    $actual = $this->controller->handlePendingDraft($draft, $this->fileManager);
+
+    $this->assertContains('value="reject"', $actual);
+    $this->assertContains('name="action"', $actual);
+    $this->assertContains('name="message"', $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftConfirmPublish()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    $_GET['confirmPublish'] = 'true';
+
+    $actual = $this->controller->handlePendingDraft($draft, $this->fileManager);
+
+    $this->assertContains('value="publish"', $actual);
+    $this->assertContains('name="action"', $actual);
+    $this->assertContains('name="message"', $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftPublishNoLock()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser2', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    $_POST['action'] = 'publish';
+
+    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+
+    $actual = $this->controller->handlePendingDraft($draft, $fm);
+
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+
+    $this->assertContains('couldn\'t acquire a lock', $this->controller->getConcertMessage());
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftPublish()
+  {
+    $this->buildDB();
+    $draftOwner = $this->findEmployeeUsername(true);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', [$draftOwner, 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+
+    $this->buildFileManager($draftOwner, '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    $_POST['action']  = 'publish';
+    $_POST['message'] = 'Looks good';
+
+    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+
+    $actual = $this->controller->handlePendingDraft($draft, $fm);
+    $this->assertSame(['redirect' => '/billy/concert/index.php'], $actual);
+
+    $filePath = Config::$stagingDir . $fm->getDraftFileName($draftOwner);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+
+    $this->checkSentEmailContents(
+        [
+          'bcc' => $expectedBcc,
+          'to'  => [$draftOwner . '@gustavus.edu' => null],
+          'replyTo' => ['no-reply@gustavus.edu' => null],
+        ],
+        'pending draft has been published',
+        'Looks good',
+        true
+    );
+
+    $this->buildFileManager('root', $filePath);
+    $expected = [[
+      'destFilepath' => '/billy/concert/index.php',
+      'username'     => 'testUser',
+      'action'       => Config::PUBLISH_PENDING_STAGE,
+    ]];
+
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftPublishFakeUser()
+  {
+    $this->buildDB();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+
+    $this->buildFileManager('testUser2', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    $_POST['action']  = 'publish';
+    $_POST['message'] = 'Looks good';
+
+    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+
+    $actual = $this->controller->handlePendingDraft($draft, $fm);
+
+    $this->assertSame(['redirect', 'message'], array_keys($actual));
+    $this->assertSame('/billy/concert/index.php', $actual['redirect']);
+    $this->assertContains('couldn\'t be notified', $actual['message']);
+
+    $filePath = Config::$stagingDir . $fm->getDraftFileName('testUser2');
+
+    $message = $this->mockMailer->popMessage();
+
+    $this->assertNull($message);
+
+    $this->buildFileManager('root', $filePath);
+    $expected = [[
+      'destFilepath' => '/billy/concert/index.php',
+      'username'     => 'testUser',
+      'action'       => Config::PUBLISH_PENDING_STAGE,
+    ]];
+
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftReject()
+  {
+    $this->buildDB();
+    $draftOwner = $this->findEmployeeUsername(true);
+    $loggedInUser = $this->findEmployeeUsername(true);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', [$loggedInUser, 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', [$draftOwner, 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+
+    $this->buildFileManager($draftOwner, '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+    $this->fileManager->stopEditing();
+
+    $this->authenticate($loggedInUser);
+
+    $this->setUpController();
+    $_POST['action']  = 'reject';
+    $_POST['message'] = 'Looks horrible';
+
+    $fm = new FileManager($loggedInUser, '/billy/concert/index.php', null, $this->controller->getDB());
+
+    $actual = $this->controller->handlePendingDraft($draft, $fm);
+    $this->assertSame(['redirect' => '/billy/concert/index.php'], $actual);
+
+    $filePath = Config::$stagingDir . $fm->getDraftFileName($draftOwner);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+
+    $this->checkSentEmailContents(
+        [
+          'bcc' => $expectedBcc,
+          'to'  => [$draftOwner . '@gustavus.edu' => null],
+          'replyTo' => [$loggedInUser . '@gustavus.edu' => null],
+        ],
+        'pending draft has been rejected',
+        'Looks horrible',
+        true
+    );
+
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertSame([], $this->fileManager->getStagedFileEntry());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftRejectFakeUser()
+  {
+    $this->buildDB();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+
+    $this->buildFileManager('testUser2', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+    $_POST['action']  = 'reject';
+    $_POST['message'] = 'Looks good';
+
+    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+
+    $actual = $this->controller->handlePendingDraft($draft, $fm);
+
+    $this->assertSame(['redirect', 'message'], array_keys($actual));
+    $this->assertSame('/billy/concert/index.php', $actual['redirect']);
+    $this->assertContains('couldn\'t be notified', $actual['message']);
+
+    $filePath = Config::$stagingDir . $fm->getDraftFileName('testUser2');
+
+    $message = $this->mockMailer->popMessage();
+
+    $this->assertNull($message);
+
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertSame([], $this->fileManager->getStagedFileEntry());
+
+    $this->unauthenticate();
+    $this->destructDB();
   }
 }

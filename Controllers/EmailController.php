@@ -177,4 +177,100 @@ class EmailController extends SharedController
 
     return $message->send();
   }
+
+  /**
+   * Sends an email to the owner of the draft that their draft has been published.
+   *
+   * @param  array  $params Array with keys of draft and message
+   * @return boolean False if the mail couldn't be sent. True otherwise.
+   */
+  public function notifyPendingDraftOwnerOfPublish(array $params)
+  {
+    assert('isset($params[\'draft\'])');
+    $draft = $params['draft'];
+
+    $bcc = Config::$devEmails;
+    $peoplePuller = new CampusPeople($this->getApiKey());
+    $person = $peoplePuller->setUsername($draft['username'])->current();
+    if (is_object($person)) {
+      $to = $person->getGustavusEmailAddress();
+    } else {
+      return false;
+    }
+
+    $loggedInPerson = $this->getLoggedInPerson();
+
+    if ($loggedInPerson !== null && !$loggedInPerson->isFake()) {
+      $replyTo   = $loggedInPerson->getGustavusEmailAddress();
+      $publisher = $loggedInPerson->getFullName();
+    } else {
+      $replyTo = 'no-reply@gustavus.edu';
+      $publisher = $this->getLoggedInUsername();
+    }
+
+    $body = sprintf('%s published your draft of %s', $publisher, (new String(Config::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
+
+    if (!empty($params['message'])) {
+      $body .= sprintf(" with the following comment:\n\r\"%s\"", $params['message']);
+    }
+
+    $message = (new EmailMessage)
+      ->setSubject('Your pending draft has been published.')
+      ->setFrom('concert@gustavus.edu')
+      ->setReplyTo($replyTo)
+      ->setBcc($bcc)
+      ->setTo($to)
+      ->setBody($body)
+      ->setDebuggingRecipients(Config::$devEmails);
+
+    return ($message->send() > 0);
+  }
+
+  /**
+   * Sends an email to the owner of the draft that their draft has been rejected.
+   *
+   * @param  array  $params Array with keys of draft and message
+   * @return boolean False if the mail couldn't be sent. True otherwise.
+   */
+  public function notifyPendingDraftOwnerOfRejection(array $params)
+  {
+    assert('isset($params[\'draft\'])');
+    $draft = $params['draft'];
+
+    $bcc = Config::$devEmails;
+    $peoplePuller = new CampusPeople($this->getApiKey());
+    $person = $peoplePuller->setUsername($draft['username'])->current();
+    if (is_object($person)) {
+      $to = $person->getGustavusEmailAddress();
+    } else {
+      return false;
+    }
+
+    $loggedInPerson = $this->getLoggedInPerson();
+
+    if ($loggedInPerson !== null && !$loggedInPerson->isFake()) {
+      $replyTo   = $loggedInPerson->getGustavusEmailAddress();
+      $publisher = $loggedInPerson->getFullName();
+    } else {
+      $replyTo = 'no-reply@gustavus.edu';
+      $publisher = $this->getLoggedInUsername();
+    }
+
+    $body = sprintf('%s rejected your draft of %s', $publisher, (new String(Config::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
+
+    if (!empty($params['message'])) {
+      $body .= sprintf(" with the following comment:\n\r\"%s\"", $params['message']);
+    }
+
+    $message = (new EmailMessage)
+      ->setSubject('Your pending draft has been rejected.')
+      ->setFrom('concert@gustavus.edu')
+      ->setReplyTo($replyTo)
+      ->setBcc($bcc)
+      ->setTo($to)
+      ->setBody($body)
+      ->setDebuggingRecipients(Config::$devEmails);
+
+    return ($message->send() > 0);
+  }
 }

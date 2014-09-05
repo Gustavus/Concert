@@ -1,0 +1,18 @@
+{% spaceless %}
+<div class="grid_20 alpha omega">
+  <h3>Are you sure?</h3>
+  <form action="{{ url }}" method="POST">
+    <div class="grid_18 alpha omega suffix_1 prefix_1">
+      <label>Message for user
+        <textarea name="message" style="width:100%;"></textarea>
+      </label>
+    </div>
+    {%- if forPublish -%}
+      <button type="submit" name="action" value="publish">Publish</button>
+    {%- else -%}
+      <button type="submit" name="action" value="reject">Reject</button>
+    {%- endif -%}
+    <button type="submit" name="action" value="cancel">Cancel</button>
+  </form>
+</div>
+{% endspaceless %}

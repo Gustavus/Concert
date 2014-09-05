@@ -131,7 +131,13 @@ class MainController extends SharedController
       $editDraft = false;
     }
 
-    if ($this->getMethod() === 'POST' && $fm->editFile($_POST) && $fm->stageFile()) {
+    if ($this->getMethod() === 'POST' && $fm->editFile($_POST)) {
+      $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+      if ($userCanPublish && $fm->stageFile()) {
+        return true;
+      } else if (!$userCanPublish) {
+        return $this->savePendingDraft($fm);
+      }
       // trying to save a new page
       return true;
     }
