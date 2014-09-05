@@ -12,8 +12,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Concert\Controllers\EmailController,
   Gustavus\Concert\Config,
   Gustavus\Utility\String,
-  Gustavus\Utility\Set,
-  Campus\Pull\People as CampusPeople;
+  Gustavus\Utility\Set;
 
 /**
  * Tests for EmailController
@@ -30,13 +29,6 @@ class EmailControllerTest extends TestBase
    * @var EmailController
    */
   private $controller;
-
-  /**
-   * PeoplePuller for testing
-   *
-   * @var \Campus\Pull\People
-   */
-  private $peoplePuller;
 
   /**
    * sets up the object for each test
@@ -67,26 +59,6 @@ class EmailControllerTest extends TestBase
   private function setUpController()
   {
     $this->controller = new TestObject(new EmailController);
-  }
-
-  /**
-   * Finds an employee username
-   *
-   * @param  boolean $increment Whether to get the current person from the people puller, or the next
-   * @return string
-   */
-  private function findEmployeeUsername($increment = false)
-  {
-    if (isset($this->controller)) {
-      if (empty($this->peoplePuller)) {
-        $this->peoplePuller = new CampusPeople($this->controller->getApiKey());
-        $this->peoplePuller->setCampusDepartment('Gustavus Technology Services');
-      }
-      if ($increment) {
-        $this->peoplePuller->next();
-      }
-      return $this->peoplePuller->current()->getUsername();
-    }
   }
 
   /**
@@ -279,7 +251,7 @@ class EmailControllerTest extends TestBase
     $this->checkSentEmailContents(
         ['bcc' => $expectedBcc],
         $draft['username'] . ' has submitted a draft awaiting',
-        sprintf("The draft can be reviewed at: %s\n\r%s" ,
+        sprintf("The draft can be reviewed at: %s\n\r%s",
             (new String($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
             (new Set($publisherNames))->toSentence()->getValue()
         ),

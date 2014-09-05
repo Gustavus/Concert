@@ -11,9 +11,11 @@ use Gustavus\Test\TestEM,
   Gustavus\Test\TestObject,
   Gustavus\Concert\FileManager,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Controllers\SharedController,
   Gustavus\Doctrine\DBAL,
   Gustavus\GACCache\Workers\ArrayFactoryWorker,
-  Gustavus\GACMailer\Test\MockMailer;
+  Gustavus\GACMailer\Test\MockMailer,
+  Campus\Pull\People as CampusPeople;
 
 /**
  * Base class for testing
@@ -59,6 +61,13 @@ class TestBase extends TestEM
    * @var MockMailer
    */
   protected $mockMailer;
+
+  /**
+   * PeoplePuller for testing
+   *
+   * @var \Campus\Pull\People
+   */
+  protected $peoplePuller;
 
   /**
    * Mapping of Generated Entities to their namespace for testing
@@ -182,12 +191,30 @@ class TestBase extends TestEM
 
     $recipientTypes = array_keys($expectedRecipients);
     foreach ($recipientTypes as $recipientType) {
-      $getter = 'get' . ucFirst($recipientType);
+      $getter = 'get' . ucfirst($recipientType);
       $this->assertSame($expectedRecipients[$recipientType], $message->{$getter}());
     }
     $assertion = $checkContains ? 'assertContains' : 'assertSame';
     $this->{$assertion}($expectedSubject, $message->getSubject());
     $this->{$assertion}($expectedBody, $message->getBody());
+  }
+
+  /**
+   * Finds an employee username
+   *
+   * @param  boolean $increment Whether to get the current person from the people puller, or the next
+   * @return string
+   */
+  protected function findEmployeeUsername($increment = false)
+  {
+    if (empty($this->peoplePuller)) {
+      $this->peoplePuller = new CampusPeople((new TestObject(new SharedController))->getApiKey());
+      $this->peoplePuller->setCampusDepartment('Gustavus Technology Services');
+    }
+    if ($increment) {
+      $this->peoplePuller->next();
+    }
+    return $this->peoplePuller->current()->getUsername();
   }
 
   /**
