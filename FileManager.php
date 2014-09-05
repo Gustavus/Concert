@@ -441,11 +441,11 @@ class FileManager
     if ($draftFilename === null) {
       $draftFilename = $this->getDraftFileName();
     }
-    $draft = $this->getDraft($draftFilename);
 
     $dbal = $this->getDBAL();
 
     $dbal->delete('drafts', ['draftFilename' => $draftFilename]);
+
     foreach ([Config::$draftDir, Config::$editableDraftDir] as $draftDir) {
       $fileName = $draftDir . $draftFilename;
       if (file_exists($fileName)) {
@@ -473,7 +473,6 @@ class FileManager
       ->addSelect('additionalUsers')
       ->from('drafts', 'd')
       ->where('draftName = ?')
-      ->andWhere('publishedDate IS NULL')
       ->orderBy('date', 'DESC');
 
     $properties = [$this->getFilePathHash()];
@@ -516,8 +515,7 @@ class FileManager
       ->addSelect('username')
       ->addSelect('additionalUsers')
       ->from('drafts', 'd')
-      ->where('draftFilename = :draftFilename')
-      ->andWhere('publishedDate IS NULL');
+      ->where('draftFilename = :draftFilename');
 
     $result = $dbal->fetchAssoc($qb->getSQL(), [':draftFilename' => $this->getDraftFileName($username)]);
     if (!empty($result['additionalUsers'])) {
@@ -546,8 +544,7 @@ class FileManager
       ->addSelect('username')
       ->addSelect('additionalUsers')
       ->from('drafts', 'd')
-      ->where('draftFilename = :draftFilename')
-      ->andWhere('publishedDate IS NULL');
+      ->where('draftFilename = :draftFilename');
 
     $result =  $dbal->fetchAssoc($qb->getSQL(), [':draftFilename' => $draftFilename]);
     if ($result['type'] === Config::PRIVATE_DRAFT && !PermissionsManager::userOwnsDraft($this->username, $result)) {
@@ -642,9 +639,10 @@ class FileManager
    *
    * @param string $action  Action we want the staged file to represent
    * @param string $fileContents  Contents of the file to stage. <strong>Note:</strong> This should only be used for revisions.
+   * @param string $stagedFileName Name to stage the file as. <strong>Note:</strong> This should only be used internally.
    * @return boolean True on success, false on failure.
    */
-  public function stageFile($action = null, $fileContents = null)
+  public function stageFile($action = null, $fileContents = null, $stagedFileName = null)
   {
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
@@ -657,12 +655,16 @@ class FileManager
     }
 
     // throw the new file into the pending updates table and throw the file in the staging directory
-    $fileHash = $this->getFilePathHash();
+
+    // the specified file name must be a 32 character hash
+    if ($stagedFileName === null || strlen($stagedFileName) !== 32) {
+      $stagedFileName = $this->getFilePathHash();
+    }
     $dbal = $this->getDBAL();
 
     $properties = [
       'destFilepath' => $this->filePath,
-      'srcFilename'  => $fileHash,
+      'srcFilename'  => $stagedFileName,
       'username'     => $this->username,
       'action'       => $action,
       'date'         => new DateTime,
@@ -682,12 +684,34 @@ class FileManager
         mkdir(Config::$stagingDir, 0777, true);
       }
       $fileContents = ($fileContents === null) ? $this->assembleFile(false) : $fileContents;
-      if ($this->saveFile(Config::$stagingDir . $fileHash, $fileContents)) {
+      if ($this->saveFile(Config::$stagingDir . $stagedFileName, $fileContents)) {
         return true;
       }
     }
     // something happened
     return false;
+  }
+
+  /**
+   * Stages a file for deletion
+   *
+   * @return boolean
+   */
+  public function stageForDeletion()
+  {
+    return $this->stageFile(Config::DELETE_STAGE);
+  }
+
+  /**
+   * Stages a pending draft to be published
+   *
+   * @param  string $draftOwner Username of the user owning the draft to be published
+   * @return boolean
+   */
+  public function stagePublishPendingDraft($draftOwner)
+  {
+    // stage the file with the contents of the draft, and the filename of the draft's name
+    return $this->stageFile(Config::PUBLISH_PENDING_STAGE, file_get_contents($this->getDraftFileName($draftOwner, true)), $this->getDraftFileName($draftOwner, false));
   }
 
   /**
@@ -776,12 +800,20 @@ class FileManager
     if (rename($srcFilePath, $destination)) {
       chgrp($destination, $group);
       chown($destination, $owner);
-      $this->saveRevision(self::buildRevisionMessage($result['action']));
 
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
         trigger_error(sprintf('The file: "%s" was moved to "%s", but could not be marked as published in the DB', $srcFilePath, $destination));
       }
-      $this->destroyDraft();
+      if ($result['action'] === Config::PUBLISH_PENDING_STAGE) {
+        $draftFilename = basename($srcFilePath);
+        $draft = $this->getDraft($draftFilename);
+        // We are publishing a pending draft. We need to get the draftName to use.
+        $this->saveRevision(self::buildRevisionMessage($result['action'], $draft['username']));
+        $this->destroyDraft($draftFilename);
+      } else {
+        $this->saveRevision(self::buildRevisionMessage($result['action']));
+        $this->destroyDraft();
+      }
       $this->destroyLock();
       return true;
     }
@@ -792,9 +824,10 @@ class FileManager
    * Builds the revision message based off of the action
    *
    * @param  string $action Action to build the message for.
+   * @param  string $username Username of the person we are performing an action for
    * @return string
    */
-  private static function buildRevisionMessage($action)
+  private static function buildRevisionMessage($action, $username = null)
   {
     switch ($action) {
       case Config::RESTORE_STAGE:
@@ -803,20 +836,12 @@ class FileManager
           return 'File restoration undone';
       case Config::DELETE_STAGE:
           return 'File deleted';
+      case Config::PUBLISH_PENDING_STAGE:
+          return 'Pending draft published for ' . $username;
       case Config::PUBLISH_STAGE:
       default:
           return 'File published';
     }
-  }
-
-  /**
-   * Stages a file for deletion
-   *
-   * @return boolean
-   */
-  public function stageForDeletion()
-  {
-    return $this->stageFile(Config::DELETE_STAGE);
   }
 
   /**

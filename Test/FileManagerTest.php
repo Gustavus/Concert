@@ -1740,6 +1740,66 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function stagePublishPendingDraft()
+  {
+    $this->buildDB();
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, Config::AUTHOR_ACCESS_LEVEL]);
+
+    // save a draft for our non-publishing user
+    $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
+    $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+    $this->fileManager->stopEditing();
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stagePublishPendingDraft('jerry'));
+
+     $expected = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?>
+<p>This is some html content</p>
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+
+    $modifiedFile = file_get_contents(self::$testFileDir . 'index.php');
+
+    $this->assertSame($expected, $modifiedFile);
+
+    $this->buildFileManager('bvisto', Config::$stagingDir . $this->fileManager->getDraftFileName('jerry'));
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'index.php', 'username' => 'bvisto', 'action' => Config::PUBLISH_PENDING_STAGE]], $stagedEntry);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function publishFileNotRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
@@ -1922,6 +1982,53 @@ echo $config["content"];';
     $this->buildFileManager('root', $filePath);
 
     $this->assertFalse($this->fileManager->publishFile());
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function publishFilePendingDraft()
+  {
+    $this->buildDB();
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, Config::AUTHOR_ACCESS_LEVEL]);
+
+    // author submits for approval
+    $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
+    $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+    $this->fileManager->stopEditing();
+
+    // publisher approves
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stagePublishPendingDraft('jerry'));
+    $filePath = Config::$stagingDir . $this->fileManager->getDraftFileName('jerry');
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    $this->assertTrue($this->fileManager->publishFile());
+
+    $this->assertFalse(file_exists($filePath));
+    $this->assertTrue(file_exists(self::$testFileDir . 'index.php'));
+
+    $revisionsAPI = Config::getRevisionsAPI(self::$testFileDir . 'index.php', $this->fileManager->getDBAL());
+    $this->assertSame(1, $revisionsAPI->getRevisionCount());
+    $revision = $revisionsAPI->getRevision(1);
+
+    $this->assertSame('bvisto', $revision->getCreatedBy());
+    $this->assertContains('jerry', $revision->getRevisionMessage());
+
     $this->destructDB();
   }
 
