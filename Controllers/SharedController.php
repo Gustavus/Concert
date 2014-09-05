@@ -99,41 +99,6 @@ class SharedController extends ConcourseController
     return parent::renderView('/cis/lib/Gustavus/Concert/Views/' . $template, $args, $modifyEnvironment);
   }
 
-  // /**
-  //  * Adds JS to page
-  //  *
-  //  * @todo  remove this. Or convert to tinymce.
-  //  *
-  //  * @return  void
-  //  */
-  // protected function addJS()
-  // {
-  //   $this->addJavascripts(sprintf(
-  //       '<script type="text/javascript">
-  //         var CKEDITOR_BASEPATH = \'/js/ckeditor/\';
-  //         Modernizr.load([
-  //           "%s",
-  //         ]);
-  //       </script>',
-  //       Resource::renderResource([['path' => '/js/ckeditor/ckeditor.js'], ['path' => '/js/ckeditor/adapters/jquery.js'], ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]])
-  //   ));
-  // }
-
-  // /**
-  //  * Adds CSS to page
-  //  *
-  //  * @return  void
-  //  */
-  // protected function addCSS()
-  // {
-  //   $this->addStylesheets(
-  //       sprintf(
-  //           '<link rel="stylesheet" type="text/css" href="%s" />',
-  //           Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION])
-  //       )
-  //   );
-  // }
-
   /**
    * Overrides visible buttons inserted by insertEditingResources
    *
@@ -179,34 +144,34 @@ class SharedController extends ConcourseController
     $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
 
     Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources, $allowCode) {
-        if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
-          $isAdmin = 'true';
-        } else {
-          $isAdmin = 'false';
-        }
+      if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
+        $isAdmin = 'true';
+      } else {
+        $isAdmin = 'false';
+      }
 
-        $script = sprintf(
-            '<script type="text/javascript">
-              Modernizr.load({
-                load: [
-                  "%s"
-                ],
-                complete: function() {
-                  Gustavus.Concert.filePath = "%s";
-                  Gustavus.Concert.redirectPath = "%s";
-                  Gustavus.Concert.allowCode = %s;
-                  Gustavus.Concert.isAdmin = %s;
-                  Gustavus.Concert.init();
-                }
-              });
-            </script>',
-            implode('","', $resources['js']),
-            Config::removeDocRootFromPath($filePath),
-            $redirectPath,
-            $allowCode ? 'true' : 'false',
-            $isAdmin
-        );
-        return $content . $script;
+      $script = sprintf(
+          '<script type="text/javascript">
+            Modernizr.load({
+              load: [
+                "%s"
+              ],
+              complete: function() {
+                Gustavus.Concert.filePath = "%s";
+                Gustavus.Concert.redirectPath = "%s";
+                Gustavus.Concert.allowCode = %s;
+                Gustavus.Concert.isAdmin = %s;
+                Gustavus.Concert.init();
+              }
+            });
+          </script>',
+          implode('","', $resources['js']),
+          Config::removeDocRootFromPath($filePath),
+          $redirectPath,
+          $allowCode ? 'true' : 'false',
+          $isAdmin
+      );
+      return $content . $script;
     }, 11);
 
     self::markResourcesAdded($resources['js']);
@@ -287,28 +252,6 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Adds action buttons for moshing
-   *
-   * @param  string $filePath Path to the file we are moshing for
-   * @return  void
-   *
-   * @todo  do we need this or want it?
-   */
-  // protected function addMoshingActions($filePath)
-  // {
-  //   if (self::userIsEditing() || self::userIsSaving()) {
-  //     Filters::add('userBox', function($content) {
-  //       // @todo make this remove concert stuff from the url
-  //       return $content . '<a href="?concert=stopEditing" class="button red concertEditPage">Stop Editing</a>';
-  //     });
-  //   } else {
-  //     Filters::add('userBox', function($content) {
-  //       return $content . '<a href="?concert=edit" class="button red concertEditPage">Edit Page</a>';
-  //     });
-  //   }
-  // }
-
-  /**
    * Adds the menu to interact with Concert
    *
    * @return  void
@@ -336,11 +279,6 @@ class SharedController extends ConcourseController
           self::markResourcesAdded([$cssResource], 'css');
         }
         self::addTemplatePref(['globalNotice' => ['notice' => ['notice' => $result, 'dismissable' => false]]]);
-
-        // disabled thickbox version.
-        // Filters::add('userBox', function($content) {
-        //   return sprintf('%s<a href="%s" class="button red concertMenu thickbox">Concert</a>', $content, $this->buildUrl('menus'));
-        // });
       }
       self::$moshMenuAdded = true;
     }
@@ -350,6 +288,7 @@ class SharedController extends ConcourseController
    * Adds a preference to the global template preference array
    *
    * @param array $pref Array of the new preference to add
+   * @return void
    */
   private static function addTemplatePref($pref)
   {
@@ -385,12 +324,22 @@ class SharedController extends ConcourseController
    *
    * @param string  $message Message to add
    * @param boolean $isError Whether it is an error message or not
+   * @param boolean $isHTML Whether message is html or not.
+   *   If true, the message won't be wrapped in a <p class="message|error">.
    * @return  void
    */
-  protected function addConcertMessage($message, $isError = false)
+  protected function addConcertMessage($message, $isError = false, $isHTML = false)
   {
-    if (!empty($message)) {
-      self::$message .= sprintf('<p class="%s">%s</p>', ($isError ? 'error' : 'message'), $message);
+    if (empty($message)) {
+      return false;
+    }
+    if (!$isHTML) {
+      $message = sprintf('<p class="%s">%s</p>', ($isError? 'error' : 'message'), $message);
+    }
+    if (!empty(self::$message)) {
+      self::$message .= $message;
+    } else {
+      self::$message = $message;
     }
   }
 
