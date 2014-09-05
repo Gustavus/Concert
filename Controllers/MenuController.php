@@ -265,7 +265,7 @@ class MenuController extends SharedController
           $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
-          'text'         => 'Add users to your draft',
+          'text'         => 'Add collaborators to your draft',
           'url'          => $url,
           'classes'      => 'green',
           'thickboxData' => ['height' => '400px'],

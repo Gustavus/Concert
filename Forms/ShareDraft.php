@@ -134,7 +134,7 @@ class ShareDraft
     $return = [
       'name'            => 'adduserssection',
       'type'            => 'section',
-      'title'           => 'Add users to your draft',
+      'title'           => 'Add collaborators to your draft',
       'container-class' => 'grid_18 alpha omega prefix_1 suffix_1',
       'children'        => $return,
     ];
