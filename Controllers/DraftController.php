@@ -117,7 +117,7 @@ class DraftController extends SharedController
   private function handlePendingDraft($draft, $fm)
   {
     $draftFilename = $fm->getDraftFileName($draft['username'], true);
-    if (isset($_POST['action'])) {
+    if (isset($_POST['action']) && in_array($_POST['action'], ['publish', 'reject'])) {
 
       $message = (!empty($_POST['message'])) ? $_POST['message']: null;
 
@@ -129,14 +129,12 @@ class DraftController extends SharedController
         }
 
         if ($fm->stagePublishPendingDraft($draft['username'])) {
-          // @todo should we send an email?
-          if (!$this->forward('emailPendingDraftPublished', ['draft' => $draft, 'message' => $message])){
+          if (!$this->forward('emailPendingDraftPublished', ['draft' => $draft, 'message' => $message])) {
             return $this->redirectWithMessage(Config::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_PUBLISHED_NOT_SENT_MESSAGE);
           }
           return $this->redirect(Config::removeDocRootFromPath($draft['destFilepath']));
         }
       } else if ($_POST['action'] === 'reject') {
-        // @todo should we change the state of the draft? I don't think so
         if (!$this->forward('emailPendingDraftRejected', ['draft' => $draft, 'message' => $message])) {
           return $this->redirectWithMessage(Config::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_REJECTION_NOT_SENT_MESSAGE);
         }
