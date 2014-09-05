@@ -146,7 +146,6 @@ Gustavus.Concert = {
     // importcss_file_filter: '/templates/css/contribute-user.css',
     //visualblocks_default_state: true,
     //forced_root_block: false,
-    extended_valid_elements: 'br',
     resize: false,
     table_class_list: [
       {title: 'None', value: ''},
@@ -192,6 +191,26 @@ Gustavus.Concert = {
       // })
 
     },
+    entities: '38,amp,34,quot,60,lt,62,gt',
+    // valid_elements: '+a[!href|title|target],'+
+    //   '-strong/b,'+
+    //   '-em/i,'+
+    //   '-small,'+
+    //   '-cite,'+
+    //   '-blockquote[cite],'+
+    //   'br,'+
+    //   '-p[class<leadin?message],'+
+    //   '-span[class<pullquote?pullquoteright?pullquoteleft],'+
+    //   '-h4/h1/h2/h3/h5/h6,'+
+    //   '-ul,'+
+    //   '-ol,'+
+    //   '-li,'+
+    //   '-dl,'+
+    //   '-dd,'+
+    //   '-dt,'+
+    //   '-abbr[title],'+
+    //   '-acronym[title]',
+    //extended_valid_elements: 'br',
     //theme_advanced_disable: ["code"],
 
     // menu : { // this is the complete default configuration
@@ -206,7 +225,7 @@ Gustavus.Concert = {
 
     // spellchecker
     spellchecker_language: 'en',
-    spellchecker_rpc_url: 'https://beta.gac.edu/concert/spellchecker/spellchecker.php',
+    spellchecker_rpc_url: '/js/tinymce-spellchecker/spellchecker.php',
     spellchecker_languages: 'English=en'
     //spellchecker_languages: 'English=en,Danish=da,Dutch=nl,Finnish=fi,French=fr_FR, German=de,Italian=it,Polish=pl,Portuguese=pt_BR,Spanish=es,Swedish=sv'
   },
