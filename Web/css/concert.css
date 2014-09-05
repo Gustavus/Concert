@@ -192,3 +192,14 @@ ConcertMenu
   margin: .2em;
   padding: 5px 7px;
 }
+
+#concertMessages .button {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  text-indent: 0;
+  text-transform: none;
+  font-weight: normal;
+  font-size: 1.4em;
+  font-family: Arial,sans-serif;
+}
