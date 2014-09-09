@@ -254,7 +254,7 @@ class MainController extends SharedController
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    if (!PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), $filePath)) {
+    if (!PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_VIEW_REVISIONS);
       return false;
     }
@@ -266,7 +266,7 @@ class MainController extends SharedController
 
     Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm, $redirectPath) {
 
-      if (!PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), $filePath)) {
+      if (!PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
         return $this->redirectWithMessage($_SERVER['REQUEST_URI'], Config::NOT_ALLOWED_TO_MANAGE_REVISIONS);
       }
 

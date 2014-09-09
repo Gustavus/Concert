@@ -365,9 +365,9 @@ class PermissionsManager
       // the user doesn't have an access level for this site.
       return false;
     }
-    // We need to check to see if their accessLevel permits publishing files.
+    // We need to check to see if their accessLevel permits viewing revisions.
     if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonRevisionsAccessLevels)) {
-      // the current user's access level doesn't allow publishing
+      // the current user's access level doesn't allow viewing revisions
       return false;
     }
     return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
