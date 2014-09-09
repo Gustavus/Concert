@@ -488,7 +488,7 @@ Gustavus.Concert = {
 $('#concertPublish').on('click', function(e) {
   e.preventDefault();
   Gustavus.Concert.saveEdits('publish');
-})
+});
 
 $('#concertSavePrivateDraft').on('click', function(e) {
   e.preventDefault();
@@ -517,17 +517,17 @@ $('#concertSavePrivateDraft').on('click', function(e) {
     // something happened.
     alert('The draft was not successfully saved');
   })
-})
+});
 
 $('#concertSavePublicDraft').on('click', function(e) {
   e.preventDefault();
   Gustavus.Concert.saveEdits('savePublicDraft');
-})
+});
 
 $('#concertDiscardDraft').on('click', function(e) {
   e.preventDefault();
   Gustavus.Concert.saveEdits('discardDraft');
-})
+});
 
 $('#concertStopEditing').on('click', function(e) {
     //e.preventDefault();
@@ -541,9 +541,13 @@ $('#concertStopEditing').on('click', function(e) {
     e.preventDefault();
   })
   // @todo redirect to a url with concert=stopEditing
-})
+});
+
+$('#quitConcert').on('click', function(e) {
+  Gustavus.Concert.releaseLock();
+});
 
 $('#toggleShowingEditableContent').on('click', function(e) {
   e.preventDefault();
   Gustavus.Concert.toggleShowingEditableContent($(this));
-})
+});

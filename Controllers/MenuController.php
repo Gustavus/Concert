@@ -150,6 +150,7 @@ class MenuController extends SharedController
 
       $item = [
         'text'     => 'Quit Concert',
+        'id'       => 'quitConcert',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
       ];
