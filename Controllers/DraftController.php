@@ -7,6 +7,7 @@
 namespace Gustavus\Concert\Controllers;
 
 use Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
   Gustavus\Utility\PageUtil,
@@ -44,7 +45,7 @@ class DraftController extends SharedController
     }
     $showSingle = (isset($params['showSingle'])) ? $params['showSingle'] : false;
 
-    $filePathFromDocRoot = Config::removeDocRootFromPath($filePath);
+    $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
 
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
       return $this->redirect($filePathFromDocRoot);
@@ -76,7 +77,7 @@ class DraftController extends SharedController
       }
 
       if (self::isRequestFromConcertRoot()) {
-        $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Config::removeDocRootFromPath($draft['destFilepath']));
+        $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Utility::removeDocRootFromPath($draft['destFilepath']));
       }
       $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
     }
@@ -130,18 +131,18 @@ class DraftController extends SharedController
 
         if ($fm->stagePublishPendingDraft($draft['username'])) {
           if (!$this->forward('emailPendingDraftPublished', ['draft' => $draft, 'message' => $message])) {
-            return $this->redirectWithMessage(Config::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_PUBLISHED_NOT_SENT_MESSAGE);
+            return $this->redirectWithMessage(Utility::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_PUBLISHED_NOT_SENT_MESSAGE);
           }
-          return $this->redirect(Config::removeDocRootFromPath($draft['destFilepath']));
+          return $this->redirect(Utility::removeDocRootFromPath($draft['destFilepath']));
         }
       } else if ($_POST['action'] === 'reject') {
         if (!$this->forward('emailPendingDraftRejected', ['draft' => $draft, 'message' => $message])) {
-          return $this->redirectWithMessage(Config::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_REJECTION_NOT_SENT_MESSAGE);
+          return $this->redirectWithMessage(Utility::removeDocRootFromPath($draft['destFilepath']), Config::DRAFT_REJECTION_NOT_SENT_MESSAGE);
         }
-        return $this->redirect(Config::removeDocRootFromPath($draft['destFilepath']));
+        return $this->redirect(Utility::removeDocRootFromPath($draft['destFilepath']));
       }
     } else {
-      $filePathFromDocRoot = Config::removeDocRootFromPath($draft['destFilepath']);
+      $filePathFromDocRoot = Utility::removeDocRootFromPath($draft['destFilepath']);
       // Let's give them the option to publish the draft.
       $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']]);
 
@@ -177,7 +178,7 @@ class DraftController extends SharedController
 
     $draft = $fm->getDraft($draftName);
 
-    $filePathFromDocRoot = Config::removeDocRootFromPath($draft['destFilepath']);
+    $filePathFromDocRoot = Utility::removeDocRootFromPath($draft['destFilepath']);
 
     if ($draft['type'] !== Config::PUBLIC_DRAFT) {
       return PageUtil::renderPageNotFound(true);
@@ -201,7 +202,7 @@ class DraftController extends SharedController
 
 
     if (self::isRequestFromConcertRoot()) {
-      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Config::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
+      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Utility::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
     }
     $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
@@ -291,7 +292,7 @@ class DraftController extends SharedController
       return $this->saveDraftForNewFile($filePath, $fromFilePath);
     }
 
-    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
     }
 
@@ -318,7 +319,7 @@ class DraftController extends SharedController
    */
   private function saveDraftForNewFile($filePath, $fromFilePath)
   {
-    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
     }
 
@@ -353,7 +354,7 @@ class DraftController extends SharedController
    */
   private function deleteDraft($filePath)
   {
-    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
     }
 
@@ -559,7 +560,7 @@ class DraftController extends SharedController
       // we need to see if the filePath to copy is set in the referer
       $query = (new String($parts['query']))->splitQueryString()->getValue();
       if (isset($query['srcFilePath'])) {
-        return Config::addDocRootToPath(urldecode($query['srcFilePath']));
+        return Utility::addDocRootToPath(urldecode($query['srcFilePath']));
       }
     }
     return Config::DEFAULT_TEMPLATE_PAGE;

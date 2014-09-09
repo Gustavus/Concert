@@ -7,6 +7,7 @@
 namespace Gustavus\Concert\Controllers;
 
 use Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Concert\FileManager,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Utility\PageUtil,
@@ -125,7 +126,7 @@ class MenuController extends SharedController
    */
   private function addMiscellaneousButtons()
   {
-    $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
+    $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
 
     if (PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), $pathFromDocRoot)) {
@@ -168,7 +169,7 @@ class MenuController extends SharedController
     if (self::isSiteNavRequest()) {
       return false;
     }
-    if ($this->userIsViewingPublicDraft(Config::removeDocRootFromPath($this->filePath))) {
+    if ($this->userIsViewingPublicDraft(Utility::removeDocRootFromPath($this->filePath))) {
       $draftName = self::guessDraftName($this->filePath);
       $draft = $this->getFileManager()->getDraft($draftName);
       if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
@@ -178,7 +179,7 @@ class MenuController extends SharedController
         } else {
           $query = $this->queryParams;
           $query['concert'] = 'editDraft';
-          $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
 
         $item = [
@@ -190,7 +191,7 @@ class MenuController extends SharedController
 
         $this->addMenuItem($item, 'drafts');
       }
-    } else if ($this->userIsEditingPublicDraft(Config::removeDocRootFromPath($this->filePath))) {
+    } else if ($this->userIsEditingPublicDraft(Utility::removeDocRootFromPath($this->filePath))) {
       $draftName = self::guessDraftName($this->filePath);
       $draft = $this->getFileManager()->getDraft($draftName);
 
@@ -199,7 +200,7 @@ class MenuController extends SharedController
       } else {
         $query = $this->queryParams;
         $query['concert'] = 'viewDraft';
-        $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+        $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
       }
 
       $item = [
@@ -236,7 +237,7 @@ class MenuController extends SharedController
     }
 
     if (!empty($draft) && $draft['type'] === Config::PUBLIC_DRAFT) {
-      if (self::userIsAddingUsersToDraft(Config::removeDocRootFromPath($this->filePath))) {
+      if (self::userIsAddingUsersToDraft(Utility::removeDocRootFromPath($this->filePath))) {
         if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
         } else {
@@ -246,7 +247,7 @@ class MenuController extends SharedController
           if (self::isSiteNavRequest()) {
             $query['concertAction'] = 'siteNav';
           }
-          $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
           'text'     => 'View Draft',
@@ -262,7 +263,7 @@ class MenuController extends SharedController
           $query = $this->queryParams;
           $query['concert'] = 'addUsers';
           $query['concertDraft'] = $draft['draftFilename'];
-          $url = (new String(Config::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
           'text'         => 'Add collaborators to your draft',
@@ -282,7 +283,7 @@ class MenuController extends SharedController
       $query['concert'] = 'viewDraft';
 
       unset($query['concertDraft']);
-      $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
+      $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
 
       $item = [
         'text' => 'View all drafts',
@@ -300,7 +301,7 @@ class MenuController extends SharedController
    */
   private function addEditButtons()
   {
-    $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
+    $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
     unset($query['concertAction']);
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
@@ -380,10 +381,10 @@ class MenuController extends SharedController
    */
   private function addSiteNavButtons()
   {
-    $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
+    $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
 
     $siteNav = self::getSiteNavForFile($this->filePath);
-    $siteNavFromDocRoot = Config::removeDocRootFromPath($siteNav);
+    $siteNavFromDocRoot = Utility::removeDocRootFromPath($siteNav);
 
     $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), $pathFromDocRoot);
     $userCanEditSiteNav = PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), $siteNavFromDocRoot);
@@ -458,7 +459,7 @@ class MenuController extends SharedController
 
       if (self::isSiteNavShared($siteNav)) {
         // we need to verify that they know this is a shared site nav.
-        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Config::buildSharedSiteNavNote(dirname($siteNav), false), 'editUrl' => $url]);
+        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Utility::buildSharedSiteNavNote(dirname($siteNav), false), 'editUrl' => $url]);
         $html = rawurlencode($html);
         $item['thickbox'] = true;
         $item['thickboxData'] = ['html' => $html];
@@ -480,7 +481,7 @@ class MenuController extends SharedController
 
       if (self::isSiteNavShared($siteNav)) {
         // we need to verify that they know this is a shared site nav.
-        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Config::buildSharedSiteNavNote(dirname($currentDirSiteNavFile), true), 'editUrl' => $url]);
+        $html = $this->renderView('confirmEditSharedSiteNav.html.twig', ['message' => Utility::buildSharedSiteNavNote(dirname($currentDirSiteNavFile), true), 'editUrl' => $url]);
         $html = rawurlencode($html);
         $item['thickbox'] = true;
         $item['thickboxData'] = ['html' => $html];
@@ -528,7 +529,7 @@ class MenuController extends SharedController
     //     }
 
     //     unset($query['concertDraft']);
-    //     $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
+    //     $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
 
     //     $item = [
     //       'text' => 'View all drafts',
@@ -570,7 +571,7 @@ class MenuController extends SharedController
     if (isset($_GET['dir'])) {
       $dir = urldecode($_GET['dir']);
     } else {
-      $dir = dirname(Config::removeDocRootFromPath($this->filePath));
+      $dir = dirname(Utility::removeDocRootFromPath($this->filePath));
     }
 
     $root = $_SERVER['DOCUMENT_ROOT'];
@@ -654,13 +655,13 @@ class MenuController extends SharedController
 
     // $fm = new FileManager($this->getLoggedInUsername(), $this->filePath, null, $this->getDB());
 
-    // if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($this->filePath))) {
+    // if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($this->filePath))) {
     //   $this->addSessionMessage('Oops! It appears that you don\'t have access to create this page.');
     //   return false;
     // }
     //@todo remove this
     //$this->filePath = '/cis/www/billy/concert/arst.php';
-    $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($this->filePath));
+    $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($this->filePath));
     if (empty($siteBase)) {
       // user doesn't have access to this site.
       if (self::isBareboneRequest()) {

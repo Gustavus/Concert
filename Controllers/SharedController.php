@@ -9,6 +9,7 @@ namespace Gustavus\Concert\Controllers;
 use Gustavus\Concourse\Controller as ConcourseController,
   Gustavus\Resources\Resource,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Concert\FileManager,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Extensibility\Filters,
@@ -124,7 +125,7 @@ class SharedController extends ConcourseController
     if (empty($redirectPath)) {
       $redirectPath = $filePath;
     }
-    $redirectPath = Config::removeDocRootFromPath($redirectPath);
+    $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
     if (!empty(self::$visibleEditingButtons)) {
       $visibleButtons = self::$visibleEditingButtons;
@@ -141,7 +142,7 @@ class SharedController extends ConcourseController
       ],
     ];
 
-    $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+    $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
 
     Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources, $allowCode) {
       if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
@@ -166,7 +167,7 @@ class SharedController extends ConcourseController
             });
           </script>',
           implode('","', $resources['js']),
-          Config::removeDocRootFromPath($filePath),
+          Utility::removeDocRootFromPath($filePath),
           $redirectPath,
           $allowCode ? 'true' : 'false',
           $isAdmin
@@ -189,7 +190,7 @@ class SharedController extends ConcourseController
       self::markResourcesAdded([$cssResource], 'css');
     }
 
-    $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+    $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
 
     if ($visibleButtons === null) {
       $visibleButtons = Config::$defaultEditingButtons;
@@ -601,7 +602,7 @@ class SharedController extends ConcourseController
    */
   protected static function isGlobalNav($siteNav)
   {
-    return (Config::addDocRootToPath($siteNav) === Config::addDocRootToPath('site_nav.php'));
+    return (Utility::addDocRootToPath($siteNav) === Utility::addDocRootToPath('site_nav.php'));
   }
 
   /**
@@ -750,12 +751,12 @@ class SharedController extends ConcourseController
    */
   protected static function isRequestFromConcertRoot($requestURI = null)
   {
-    $concertRoot = Config::addDocRootToPath(Config::WEB_DIR);
+    $concertRoot = Utility::addDocRootToPath(Config::WEB_DIR);
 
     if ($requestURI === null) {
       $requestURI = $_SERVER['REQUEST_URI'];
     }
-    $requestURI = Config::addDocRootToPath($requestURI);
+    $requestURI = Utility::addDocRootToPath($requestURI);
 
     return (strpos($requestURI, $concertRoot) === 0);
   }

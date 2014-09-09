@@ -7,6 +7,7 @@
 namespace Gustavus\Concert\Controllers;
 
 use Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
   Gustavus\Utility\File,
@@ -46,7 +47,7 @@ class SiteNavController extends SharedController
     $_GET['concertMoshed'] = 'false';
 
     if (self::isSiteNavShared($siteNav)) {
-      $this->addConcertMessage(Config::buildSharedSiteNavNote(dirname($siteNav), false));
+      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($siteNav), false));
     }
 
     $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
@@ -77,11 +78,11 @@ class SiteNavController extends SharedController
     // Just kidding. For now, we want to either allow them to edit a current nav, create one in their current directory, delete one, or talk to us.
     $siteNav = self::getSiteNavForFile($filePath);
 
-    $filePathFromDocRoot = Config::removeDocRootFromPath($filePath);
-    $siteNavFromDocRoot  = Config::removeDocRootFromPath($siteNav);
+    $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
+    $siteNavFromDocRoot  = Utility::removeDocRootFromPath($siteNav);
 
     // Location of the current directory's site nav. Even if it doesn't exist.
-    $currentDirNav = Config::addDocRootToPath(dirname($filePath) . DIRECTORY_SEPARATOR . 'site_nav.php');
+    $currentDirNav = Utility::addDocRootToPath(dirname($filePath) . DIRECTORY_SEPARATOR . 'site_nav.php');
 
     if (self::isGlobalNav($siteNav)) {
       // no site nav exists for this site up to the global nav.
@@ -127,7 +128,7 @@ class SiteNavController extends SharedController
     $this->setTitle('Create Local Navigation');
 
     if (self::isSiteNavShared($navToCreate)) {
-      $this->addConcertMessage(Config::buildSharedSiteNavNote(dirname($navToCreate), true));
+      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), true));
     }
 
     $origGet = $_GET;
@@ -164,13 +165,13 @@ class SiteNavController extends SharedController
   // {
   //   $this->setTitle('Local Navigation Drafts');
 
-  //   $filePathFromDocRoot = Config::removeDocRootFromPath($filePath);
+  //   $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
 
   //   $siteNav             = self::getSiteNavForFile($filePath);
-  //   $siteNavFromDocRoot  = Config::removeDocRootFromPath($siteNav);
+  //   $siteNavFromDocRoot  = Utility::removeDocRootFromPath($siteNav);
 
   //   // Location of the current directory's site nav. Even if it doesn't exist.
-  //   $currentDirNav = Config::addDocRootToPath(dirname($filePath) . DIRECTORY_SEPARATOR . 'site_nav.php');
+  //   $currentDirNav = Utility::addDocRootToPath(dirname($filePath) . DIRECTORY_SEPARATOR . 'site_nav.php');
 
   //   if (self::isGlobalNav($siteNav)) {
   //     // no site nav exists for this site up to the global nav.
@@ -199,7 +200,7 @@ class SiteNavController extends SharedController
 
 
 
-  //   $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+  //   $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
 
   //   if (strpos($siteNavFromDocRoot, $siteBase) === 0) {
   //     // the found site nav lives in the current site.
@@ -273,7 +274,7 @@ class SiteNavController extends SharedController
   //   $_GET['concertMoshed'] = 'false';
 
   //   if (self::isSiteNavShared($navToCreate)) {
-  //     $this->addConcertMessage(Config::buildSharedSiteNavNote(dirname($navToCreate), true));
+  //     $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), true));
   //   }
 
   //   $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
@@ -282,7 +283,7 @@ class SiteNavController extends SharedController
   //   self::setGET($origGet);
   //   if (!$barebonesSet) {
   //     // add the current file
-  //     $this->setContent((new File(Config::addDocRootToPath($filePath)))->loadAndEvaluate());
+  //     $this->setContent((new File(Utility::addDocRootToPath($filePath)))->loadAndEvaluate());
   //   } else {
   //     return $moshResult;
   //   }
@@ -321,7 +322,7 @@ class SiteNavController extends SharedController
     $origGet = $_GET;
     $_GET['forwardedFrom'] = 'siteNav';
     $_GET['concertMoshed'] = 'false';
-    $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB(), 'redirectPath' => Config::removeDocRootFromPath($filePath)]);
+    $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB(), 'redirectPath' => Utility::removeDocRootFromPath($filePath)]);
     self::setGET($origGet);
     return $moshResult;
   }

@@ -7,6 +7,7 @@
 namespace Gustavus\Concert\Controllers;
 
 use Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\GACMailer\EmailMessage,
   Gustavus\Utility\String,
   Gustavus\Utility\Set,
@@ -49,7 +50,7 @@ class EmailController extends SharedController
 
     $body = sprintf("%s has shared a draft with you for the page: %s\n\rThe draft can be viewed or edited at: %s",
         $name,
-        Config::removeDocRootFromPath($draft['destFilepath']),
+        Utility::removeDocRootFromPath($draft['destFilepath']),
         $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true)
     );
 
@@ -65,7 +66,7 @@ class EmailController extends SharedController
     if (empty($bcc)) {
       $body = sprintf("A draft has been shared with users, but they don't exist in the campusAPI\n\rUsers: %s", (new Set($usernames))->toSentence()->getValue());
       $message = (new EmailMessage)
-        ->setSubject('Unable to email users about shared draft for: ' . Config::removeDocRootFromPath($draft['destFilepath']))
+        ->setSubject('Unable to email users about shared draft for: ' . Utility::removeDocRootFromPath($draft['destFilepath']))
         ->setFrom('concert@gustavus.edu')
         ->setReplyTo('no-reply@gustavus.edu')
         ->setTo(Config::$adminEmails)
@@ -101,7 +102,7 @@ class EmailController extends SharedController
 
     $draft      = $params['draft'];
     $publishers = $params['publishers'];
-    $draftPath  = Config::removeDocRootFromPath($draft['destFilepath']);
+    $draftPath  = Utility::removeDocRootFromPath($draft['destFilepath']);
 
     $peoplePuller = new CampusPeople($this->getApiKey());
     $draftOwner   = $peoplePuller->setUsername($draft['username'])->current();
@@ -208,7 +209,7 @@ class EmailController extends SharedController
       $publisher = $this->getLoggedInUsername();
     }
 
-    $body = sprintf('%s published your draft of %s', $publisher, (new String(Config::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
+    $body = sprintf('%s published your draft of %s', $publisher, (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
 
     if (!empty($params['message'])) {
       $body .= sprintf(" with the following comment:\n\r\"%s\"", $params['message']);
@@ -256,7 +257,7 @@ class EmailController extends SharedController
       $publisher = $this->getLoggedInUsername();
     }
 
-    $body = sprintf('%s rejected your draft of %s', $publisher, (new String(Config::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
+    $body = sprintf('%s rejected your draft of %s', $publisher, (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
 
     if (!empty($params['message'])) {
       $body .= sprintf(" with the following comment:\n\r\"%s\"", $params['message']);

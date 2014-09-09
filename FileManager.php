@@ -8,6 +8,7 @@ namespace Gustavus\Concert;
 
 use Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Extensibility\Filters,
   Gustavus\Doctrine\DBAL,
@@ -607,7 +608,7 @@ class FileManager
       $drafts[$userDraft['draftFilename']] = $userDraft;
     }
 
-    if (PermissionsManager::userCanPublishPendingDrafts($this->username, Config::removeDocRootFromPath($this->filePath))) {
+    if (PermissionsManager::userCanPublishPendingDrafts($this->username, Utility::removeDocRootFromPath($this->filePath))) {
       // user has access to publish pending drafts
       $pendingDrafts = $this->getDrafts([Config::PENDING_PUBLISH_DRAFT, Config::PUBLIC_DRAFT]);
       if (!empty($pendingDrafts)) {
@@ -752,7 +753,7 @@ class FileManager
   private function getRevisionsAPI()
   {
     if (empty($this->revisionsAPI)) {
-      $this->revisionsAPI = Config::getRevisionsAPI($this->filePath, $this->getDBAL());
+      $this->revisionsAPI = Utility::getRevisionsAPI($this->filePath, $this->getDBAL());
     }
     return $this->revisionsAPI;
   }
@@ -961,7 +962,7 @@ class FileManager
    */
   private function removeFile()
   {
-    $site = PermissionsManager::findUsersSiteForFile($this->username, Config::removeDocRootFromPath($this->filePath));
+    $site = PermissionsManager::findUsersSiteForFile($this->username, Utility::removeDocRootFromPath($this->filePath));
 
     if (empty($site) || strpos($this->filePath, $site) === false) {
       // we can't find a site for the file to remove.
@@ -1159,7 +1160,7 @@ class FileManager
     if (($accessLevel = $this->forceAccessLevel())) {
       return PermissionsManager::accessLevelCanEditPart($accessLevel, $partName);
     }
-    $filePath = Config::removeDocRootFromPath($this->filePath);
+    $filePath = Utility::removeDocRootFromPath($this->filePath);
     return PermissionsManager::userCanEditPart($this->username, $filePath, $partName);
   }
 
@@ -1214,7 +1215,7 @@ class FileManager
       return PermissionsManager::userCanEditDraft($this->username, $draft);
     }
 
-    $filePath = Config::removeDocRootFromPath($this->filePath);
+    $filePath = Utility::removeDocRootFromPath($this->filePath);
     return PermissionsManager::userCanEditFile($this->username, $filePath);
   }
 

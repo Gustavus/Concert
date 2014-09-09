@@ -11,6 +11,7 @@ use Gustavus\Concert\FileManager,
   Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Doctrine\DBAL,
   Gustavus\Extensibility\Filters,
   Gustavus\Concourse\RoutingUtil,
@@ -2025,7 +2026,7 @@ echo $config["content"];';
     $this->assertFalse(file_exists($filePath));
     $this->assertTrue(file_exists(self::$testFileDir . 'index.php'));
 
-    $revisionsAPI = Config::getRevisionsAPI(self::$testFileDir . 'index.php', $this->fileManager->getDBAL());
+    $revisionsAPI = Utility::getRevisionsAPI(self::$testFileDir . 'index.php', $this->fileManager->getDBAL());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
     $revision = $revisionsAPI->getRevision(1);
 
@@ -2242,7 +2243,7 @@ echo $config["content"];';
     $this->assertFalse(file_exists($file));
 
 
-    $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
+    $revisionsAPI = Utility::getRevisionsAPI($file, $this->fileManager->getDBAL());
     $this->assertSame(3, $revisionsAPI->getRevisionCount());
 
     $this->assertSame('Initial version', $revisionsAPI->getRevision(1)->getRevisionMessage());
@@ -2547,7 +2548,7 @@ echo $config["content"];';
 
     $this->assertTrue($result);
 
-    $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
+    $revisionsAPI = Utility::getRevisionsAPI($file, $this->fileManager->getDBAL());
     $this->assertSame(0, $revisionsAPI->getRevisionCount());
 
 
@@ -2572,7 +2573,7 @@ echo $config["content"];';
     $result = $this->fileManager->saveRevision();
     $this->assertTrue($result);
 
-    $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
+    $revisionsAPI = Utility::getRevisionsAPI($file, $this->fileManager->getDBAL());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
     Filters::add(RevisionsAPI::RENDER_REVISION_FILTER, function($content) {

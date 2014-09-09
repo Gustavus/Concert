@@ -11,6 +11,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Concert\Test\TestBase,
   Gustavus\Concert\Controllers\EmailController,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Utility\String,
   Gustavus\Utility\Set;
 
@@ -174,7 +175,7 @@ class EmailControllerTest extends TestBase
 
     $this->checkSentEmailContents(
         ['to' => $expectedTo],
-        'No publishers were found for ' . Config::removeDocRootFromPath($draft['destFilepath']),
+        'No publishers were found for ' . Utility::removeDocRootFromPath($draft['destFilepath']),
         $this->peoplePuller->current()->getFullName() . ' submitted a draft pending review',
         true
     );
@@ -207,7 +208,7 @@ class EmailControllerTest extends TestBase
       $expectedBcc[$publisher . '@gustavus.edu'] = null;
     }
 
-    $draftPath = Config::removeDocRootFromPath($draft['destFilepath']);
+    $draftPath = Utility::removeDocRootFromPath($draft['destFilepath']);
     $this->checkSentEmailContents(
         ['bcc' => $expectedBcc],
         $draft['username'] . ' has submitted a draft awaiting',
@@ -247,7 +248,7 @@ class EmailControllerTest extends TestBase
       $expectedBcc[$publisher . '@gustavus.edu'] = null;
     }
 
-    $draftPath = Config::removeDocRootFromPath($draft['destFilepath']);
+    $draftPath = Utility::removeDocRootFromPath($draft['destFilepath']);
     $this->checkSentEmailContents(
         ['bcc' => $expectedBcc],
         $draft['username'] . ' has submitted a draft awaiting',
@@ -285,7 +286,7 @@ class EmailControllerTest extends TestBase
 
     $this->checkSentEmailContents(
         ['to' => $expectedTo],
-        'Unable to email publishers for: ' . Config::removeDocRootFromPath($draft['destFilepath']),
+        'Unable to email publishers for: ' . Utility::removeDocRootFromPath($draft['destFilepath']),
         'A publisher was found',
         true
     );

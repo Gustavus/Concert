@@ -12,6 +12,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Concert\Controllers\MainController,
   Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Doctrine\DBAL,
   Gustavus\FormBuilderMK2\ElementRenderers\ElementRenderer,
   Gustavus\Concourse\Test\RouterTestUtil,
@@ -1368,7 +1369,7 @@ class MainControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
     $actual = $this->controller->handleRevisions($filePath);
@@ -1401,7 +1402,7 @@ class MainControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
     $_GET['revisionNumber'] = 1;
@@ -1439,7 +1440,7 @@ class MainControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $_POST['revisionNumber'] = 1;
@@ -1454,7 +1455,7 @@ class MainControllerTest extends TestBase
     // publish the file to trigger a revision
     $this->fileManager->publishFile();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $this->unauthenticate();
@@ -1491,7 +1492,7 @@ class MainControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $_POST['revisionNumber'] = 1;
@@ -1506,7 +1507,7 @@ class MainControllerTest extends TestBase
     // publish the file to trigger a revision
     $this->fileManager->publishFile();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $this->unauthenticate();
@@ -1539,7 +1540,7 @@ class MainControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $_POST['revisionNumber'] = 1;
@@ -1558,7 +1559,7 @@ class MainControllerTest extends TestBase
     // publish the file to trigger a revision
     $this->fileManager->publishFile();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(3, $revisionsAPI->getRevisionCount());
 
     $this->unauthenticate();
@@ -1591,7 +1592,7 @@ class MainControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $_POST['revisionNumber'] = 1;
@@ -1624,7 +1625,7 @@ class MainControllerTest extends TestBase
     $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
     $this->fileManager->publishFile();
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
 
     $this->assertSame(4, $revisionsAPI->getRevisionCount());
 

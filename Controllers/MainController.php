@@ -7,6 +7,7 @@
 namespace Gustavus\Concert\Controllers;
 
 use Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
   Gustavus\Utility\String,
@@ -61,7 +62,7 @@ class MainController extends SharedController
 
     if ($this->getMethod() === 'POST' && $fm->editFile($_POST)) {
       // trying to save an edit
-      $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+      $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
       if ($userCanPublish && $fm->stageFile()) {
         return true;
       } else if (!$userCanPublish) {
@@ -91,7 +92,7 @@ class MainController extends SharedController
     if ($fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT)) {
       $pendingDraft = $fileManager->getDraft();
 
-      $publishers = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($pendingDraft['destFilepath']));
+      $publishers = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($pendingDraft['destFilepath']));
 
       $this->forward('emailPendingDraft', ['draft' => $pendingDraft, 'publishers' => $publishers]);
 
@@ -115,7 +116,7 @@ class MainController extends SharedController
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
-    if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+    if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE);
       return false;
     }
@@ -132,7 +133,7 @@ class MainController extends SharedController
     }
 
     if ($this->getMethod() === 'POST' && $fm->editFile($_POST)) {
-      $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath));
+      $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
       if ($userCanPublish && $fm->stageFile()) {
         return true;
       } else if (!$userCanPublish) {
@@ -164,10 +165,10 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!file_exists($filePath)) {
-      return $this->redirect(dirname(Config::removeDocRootFromPath($filePath)));
+      return $this->redirect(dirname(Utility::removeDocRootFromPath($filePath)));
     }
 
-    if (!PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+    if (!PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_DELETE_MESSAGE);
       return false;
     }
@@ -186,7 +187,7 @@ class MainController extends SharedController
 
       if ($_POST['deleteAction'] === 'confirmDelete' && urldecode($_POST['filePath']) === $filePath && $fm->stageForDeletion()) {
         if (isset($_GET['barebones'])) {
-          $url = (new String(Config::removeDocRootFromPath(dirname($filePath))))->getValue();
+          $url = (new String(Utility::removeDocRootFromPath(dirname($filePath))))->getValue();
           // @todo what should we do here? Return something that tells our javascript to set a timeout and then redirect to the parent site
           return ['action' => 'return', 'value' => json_encode(['redirectUrl' => $url])];
         } else {
@@ -196,7 +197,7 @@ class MainController extends SharedController
         $fm->stopEditing();
         $redirectPath = self::findRedirectPath();
 
-        $url = (!empty($redirectPath)) ? $redirectPath : Config::removeDocRootFromPath($filePath);
+        $url = (!empty($redirectPath)) ? $redirectPath : Utility::removeDocRootFromPath($filePath);
         if (isset($_GET['barebones'])) {
           return true;
         } else {
@@ -250,11 +251,11 @@ class MainController extends SharedController
     // we don't want this set anymore
     unset($_GET['forwardedFrom']);
 
-    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->getDB());
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    if (!PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+    if (!PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_VIEW_REVISIONS);
       return false;
     }
@@ -266,7 +267,7 @@ class MainController extends SharedController
 
     Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm, $redirectPath) {
 
-      if (!PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), Config::removeDocRootFromPath($filePath))) {
+      if (!PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
         return $this->redirectWithMessage($_SERVER['REQUEST_URI'], Config::NOT_ALLOWED_TO_MANAGE_REVISIONS);
       }
 
@@ -286,7 +287,7 @@ class MainController extends SharedController
       $fm->stageFile($action, $revisionContent);
       $redirectPath = ($redirectPath === null) ? $filePath : $redirectPath;
 
-      $redirectPath = Config::removeDocRootFromPath($redirectPath);
+      $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
       $query = [
         'concert' => 'revisions',
@@ -368,7 +369,7 @@ class MainController extends SharedController
       // let ourselves know that we have already moshed this request.
       self::markMoshed();
 
-      $filePath = Config::addDocRootToPath($filePath);
+      $filePath = Utility::addDocRootToPath($filePath);
 
       if (self::isSiteNavRequest() && !self::isForwardedFromSiteNav()) {
         // this has to happen before anything, because it will forward back to here and then everything else will get ran.
@@ -405,7 +406,7 @@ class MainController extends SharedController
         return $this->forward('handleDraftActions', ['filePath' => $filePath]);
       }
 
-      $filePathFromDocRoot = Config::removeDocRootFromPath($filePath);
+      $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
       // check to see if the user has access to edit this page
       if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
 
@@ -520,7 +521,7 @@ class MainController extends SharedController
         if (isset(Config::$templates[$_GET['srcFilePath']])) {
           $fromFilePath = Config::$templates[$_GET['srcFilePath']]['location'];
         } else {
-          $fromFilePath = self::isInternalForward() ? $_GET['srcFilePath'] : Config::addDocRootToPath(urldecode($_GET['srcFilePath']));
+          $fromFilePath = self::isInternalForward() ? $_GET['srcFilePath'] : Utility::addDocRootToPath(urldecode($_GET['srcFilePath']));
           // we will have an absolute path if we were internally forwarded
         }
       } else {

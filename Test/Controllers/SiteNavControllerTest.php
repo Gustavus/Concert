@@ -12,6 +12,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Concert\Controllers\SiteNavController,
   Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\Config,
+  Gustavus\Concert\Utility,
   Gustavus\Doctrine\DBAL,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
@@ -103,7 +104,7 @@ class SiteNavControllerTest extends TestBase
           return 'renderPageNotFound';
         }
     );
-    self::$overrideToken['addDocRootToPath'] = $token = override_method('\Gustavus\Concert\Config', 'addDocRootToPath', function($filePath) use (&$token) {
+    self::$overrideToken['addDocRootToPath'] = $token = override_method('\Gustavus\Concert\Utility', 'addDocRootToPath', function($filePath) use (&$token) {
           if (strpos($filePath, '/cis/lib/') === 0) {
             return $filePath;
           }
@@ -402,7 +403,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
     $_GET['concert'] = 'revisions';
@@ -437,7 +438,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
     $_GET['revisionNumber'] = 1;
@@ -478,7 +479,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $_POST['revisionNumber'] = 1;
@@ -498,7 +499,7 @@ class SiteNavControllerTest extends TestBase
     // publish the file to trigger a revision
     $this->fileManager->publishFile();
 
-    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
     $this->assertSame(3, $revisionsAPI->getRevisionCount());
 
     $this->unauthenticate();
@@ -534,7 +535,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->setUpController();
 
-    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
     $this->assertSame(2, $revisionsAPI->getRevisionCount());
 
     $_POST['revisionNumber'] = 1;
@@ -568,7 +569,7 @@ class SiteNavControllerTest extends TestBase
     $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
     $this->fileManager->publishFile();
 
-    $revisionsAPI = Config::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
 
     $this->assertSame(4, $revisionsAPI->getRevisionCount());
 

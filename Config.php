@@ -6,8 +6,6 @@
 
 namespace Gustavus\Concert;
 
-use Gustavus\Revisions\API as RevisionsAPI;
-
 /**
  * Configuration class
  *
@@ -535,102 +533,4 @@ class Config
   public static $adminEmails = [
     'web+concert@gustavus.edu'
   ];
-
-  /**
-   * Builds the upload location for the current user and page being edited
-   *
-   * @return string
-   */
-  public static function getUploadLocation()
-  {
-    return '/cis/www/concert/files/';
-    $dir = str_replace('/cis/www/', '', self::FILE_MANAGER_LOCATION);
-    $dirs = explode('/', $dir);
-    // relative path from filemanager to doc root
-    $relativeToDocRoot = str_repeat('../', count($dirs));
-
-
-    // @todo make this dynamic per project
-    $currentProjectUploadDir = '/cms/files';
-    return $relativeToDocRoot . $currentProjectUploadDir;
-  }
-
-  /**
-   * Builds the upload location for the current user and page being edited
-   *
-   * @return string
-   */
-  public static function getUploadThumbLocation()
-  {
-    return '/cis/www/concert/thumbs/';
-  }
-
-  /**
-   * Removes the doc root from the file path
-   *
-   * @param  string $filePath File path to remove doc root from
-   * @return string
-   */
-  public static function removeDocRootFromPath($filePath)
-  {
-    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
-    if (strpos($filePath, $docRoot) === 0) {
-      return substr($filePath, strlen($docRoot));
-    } else {
-      return $filePath;
-    }
-  }
-
-  /**
-   * Adds the doc root from the file path
-   *
-   * @param  string $filePath File path to add the doc root to
-   * @return string
-   */
-  public static function addDocRootToPath($filePath)
-  {
-    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
-    if (strpos($filePath, $docRoot) !== 0) {
-      return str_replace('//', '/', $docRoot . DIRECTORY_SEPARATOR . $filePath);
-    } else {
-      return $filePath;
-    }
-  }
-
-  /**
-   * Builds a message for editing or creating a shared site nav
-   *
-   * @param  string  $siteNavDir Directory the site nav we are creating or editing lives in
-   * @param  boolean $creation   Whether we are creating a new site nav or editing a curren one
-   * @return string
-   */
-  public static function buildSharedSiteNavNote($siteNavDir, $creation = false)
-  {
-    $messageStart = ($creation) ? self::CREATE_SHARED_SITE_NAV_NOTE_START : self::EDITING_SHARED_SITE_NAV_NOTE_START;
-    return sprintf('%s "%s/".', $messageStart, self::removeDocRootFromPath($siteNavDir));
-  }
-
-  /**
-   * Gets the revisionsAPI for us to work with revisions
-   *
-   * @param  string $filePath Full path to the file
-   * @param  \Doctrine\DBAL\Connection $dbal     Doctrine connection to use
-   * @return API
-   */
-  public static function getRevisionsAPI($filePath, $dbal)
-  {
-    $filePathHash = md5($filePath);
-
-    $params = array(
-      'dbName'            => 'concert',
-      'revisionsTable'    => 'revision',
-      'revisionDataTable' => 'revisionData',
-      'table'             => $filePathHash,
-      'rowId'             => 0,
-      'splitStrategy'     => 'sentenceOrTag',
-      'dbal'              => $dbal,
-    );
-
-    return new RevisionsAPI($params);
-  }
 }

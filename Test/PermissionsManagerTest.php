@@ -8,7 +8,8 @@
 namespace Gustavus\Concert\Test;
 
 use Gustavus\Concert\PermissionsManager,
-  Gustavus\Concert\Config;
+  Gustavus\Concert\Config,
+  Gustavus\Concert\Utility;
 
 /**
  * Class to test PermissionManager class
@@ -1397,7 +1398,7 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
 
-    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
 
     $this->assertSame(['/billy/concert/', '/billy/'], $result);
     $this->destructDB();
@@ -1415,7 +1416,7 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
 
-    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
 
     $this->assertEmpty($result);
     $this->destructDB();
@@ -1432,7 +1433,7 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
 
-    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
 
     $this->assertNull($result);
     $this->destructDB();
@@ -1450,7 +1451,7 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
 
-    $sites = $this->call('PermissionsManager', 'findSitesContainingFile', [Config::removeDocRootFromPath($file)]);
+    $sites = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
 
     $result = $this->call('PermissionsManager', 'sortSitesByDepth', [$sites]);
 
@@ -1535,7 +1536,7 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
 
-    $result = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($file));
+    $result = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($file));
 
     $this->assertSame(['bvisto'], $result);
     $this->destructDB();
@@ -1550,7 +1551,7 @@ class PermissionsManagerTest extends TestBase
     $this->constructDB(['Sites', 'Permissions']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SUPER_USER]);
 
-    $result = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($file));
+    $result = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($file));
 
     $this->assertNull($result);
     $this->destructDB();
@@ -1567,7 +1568,7 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
     $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', '/billy/concert/', Config::SITE_PUBLISHER_ACCESS_LEVEL]);
 
-    $result = PermissionsManager::findPublishersForFile(Config::removeDocRootFromPath($file));
+    $result = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($file));
 
     $this->assertSame(['bvisto', 'jerry'], $result);
     $this->destructDB();
