@@ -128,8 +128,7 @@ class MenuController extends SharedController
     $pathFromDocRoot = Config::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
 
-    if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
-      // @todo change this to our separate access level for revisions
+    if (PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $params = $query;
       $params['concert'] = 'revisions';
       $item = [
