@@ -1999,6 +1999,8 @@ echo $config["content"];';
 
     // author submits for approval
     $this->buildFileManager('jerry', self::$testFileDir . 'index.php');
+    $edits = ['1' => '<p>This is some edited html content</p>'];
+    $this->fileManager->editFile($edits);
     $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
     $this->fileManager->stopEditing();
 
@@ -2010,6 +2012,7 @@ echo $config["content"];';
     $filePath = Config::$stagingDir . $this->fileManager->getDraftFileName('jerry');
 
     $this->assertContains(self::$testFileDir, $filePath);
+    $this->assertContains('This is some edited html content', file_get_contents($filePath));
 
     // file is staged, now we can publish it.
     // re-create our fileManager with the staged file
@@ -2023,8 +2026,14 @@ echo $config["content"];';
     $this->assertTrue(file_exists(self::$testFileDir . 'index.php'));
 
     $revisionsAPI = Config::getRevisionsAPI(self::$testFileDir . 'index.php', $this->fileManager->getDBAL());
-    $this->assertSame(1, $revisionsAPI->getRevisionCount());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
     $revision = $revisionsAPI->getRevision(1);
+
+    $this->assertSame('bvisto', $revision->getCreatedBy());
+    $this->assertContains('Initial', $revision->getRevisionMessage());
+    $this->assertNotContains('jerry', $revision->getRevisionMessage());
+
+    $revision = $revisionsAPI->getRevision(2);
 
     $this->assertSame('bvisto', $revision->getCreatedBy());
     $this->assertContains('jerry', $revision->getRevisionMessage());
@@ -2196,6 +2205,8 @@ echo $config["content"];';
     $this->buildFileManager('bvisto', $file);
 
     $this->assertTrue($this->fileManager->acquireLock());
+    $edits = ['1' => '<p>This is some edited html content</p>'];
+    $this->fileManager->editFile($edits);
     $this->assertTrue($this->fileManager->stageFile());
     $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
 
@@ -2232,13 +2243,17 @@ echo $config["content"];';
 
 
     $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
-    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+    $this->assertSame(3, $revisionsAPI->getRevisionCount());
 
-    $this->assertSame('File published', $revisionsAPI->getRevision(1)->getRevisionMessage());
+    $this->assertSame('Initial version', $revisionsAPI->getRevision(1)->getRevisionMessage());
     $this->assertSame(self::$indexContents, $revisionsAPI->getRevision(1)->getRevisionData('page')->getContent());
+    $this->assertNotContains('This is some edited html content', $revisionsAPI->getRevision(1)->getRevisionData('page')->getContent());
 
-    $this->assertSame('File deleted', $revisionsAPI->getRevision(2)->getRevisionMessage());
-    $this->assertSame('', $revisionsAPI->getRevision(2)->getRevisionData('page')->getContent());
+    $this->assertSame('File published', $revisionsAPI->getRevision(2)->getRevisionMessage());
+    $this->assertContains('This is some edited html content', $revisionsAPI->getRevision(2)->getRevisionData('page')->getContent());
+
+    $this->assertSame('File deleted', $revisionsAPI->getRevision(3)->getRevisionMessage());
+    $this->assertSame('', $revisionsAPI->getRevision(3)->getRevisionData('page')->getContent());
 
     $this->destructDB();
   }
@@ -2533,7 +2548,7 @@ echo $config["content"];';
     $this->assertTrue($result);
 
     $revisionsAPI = Config::getRevisionsAPI($file, $this->fileManager->getDBAL());
-    $this->assertNull($revisionsAPI->getRevisionCount());
+    $this->assertSame(0, $revisionsAPI->getRevisionCount());
 
 
     $this->destructDB();

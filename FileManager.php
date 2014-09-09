@@ -66,6 +66,13 @@ class FileManager
   private $dbal;
 
   /**
+   * Revisions API
+   *
+   * @var \Gustavus\Revisions\API
+   */
+  private $revisionsAPI;
+
+  /**
    * Flag that lets us know if the user is editing a public draft or not
    *
    * @var boolean
@@ -722,7 +729,7 @@ class FileManager
    */
   private function saveRevision($message = '')
   {
-    $revisionAPI = Config::getRevisionsAPI($this->filePath, $this->getDBAL());
+    $revisionsAPI = $this->getRevisionsAPI();
 
     if (file_exists($this->filePath)) {
       $content = file_get_contents($this->filePath);
@@ -734,7 +741,36 @@ class FileManager
       'page' => $content,
     ];
 
-    return $revisionAPI->saveRevision($revisionInfo, $message, $this->username);
+    return $revisionsAPI->saveRevision($revisionInfo, $message, $this->username);
+  }
+
+  /**
+   * Gets the current API for revisions. Builds it is it isn't built yet
+   *
+   * @return Gustavus\Revisions\API
+   */
+  private function getRevisionsAPI()
+  {
+    if (empty($this->revisionsAPI)) {
+      $this->revisionsAPI = Config::getRevisionsAPI($this->filePath, $this->getDBAL());
+    }
+    return $this->revisionsAPI;
+  }
+
+  /**
+   * Saves an initial revision if the current page doesn't yet have any revisions and currently exists.
+   *
+   * @return boolean
+   */
+  private function saveInitialRevisionIfNeeded()
+  {
+    $revisionsAPI = $this->getRevisionsAPI();
+
+    if ($revisionsAPI->getRevisionCount() === 0 && file_exists($this->filePath)) {
+      // no revisions exist yet, and this file exists. We need to save an initial revision.
+      return $this->saveRevision('Initial version');
+    }
+    return false;
   }
 
   /**
@@ -797,6 +833,7 @@ class FileManager
     $this->ensureDirectoryExists(dirname($destination), $owner, $group);
     // @todo what to do if the destination is a symlink?
 
+    $this->saveInitialRevisionIfNeeded();
     if (rename($srcFilePath, $destination)) {
       chgrp($destination, $group);
       chown($destination, $owner);
@@ -899,6 +936,7 @@ class FileManager
     //   // @todo can we delete directories
     // }
 
+    $this->saveInitialRevisionIfNeeded();
     if ($this->removeFile()) {
       $this->saveRevision(self::buildRevisionMessage($result['action']));
 
