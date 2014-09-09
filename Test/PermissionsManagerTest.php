@@ -1054,6 +1054,156 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanManageRevisionsNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanManageRevisions('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanManageRevisionsNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanManageRevisions('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanManageRevisionsFalse()
+  {
+    $origManageRevisionsAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['admin'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanManageRevisions('bvisto', '/arst/protected/arst.php'));
+
+    Config::$manageRevisionsAccessLevels = $origManageRevisionsAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanManageRevisionsExcluded()
+  {
+    $origManageRevisionsAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanManageRevisions('bvisto', '/arst/private/arst.php'));
+
+    Config::$manageRevisionsAccessLevels = $origManageRevisionsAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanManageRevisions()
+  {
+    $origManageRevisionsAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanManageRevisions('bvisto', '/arst/protected/arst.php'));
+
+    Config::$manageRevisionsAccessLevels = $origManageRevisionsAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewRevisionsNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanViewRevisions('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewRevisionsNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanViewRevisions('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewRevisionsFalse()
+  {
+    $origNonRevisionsAccessLevels = Config::$nonRevisionsAccessLevels;
+    Config::$nonRevisionsAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanViewRevisions('bvisto', '/arst/protected/arst.php'));
+
+    Config::$nonRevisionsAccessLevels = $origNonRevisionsAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewRevisionsExcluded()
+  {
+    $origNonRevisionsAccessLevels = Config::$nonRevisionsAccessLevels;
+    Config::$nonRevisionsAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanViewRevisions('bvisto', '/arst/private/arst.php'));
+
+    Config::$nonRevisionsAccessLevels = $origNonRevisionsAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewRevisions()
+  {
+    $origNonRevisionsAccessLevels = Config::$nonRevisionsAccessLevels;
+    Config::$nonRevisionsAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanViewRevisions('bvisto', '/arst/protected/arst.php'));
+
+    Config::$nonRevisionsAccessLevels = $origNonRevisionsAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function adjustPermissionFiles()
   {
     $files = ['/arst', '/private//*', 'secure', 'files/private.php'];

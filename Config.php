@@ -201,6 +201,16 @@ class Config
    */
   const DRAFT_PUBLISHED_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been published.';
 
+  /**
+   * Message to display to people who can't manage revisions, but are trying
+   */
+  const NOT_ALLOWED_TO_MANAGE_REVISIONS = 'Oops! It appears that you don\'t have access to manage revisions for this page.';
+
+  /**
+   * Message to display to people who can't manage revisions, but are trying
+   */
+  const NOT_ALLOWED_TO_VIEW_REVISIONS = 'Oops! It appears that you don\'t have access to view revisions for this page.';
+
   // Staged file stages
 
   /**
@@ -360,6 +370,23 @@ class Config
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
   ];
+
+  /**
+   * AccessLevels that can publish drafts for other people
+   *
+   * @var array
+   */
+  public static $manageRevisionsAccessLevels = [
+    self::SITE_ADMIN_ACCESS_LEVEL,
+    self::SITE_PUBLISHER_ACCESS_LEVEL,
+  ];
+
+  /**
+   * AccessLevels that can't view revisions
+   *
+   * @var array
+   */
+  public static $nonRevisionsAccessLevels = [];
 
   /**
    * Access levels that can't upload files

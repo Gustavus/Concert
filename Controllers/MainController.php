@@ -254,15 +254,8 @@ class MainController extends SharedController
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    if (!$fm->userCanEditFile()) {
-      // @todo should we add a separate access level for revisions?
-      $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE);
-      return false;
-    }
-
-    if (!$fm->acquireLock()) {
-      // @todo should a lock be required to look at revisions? Or only for restoring/undoing restorations?
-      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
+    if (!PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), $filePath)) {
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_VIEW_REVISIONS);
       return false;
     }
 
@@ -273,6 +266,13 @@ class MainController extends SharedController
 
     Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm, $redirectPath) {
 
+      if (!PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), $filePath)) {
+        return $this->redirectWithMessage($_SERVER['REQUEST_URI'], Config::NOT_ALLOWED_TO_MANAGE_REVISIONS);
+      }
+
+      if (!$fm->acquireLock()) {
+        return $this->redirectWithMessage($_SERVER['REQUEST_URI'], $this->renderLockNotAcquiredMessage($fm));
+      }
       switch ($restoreAction) {
         case RevisionsAPI::UNDO_ACTION:
           $action = Config::UNDO_RESTORE_STAGE;

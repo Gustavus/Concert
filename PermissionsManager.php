@@ -320,6 +320,60 @@ class PermissionsManager
   }
 
   /**
+   * Checks to see if the specified user can manage revisions or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanManageRevisions($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits editing raw html.
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$manageRevisionsAccessLevels)) {
+      return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
+    }
+    // the current user's access level doesn't allow editing raw html.
+    return false;
+  }
+
+  /**
+   * Checks to see if the specified user can view revisions or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanViewRevisions($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits publishing files.
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonRevisionsAccessLevels)) {
+      // the current user's access level doesn't allow publishing
+      return false;
+    }
+    return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
+  }
+
+  /**
    * Checks to see if the specified accessLevels can be found in $arrayToCheck
    * @param  array $accessLevels AccessLevels to try finding in the specified array
    * @param  array $arrayToCheck Array to search for accessLevels in

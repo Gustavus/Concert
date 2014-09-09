@@ -1425,8 +1425,6 @@ class FileManager
    *
    * @param boolean $forDraft Whether we are trying to acquire a lock for a draft. <strong>Note:</strong> This should only be used internally.
    * @return boolean|integer True if the lock was acquired. Minutes left until the lock expires if the lock couldn't be acquired.
-   *
-   * @todo  Test this with multiple simultaneous attempts
    */
   public function acquireLock($forDraft = false)
   {

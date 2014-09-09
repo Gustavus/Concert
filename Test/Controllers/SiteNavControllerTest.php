@@ -17,7 +17,8 @@ use Gustavus\Test\TestObject,
   Gustavus\Utility\PageUtil,
   Gustavus\Utility\String,
   Gustavus\Concourse\RoutingUtil,
-  Gustavus\Extensibility\Filters;
+  Gustavus\Extensibility\Filters,
+  Gustavus\Revisions\API as RevisionsAPI;
 
 /**
  * Tests for SiteNavController
@@ -80,6 +81,8 @@ class SiteNavControllerTest extends TestBase
     $_POST = [];
     $_GET = [];
     $_SERVER['REQUEST_METHOD'] = 'GET';
+    Filters::clear(RevisionsAPI::RENDER_REVISION_FILTER);
+    Filters::clear(RevisionsAPI::RESTORE_HOOK);
   }
 
   /**
@@ -336,7 +339,7 @@ class SiteNavControllerTest extends TestBase
   /**
    * @test
    */
-  public function handleRevisionsCantEdit()
+  public function handleRevisionsCantView()
   {
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
@@ -349,7 +352,7 @@ class SiteNavControllerTest extends TestBase
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 
     $this->assertFalse($actual);
-    $this->assertContains(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertContains(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessage());
     $this->destructDB();
   }
 
@@ -452,6 +455,8 @@ class SiteNavControllerTest extends TestBase
    */
   public function handleRevisionsRestore()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $siteNav = self::$testFileDir . 'site_nav.php';
     file_put_contents($siteNav, 'siteNav contents');
@@ -498,6 +503,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 
   /**
@@ -505,6 +511,8 @@ class SiteNavControllerTest extends TestBase
    */
   public function handleRevisionsRestoreUndo()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $siteNav = self::$testFileDir . 'site_nav.php';
     file_put_contents($siteNav, 'siteNav contents');
@@ -572,5 +580,6 @@ class SiteNavControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 }

@@ -84,6 +84,7 @@ class MainControllerTest extends TestBase
     $_GET = [];
     $_SERVER['REQUEST_METHOD'] = 'GET';
     Filters::clear(RevisionsAPI::RENDER_REVISION_FILTER);
+    Filters::clear(RevisionsAPI::RESTORE_HOOK);
   }
 
   /**
@@ -1309,7 +1310,7 @@ class MainControllerTest extends TestBase
   /**
    * @test
    */
-  public function handleRevisionsCantEdit()
+  public function handleRevisionsCantView()
   {
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
@@ -1319,7 +1320,7 @@ class MainControllerTest extends TestBase
     $actual = $this->controller->handleRevisions($filePath);
 
     $this->assertFalse($actual);
-    $this->assertContains(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertContains(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessage());
     $this->destructDB();
   }
 
@@ -1328,6 +1329,8 @@ class MainControllerTest extends TestBase
    */
   public function handleRevisionsNoRevisions()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -1342,6 +1345,7 @@ class MainControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 
   /**
@@ -1349,6 +1353,8 @@ class MainControllerTest extends TestBase
    */
   public function handleRevisions()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -1372,6 +1378,7 @@ class MainControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 
   /**
@@ -1379,6 +1386,8 @@ class MainControllerTest extends TestBase
    */
   public function handleRevisionsViewSpecific()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -1402,6 +1411,107 @@ class MainControllerTest extends TestBase
     $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
     $this->assertContains("test contents\n\rmore", $actual['value']['content']);
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsRestoreNotAllowed()
+  {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['admin'];
+    $filePath = self::$testFileDir . 'index.php';
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>';
+    file_put_contents($filePath, $fileContents);
+    $this->buildFileManager('bvisto', $filePath);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($filePath, $fileContents);
+    $this->buildFileManager('bvisto', $filePath);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $_POST['revisionNumber'] = 1;
+    $_POST['restore'] = 1;
+
+    $actual = $this->controller->handleRevisions($filePath);
+
+    $this->assertContains(Config::NOT_ALLOWED_TO_MANAGE_REVISIONS, $actual['value']['content']);
+
+    $filePathHash = $this->fileManager->getFilePathHash();
+    $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
+    // publish the file to trigger a revision
+    $this->fileManager->publishFile();
+
+    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $this->unauthenticate();
+    $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsRestoreNoLock()
+  {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
+    $filePath = self::$testFileDir . 'index.php';
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>';
+    file_put_contents($filePath, $fileContents);
+    $this->buildFileManager('bvisto', $filePath);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($filePath, $fileContents);
+    $this->buildFileManager('bvisto', $filePath);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->buildFileManager('jerry', $filePath);
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $_POST['revisionNumber'] = 1;
+    $_POST['restore'] = 1;
+
+    $actual = $this->controller->handleRevisions($filePath);
+
+    $this->assertContains($this->controller->renderLockNotAcquiredMessage($filePath), $actual['value']['content']);
+
+    $filePathHash = $this->fileManager->getFilePathHash();
+    $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
+    // publish the file to trigger a revision
+    $this->fileManager->publishFile();
+
+    $revisionsAPI = Config::getRevisionsAPI($filePath, $this->controller->getDB());
+    $this->assertSame(2, $revisionsAPI->getRevisionCount());
+
+    $this->unauthenticate();
+    $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 
   /**
@@ -1409,6 +1519,8 @@ class MainControllerTest extends TestBase
    */
   public function handleRevisionsRestore()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -1451,6 +1563,7 @@ class MainControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 
   /**
@@ -1458,6 +1571,8 @@ class MainControllerTest extends TestBase
    */
   public function handleRevisionsRestoreUndo()
   {
+    $origManageRevAccessLevels = Config::$manageRevisionsAccessLevels;
+    Config::$manageRevisionsAccessLevels = ['test'];
     $filePath = self::$testFileDir . 'index.php';
     $this->buildDB();
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -1522,5 +1637,6 @@ class MainControllerTest extends TestBase
 
     $this->unauthenticate();
     $this->destructDB();
+    Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
 }
