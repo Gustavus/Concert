@@ -447,6 +447,27 @@ class PermissionsManager
    * @param  string $filePath Path to the file we are searching for sites for.
    * @return array|null Array if sites are found, null otherwise.
    */
+  public static function findParentSiteForFile($filePath)
+  {
+    $filePath = str_replace('//', '/', $filePath);
+
+    $sites = self::findSitesContainingFile($filePath);
+
+    if (empty($sites)) {
+      return null;
+    }
+
+    $sites = self::sortSitesByDepth($sites);
+
+    return end($sites);
+  }
+
+  /**
+   * Finds all of the sites that contain the current file.
+   *
+   * @param  string $filePath Path to the file we are searching for sites for.
+   * @return array|null Array if sites are found, null otherwise.
+   */
   private static function findSitesContainingFile($filePath)
   {
     $filePathArray = explode('/', str_replace('//', '/', $filePath));

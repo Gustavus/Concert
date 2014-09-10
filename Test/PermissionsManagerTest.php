@@ -1389,6 +1389,24 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function findParentSiteForFile()
+  {
+    $file = '/cis/www/billy/concert/test/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = PermissionsManager::findParentSiteForFile(Utility::removeDocRootFromPath($file));
+
+    $this->assertSame('/billy/', $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function findSitesContainingFile()
   {
     $file = '/cis/www/billy/concert/index.php';
