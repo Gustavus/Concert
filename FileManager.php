@@ -277,7 +277,7 @@ class FileManager
   private function saveFile($destination, $file)
   {
     if (is_writable(dirname($destination))) {
-      return file_put_contents($destination, $file);
+      return (file_put_contents($destination, $file) !== false);
     } else {
       throw new RuntimeException("Unable to write file: {$destination}");
     }
@@ -812,6 +812,13 @@ class FileManager
     if ($result['action'] === Config::DELETE_STAGE) {
       // we are trying to delete this file
       return $this->deleteFile();
+    } else if ($result['action'] === Config::CREATE_HTTPD_DIRECTORY_STAGE) {
+      // we are trying to delete this file
+      if ($this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP)) {
+        unlink($this->filePath);
+        return true;
+      }
+      return false;
     }
 
     // now we set our current username to be the username that staged the file, so we can check permissions and publish it for them
@@ -1128,7 +1135,7 @@ class FileManager
    *   <strong>Note:</strong> This should only be called by publishFile.
    *
    * @param  string $directory Directory to make sure is in existence
-   * @param  string $owner     Owner to set for the directory if we are creating a new one
+   * @param  string $owner     Owner to set for the directory if we are creating a new one (if the current user is root)
    * @param  string $group     Group the directory should have if we are creating a new one
    *
    * @return boolean
@@ -1138,7 +1145,13 @@ class FileManager
     if (!is_dir($directory)) {
       if (mkdir($directory, 0777, true)) {
         chgrp($directory, $group);
-        chown($directory, $owner);
+
+        $pwuData = posix_getpwuid(posix_geteuid());
+        $currentUser = $pwuData['name'];
+
+        if ($currentUser === 'root') {
+          chown($directory, $owner);
+        }
         return true;
       } else {
         return false;

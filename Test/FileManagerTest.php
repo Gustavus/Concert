@@ -1801,6 +1801,34 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function stageAndPublishFileHTTPDDir()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $this->assertFalse(is_dir(self::$testFileDir . '/httpdDir'));
+
+
+    $this->buildFileManager('bvisto', self::$testFileDir . '/httpdDir');
+
+    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, ''));
+
+    $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame([['destFilepath' => self::$testFileDir . '/httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_HTTPD_DIRECTORY_STAGE]], $stagedEntry);
+
+    $this->fileManager->publishFile();
+
+    $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function publishFileNotRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);

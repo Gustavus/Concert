@@ -65,6 +65,16 @@ class Config
   const CSS_VERSION = 1;
 
   /**
+   * HTTPD user (User running apache)
+   */
+  const HTTPD_USER = 'httpd';
+
+  /**
+   * Group of the HTTPD user
+   */
+  const HTTPD_GROUP = 'httpd';
+
+  /**
    * Absolute location of the external file manager utility
    */
   const FILE_MANAGER_LOCATION = '/cis/www/concert/filemanager';
@@ -231,6 +241,10 @@ class Config
    * Stage for specifing an undo restore stage
    */
   const UNDO_RESTORE_STAGE = 'undoRestore';
+  /**
+   * Stage for specifing an undo restore stage
+   */
+  const CREATE_HTTPD_DIRECTORY_STAGE = 'createHTTPDDir';
 
 
   // Access Levels
