@@ -22,13 +22,14 @@ use Gustavus\Concert\Utility;
 //    |   |   |   |- responsivefilemanager
 //    |   |   |   |   |- plugin.min.js
 
-$base_url ="http://".$_SERVER['HTTP_HOST'];  // DON'T TOUCH (base url (only domain) of site (without final /)).
+$base_url ="https://".$_SERVER['HTTP_HOST'];  // DON'T TOUCH (base url (only domain) of site (without final /)).
 //$upload_dir = '/files/'; // path from base_url to base of upload folder (with start and final /)
-$upload_dir = Utility::getUploadLocation(); // path from base_url to base of upload folder (with start and final /)
+var_dump('getUploadLoc', __DIR__, Utility::getUploadLocation(false));
+$upload_dir = Utility::getUploadLocation(true); // path from base_url to base of upload folder (with start and final /)
 //$current_path = '../source/'; // relative path from filemanager folder to upload folder (with final /)
-$current_path = Utility::getUploadLocation(); // relative path from filemanager folder to upload folder (with final /)
+$current_path = Utility::getUploadLocation(true); // relative path from filemanager folder to upload folder (with final /)
 //thumbs folder can't put inside upload folder
-$thumbs_base_path = Utility::getUploadThumbLocation(); // relative path from filemanager folder to thumbs folder (with final /)
+$thumbs_base_path = Utility::getUploadLocation(true, true); // relative path from filemanager folder to thumbs folder (with final /)
 
 // OPTIONAL SECURITY
 // if set to true only those will access RF whose url contains the access key(akey) like:

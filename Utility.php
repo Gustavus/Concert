@@ -120,6 +120,11 @@ class Utility
   public static function getUploadLocation($fromRoot = false, $forThumbs = false)
   {
     $referer = PageUtil::getReferer();
+
+    $fileManagerLocation = '/cis/lib/Gustavus/Concert/Assets/ResponsiveFilemanager/filemanager/';
+    $explodedLocation = explode('/', $fileManagerLocation);
+
+    $relPathFromFileManagerToCis = '../..';
     var_dump($referer, $_POST, $_GET);
 
     $parts = parse_url($referer);
@@ -157,7 +162,7 @@ class Utility
       $fm->stageFile(Config::PUBLISH_STAGE, file_get_contents(Config::MEDIA_DIR_HTACCESS_TEMPLATE));
     }
 
-    return ($fromRoot) ? $fileDirAbs : $fileDir;
+    return ($fromRoot) ? $fileDirAbs : $relPathFromFileManagerToCis . $fileDir;
     // $dir = self::removeDocRootFromPath(self::FILE_MANAGER_LOCATION);
     // var_dump($dir);
     // $dirs = array_filter(explode('/', $dir));
