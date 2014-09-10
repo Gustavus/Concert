@@ -105,6 +105,11 @@ class Config
   const SITE_NAV_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/site_nav.php';
 
   /**
+   * .htaccess file to copy to any new media directory
+   */
+  const MEDIA_DIR_HTACCESS_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/.htaccess';
+
+  /**
    * Private draft type identifier
    */
   const PRIVATE_DRAFT = 'private';

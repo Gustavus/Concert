@@ -8,7 +8,9 @@ namespace Gustavus\Concert;
 
 use Gustavus\Concert\Config,
   Gustavus\Revisions\API as RevisionsAPI,
-  Gustavus\Utility\PageUtil;
+  Gustavus\Utility\PageUtil,
+  Gustavus\Gatekeeper\Gatekeeper,
+  Gustavus\Doctrine\DBAL;
 
 /**
  * Class containing utility functions
@@ -16,9 +18,28 @@ use Gustavus\Concert\Config,
  * @package  Concert
  * @author  Billy Visto
  */
-
 class Utility
 {
+  /**
+   * Doctrine DBAL connection
+   *
+   * @var \Doctrine\DBAL\Connection
+   */
+  private static $dbal;
+
+  /**
+   * Gets the DBAL connection
+   *
+   * @return \Doctrine\DBAL\Connection
+   */
+  private static function getDBAL()
+  {
+    if (empty(self::$dbal)) {
+      self::$dbal = DBAL::getDBAL(Config::DB);
+    }
+    return self::$dbal;
+  }
+
   /**
    * Removes the doc root from the file path
    *
@@ -92,11 +113,14 @@ class Utility
   /**
    * Builds the upload location for the current user and page being edited
    *
+   * @param  boolean $fromRoot Whether we want the absolute path or not
+   * @param  boolean $forThumbs Whether we are getting the location of thumbnails or not.
    * @return string
    */
-  public static function getUploadLocation()
+  public static function getUploadLocation($fromRoot = false, $forThumbs = false)
   {
     $referer = PageUtil::getReferer();
+    var_dump($referer, $_POST, $_GET);
 
     $parts = parse_url($referer);
 
@@ -105,7 +129,35 @@ class Utility
     if (strpos($filePath, '.php') === false) {
       $filePath = str_replace('//', '/', $filePath . DIRECTORY_SEPARATOR . 'index.php');
     }
-    return ($fromRoot) ? self::addDocRootToPath($filePath): $filePath;
+
+    $siteBase = PermissionsManager::findParentSiteForFile($filePath);
+    if (empty($siteBase)) {
+      return null;
+    }
+
+    $mediaDir = $siteBase . '/files/';
+    if ($forThumbs) {
+      $fileDir = $mediaDir . 'thumbs/';
+    } else {
+      $fileDir = $mediaDir . 'media/';
+    }
+
+    $fileDirAbs = self::addDocRootToPath($fileDir);
+    if (!is_dir($fileDirAbs)) {
+      $fm = new FileManager(Gatekeeper::getUsername(), $fileDirAbs, null, self::getDBAL());
+      $fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '');
+      // give it a second to stage and publish the file.
+      // @todo is this the best way to do this? Do we always want one created? Or only when they try to use filemanager? Will it sit empty, or be used?
+      //
+      // We can create it before even adding the fileManager plugin from the Shared controller. We would still need something here as a fallback, though.
+      sleep(1);
+    }
+    if (!file_exists(self::addDocRootToPath($mediaDir) . '.htaccess')) {
+      $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($mediaDir) . '.htaccess', null, self::getDBAL());
+      $fm->stageFile(Config::PUBLISH_STAGE, file_get_contents(Config::MEDIA_DIR_HTACCESS_TEMPLATE));
+    }
+
+    return ($fromRoot) ? $fileDirAbs : $fileDir;
     // $dir = self::removeDocRootFromPath(self::FILE_MANAGER_LOCATION);
     // var_dump($dir);
     // $dirs = array_filter(explode('/', $dir));
@@ -118,15 +170,5 @@ class Utility
     // @todo make this dynamic per project
     $currentProjectUploadDir = '/concert/files';
     return $relativeToDocRoot . $currentProjectUploadDir;
-  }
-
-  /**
-   * Builds the upload location for the current user and page being edited
-   *
-   * @return string
-   */
-  public static function getUploadThumbLocation()
-  {
-    return '/cis/www/concert/thumbs/';
   }
 }
