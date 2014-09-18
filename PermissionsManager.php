@@ -320,6 +320,33 @@ class PermissionsManager
   }
 
   /**
+   * Checks to see if the specified user can upload files or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanUpload($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits uploading.
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonUploadingAccessLevels)) {
+      // nope. They cannot upload.
+      return false;
+    }
+    return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
+  }
+
+  /**
    * Checks to see if the specified user can manage revisions or not
    *
    * @param  string $username Username to check

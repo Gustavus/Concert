@@ -1055,6 +1055,82 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanUploadNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanUpload('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanUploadNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanUpload('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanUploadFalse()
+  {
+    $origNonUploadingAccessLevels = Config::$nonUploadingAccessLevels;
+    Config::$nonUploadingAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanUpload('bvisto', '/arst/protected/arst.php'));
+
+    Config::$nonUploadingAccessLevels = $origNonUploadingAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanUploadExcluded()
+  {
+    $origNonUploadingAccessLevels = Config::$nonUploadingAccessLevels;
+    Config::$nonUploadingAccessLevels = ['arst'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanUpload('bvisto', '/arst/private/arst.php'));
+
+    Config::$nonUploadingAccessLevels = $origNonUploadingAccessLevels;
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanUpload()
+  {
+    $origNonUploadingAccessLevels = Config::$nonUploadingAccessLevels;
+    Config::$nonUploadingAccessLevels = ['arst'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanUpload('bvisto', '/arst/protected/arst.php'));
+
+    Config::$nonUploadingAccessLevels = $origNonUploadingAccessLevels;
+    $this->destructDB();
+  }
+
+
+  /**
+   * @test
+   */
   public function userCanManageRevisionsNoSites()
   {
     $this->constructDB(['Sites', 'Permissions']);

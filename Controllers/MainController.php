@@ -48,12 +48,13 @@ class MainController extends SharedController
     if (isset($_SESSION['concertCMS']['siteAccessKeys'][$_GET['accessKey']])) {
       $siteBase = $_SESSION['concertCMS']['siteAccessKeys'][$_GET['accessKey']];
 
-      $siteBase = PermissionsManager::findParentSiteForFile(Utility::removeDocRootFromPath(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php')));
-      if (empty($siteBase)) {
+      $parentSiteBase = PermissionsManager::findParentSiteForFile(Utility::removeDocRootFromPath(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php')));
+      if (empty($parentSiteBase)) {
         return null;
       }
       // set our current parent's site base in the session
-      $_SESSION['concertCMS']['currentParentSiteBase'] = Utility::addDocRootToPath($siteBase);
+      $_SESSION['concertCMS']['currentParentSiteBase'] = Utility::addDocRootToPath($parentSiteBase);
+      $_SESSION['concertCMS']['userCanUploadToCurrentSite'] = PermissionsManager::userCanUpload($this->getLoggedInUsername(), $siteBase . DIRECTORY_SEPARATOR . 'index.php');
     } else {
       // no access key. We won't know what to do.
       return null;
