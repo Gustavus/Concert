@@ -55,7 +55,7 @@ class SharedControllerTestController extends SharedController
    */
   protected function redirect($path = '/', $statusCode = 303)
   {
-    $_POST = null;
+    $_POST = [];
     return ['redirect' => $path];
   }
 

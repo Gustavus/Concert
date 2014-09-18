@@ -72,7 +72,7 @@ class DraftControllerTestController extends DraftController
    */
   protected function redirect($path = '/', $statusCode = 303)
   {
-    $_POST = null;
+    $_POST = [];
     return ['redirect' => $path];
   }
 
@@ -84,7 +84,7 @@ class DraftControllerTestController extends DraftController
    */
   protected function redirectWithMessage($path = '/', $message = '', $statusCode = 303)
   {
-    $_POST = null;
+    $_POST = [];
     return ['redirect' => $path, 'message' => $message];
   }
 

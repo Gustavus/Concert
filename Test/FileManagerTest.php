@@ -1817,7 +1817,7 @@ echo $config["content"];';
 
     $stagedEntry = $this->fileManager->getStagedFileEntry();
 
-    $this->assertSame([['destFilepath' => self::$testFileDir . '/httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_HTTPD_DIRECTORY_STAGE]], $stagedEntry);
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_HTTPD_DIRECTORY_STAGE]], $stagedEntry);
 
     $this->fileManager->publishFile();
 
