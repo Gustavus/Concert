@@ -122,6 +122,22 @@ class SharedController extends ConcourseController
    */
   protected function insertEditingResources($filePath, $redirectPath = null, array $visibleButtons = null, array $additionalButtons = null)
   {
+    // set things up for fileManager
+    // set the language file to use since filemanager tries to use relative paths.
+    $_SESSION['RF']['language_file'] = Config::FILE_MANAGER_LOCATION . '/lang/en_EN.php';
+    $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
+
+    $siteBase      = PermissionsManager::findParentSiteForFile($filePathFromDocRoot);
+    if (!empty($siteBase)) {
+      $siteAccessKey = md5($siteBase);
+      if (!isset($_SESSION['concertCMS']['siteAccessKeys'][$siteAccessKey])) {
+        $_SESSION['concertCMS']['siteAccessKeys'][$siteAccessKey] = $siteBase;
+      }
+    } else {
+      $siteAccessKey = 'noKey';
+    }
+
+
     if (empty($redirectPath)) {
       $redirectPath = $filePath;
     }
@@ -142,9 +158,9 @@ class SharedController extends ConcourseController
       ],
     ];
 
-    $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
+    $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), $filePathFromDocRoot);
 
-    Filters::add('scripts', function($content) use ($filePath, $redirectPath, $resources, $allowCode) {
+    Filters::add('scripts', function($content) use ($filePathFromDocRoot, $redirectPath, $resources, $allowCode, $siteAccessKey) {
       if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
         $isAdmin = 'true';
       } else {
@@ -155,22 +171,25 @@ class SharedController extends ConcourseController
           '<script type="text/javascript">
             Modernizr.load({
               load: [
-                "%s"
+                "%1$s"
               ],
               complete: function() {
-                Gustavus.Concert.filePath = "%s";
-                Gustavus.Concert.redirectPath = "%s";
-                Gustavus.Concert.allowCode = %s;
-                Gustavus.Concert.isAdmin = %s;
+                Gustavus.Concert.filePath = "%2$s";
+                Gustavus.Concert.redirectPath = "%3$s";
+                Gustavus.Concert.allowCode = %4$s;
+                Gustavus.Concert.isAdmin = %5$s;
+                Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%6$s";
+                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%6$s/",
                 Gustavus.Concert.init();
               }
             });
           </script>',
           implode('","', $resources['js']),
-          Utility::removeDocRootFromPath($filePath),
+          $filePathFromDocRoot,
           $redirectPath,
           $allowCode ? 'true' : 'false',
-          $isAdmin
+          $isAdmin,
+          $siteAccessKey
       );
       return $content . $script;
     }, 11);
@@ -190,7 +209,7 @@ class SharedController extends ConcourseController
       self::markResourcesAdded([$cssResource], 'css');
     }
 
-    $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
+    $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), $filePathFromDocRoot);
 
     if ($visibleButtons === null) {
       $visibleButtons = Config::$defaultEditingButtons;

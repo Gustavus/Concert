@@ -98,7 +98,7 @@ class FileManager
   public function __construct($username, $filePath, $srcFilePath = null, $dbal = null)
   {
     $this->username    = $username;
-    $this->filePath    = $filePath;
+    $this->filePath    = str_replace('//', '/', $filePath);
     $this->srcFilePath = $srcFilePath;
     $this->dbal        = $dbal;
   }

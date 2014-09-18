@@ -86,4 +86,18 @@ return [
   'emailPendingDraftRejected' => [
     'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyPendingDraftOwnerOfRejection',
   ],
+  // FileManager requests
+  'fileManagerRequest' => [
+    'route' => '/filemanager/{request}',
+    'handler' => 'Gustavus\Concert\Controllers\MainController:handleFileManagerRequest',
+  ],
+  'fileManagerResources' => [
+    'route' => '/filemanager/{request=*}',
+    'handler' => 'Gustavus\Concert\Controllers\MainController:handleFileManagerRequest',
+  ],
+  // used for building urls
+  'fileManager' => [
+    'route' => '/filemanager/{request}',
+    'handler' => null,
+  ],
 ];

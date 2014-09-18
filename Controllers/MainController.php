@@ -31,6 +31,59 @@ use Gustavus\Concert\Config,
 class MainController extends SharedController
 {
   /**
+   * Handles file manager requests.
+   *   All of fileManager's php requests get routed through here so we can figure out what site they are editing based off of the access key used
+   *
+   * @param  array $params Array of parameters containing the requested file
+   * @return string
+   */
+  public function handleFileManagerRequest($params)
+  {
+    assert('isset($params[\'request\'], $_GET[\'accessKey\'])');
+
+    // we don't want warnings to get triggered since filemanager does a lot of crazy stuff. Mostly with wanting relative paths when we are actually using absolute paths
+    error_reporting(~E_WARNING);
+
+    PageUtil::startSessionIfNeeded();
+    if (isset($_SESSION['concertCMS']['siteAccessKeys'][$_GET['accessKey']])) {
+      $siteBase = $_SESSION['concertCMS']['siteAccessKeys'][$_GET['accessKey']];
+
+      $siteBase = PermissionsManager::findParentSiteForFile(Utility::removeDocRootFromPath(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php')));
+      if (empty($siteBase)) {
+        return null;
+      }
+      // set our current parent's site base in the session
+      $_SESSION['concertCMS']['currentParentSiteBase'] = Utility::addDocRootToPath($siteBase);
+    } else {
+      // no access key. We won't know what to do.
+      return null;
+    }
+
+    // now we need to fix things for filemanager
+    if ($this->getMethod() === 'POST' && strpos($params['request'], 'upload.php') !== false) {
+      if (isset($_POST['path'])) {
+        $_POST['path'] = Utility::addDocRootToPath($_POST['path']);
+      }
+
+      if (isset($_POST['path_thumb'])) {
+        $_POST['path_thumb'] = Utility::addDocRootToPath($_POST['path_thumb']);
+      }
+    }
+
+    if (strpos($params['request'], 'ajax_calls.php') !== false && isset($_GET['sub_action'], $_GET['file']) && $_GET['sub_action'] === 'preview') {
+      $_GET['file'] = Utility::addDocRootToPath($_GET['file']);
+    }
+
+    $file = (new File(Utility::addDocRootToPath($this->buildUrl('fileManager', ['request' => '']) . $params['request'])));
+    if (strpos($params['request'], '.php') !== false) {
+      $output = $file->loadAndEvaluate();
+      return str_replace(rtrim($_SERVER['DOCUMENT_ROOT'], '/'), '', $output);
+    } else {
+      return $file->serve();
+    }
+  }
+
+  /**
    * Handles editing a page
    *
    * @param  string $filePath Path to the file we are trying to edit
@@ -297,13 +350,13 @@ class MainController extends SharedController
       }
 
       if ($restoreAction === RevisionsAPI::UNDO_ACTION) {
-        $_POST = null;
+        $_POST = [];
 
         $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
         return $this->redirectWithMessage($url, Config::UNDO_RESTORE_MESSAGE);
 
       } else {
-        $_POST = null;
+        $_POST = [];
 
         $query['revisionsAction'] = 'thankYou';
         $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
