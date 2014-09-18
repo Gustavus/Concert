@@ -135,7 +135,11 @@ Gustavus.Concert = {
     toolbar: "insertfile undo redo | styleselect | bold italic | bullist numlist | link image responsivefilemanager | spellchecker",
 
     // media
-    image_advtab: true,
+    image_advtab: false,
+    image_class_list: [
+      {title: 'None', value: ''},
+      {title: 'Fancy', value: 'fancy'}
+    ],
     filemanager_title:"Responsive Filemanager" ,
     external_plugins: { "filemanager" : "/concert/filemanager/plugin.min.js"},
     //toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
@@ -190,7 +194,7 @@ Gustavus.Concert = {
       // })
 
     },
-    entities: '38,amp,34,quot,60,lt,62,gt',
+    //entities: '38,amp,34,quot,60,lt,62,gt',
     // valid_elements: '+a[!href|title|target],'+
     //   '-strong/b,'+
     //   '-em/i,'+
@@ -351,9 +355,13 @@ Gustavus.Concert = {
   /**
    * Sends a post request with the edited contents
    * @param {String} action Action we are saving for
+   * @param {Boolean} allowRedirects Whether or not to redirect on save
    * @return {undefined}
    */
-  saveEdits: function(action) {
+  saveEdits: function(action, allowRedirects) {
+    if (allowRedirects == undefined) {
+      allowRedirects = true;
+    }
     var edits = this.buildEditsObject();
     edits.concertAction = 'save';
     edits.saveAction = action;
@@ -368,18 +376,17 @@ Gustavus.Concert = {
       success: function(data) {
         if (data && data.error) {
           alert(data.reason);
-        } else {
+        } else if (allowRedirects) {
           if (data && data.redirectUrl) {
-            //window.location = data.redirectUrl;
+            window.location = data.redirectUrl;
           } else {
-            console.log('Saved. Redirecting to: ' + Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'}));
-            //window.location = Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
+            window.location = Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
           }
         }
       },
       error: function() {
         // @todo add a failed message
-        console.log('failed');
+        alert('Something unexpected happened. Please try again. If your problem persists, please email <a href="mailto:web@gustavus.edu">web@gustavus.edu</a> with details on what is going on.');
       }
     });
   },
@@ -499,7 +506,7 @@ $('#concertSavePrivateDraft').on('click', function(e) {
         modal: true,
         buttons: {
           'Save private draft': function() {
-            Gustavus.Concert.saveEdits('savePrivateDraft');
+            Gustavus.Concert.saveEdits('savePrivateDraft', false);
             $(this).dialog('close');
           },
           Cancel: function() {
@@ -508,7 +515,7 @@ $('#concertSavePrivateDraft').on('click', function(e) {
         }
       });
     } else {
-      Gustavus.Concert.saveEdits('savePrivateDraft');
+      Gustavus.Concert.saveEdits('savePrivateDraft', false);
     }
   })
 
@@ -520,7 +527,7 @@ $('#concertSavePrivateDraft').on('click', function(e) {
 
 $('#concertSavePublicDraft').on('click', function(e) {
   e.preventDefault();
-  Gustavus.Concert.saveEdits('savePublicDraft');
+  Gustavus.Concert.saveEdits('savePublicDraft', false);
 });
 
 $('#concertDiscardDraft').on('click', function(e) {
