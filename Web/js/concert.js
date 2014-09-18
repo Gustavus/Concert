@@ -136,7 +136,6 @@ Gustavus.Concert = {
 
     // media
     image_advtab: true,
-    external_filemanager_path: "/concert/filemanager/",
     filemanager_title:"Responsive Filemanager" ,
     external_plugins: { "filemanager" : "/concert/filemanager/plugin.min.js"},
     //toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
