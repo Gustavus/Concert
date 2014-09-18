@@ -1,0 +1,6 @@
+[submodule "ResponsiveFilemanager"]
+	path = ResponsiveFilemanager
+	url = https://github.com/trippo/ResponsiveFilemanager.git
+[submodule "Assets/ResponsiveFilemanager"]
+	path = Assets/ResponsiveFilemanager
+	url = https://github.com/trippo/ResponsiveFilemanager.git
