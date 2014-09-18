@@ -2615,4 +2615,29 @@ echo $config["content"];';
 
     $this->destructDB();
   }
+
+  /**
+   * @test
+   */
+  public function isNonEditableFileFalse()
+  {
+    file_put_contents(self::$testFileDir . 'arst.php', 'arst');
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'arst.php');
+
+    $this->assertFalse($this->fileManager->isNonEditableFile());
+  }
+
+  /**
+   * @test
+   */
+  public function isNonEditableFile()
+  {
+    file_put_contents(self::$testFileDir . 'arst.php', 'arst');
+    symlink(self::$testFileDir . 'arst.php', self::$testFileDir . 'arstLink.php');
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'arstLink.php');
+
+    $this->assertTrue($this->fileManager->isNonEditableFile());
+  }
 }

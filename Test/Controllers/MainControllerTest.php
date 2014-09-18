@@ -151,6 +151,30 @@ class MainControllerTest extends TestBase
   /**
    * @test
    */
+  public function editLink()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $filePath = self::$testFileDir . 'indexLink.php';
+    symlink($filePath, self::$testFileDir . 'indexLink.php');
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $this->assertFalse($this->controller->edit($filePath));
+
+    $this->assertContains(Config::SPECIAL_FILE_MESSAGE, $this->controller->getConcertMessage());
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function editNoLock()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
@@ -572,6 +596,28 @@ class MainControllerTest extends TestBase
     $this->setUpController();
 
     $this->assertSame(['redirect' => dirname($filePath)], $this->controller->deletePage($filePath));
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function deletePageLink()
+  {
+    file_put_contents(self::$testFileDir . 'index.php', 'arst');
+    $filePath = self::$testFileDir . 'indexLink.php';
+    symlink(self::$testFileDir . 'index.php', $filePath);
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+
+    $this->assertFalse($this->controller->deletePage($filePath));
+
+    $this->assertContains(Config::SPECIAL_FILE_MESSAGE, $this->controller->getConcertMessage());
 
     $this->unauthenticate();
     $this->destructDB();

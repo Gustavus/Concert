@@ -224,6 +224,11 @@ class Config
    */
   const NOT_ALLOWED_TO_VIEW_REVISIONS = 'Oops! It appears that you don\'t have access to view revisions for this page.';
 
+  /**
+   * Message to display for special files. (symlinks)
+   */
+  const SPECIAL_FILE_MESSAGE = 'This is a special file that cannot be edited in Concert. Please contact <a href="mailto:web@gustavus.edu">Web Services</a> to edit this file.';
+
   // Staged file stages
 
   /**

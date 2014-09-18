@@ -97,6 +97,11 @@ class MainController extends SharedController
       return false;
     }
 
+    if ($fm->isNonEditableFile()) {
+      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE);
+      return false;
+    }
+
     if (!$fm->acquireLock()) {
       $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
       return false;
@@ -218,6 +223,11 @@ class MainController extends SharedController
 
     if (!file_exists($filePath)) {
       return $this->redirect(dirname(Utility::removeDocRootFromPath($filePath)));
+    }
+
+    if ($fm->isNonEditableFile()) {
+      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE);
+      return false;
     }
 
     if (!PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {

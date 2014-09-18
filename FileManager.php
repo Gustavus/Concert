@@ -1437,6 +1437,11 @@ class FileManager
    */
   public function acquireLock($forDraft = false)
   {
+    if ($this->isNonEditableFile()) {
+      // file cannot be edited
+      return false;
+    }
+
     if (isset($this->lockAcquired)) {
       // we have already tried to acquire a lock
       if ($this->lockAcquired) {
@@ -1508,6 +1513,20 @@ class FileManager
       }
     }
 
+    return false;
+  }
+
+  /**
+   * Checks to see if this file could be edited if the user actually has permission
+   *   Non editable files include: Sym Links
+   *
+   * @return boolean
+   */
+  public function isNonEditableFile()
+  {
+    if (is_link($this->filePath)) {
+      return true;
+    }
     return false;
   }
 
