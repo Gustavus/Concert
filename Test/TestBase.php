@@ -101,7 +101,10 @@ class TestBase extends TestEM
     Config::$stagingDir       = self::$testFileDir . '/staging/';
     Config::$draftDir         = self::$testFileDir . '/drafts/';
     Config::$editableDraftDir = self::$testFileDir . '/editableDrafts/';
-    $this->set('PermissionsManager', 'dbal', DBAL::getDBAL('testDB', $this->getDBH()));
+
+    $dbal = DBAL::getDBAL('testDB', $this->getDBH());
+    $this->set('PermissionsManager', 'dbal', $dbal);
+    $this->set('Utility', 'dbal', $dbal);
     $this->setUpCaches();
     $this->origGet = $_GET;
     $this->mockMailer = new MockMailer();
