@@ -35,6 +35,7 @@ class Utility
   private static function getDBAL()
   {
     if (empty(self::$dbal)) {
+      var_dump('no dbal');
       self::$dbal = DBAL::getDBAL(Config::DB);
     }
     return self::$dbal;
@@ -113,67 +114,52 @@ class Utility
   /**
    * Builds the upload location for the current user and page being edited
    *
-   * @param  boolean $fromRoot Whether we want the absolute path or not
-   * @param  boolean $forThumbs Whether we are getting the location of thumbnails or not.
-   * @return string
+   * @return string|null null if an uploadLocation couldn't be created
    */
-  public static function getUploadLocation($fromRoot = false, $forThumbs = false)
+  public static function getUploadLocation()
   {
-    $referer = PageUtil::getReferer();
-
-    $fileManagerLocation = '/cis/lib/Gustavus/Concert/Assets/ResponsiveFilemanager/filemanager/';
-    $explodedLocation = explode('/', $fileManagerLocation);
-
-    $relPathFromFileManagerToCis = '../..';
-    var_dump($referer, $_POST, $_GET);
-
-    $parts = parse_url($referer);
-
-    // $parts['path'] will have a leading slash. We want to remove the trailing slash from the doc root
-    $filePath = $parts['path'];
-    if (strpos($filePath, '.php') === false) {
-      $filePath = str_replace('//', '/', $filePath . DIRECTORY_SEPARATOR . 'index.php');
-    }
-
-    $siteBase = PermissionsManager::findParentSiteForFile($filePath);
-    if (empty($siteBase)) {
+    if (isset($_SESSION['concertCMS']['currentParentSiteBase'])) {
+      $uploadLocation = str_replace('//', '/', $_SESSION['concertCMS']['currentParentSiteBase'] . '/files/');
+      self::ensureUploadDirectoriesExist($uploadLocation);
+      return $uploadLocation;
+    } else {
       return null;
     }
+  }
 
-    $mediaDir = $siteBase . '/files/';
-    if ($forThumbs) {
-      $fileDir = $mediaDir . 'thumbs/';
-    } else {
-      $fileDir = $mediaDir . 'media/';
+  /**
+   * Ensures that our upload directories exist.
+   *
+   * @param  string $uploadLocation Absolute path to the upload location
+   * @return void
+   */
+  private static function ensureUploadDirectoriesExist($uploadLocation)
+  {
+    $staged = false;
+    foreach (['thumbs/', 'media/'] as $folder) {
+      if (!is_dir($uploadLocation . $folder)) {
+        $fm = new FileManager(Gatekeeper::getUsername(), $uploadLocation . $folder, null, self::getDBAL());
+        if ($fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '')) {
+          $staged = true;
+        }
+      }
     }
 
-    $fileDirAbs = self::addDocRootToPath($fileDir);
-    if (!is_dir($fileDirAbs)) {
-      $fm = new FileManager(Gatekeeper::getUsername(), $fileDirAbs, null, self::getDBAL());
-      $fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '');
-      // give it a second to stage and publish the file.
+    if (!file_exists($uploadLocation . '.htaccess')) {
+      $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($uploadLocation) . '.htaccess', null, self::getDBAL());
+      if ($fm->stageFile(Config::PUBLISH_STAGE, file_get_contents(Config::MEDIA_DIR_HTACCESS_TEMPLATE))) {
+        $staged = true;
+      }
+    }
+
+    if ($staged && PHP_SAPI !== 'cli') {
+
       // @todo is this the best way to do this? Do we always want one created? Or only when they try to use filemanager? Will it sit empty, or be used?
       //
       // We can create it before even adding the fileManager plugin from the Shared controller. We would still need something here as a fallback, though.
+
+      // we staged something. give it a second to publish the file.
       sleep(1);
     }
-    if (!file_exists(self::addDocRootToPath($mediaDir) . '.htaccess')) {
-      $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($mediaDir) . '.htaccess', null, self::getDBAL());
-      $fm->stageFile(Config::PUBLISH_STAGE, file_get_contents(Config::MEDIA_DIR_HTACCESS_TEMPLATE));
-    }
-
-    return ($fromRoot) ? $fileDirAbs : $relPathFromFileManagerToCis . $fileDir;
-    // $dir = self::removeDocRootFromPath(self::FILE_MANAGER_LOCATION);
-    // var_dump($dir);
-    // $dirs = array_filter(explode('/', $dir));
-    // // relative path from filemanager to doc root
-    // $relativeToDocRoot = str_repeat('../', count($dirs));
-
-    // var_dump($_SERVER);
-
-
-    // @todo make this dynamic per project
-    $currentProjectUploadDir = '/concert/files';
-    return $relativeToDocRoot . $currentProjectUploadDir;
   }
 }

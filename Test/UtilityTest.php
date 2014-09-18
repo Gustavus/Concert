@@ -21,6 +21,13 @@ use Gustavus\Concert\Utility,
 class UtilityTest extends TestBase
 {
   /**
+   * Token for overrides
+   *
+   * @var array
+   */
+  private static $overrideToken;
+
+  /**
    * Sets up environment for every test
    *
    * @return void
@@ -38,6 +45,34 @@ class UtilityTest extends TestBase
   public function tearDown()
   {
     parent::tearDown();
+  }
+
+  /**
+   * Sets up environment for every test class
+   *
+   * @return void
+   */
+  public static function setUpBeforeClass()
+  {
+    self::$overrideToken = [];
+    self::$overrideToken['addDocRootToPath'] = $token = override_method('\Gustavus\Concert\Utility', 'addDocRootToPath', function($filePath) use (&$token) {
+          if (strpos($filePath, '/cis/lib/') === 0) {
+            return $filePath;
+          }
+          return call_overridden_func($token, null, $filePath);
+        }
+    );
+    parent::setUpBeforeClass();
+  }
+
+  /**
+   * Tears down the environment after each test class is done with tests
+   * @return void
+   */
+  public static function tearDownAfterClass()
+  {
+    self::$overrideToken = [];
+    parent::tearDownAfterClass();
   }
 
   /**
@@ -112,5 +147,64 @@ class UtilityTest extends TestBase
     $dbal = DBAL::getDBAL('testDB', $this->getDBH());
     $api = Utility::getRevisionsAPI('/cis/www/billy/concert/index.php', $dbal);
     $this->assertInstanceOf('\Gustavus\Revisions\API', $api);
+  }
+
+  /**
+   * @test
+   */
+  public function getUploadLocationNull()
+  {
+    $this->assertNull(Utility::getUploadLocation());
+  }
+
+  /**
+   * @test
+   */
+  public function getUploadLocation()
+  {
+    $this->buildDB();
+    $baseSite = self::$testFileDir . 'billy/';
+    $_SESSION['concertCMS']['currentParentSiteBase'] = $baseSite;
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', $baseSite, 'admin']);
+    $this->authenticate('bvisto');
+
+    $this->assertSame($baseSite . 'files/', Utility::getUploadLocation());
+
+    // make sure media directory was created
+    $this->buildFileManager('bvisto', $baseSite . 'files/media/');
+    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
+
+    $expected = [[
+      'destFilepath' => $baseSite . 'files/media/',
+      'username'     => 'bvisto',
+      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+    ]];
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+
+    // now for thumbs dir
+    $this->buildFileManager('bvisto', $baseSite . 'files/thumbs/');
+    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
+
+    $expected = [[
+      'destFilepath' => $baseSite . 'files/thumbs/',
+      'username'     => 'bvisto',
+      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+    ]];
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+
+    // now make sure .htaccess file was inserted
+    $this->buildFileManager('bvisto', $baseSite . 'files/.htaccess');
+    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
+
+    $expected = [[
+      'destFilepath' => $baseSite . 'files/.htaccess',
+      'username'     => 'bvisto',
+      'action'       => Config::PUBLISH_STAGE,
+    ]];
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+
+    $this->unauthenticate();
+    $this->destructDB();
   }
 }
