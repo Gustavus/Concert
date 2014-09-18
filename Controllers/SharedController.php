@@ -25,8 +25,6 @@ use Gustavus\Concourse\Controller as ConcourseController,
  * @package Concert
  * @subpackage Controllers
  * @author  Billy Visto
- *
- * @todo  write tests
  */
 class SharedController extends ConcourseController
 {
@@ -519,7 +517,7 @@ class SharedController extends ConcourseController
    */
   protected static function userIsDoneEditing()
   {
-    return (isset($_GET['concert']) && $_GET['concert'] === 'stopEditing');
+    return (isset($_GET['concert']) && ($_GET['concert'] === 'stopEditing' || $_GET['concert'] === 'stopEditingSiteNav'));
   }
 
   /**
@@ -611,7 +609,7 @@ class SharedController extends ConcourseController
     if (isset($_POST['filePath']) && (strpos($_POST['filePath'], 'site_nav.php') !== false || strpos($_POST['filePath'], 'concertAction=siteNav') !== false)) {
       return true;
     }
-    return ((isset($_GET['concert']) && $_GET['concert'] === 'siteNav') || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav'));
+    return ((isset($_GET['concert']) && ($_GET['concert'] === 'siteNav' || $_GET['concert'] === 'stopEditingSiteNav')) || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav'));
   }
 
   /**

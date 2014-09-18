@@ -25,8 +25,6 @@ use Gustavus\Concert\Config,
  * @package Concert
  * @subpackage Controller
  * @author  Billy Visto
- *
- * @todo  write tests
  */
 class MainController extends SharedController
 {
@@ -242,7 +240,6 @@ class MainController extends SharedController
       if ($_POST['deleteAction'] === 'confirmDelete' && urldecode($_POST['filePath']) === $filePath && $fm->stageForDeletion()) {
         if (isset($_GET['barebones'])) {
           $url = (new String(Utility::removeDocRootFromPath(dirname($filePath))))->getValue();
-          // @todo what should we do here? Return something that tells our javascript to set a timeout and then redirect to the parent site
           return ['action' => 'return', 'value' => json_encode(['redirectUrl' => $url])];
         } else {
           return PageUtil::renderPageNotFound(true);

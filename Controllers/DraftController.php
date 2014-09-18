@@ -24,8 +24,6 @@ use Gustavus\Concert\Config,
  * @package Concert
  * @subpackage Controller
  * @author  Billy Visto
- *
- * @todo  write tests
  */
 class DraftController extends SharedController
 {

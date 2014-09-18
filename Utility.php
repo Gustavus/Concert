@@ -153,11 +153,6 @@ class Utility
     }
 
     if ($staged && PHP_SAPI !== 'cli') {
-
-      // @todo is this the best way to do this? Do we always want one created? Or only when they try to use filemanager? Will it sit empty, or be used?
-      //
-      // We can create it before even adding the fileManager plugin from the Shared controller. We would still need something here as a fallback, though.
-
       // we staged something. give it a second to publish the file.
       sleep(1);
     }

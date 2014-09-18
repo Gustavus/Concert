@@ -415,9 +415,10 @@ class MenuController extends SharedController
 
     if (self::isSiteNavRequest() && (self::userIsEditing() || self::userIsCreatingSiteNav())) {
       $query = $this->queryParams;
-      // @todo with concertAction being siteNav, this will keep giving us site nav options. What to do since adding edit buttons doesn't do anything if it is a site-nav request
-      $query['concertAction'] = 'siteNav';
-      $query['concert']       = 'stopEditing';
+      $query['concert']       = 'stopEditingSiteNav';
+      if (isset($query['concertAction']) && $query['concertAction'] === 'siteNav') {
+        unset($query['concertAction']);
+      }
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
         'text'     => 'Stop editing local navigation',
@@ -592,8 +593,7 @@ class MenuController extends SharedController
           $files[] = $file;
         }
       }
-      // @todo do we need this? scandir sorts them by default
-      //natcasesort($files);
+
       // The 2 accounts for . and ..
       if (count($files) > 2) {
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
@@ -642,7 +642,6 @@ class MenuController extends SharedController
    */
   public function renderNewPageForm($params = null)
   {
-    // @todo should we abstract this out?
     if (!empty($params) && isset($params['fileTree']) && ($params['fileTree'] === 'toFile' || $params['fileTree'] === 'fromFile')) {
       return $this->renderFileTree($params['fileTree'] === 'fromFile');
     }
@@ -653,14 +652,6 @@ class MenuController extends SharedController
       $this->analyzeReferer(false);
     }
 
-    // $fm = new FileManager($this->getLoggedInUsername(), $this->filePath, null, $this->getDB());
-
-    // if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($this->filePath))) {
-    //   $this->addSessionMessage('Oops! It appears that you don\'t have access to create this page.');
-    //   return false;
-    // }
-    //@todo remove this
-    //$this->filePath = '/cis/www/billy/concert/arst.php';
     $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($this->filePath));
     if (empty($siteBase)) {
       // user doesn't have access to this site.

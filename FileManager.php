@@ -939,11 +939,6 @@ class FileManager
       return false;
     }
 
-    // now to delete the file
-    // if (is_dir($file)) {
-    //   // @todo can we delete directories
-    // }
-
     $this->saveInitialRevisionIfNeeded();
     if ($this->removeFile()) {
       $this->saveRevision(self::buildRevisionMessage($result['action']));
@@ -1482,7 +1477,6 @@ class FileManager
       } else {
         $this->lockAcquired = false;
         return $this->lockAcquired;
-        //return Config::LOCK_DURATION - $minutes; @todo Do something with the time remaining?
       }
     } else {
       // make a lock

@@ -19,8 +19,6 @@ use Gustavus\Concert\Config,
  * @package Concert
  * @subpackage Controller
  * @author  Billy Visto
- *
- * @todo  write tests
  */
 class EmailController extends SharedController
 {
@@ -155,7 +153,6 @@ class EmailController extends SharedController
     }
 
     if (count($publisherNames) > 1) {
-      // @todo make this add the publishers and alert them that others also received this. If 1 publisher, we still need to add them to bcc
       $othersNotifiedMessage = sprintf("\n\r%s have also been notified.", (new Set($publisherNames))->toSentence()->getValue());
     } else {
       $othersNotifiedMessage = '';
