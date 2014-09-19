@@ -698,6 +698,10 @@ class SharedController extends ConcourseController
    */
   protected function userIsEditingPublicDraft($requestURI)
   {
+    if (isset($_POST['concertAction'], $_POST['saveAction']) && $_POST['concertAction'] === 'save' && $_POST['saveAction'] === 'savePublicDraft') {
+      // user is trying to save a public draft.
+      return true;
+    }
     if (strpos($requestURI, '?') !== false) {
       // we need to break the requestURI up
       $parts = parse_url($requestURI);
