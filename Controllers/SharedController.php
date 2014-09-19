@@ -125,7 +125,7 @@ class SharedController extends ConcourseController
     $_SESSION['RF']['language_file'] = Config::FILE_MANAGER_LOCATION . '/lang/en_EN.php';
     $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
 
-    $siteBase      = PermissionsManager::findParentSiteForFile($filePathFromDocRoot);
+    $siteBase      = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), $filePathFromDocRoot);
     if (!empty($siteBase)) {
       $siteAccessKey = md5($siteBase);
       if (!isset($_SESSION['concertCMS']['siteAccessKeys'][$siteAccessKey])) {
