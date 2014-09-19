@@ -242,7 +242,9 @@ function executeSomeContent()
 
 ob_start();
 ?>
+
 <p>This is some html content</p>
+
 <?php
 
 $config["content"] .= ob_get_contents();
@@ -281,7 +283,9 @@ echo $config["content"];'
       ],
       'content' => [
         1 => '
+
 <p>This is some html content</p>
+
 '
       ],
     ];

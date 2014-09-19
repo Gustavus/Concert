@@ -38,6 +38,7 @@ class FileConfiguration
 
   /**
    * Object constructor
+   *
    * @param array $fileConfigurationArray fileConfigurationArray to build off of
    */
   public function __construct($fileConfigurationArray)
@@ -97,19 +98,29 @@ class FileConfiguration
       // increment here so we don't have to do any extra math when we check to see if we are the last part below.
       ++$i;
       if ($configurationPart->getContentType() === Config::PHP_CONTENT_TYPE) {
-
+        if ($i === 1) {
+          $newLine = '';
+        } else {
+          $newLine = "\n";
+        }
         if ($i === $partsCount) {
           // last piece and we are php. Don't add the php closing tag.
-          $template = '<?php%s';
+          $template = '%s<?php%s';
         } else {
-          $template = '<?php%s?>';
+          $template = "%s<?php%s?>\n";
         }
-        $file .= sprintf($template, $configurationPart->getContent($wrapEditableContent));
+        $file .= sprintf($template, $newLine, $configurationPart->getContent($wrapEditableContent));
 
       } else {
-        $file .= $configurationPart->getContent($wrapEditableContent);
+        $file .= sprintf('%s%s%s',
+            ($i === 1 ? '' : "\n"),
+            $configurationPart->getContent($wrapEditableContent),
+            ($i === $partsCount ? '' : "\n")
+        );
       }
     }
+    // make sure we don't have more than 3 line breaks. This will avoid growing whitespace after every edit depending on the edits. (Non edited content will maintain it's whitespace, whereas edited content will not)
+    $file = preg_replace('`\v{3,}`', "\n\n", $file);
     return $file;
   }
 

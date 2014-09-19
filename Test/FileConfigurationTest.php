@@ -140,7 +140,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
+?>
+
+<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+
+<?php
 
 $config["content"] .= ob_get_contents();
 
@@ -195,8 +199,8 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->assertNotNull($editedPart);
     // 2 shouldn't exist
     $this->assertNull($configuration->getEditedFileConfigurationPart('2'));
-    $this->assertSame("\n<p>This is some html content</p>\n", $editedPart->getValueBeforeEdit());
-    $this->assertNotSame("\n<p>This is some html content</p>\n", $editedPart->getContent());
+    $this->assertSame("\n\n<p>This is some html content</p>\n\n", $editedPart->getValueBeforeEdit());
+    $this->assertNotSame("\n\n<p>This is some html content</p>\n\n", $editedPart->getContent());
   }
 
   /**

@@ -198,7 +198,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
+?>
+
+<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+
+<?php
 
 $config["content"] .= ob_get_contents();
 
@@ -240,7 +244,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
+?>
+
+<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+
+<?php
 
 $config["content"] .= ob_get_contents();
 
@@ -291,7 +299,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some edited html content</p></div>%s<?php
+?>
+
+<div class="editable" data-index="1"><p>This is some edited html content</p></div>%s
+
+<?php
 
 $config["content"] .= ob_get_contents();
 
@@ -357,7 +369,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><div class="editable" data-index="1"><p>This is some html content</p></div>%s<?php
+?>
+
+<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+
+<?php
 
 $config["content"] .= ob_get_contents();
 
@@ -888,8 +904,8 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->assertTrue($this->fileManager->editFile($edits));
     $editedPart = $this->fileManager->getFileConfiguration()->getEditedFileConfigurationPart('1');
     $this->assertNotNull($editedPart);
-    $this->assertSame("\n<p>This is some html content</p>\n", $editedPart->getValueBeforeEdit());
-    $this->assertNotSame("\n<p>This is some html content</p>\n", $editedPart->getContent());
+    $this->assertSame("\n\n<p>This is some html content</p>\n\n", $editedPart->getValueBeforeEdit());
+    $this->assertNotSame("\n\n<p>This is some html content</p>\n\n", $editedPart->getContent());
     $this->destructDB();
   }
 
@@ -962,7 +978,11 @@ function executeSomeContent()
 }
 
 ob_start();
-?><p>This is some html content</p><?php
+?>
+
+<p>This is some html content</p>
+
+<?php
 
 $config["content"] .= ob_get_contents();
 
@@ -993,7 +1013,13 @@ echo $config["content"];';
     $nonEditableContent = $this->fileManager->removeEditablePieces($fileContents);
     $this->assertNotContains($this->wrappedEditableIdentifier, $nonEditableContent);
 
-    $expectedFile = '<p>This is some html content</p><?php=$test;?>more html<?php //arst';
+    $expectedFile = '<p>This is some html content</p>
+
+<?php=$test;?>
+
+more html
+
+<?php //arst';
 
     $this->assertSame($expectedFile, $nonEditableContent);
 
@@ -1624,7 +1650,9 @@ function executeSomeContent()
 
 ob_start();
 ?>
+
 <p>This is some html content</p>
+
 <?php
 
 $config["content"] .= ob_get_contents();
@@ -1718,7 +1746,9 @@ function executeSomeContent()
 
 ob_start();
 ?>
+
 <p>This is some html content</p>
+
 <?php
 
 $config["content"] .= ob_get_contents();
@@ -1778,7 +1808,9 @@ function executeSomeContent()
 
 ob_start();
 ?>
+
 <p>This is some html content</p>
+
 <?php
 
 $config["content"] .= ob_get_contents();
