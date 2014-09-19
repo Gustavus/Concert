@@ -500,7 +500,7 @@ class MainController extends SharedController
           $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
           if ($fm->userHasLock()) {
             // user has a lock for this page.
-            $this->addConcertMessage('It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?', false);
+            $this->addConcertMessage(Config::CONTINUE_EDITING_MESSAGE, false);
           }
         }
       }
