@@ -30,6 +30,11 @@ class Config
   const OTHER_CONTENT_TYPE = 'content';
 
   /**
+   * Flag to specify javascript content types
+   */
+  const SCRIPT_CONTENT_TYPE = 'scriptcontent';
+
+  /**
    * routing file's location
    */
   const ROUTING_LOCATION = '/cis/lib/Gustavus/Concert/routing.php';
@@ -283,6 +288,10 @@ class Config
   /**
    * This person can publish pending drafts for this site.
    */
+  const SITE_EDITOR_ACCESS_LEVEL  = 'editor';
+  /**
+   * This person can publish pending drafts for this site.
+   */
   const SITE_PUBLISHER_ACCESS_LEVEL  = 'publisher';
   /**
    * Access level that can only save drafts (non publishing)
@@ -396,7 +405,7 @@ class Config
   ];
 
   /**
-   * AccessLevels that can publish drafts for other people
+   * AccessLevels that can manage revisions
    *
    * @var array
    */
@@ -448,6 +457,17 @@ class Config
    * @var array
    */
   public static $contentTypes = [
+    self::PHP_CONTENT_TYPE,
+    self::OTHER_CONTENT_TYPE,
+    self::SCRIPT_CONTENT_TYPE,
+  ];
+
+  /**
+   * Supported content types
+   *
+   * @var array
+   */
+  public static $editableContentTypes = [
     self::PHP_CONTENT_TYPE,
     self::OTHER_CONTENT_TYPE,
   ];
