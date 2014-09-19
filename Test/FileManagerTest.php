@@ -144,6 +144,18 @@ class FileManagerTest extends TestBase
   /**
    * @test
    */
+  public function buildFileConfigurationArrayWithScripts()
+  {
+    file_put_contents(self::$testFileDir . 'index6.php', self::$indexSixContents);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index6.php');
+
+    $this->assertSame(self::$indexSixConfigArray, $this->fileManager->buildFileConfigurationArray());
+  }
+
+  /**
+   * @test
+   */
   public function buildAndGetFileConfiguration()
   {
     file_put_contents(self::$testFileDir . 'index5.php', self::$indexThreeContents);

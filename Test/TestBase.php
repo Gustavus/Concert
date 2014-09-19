@@ -281,6 +281,7 @@ $config["content"] .= ob_get_contents();
 
 echo $config["content"];'
       ],
+      'scriptcontent' => [],
       'content' => [
         1 => '
 
@@ -312,6 +313,7 @@ $config["content"] .= ob_get_contents();
 
 echo $config["content"];'
       ],
+      'scriptcontent' => [],
       'content' => [],
     ];
 
@@ -330,6 +332,7 @@ this does not contain any php';
    */
   protected static $indexThreeConfigArray = [
       'phpcontent' => [],
+      'scriptcontent' => [],
       'content' => [
         0 => '
 <p>This is some html content</p>
@@ -355,6 +358,7 @@ this does not contain any php'
       'phpcontent' => [
         1 => '$test;',
       ],
+      'scriptcontent' => [],
       'content' => [
         0 => '
 <p>This is some html content</p>
@@ -382,9 +386,10 @@ more html
    */
   protected static $indexFiveConfigArray = [
       'phpcontent' => [
-        1 => '$test;',
+        1 => '=$test;',
         3 => '//arst',
       ],
+      'scriptcontent' => [],
       'content' => [
         0 => '
 <p>This is some html content</p>
@@ -393,6 +398,51 @@ more html
         2 => '
 more html
 '
+      ],
+    ];
+
+  /**
+   * File 6 contents to test (Contains javascript)
+   * @var string
+   */
+  protected static $indexSixContents = '
+<p>This is some html content</p>
+
+<?=$test;?>
+
+more html
+<script type="text/javascript">javascript</script>
+arst
+<script>more scripts</script>
+<?php //arst';
+
+  /**
+   * File 6 configuration array
+   * @var array
+   */
+  protected static $indexSixConfigArray = [
+      'phpcontent' => [
+        1 => '=$test;',
+        7 => ' //arst',
+      ],
+      'scriptcontent' => [
+        3 => '<script type="text/javascript">javascript</script>',
+        5 => '<script>more scripts</script>',
+      ],
+      'content' => [
+        0 => '
+<p>This is some html content</p>
+
+',
+        2 => '
+
+more html
+',
+        4 => '
+arst
+',
+        6 => '
+',
       ],
     ];
 

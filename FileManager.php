@@ -156,31 +156,47 @@ class FileManager
 
       # capture everything until the end of the file or a closing php tag
       (?P<phpcontent>.+?
-        (?=(?:\?\>|(?:\?\>)?[\h\v]*?\z))
+        (?=(?:\?>|(?:\?>)?[\h\v]*?\z))
       )
     )';
 
-    // finds any content outside php tags and sets it to be named "content".
-    $contentPiece = '(?:
-      # look for newlines and not an opening php tag
-      (?:\?\>|(?:\A(?!\<\?)))
+    // finds any content between script tags
+    $scriptPiece = '(?:
+      # capture everything between script tags including the tags themselves
+      (?P<scriptcontent>(?=<script(?:[^>]+)?>).+?)
+      (?=</script>)
+    )';
 
-      # capture until we see the end of the file or an opening php tag
-      (?P<content>.+?)(?=<\?(?:php)?|[\h*|\v*]*?\z)
+    // finds any content outside php and script tags and sets it to be named "content".
+    $contentPiece = '(?:
+      # look for newlines and not an opening php or script tag
+      (?:\?\>|</script>|(?:\A(?!(?:<\?|<script(?:[^>]+)?>))))
+
+      # capture until we see the end of the file, an opening php tag, or an opening script tag
+      (?P<content>.+?)(?=<\?(?:php)?|<script(?:[^>]+)?>|[\h*|\v*]*?\z)
     )';
 
     // throw the two pieces together into one regex with s for PCRE_DOTALL and m for PCRE_MULTILINE
-    $regex = sprintf('`%s|%s`smx', $phpPiece, $contentPiece);
+    $regex = sprintf('`%s|%s|%s`smx', $phpPiece, $scriptPiece, $contentPiece);
 
     preg_match_all($regex, $contents, $matches);
 
     // $matches has a lot of extra information that we don't need, so lets get rid of it.
     $result = [];
     if (isset($matches['phpcontent'])) {
-      $result['phpcontent'] = array_filter($matches['phpcontent']);
+      $result[Config::PHP_CONTENT_TYPE] = array_filter($matches['phpcontent']);
+    }
+    if (isset($matches['scriptcontent'])) {
+      $result[Config::SCRIPT_CONTENT_TYPE] = array_filter($matches['scriptcontent']);
+      foreach ($result[Config::SCRIPT_CONTENT_TYPE] as &$scriptContent) {
+        // script closing tags don't get included in our capture
+        if (!empty($scriptContent) && strpos($scriptContent, '<script') !== false) {
+          $scriptContent .= '</script>';
+        }
+      }
     }
     if (isset($matches['content'])) {
-      $result['content'] = array_filter($matches['content']);
+      $result[Config::OTHER_CONTENT_TYPE] = array_filter($matches['content']);
     }
 
     return $result;

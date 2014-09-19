@@ -123,7 +123,7 @@ class FileConfigurationPart
   public function getContent($wrapEditableContent = false)
   {
     if ($this->isPHPContent()) {
-      if (Config::ALLOW_PHP_EDITS && ($wrapEditableContent || $this->edited)) {
+      if (Config::ALLOW_PHP_EDITS && in_array($this->getContentType(), Config::$editableContentTypes) && ($wrapEditableContent || $this->edited)) {
         $prettyPrinter = new GustavusPrettyPrinter;
         $this->buildEditablePHPNodes($wrapEditableContent);
         return str_replace('    ', '  ', $prettyPrinter->prettyPrint($this->phpNodes));
@@ -132,7 +132,7 @@ class FileConfigurationPart
     }
 
     // not php if we are here.
-    if ($wrapEditableContent) {
+    if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
       return $this->wrapEditableContent($this->content);
     }
     return $this->content;
@@ -270,7 +270,7 @@ class FileConfigurationPart
    */
   public function editValue($index, $newContent)
   {
-    if (!$this->isPHPContent()) {
+    if (!$this->isPHPContent() && in_array($this->getContentType(), Config::$editableContentTypes)) {
       // save our original value before editing
       $this->valuesBeforeEdit = $this->content;
       // non php content is editable
@@ -279,7 +279,7 @@ class FileConfigurationPart
       return true;
     }
 
-    if (!Config::ALLOW_PHP_EDITS) {
+    if (!Config::ALLOW_PHP_EDITS || !in_array($this->getContentType(), Config::$editableContentTypes)) {
       return false;
     }
 
