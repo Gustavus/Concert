@@ -858,7 +858,6 @@ class FileManager
 
     // make sure the destination directory exists in case someone is adding a directory
     $this->ensureDirectoryExists(dirname($destination), $owner, $group);
-    // @todo what to do if the destination is a symlink?
 
     $this->saveInitialRevisionIfNeeded();
     if (rename($srcFilePath, $destination)) {
