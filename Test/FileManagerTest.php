@@ -59,6 +59,34 @@ class FileManagerTest extends TestBase
   }
 
   /**
+   * Checks to see if drafts are the same or not
+   *   Makes sure the date isn't empty, but doesn't check to make sure it is the correct date because that isn't that easy to do testing
+   *
+   * @param  array $expected Expected drafts. (Without dates)
+   * @param  array $actual   Actual drafts.
+   * @return void
+   */
+  private function assertDraftsAreSame($expected, $actual)
+  {
+    if (isset($actual[0]) && is_array($actual[0])) {
+      foreach ($actual as &$draft) {
+        if (isset($draft['date'])) {
+          $this->assertNotEmpty($draft['date']);
+          unset($draft['date']);
+        }
+      }
+    } else {
+      if (isset($actual['date'])) {
+        $this->assertNotEmpty($actual['date']);
+        unset($actual['date']);
+      }
+    }
+
+    // now we don't have any dates we need to worry about. Now make sure they are the same.
+    $this->assertSame($expected, $actual);
+  }
+
+  /**
    * @test
    */
   public function buildAndGetFileConfigurationArray()
@@ -433,11 +461,11 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
       ],
     ];
 
-    $this->assertSame($expected, $this->fileManager->getDrafts());
+    $this->assertDraftsAreSame($expected, $this->fileManager->getDrafts());
 
     $expected[0]['type'] = Config::PUBLIC_DRAFT;
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
-    $this->assertSame($expected, $this->fileManager->getDrafts());
+    $this->assertDraftsAreSame($expected, $this->fileManager->getDrafts());
     $this->destructDB();
   }
 
@@ -786,7 +814,7 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
       'additionalUsers' => null,
     ]];
 
-    $this->assertSame($expected, $result);
+    $this->assertDraftsAreSame($expected, $result);
     $this->destructDB();
   }
 
@@ -851,7 +879,7 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
       'additionalUsers' => null,
     ]];
 
-    $this->assertSame($expected, $result);
+    $this->assertDraftsAreSame($expected, $result);
     $this->destructDB();
   }
 

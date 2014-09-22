@@ -495,6 +495,7 @@ class FileManager
       ->addSelect('type')
       ->addSelect('username')
       ->addSelect('additionalUsers')
+      ->addSelect('date')
       ->from('drafts', 'd')
       ->where('draftName = ?')
       ->orderBy('date', 'DESC');
@@ -538,6 +539,7 @@ class FileManager
       ->addSelect('type')
       ->addSelect('username')
       ->addSelect('additionalUsers')
+      ->addSelect('date')
       ->from('drafts', 'd')
       ->where('draftFilename = :draftFilename');
 
@@ -567,6 +569,7 @@ class FileManager
       ->addSelect('type')
       ->addSelect('username')
       ->addSelect('additionalUsers')
+      ->addSelect('date')
       ->from('drafts', 'd')
       ->where('draftFilename = :draftFilename');
 
