@@ -164,7 +164,7 @@ Gustavus.Concert = {
       });
       editor.on('blur', function(e) {
         // clean up content
-        editor.setContent(Gustavus.Concert.mceCleanup(editor.getContent()), {format: 'raw'});
+        editor.setContent(Gustavus.Concert.convertImageURLsToGIMLI(editor.getContent()), {format: 'raw'});
         //console.log(editor.getContent());
         if (editableIsVisibleOnFocus === true) {
           $(editor.bodyElement).addClass('show');
@@ -330,13 +330,76 @@ Gustavus.Concert = {
   },
 
   /**
-   * Cleanup function for tinyMCE to strip empty paragraphs
-   * @param  {String} content Content to clean up
-   * @return {String} Cleaned content
+   * Checks to see if the specified host is a Gustavus host or not
+   * @param  {String}  host Host to check
+   * @return {Boolean}
    */
-  mceCleanup: function(content) {
-    var cleaned = content.replace(/<p>(?:[\s]|&nbsp;|<br[^>]*>)*<\/p>/g, '<br/>');
-    return cleaned;
+  isGustavusHost: function(host) {
+    if (host.indexOf('gac.edu') !== -1) {
+      return true;
+    } else if (host.indexOf('gustavus.edu') !== -1) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  /**
+   * Function for tinyMCE to convert image urls into GIMLI urls
+   * @param  {String} content Content to convert URLs for
+   * @return {String} Adjusted content
+   */
+  convertImageURLsToGIMLI: function(content) {
+    // wrap everything in a div so we only have one jquery object to work with
+    var $content = $('<div>' + content + '</div>');
+
+    $content.find('img').each(function() {
+      $this = $(this);
+      var width = $this.attr('width');
+      var height = $this.attr('height');
+      var src = $this.attr('src');
+
+      var url = Gustavus.Utility.URLUtil.parseURL(src);
+      if (url.host && url.pathname && Gustavus.Concert.isGustavusHost(url.host)) {
+        if (url.pathname.indexOf('/gimli/') === 0) {
+          // already a gimli url
+          // we may need to update the width and height
+          var widthMatches = url.pathname.match('^/gimli/[^w]*?(w[,.:x]?([0-9]+))');
+          var currentWidth = widthMatches ? widthMatches[2] : null;
+
+          var heightMatches = url.pathname.match('^/gimli/[^h]*?(h[,.:x]?([0-9]+))');
+          var currentHeight = heightMatches ? heightMatches[2] : null;
+          if (currentWidth == width && currentHeight == height) {
+            // nothing to do
+            return true;
+          }
+          // now we need to adjust the gimli parameters
+          if (currentWidth) {
+            url.pathname = url.pathname.replace(widthMatches[1], 'w' + width);
+          }
+          if (currentHeight) {
+            url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
+          }
+          $this.attr('src', Gustavus.Utility.URLUtil.buildURL(url, true));
+          return true;
+        }
+        // we don't yet have a gimli url. Let's build one.
+        var newPathname = '/gimli/';
+        var separator = '';
+        if (width) {
+          newPathname += 'w' + width;
+          separator = '-';
+        }
+        if (height) {
+          newPathname += separator + 'h' + height;
+        }
+        newPathname += url.pathname;
+        url.pathname = newPathname;
+        $this.attr('src', Gustavus.Utility.URLUtil.buildURL(url, true));
+      }
+    })
+
+    return $content.html();
   },
 
   /**
@@ -500,7 +563,7 @@ $('#concertSavePrivateDraft').on('click', function(e) {
   e.preventDefault();
   var req = Gustavus.Concert.hasSharedDraft();
   req.done(function(data) {
-    console.log(data);
+    //console.log(data);
     if (data) {
       $('#confirmPrivateDraft').dialog({
         modal: true,
