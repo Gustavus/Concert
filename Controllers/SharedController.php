@@ -17,7 +17,8 @@ use Gustavus\Concourse\Controller as ConcourseController,
   Campus,
   Gustavus\Utility\File,
   Gustavus\Utility\Number,
-  Gustavus\Utility\Set;
+  Gustavus\Utility\Set,
+  DateTime;
 
 /**
  * Controller to handle shared functionality for other controllers
@@ -476,6 +477,20 @@ class SharedController extends ConcourseController
     return sprintf('%s %s a draft open for this page.', (new Set($draftUsers))->toSentence(), $verb);
   }
 
+  /**
+   * Adds a concert message saying that the draft is out of date if the page has been modified since the draft was saved.
+   *
+   * @param array $draft Draft to check for
+   */
+  public function addOutdatedDraftMessageIfNeeded($draft)
+  {
+    $draftTimeStamp = (int) (new DateTime($draft['date']))->format('U');
+
+    if (file_exists($draft['destFilepath']) && $draftTimeStamp < filemtime($draft['destFilepath'])) {
+      $this->addConcertMessage(Config::OUTDATED_DRAFT_MESSAGE);
+    }
+  }
+
 
   // Action checks
 
@@ -698,15 +713,16 @@ class SharedController extends ConcourseController
    */
   protected function userIsEditingPublicDraft($requestURI)
   {
-    if (isset($_POST['concertAction'], $_POST['saveAction']) && $_POST['concertAction'] === 'save' && $_POST['saveAction'] === 'savePublicDraft') {
-      // user is trying to save a public draft.
-      return true;
+    if (self::userIsSavingPublicDraft() && isset($_POST['filePath'])) {
+      // user is trying to save the draft. We know that the specified file gets sent as well, so let's see if this file is representing public draft
+      $requestURI = $_POST['filePath'];
     }
+
     if (strpos($requestURI, '?') !== false) {
       // we need to break the requestURI up
       $parts = parse_url($requestURI);
       if (isset($parts['path'])) {
-        // we only need the path as we aren'd doing anything with query params here.
+        // we only need the path as we aren't doing anything with query params here.
         $requestURI = $parts['path'];
       }
     }

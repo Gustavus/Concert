@@ -270,6 +270,31 @@ class SharedControllerTest extends TestBase
   /**
    * @test
    */
+  public function userIsEditingPublicDraftEditing()
+  {
+    $this->setUpController();
+    $requestURI = '/billy/concert/index.php?concert=editDraft&concertDraft=12345678901234567890123456789012';
+
+    $this->assertFalse($this->controller->userIsEditingPublicDraft($requestURI));
+  }
+
+
+  /**
+   * @test
+   */
+  public function userIsEditingPublicDraftSavingPublicDraft()
+  {
+    $this->setUpController();
+    $requestURI = '/billy/concert/index.php?concert=editDraft&concertDraft=12345678901234567890123456789012';
+    $filePath = $this->controller->buildUrl('editDraft', ['draftName' => 'testFile']) . '?concert=test';
+    $_POST['filePath']   = $filePath;
+    $_POST['saveAction'] = 'savePublicDraft';
+
+    $this->assertTrue($this->controller->userIsEditingPublicDraft($requestURI));
+  }
+  /**
+   * @test
+   */
   public function userIsViewingPublicDraft()
   {
     $this->setUpController();
@@ -650,5 +675,65 @@ class SharedControllerTest extends TestBase
 
     $this->assertTrue($this->call('Controllers\SharedController', 'isSiteNavShared', [$dir . 'site_nav.php']));
     self::removeFiles(self::$testFileDir);
+  }
+
+  /**
+   * @test
+   */
+  public function addOutdatedDraftMessageIfNeededNotNeeded()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+    $this->setUpController();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->authenticate('bvisto');
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $fm = new FileManager('bvisto', self::$testFileDir . 'index.php', null, $this->controller->getDB());
+
+    $this->assertContains(self::$testFileDir, $fm->saveDraft(Config::PRIVATE_DRAFT));
+
+    $draft = $fm->getDraft();
+
+    $this->controller->addOutDatedDraftMessageIfNeeded($draft);
+
+    $result = $this->controller->getConcertMessage();
+
+    $this->assertEmpty($result);
+    $this->destructDB();
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function addOutdatedDraftMessageIfNeeded()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+    $this->setUpController();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->authenticate('bvisto');
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $fm = new FileManager('bvisto', self::$testFileDir . 'index.php', null, $this->controller->getDB());
+
+    $this->assertContains(self::$testFileDir, $fm->saveDraft(Config::PRIVATE_DRAFT));
+
+    $draft = $fm->getDraft();
+
+    // force the draft date to be older
+    $draft['date'] = (new \DateTime('-1 days'))->format('m/d/Y g:i:s');
+
+    $this->controller->addOutDatedDraftMessageIfNeeded($draft);
+
+    $result = $this->controller->getConcertMessage();
+
+    $this->assertNotEmpty($result);
+    $this->assertContains(Config::OUTDATED_DRAFT_MESSAGE, $result);
+    $this->destructDB();
+    $this->unauthenticate();
   }
 }
