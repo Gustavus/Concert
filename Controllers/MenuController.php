@@ -200,6 +200,7 @@ class MenuController extends SharedController
       } else {
         $query = $this->queryParams;
         $query['concert'] = 'viewDraft';
+        $query['draftAction'] = 'stopEditing';
         $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
       }
 

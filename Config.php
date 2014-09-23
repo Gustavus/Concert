@@ -234,7 +234,20 @@ class Config
    */
   const SPECIAL_FILE_MESSAGE = 'This is a special file that cannot be edited in Concert. Please contact <a href="mailto:web@gustavus.edu">Web Services</a> to edit this file.';
 
+  /**
+   * Message to use to prompt someone to continue editing their draft
+   */
   const CONTINUE_EDITING_MESSAGE = 'It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?';
+
+  /**
+   * Message to use when the draft is older than the page the draft represents
+   */
+  const OUTDATED_DRAFT_MESSAGE = 'It appears that this draft was created off of an older version of the page and may be out of date.';
+
+  /**
+   * Additional message to display to the owner of the draft telling them that they may need to discard it.
+   */
+  const OUTDATED_DRAFT_MESSAGE_OWNER_ADDITIONS = 'Please discard this draft before continuing otherwise you might over-write any changes made since this draft was created.';
 
   // Staged file stages
 

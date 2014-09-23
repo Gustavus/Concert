@@ -113,6 +113,8 @@ class MainController extends SharedController
 
     if ($fm->draftExists() && $fm->userHasOpenDraft()) {
       $editDraft = true;
+      // add a message saying that the draft is older than the published date of the page and it might be out of sync.
+      $this->addOutdatedDraftMessageIfNeeded($fm->getDraft());
     } else {
       $editDraft = false;
     }

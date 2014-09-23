@@ -92,6 +92,9 @@ class DraftController extends SharedController
       return $this->handlePendingDraft($draft, $fm);
     }
 
+    // add a message saying that the draft is older than the published date of the page and it might be out of sync.
+    $this->addOutdatedDraftMessageIfNeeded($draft);
+
     return $this->displayPage($draftFilename, true);
   }
 
@@ -150,6 +153,9 @@ class DraftController extends SharedController
         return $this->renderView('confirmPendingDraftAction.html.twig', ['url' => $url, 'forPublish' => true]);
       }
 
+      // add a message saying that the draft is older than the published date of the page and it might be out of sync.
+      $this->addOutdatedDraftMessageIfNeeded($draft);
+
       $this->addConcertMessage($this->renderView('publishPendingDraftActions.html.twig',
           [
             'url'     => $url,
@@ -203,6 +209,9 @@ class DraftController extends SharedController
       $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Utility::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
     }
     $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
+
+    // add a message saying that the draft is older than the published date of the page and it might be out of sync.
+    $this->addOutdatedDraftMessageIfNeeded($draft);
 
     return $this->displayPage(Config::$draftDir . $draftName, true);
   }
@@ -272,6 +281,9 @@ class DraftController extends SharedController
     if ($draftFilename === false) {
       return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
+
+    // add a message saying that the draft is older than the published date of the page and it might be out of sync.
+    $this->addOutdatedDraftMessageIfNeeded($draft);
 
     return $this->displayPage($draftFilename, true);
   }
@@ -486,6 +498,11 @@ class DraftController extends SharedController
    */
   public function handleDraftActions(array $params)
   {
+    if (self::userIsDoneEditingDraft() && isset($_GET['concertDraft'])) {
+      // user is done editing this draft. We might need to show more information about the draft, so we just release the lock and keep going with the request.
+      $this->stopEditingPublicDraft(['filePath' => $_GET['concertDraft']]);
+    }
+
     switch (true) {
       case $this->userIsViewingPublicDraft($params['filePath']):
         $params['draftName'] = self::guessDraftName();

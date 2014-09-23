@@ -481,13 +481,19 @@ class SharedController extends ConcourseController
    * Adds a concert message saying that the draft is out of date if the page has been modified since the draft was saved.
    *
    * @param array $draft Draft to check for
+   * @return  void
    */
   public function addOutdatedDraftMessageIfNeeded($draft)
   {
     $draftTimeStamp = (int) (new DateTime($draft['date']))->format('U');
 
     if (file_exists($draft['destFilepath']) && $draftTimeStamp < filemtime($draft['destFilepath'])) {
-      $this->addConcertMessage(Config::OUTDATED_DRAFT_MESSAGE);
+      if ($draft['username'] === $this->getLoggedInUsername()) {
+        $message = sprintf('%s %s', Config::OUTDATED_DRAFT_MESSAGE, Config::OUTDATED_DRAFT_MESSAGE_OWNER_ADDITIONS);
+      } else {
+        $message = Config::OUTDATED_DRAFT_MESSAGE;
+      }
+      $this->addConcertMessage($message);
     }
   }
 
@@ -603,6 +609,16 @@ class SharedController extends ConcourseController
   protected static function userIsEditingDraft()
   {
     return (isset($_GET['concert']) && $_GET['concert'] === 'editDraft');
+  }
+
+  /**
+   * Checks to see if the user is done editing a draft
+   *
+   * @return boolean
+   */
+  protected static function userIsDoneEditingDraft()
+  {
+    return (isset($_GET['draftAction']) && $_GET['draftAction'] === 'stopEditing');
   }
 
   /**
