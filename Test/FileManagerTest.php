@@ -1034,6 +1034,22 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function removeEditablePiecesNewLines()
+  {
+    $this->buildFileManager('bvisto', '/billy');
+
+    $content = '
+
+<div class="editable" data-index="7"></div>' . Config::EDITABLE_DIV_CLOSING_IDENTIFIER . '
+    ';
+    $result = $this->fileManager->removeEditablePieces($content);
+
+    $this->assertSame('', $result);
+  }
+
+  /**
+   * @test
+   */
   public function removeEditablePiecesAndAttemptToEditNonEditableKey()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);

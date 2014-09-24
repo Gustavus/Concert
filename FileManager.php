@@ -1256,14 +1256,21 @@ class FileManager
    */
   private function removeEditablePieces($content)
   {
-    $indexPattern = '`<div[^<]+class[^<]+?editable[^>]+?data-index\=(?:\'|")([^>]+)(?:\'|")>`';
+    $indexPattern = '`<div[^>]+class[^>]+?editable[^>]+?data-index\=(?:\'|")([^>]+)(?:\'|")>`';
     preg_match_all($indexPattern, $content, $matches);
     if (isset($matches[1])) {
       $_SESSION['concertCMS']['nonEditableKeys'][$this->getFilePathHash()] = $matches[1];
     }
 
-    $pattern = sprintf('`(?:<div[^<]+class[^<]+?editable[^>]+?>)|(?:</div>%s)`', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
-    return preg_replace($pattern, '', $content);
+    $pattern = sprintf('`(?:<div[^>]+class[^>]+?editable[^>]+?>)|(?:</div>%s)`', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $result = preg_replace($pattern, '', $content);
+
+    $trimmedResult = trim($result);
+    if (empty($trimmedResult)) {
+      return '';
+    }
+    return $result;
   }
 
   /**
