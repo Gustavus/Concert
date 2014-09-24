@@ -328,6 +328,36 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function findClosestSiteForFileNone()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/arst/', 'admin', 'files/*', 'private/*']);
+
+    $this->assertNull(PermissionsManager::findClosestSiteForFile('/billy/private/public.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findClosestSiteForFile()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/', 'admin', 'files/*', 'private/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/arst/', 'admin', 'files/*', 'private/*']);
+
+    $this->assertSame('/arst/private/', PermissionsManager::findClosestSiteForFile('/arst/private/public.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function getSitesFromBase()
   {
     $this->constructDB(['Sites', 'Permissions']);

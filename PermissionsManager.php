@@ -469,7 +469,31 @@ class PermissionsManager
   }
 
   /**
-   * Finds all of the sites that contain the current file.
+   * Finds the closest site for the specified filePath.
+   *
+   * @param  string $filePath Path to the file we are searching for a site for.
+   * @return string|null String if a site is found, null otherwise.
+   */
+  public static function findClosestSiteForFile($filePath)
+  {
+    $filePath = str_replace('//', '/', $filePath);
+
+    $sites = self::findSitesContainingFile($filePath);
+    if (empty($sites)) {
+      return null;
+    }
+
+    $sites = self::sortSitesByDepth($sites);
+    foreach ($sites as $site) {
+      if (strpos($filePath, $site) !== false) {
+        return $site;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Finds the top-most parent site for this file.
    *
    * @param  string $filePath Path to the file we are searching for sites for.
    * @return array|null Array if sites are found, null otherwise.
