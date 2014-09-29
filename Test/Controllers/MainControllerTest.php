@@ -143,7 +143,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->edit('billy/concert/index.php'));
 
-    $this->assertContains('don\'t have access', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('don\'t have access', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -167,7 +167,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->edit($filePath));
 
-    $this->assertContains(Config::SPECIAL_FILE_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::SPECIAL_FILE_MESSAGE, $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -190,7 +190,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->edit('billy/concert/index.php'));
 
-    $this->assertContains('arst currently holds the lock', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('arst currently holds the lock', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -215,7 +215,7 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
-    $this->assertEmpty($this->controller->getConcertMessage());
+    $this->assertEmpty($this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -243,7 +243,7 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
-    $this->assertContains('draft open for this page', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('draft open for this page', $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -266,7 +266,7 @@ class MainControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->edit($filePath));
 
-    $this->assertEmpty($this->controller->getConcertMessage());
+    $this->assertEmpty($this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -424,7 +424,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->createNewPage($filePath));
 
-    $this->assertContains('don\'t have access', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('don\'t have access', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -449,7 +449,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->createNewPage($filePath));
 
-    $this->assertContains('arst currently', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('arst currently', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
     self::removeFiles(self::$testFileDir);
@@ -617,7 +617,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->deletePage($filePath));
 
-    $this->assertContains(Config::SPECIAL_FILE_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::SPECIAL_FILE_MESSAGE, $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -638,7 +638,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->deletePage($filePath));
 
-    $this->assertContains(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -664,7 +664,7 @@ class MainControllerTest extends TestBase
 
     $this->assertFalse($this->controller->deletePage($filePath));
 
-    $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::LOCK_NOT_ACQUIRED_MESSAGE, $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1165,7 +1165,7 @@ class MainControllerTest extends TestBase
     $this->assertSame(['action'], array_keys($actual));
     $this->assertSame('none', $actual['action']);
 
-    $this->assertContains(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1255,7 +1255,7 @@ class MainControllerTest extends TestBase
 
     $this->assertSame(['action' => 'none'], $actual);
 
-    $this->assertContains('process of editing this page but left', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('process of editing this page but left', $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1284,7 +1284,7 @@ class MainControllerTest extends TestBase
 
     $this->assertSame(['action' => 'none'], $actual);
 
-    $this->assertEmpty($this->controller->getConcertMessage());
+    $this->assertEmpty($this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1367,7 +1367,7 @@ class MainControllerTest extends TestBase
     $actual = $this->controller->handleRevisions($filePath);
 
     $this->assertFalse($actual);
-    $this->assertContains(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessages());
     $this->destructDB();
   }
 

@@ -353,7 +353,7 @@ class SiteNavControllerTest extends TestBase
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 
     $this->assertFalse($actual);
-    $this->assertContains(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessage());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessages());
     $this->destructDB();
   }
 

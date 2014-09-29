@@ -268,7 +268,7 @@ class DraftControllerTest extends TestBase
     $this->setUpController();
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draft' => basename($draftName)]));
-    $this->assertContains('will live at', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('will live at', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -400,8 +400,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $sessionMessage = $this->controller->getConcertMessage();
-    $this->assertContains('Edit Draft', $sessionMessage);
+    $this->assertMessageInMessages('Edit Draft', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -432,8 +431,7 @@ class DraftControllerTest extends TestBase
     // we are forcing people to view public drafts from the location that they will live at
     $this->assertSame(['redirect' => 'https://beta.gac.edu/billy/concert/index.php?concert=viewDraft&concertDraft=edba98d222792b8363ebcdc9c56c67b8'], $actual);
 
-    $sessionMessage = $this->controller->getConcertMessage();
-    $this->assertContains('Edit Draft', $sessionMessage);
+    $this->assertMessageInMessages('Edit Draft', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -1459,8 +1457,8 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $this->assertContains('confirmPublish=true', $this->controller->getConcertMessage());
-    $this->assertContains('confirmReject=true', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('confirmPublish=true', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages('confirmReject=true', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -1557,7 +1555,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $this->assertContains('couldn\'t acquire a lock', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('couldn\'t acquire a lock', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }

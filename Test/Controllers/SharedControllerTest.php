@@ -604,7 +604,7 @@ class SharedControllerTest extends TestBase
     $this->setUpController();
 
     $this->controller->setConcertMessage('arst');
-    $this->assertContains('arst', $this->controller->getConcertMessage());
+    $this->assertMessageInMessages('arst', $this->controller->getConcertMessages());
   }
 
   /**
@@ -699,7 +699,7 @@ class SharedControllerTest extends TestBase
 
     $this->controller->addOutDatedDraftMessageIfNeeded($draft);
 
-    $result = $this->controller->getConcertMessage();
+    $result = $this->controller->getConcertMessages();
 
     $this->assertEmpty($result);
     $this->destructDB();
@@ -730,10 +730,10 @@ class SharedControllerTest extends TestBase
 
     $this->controller->addOutDatedDraftMessageIfNeeded($draft);
 
-    $result = $this->controller->getConcertMessage();
+    $result = $this->controller->getConcertMessages();
 
     $this->assertNotEmpty($result);
-    $this->assertContains(Config::OUTDATED_DRAFT_MESSAGE, $result);
+    $this->assertMessageInMessages(Config::OUTDATED_DRAFT_MESSAGE, $result);
     $this->destructDB();
     $this->unauthenticate();
   }

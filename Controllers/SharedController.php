@@ -49,11 +49,11 @@ class SharedController extends ConcourseController
   private static $addedResources = [];
 
   /**
-   * Message to display to the user
+   * Messages to display to the user
    *
    * @var string
    */
-  private static $message = '';
+  private static $messages = [];
 
   /**
    * Array of visible buttons to show when inserting editing resources.
@@ -302,7 +302,7 @@ class SharedController extends ConcourseController
     if (!self::$moshMenuAdded) {
       // add messages to the menu
       Filters::add('scripts', function($content) {
-        return $content . $this->renderView('messages.js.twig', ['messages' => $this->getConcertMessage()]);
+        return $content . $this->renderView('messages.js.twig', ['messages' => $this->getConcertMessages()]);
       });
 
       $result = $this->forward('menus', ['forReferer' => false]);
@@ -319,7 +319,7 @@ class SharedController extends ConcourseController
 
           self::markResourcesAdded([$cssResource], 'css');
         }
-        self::addTemplatePref(['globalNotice' => ['notice' => ['notice' => $result, 'dismissable' => false]]]);
+        self::addTemplatePref(['globalNotice' => ['vanilla' => ['notice' => $result, 'dismissable' => false]]]);
       }
       self::$moshMenuAdded = true;
     }
@@ -355,9 +355,9 @@ class SharedController extends ConcourseController
    *
    * @return string
    */
-  public function getConcertMessage()
+  public function getConcertMessages()
   {
-    return self::$message;
+    return self::$messages;
   }
 
   /**
@@ -365,22 +365,22 @@ class SharedController extends ConcourseController
    *
    * @param string  $message Message to add
    * @param boolean $isError Whether it is an error message or not
-   * @param boolean $isHTML Whether message is html or not.
-   *   If true, the message won't be wrapped in a <p class="message|error">.
    * @return  void
    */
-  protected function addConcertMessage($message, $isError = false, $isHTML = false)
+  protected function addConcertMessage($message, $isError = false)
   {
     if (empty($message)) {
       return false;
     }
-    if (!$isHTML) {
-      $message = sprintf('<p class="%s">%s</p>', ($isError? 'error' : 'message'), $message);
-    }
-    if (!empty(self::$message)) {
-      self::$message .= $message;
+    $message = [
+      'type'    => ($isError? 'error' : 'message'),
+      'message' => $message,
+    ];
+
+    if (!isset(self::$messages)) {
+      self::$messages = [$message];
     } else {
-      self::$message = $message;
+      self::$messages[] = $message;
     }
   }
 
@@ -394,9 +394,14 @@ class SharedController extends ConcourseController
   protected function setConcertMessage($message, $isError = false)
   {
     if (!empty($message)) {
-      $message = sprintf('<p class="%s">%s</p>', ($isError ? 'error' : 'message'), $message);
+      $message = [
+        'type'    => ($isError ? 'error' : 'message'),
+        'message' => $message,
+      ];
+      self::$messages = [$message];
+    } else {
+      self::$messages = [];
     }
-    self::$message = $message;
   }
 
   /**

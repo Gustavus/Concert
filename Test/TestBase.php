@@ -221,6 +221,25 @@ class TestBase extends TestEM
   }
 
   /**
+   * Checks to see if a message exists in our message array
+   *
+   * @param  string $searchMessage Message we want to find in our messages
+   * @param  array  $messages      Array of arrays with keys of type and message
+   * @return boolean
+   */
+  protected function assertMessageInMessages($searchMessage, $messages)
+  {
+    $found = false;
+    foreach ($messages as $message) {
+      if (strpos($message['message'], $searchMessage) !== false) {
+        $found = true;
+        break;
+      }
+    }
+    $this->assertTrue($found, sprintf('We were unable to find the message: "%s" in %s', $searchMessage, print_r($messages, true)));
+  }
+
+  /**
    * File 1 contents to test
    * @var string
    */
