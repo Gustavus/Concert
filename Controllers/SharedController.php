@@ -124,9 +124,27 @@ class SharedController extends ConcourseController
     // set things up for fileManager
     // set the language file to use since filemanager tries to use relative paths.
     $_SESSION['RF']['language_file'] = Config::FILE_MANAGER_LOCATION . '/lang/en_EN.php';
+
     $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
 
-    $siteBase      = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), $filePathFromDocRoot);
+    if (self::userIsEditingPublicDraft($filePath)) {
+      // we need to find the site base a different way
+      $draftName = self::guessDraftName();
+      if (!empty($draftName)) {
+        $fm = new FileManager($this->getLoggedInUsername(), Config::$draftDir . $draftName, null, $this->getDB());
+        $draft = $fm->getDraft($draftName);
+        if (!empty($draft)) {
+          $destFilepath = $draft['destFilepath'];
+        } else {
+          $destFilepath = $filePath;
+        }
+      }
+      $siteBase = PermissionsManager::findClosestSiteForFile(Utility::removeDocRootFromPath($destFilepath));
+
+    } else {
+      $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), $filePathFromDocRoot);
+    }
+
     if (!empty($siteBase)) {
       $siteAccessKey = md5($siteBase);
       if (!isset($_SESSION['concertCMS']['siteAccessKeys'][$siteAccessKey])) {
@@ -159,7 +177,11 @@ class SharedController extends ConcourseController
 
     $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), $filePathFromDocRoot);
 
-    Filters::add('scripts', function($content) use ($filePathFromDocRoot, $redirectPath, $resources, $allowCode, $siteAccessKey) {
+    if (!isset($originalFilePath)) {
+      $originalFilePath = $filePath;
+    }
+
+    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $resources, $allowCode, $siteAccessKey) {
       if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
         $isAdmin = 'true';
       } else {
@@ -184,7 +206,7 @@ class SharedController extends ConcourseController
             });
           </script>',
           implode('","', $resources['js']),
-          $filePathFromDocRoot,
+          $originalFilePath,
           $redirectPath,
           $allowCode ? 'true' : 'false',
           $isAdmin,

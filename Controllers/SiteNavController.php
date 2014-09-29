@@ -52,11 +52,17 @@ class SiteNavController extends SharedController
 
     $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
 
-    if (isset($moshResult['action']) && $moshResult['action'] === 'return') {
+    if (isset($moshResult['action']) && $moshResult['action'] === 'return'){
+      if (!is_string($moshResult['value'])) {
+        $moshResult['value'] = '';
+      }
       $this->setLocalNavigation($moshResult['value']);
     }
     // we don't want our temporary GET parameters for moshing set anymore.
     self::setGET($origGet);
+    if ($this->getMethod() === 'POST') {
+      return true;
+    }
 
     return $this->displayPage();
   }

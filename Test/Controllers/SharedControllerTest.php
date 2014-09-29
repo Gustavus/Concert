@@ -17,7 +17,8 @@ use Gustavus\Test\TestObject,
   Gustavus\Concourse\Test\RouterTestUtil,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
-  Gustavus\Concourse\RoutingUtil;
+  Gustavus\Concourse\RoutingUtil,
+  Gustavus\Extensibility\Filters;
 
 /**
  * Test controller for SharedController
@@ -278,7 +279,6 @@ class SharedControllerTest extends TestBase
     $this->assertFalse($this->controller->userIsEditingPublicDraft($requestURI));
   }
 
-
   /**
    * @test
    */
@@ -292,6 +292,7 @@ class SharedControllerTest extends TestBase
 
     $this->assertTrue($this->controller->userIsEditingPublicDraft($requestURI));
   }
+
   /**
    * @test
    */
@@ -733,6 +734,88 @@ class SharedControllerTest extends TestBase
 
     $this->assertNotEmpty($result);
     $this->assertContains(Config::OUTDATED_DRAFT_MESSAGE, $result);
+    $this->destructDB();
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function insertEditingResourcesPublicDraft()
+  {
+    $this->buildDB();
+    $this->setUpController();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->authenticate('bvisto');
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+    $this->assertContains(self::$testFileDir, $this->fileManager->saveDraft(Config::PUBLIC_DRAFT));
+
+    $draft = $this->fileManager->getDraft();
+
+    $filePath = $this->controller->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
+
+    $_GET['concert']      = 'editDraft';
+    $_GET['concertDraft'] = $draft['draftFilename'];
+    $this->controller->insertEditingResources($filePath);
+
+    $this->assertContains(self::$testFileDir, $_SESSION['concertCMS']['siteAccessKeys']);
+
+    $scripts = '';
+    $scripts = Filters::apply('scripts', $scripts);
+
+    // make sure filePath is the path for editing public drafts and not the path to the file being edited
+    $this->assertContains(sprintf('Gustavus.Concert.filePath = "%s"', $filePath), $scripts);
+    $this->destructDB();
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function insertEditingResourcesNotAllowed()
+  {
+    $this->buildDB();
+    $this->setUpController();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->authenticate('bvisto');
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'index.php');
+    $this->assertContains(self::$testFileDir, $this->fileManager->saveDraft(Config::PUBLIC_DRAFT));
+
+    $draft = $this->fileManager->getDraft();
+
+    $filePath = $this->controller->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
+
+    $this->controller->insertEditingResources($filePath);
+
+    $this->assertFalse(isset($_SESSION['concertCMS']));
+    $this->destructDB();
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function insertEditingResources()
+  {
+    $this->buildDB();
+    $this->setUpController();
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->authenticate('bvisto');
+
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->controller->insertEditingResources(self::$testFileDir . 'index.php');
+
+    $this->assertContains(self::$testFileDir, $_SESSION['concertCMS']['siteAccessKeys']);
     $this->destructDB();
     $this->unauthenticate();
   }
