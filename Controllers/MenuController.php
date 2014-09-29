@@ -131,6 +131,7 @@ class MenuController extends SharedController
 
     if (PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $params = $query;
+      self::removeConcertQueryParams($params);
       $params['concert'] = 'revisions';
       $item = [
         'text'     => 'View page revisions',
@@ -144,9 +145,7 @@ class MenuController extends SharedController
 
     if (isset($query['concert'])) {
       // add quit button
-      foreach (Config::$concertGETKeys as $key) {
-        unset($query[$key]);
-      }
+      self::removeConcertQueryParams($query);
 
       $item = [
         'text'     => 'Quit Concert',
@@ -178,6 +177,7 @@ class MenuController extends SharedController
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
+          self::removeConcertQueryParams($query);
           $query['concert'] = 'editDraft';
           $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
@@ -199,6 +199,10 @@ class MenuController extends SharedController
         $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
       } else {
         $query = $this->queryParams;
+        self::removeConcertQueryParams($query);
+        if (isset($this->queryParams['concertDraft'])) {
+          $query['concertDraft'] = $this->queryParams['concertDraft'];
+        }
         $query['concert'] = 'viewDraft';
         $query['draftAction'] = 'stopEditing';
         $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
@@ -243,6 +247,7 @@ class MenuController extends SharedController
           $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
+          self::removeConcertQueryParams($query);
           $query['concert']      = 'viewDraft';
           $query['concertDraft'] = $draft['draftFilename'];
           if (self::isSiteNavRequest()) {
@@ -262,6 +267,7 @@ class MenuController extends SharedController
           $url = $this->buildUrl('addUsersToDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
+          self::removeConcertQueryParams($query);
           $query['concert'] = 'addUsers';
           $query['concertDraft'] = $draft['draftFilename'];
           $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
@@ -281,9 +287,9 @@ class MenuController extends SharedController
 
     if (!empty($drafts)) {
       $query = $this->queryParams;
+      self::removeConcertQueryParams($query);
       $query['concert'] = 'viewDraft';
 
-      unset($query['concertDraft']);
       $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
 
       $item = [
@@ -304,7 +310,7 @@ class MenuController extends SharedController
   {
     $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
-    unset($query['concertAction']);
+    self::removeConcertQueryParams($query);
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
       return;
     }
@@ -351,6 +357,7 @@ class MenuController extends SharedController
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
         } else {
           $query = $this->queryParams;
+          self::removeConcertQueryParams($query);
           $query['concert'] = 'edit';
           $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
         }
@@ -416,10 +423,8 @@ class MenuController extends SharedController
 
     if (self::isSiteNavRequest() && (self::userIsEditing() || self::userIsCreatingSiteNav())) {
       $query = $this->queryParams;
+      self::removeConcertQueryParams($query);
       $query['concert']       = 'stopEditingSiteNav';
-      if (isset($query['concertAction']) && $query['concertAction'] === 'siteNav') {
-        unset($query['concertAction']);
-      }
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
         'text'     => 'Stop editing local navigation',
@@ -449,6 +454,7 @@ class MenuController extends SharedController
       //
       // give them the option to edit the current site nav or the inherited nav.
       $query = $this->queryParams;
+      self::removeConcertQueryParams($query);
       $query['concert']       = 'edit';
       $query['concertAction'] = 'siteNav';
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
@@ -472,6 +478,7 @@ class MenuController extends SharedController
 
     if (!(self::userIsEditing() || self::userIsCreatingSiteNav()) && $isInheritedNav) {
       $query = $this->queryParams;
+      self::removeConcertQueryParams($query);
       $query['concert']       = 'createSiteNav';
       $query['concertAction'] = 'siteNav';
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
@@ -494,8 +501,9 @@ class MenuController extends SharedController
 
     if (!self::isRevisionRequest() || !self::isSiteNavRequest()) {
       $query = $this->queryParams;
+      self::removeConcertQueryParams($query);
       $query['concert']         = 'revisions';
-        $query['concertAction'] = 'siteNav';
+      $query['concertAction']   = 'siteNav';
       $item = [
         'text'     => $isInheritedNav ? 'View inherited local navigation revisions' : 'View local navigation revisions',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query),
@@ -729,6 +737,19 @@ class MenuController extends SharedController
     $this->analyzeReferer();
     if (!empty($this->queryParams)) {
       $_GET = array_merge($this->queryParams, $_GET);
+    }
+  }
+
+  /**
+   * Removes concert query params from an array
+   *
+   * @param  array $query Array to remove concert parameters from
+   * @return void
+   */
+  private static function removeConcertQueryParams(&$query)
+  {
+    foreach (Config::$concertGETKeys as $key) {
+      unset($query[$key]);
     }
   }
 }
