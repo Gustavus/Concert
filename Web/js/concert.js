@@ -359,7 +359,7 @@ Gustavus.Concert = {
       var height = $this.attr('height');
       var src = $this.attr('src');
 
-      var url = Gustavus.Utility.URLUtil.parseURL(src);
+      var url = Gustavus.Utility.URL.parseURL(src);
       if (url.host && url.pathname && Gustavus.Concert.isGustavusHost(url.host)) {
         if (url.pathname.indexOf('/gimli/') === 0) {
           // already a gimli url
@@ -380,7 +380,7 @@ Gustavus.Concert = {
           if (currentHeight) {
             url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
           }
-          $this.attr('src', Gustavus.Utility.URLUtil.buildURL(url, true));
+          $this.attr('src', Gustavus.Utility.URL.buildURL(url, true));
           return true;
         }
         // we don't yet have a gimli url. Let's build one.
@@ -395,7 +395,7 @@ Gustavus.Concert = {
         }
         newPathname += url.pathname;
         url.pathname = newPathname;
-        $this.attr('src', Gustavus.Utility.URLUtil.buildURL(url, true));
+        $this.attr('src', Gustavus.Utility.URL.buildURL(url, true));
       }
     })
 
@@ -443,7 +443,7 @@ Gustavus.Concert = {
           if (data && data.redirectUrl) {
             window.location = data.redirectUrl;
           } else {
-            window.location = Gustavus.Utility.URLUtil.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
+            window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
           }
         }
       },
@@ -612,7 +612,7 @@ $('#concertStopEditing').on('click', function(e) {
   // @todo redirect to a url with concert=stopEditing
 });
 
-$('#quitConcert').on('click', function(e) {
+$('.quitConcert').on('click', function(e) {
   Gustavus.Concert.releaseLock();
 });
 
