@@ -524,12 +524,13 @@ class Config
    *   <code>
    *   ['admin' => ['focusbox']] // This means that admins can't edit the focusbox
    *   </code>
-   *   Note: The parts should all be lowercase
+   *
+   *   Note: The parts should all be lowercase.
+   *   This won't be of use until we start getting access levels that can edit different pieces.
    * @var array
    */
   public static $nonEditablePartsByAccessLevel = [
-    'admin'  => ['focusbox'],
-    'public' => ['focusbox'],
+    // self::PUBLIC_ACCESS_LEVEL => ['focusbox'],
   ];
 
   /**
@@ -569,6 +570,7 @@ class Config
     'concertAction',
     'forwardedFrom',
     'concertDraft',
+    'draftAction',
   ];
 
   /**
