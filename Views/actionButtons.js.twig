@@ -15,13 +15,13 @@
   'publish': reviewButton,
   'savePrivateDraft': {
     'id': 'concertSavePrivateDraft',
-    'text': 'Save private draft',
+    'text': 'Save Private Draft',
     'classes': 'secondary',
   },
   'savePublicDraft': {
     'id': 'concertSavePublicDraft',
-    'text': 'Save shared draft',
-    'classes': 'success',
+    'text': 'Save Draft',
+    'classes': 'secondary',
   },
   'discardDraft': {
     'id': 'concertDiscardDraft',
@@ -64,7 +64,9 @@
           .appendTo($actionButtons)
           .filter('.menu-item')
           .hide()
-          .fadeIn();
+          .fadeIn(function () {
+            $(this).css('display', '');
+          });
       });
     }
   });
