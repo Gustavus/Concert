@@ -540,7 +540,7 @@ class Config
    */
   public static $defaultEditingButtons = [
     'publish',
-    'savePrivateDraft',
+    //'savePrivateDraft', Disabled for now. You can only save a shared draft.
     'savePublicDraft',
     'discardDraft',
   ];
