@@ -89,9 +89,9 @@ class MenuController extends SharedController
    * @var array
    */
   private static $groupWeights = [
-    'concert'         => 0,
-    'drafts'          => 1,
-    'localNavigation' => 2,
+    'file'    => 0,
+    'drafts'     => 1,
+    'navigation' => 2,
   ];
 
   /**
@@ -157,13 +157,13 @@ class MenuController extends SharedController
    * @param integer $weight Weight of the item for sorting
    * @return void
    */
-  private function addMenuItem($item, $group = 'concert', $weight = 0)
+  private function addMenuItem($item, $group = 'file', $weight = 0)
   {
     // set the item's weight
     $item['weight'] = $weight;
 
     if ($group === null) {
-      $group = 'concert';
+      $group = 'file';
     }
 
     $type = ($group === 'actionButtons') ? 'buttons': 'menu';
@@ -242,7 +242,7 @@ class MenuController extends SharedController
         'thickbox' => false,
       ];
 
-      $this->addMenuItem($item);
+      $this->addMenuItem($item, null, 50);
     }
   }
 
@@ -425,7 +425,7 @@ class MenuController extends SharedController
         'thickboxData' => ['height' => '400px'],
       ];
 
-      $this->addMenuItem($item, 'concert', 20);
+      $this->addMenuItem($item, null, 20);
     }
 
     if (file_exists($this->filePath) && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
@@ -437,7 +437,7 @@ class MenuController extends SharedController
         'classes'  => 'red',
       ];
 
-      $this->addMenuItem($item, 'concert', 10);
+      $this->addMenuItem($item, null, 10);
     }
 
     if (self::userIsEditing() || self::userIsSaving()) {
@@ -544,7 +544,7 @@ class MenuController extends SharedController
         'thickbox' => false,
       ];
 
-      $this->addMenuItem($item, 'localNavigation', 20);
+      $this->addMenuItem($item, 'navigation', 20);
       // disabled drafts for siteNavs
       // } else if (($draft = $fm->getDraftForUser($this->getLoggedInUsername())) !== false) {
       //   // the user has a draft of the site nav they can continue editing.
@@ -558,7 +558,7 @@ class MenuController extends SharedController
       //     'thickbox' => false,
       //   ];
 
-      //   $this->addMenuItem($item, 'localNavigation', 20);
+      //   $this->addMenuItem($item, 'navigation', 20);
     }
 
     if (!self::isGlobalNav($siteNav) && !(self::userIsEditing() || self::userIsCreatingSiteNav())) {
@@ -585,7 +585,7 @@ class MenuController extends SharedController
         $item['thickboxData'] = ['html' => $html];
       }
 
-      $this->addMenuItem($item, 'localNavigation', 20);
+      $this->addMenuItem($item, 'navigation', 20);
     }
 
     if (!(self::userIsEditing() || self::userIsCreatingSiteNav()) && $isInheritedNav) {
@@ -608,7 +608,7 @@ class MenuController extends SharedController
         $item['thickboxData'] = ['html' => $html];
       }
 
-      $this->addMenuItem($item, 'localNavigation', 20);
+      $this->addMenuItem($item, 'navigation', 20);
     }
 
     if (!self::isRevisionRequest() || !self::isSiteNavRequest()) {
@@ -621,7 +621,7 @@ class MenuController extends SharedController
         'url'      => (new String($pathFromDocRoot))->addQueryString($query),
         'thickbox' => false,
       ];
-      $this->addMenuItem($item, 'localNavigation', 20);
+      $this->addMenuItem($item, 'navigation', 20);
     }
 
 
@@ -658,7 +658,7 @@ class MenuController extends SharedController
     //       'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
     //     ];
 
-    //     $this->addMenuItem($item, 'localNavigation', 20);
+    //     $this->addMenuItem($item, 'navigation', 20);
     //   }
     // }
 
@@ -676,7 +676,7 @@ class MenuController extends SharedController
     //     'classes'  => 'red',
     //   ];
 
-    //   $this->addMenuItem($item, 'localNavigation', 20);
+    //   $this->addMenuItem($item, 'navigation', 20);
     // }
   }
 

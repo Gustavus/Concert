@@ -123,13 +123,13 @@ class MenuControllerTest extends TestBase
     $item2 = ['id' => 'test', 'url' => 'test2'];
 
     $this->setUpController();
-    $this->controller->addMenuItem($item2, 'localNavigation', 5);
-    $this->controller->addMenuItem($item2, 'localNavigation', 0);
+    $this->controller->addMenuItem($item2, 'navigation', 5);
+    $this->controller->addMenuItem($item2, 'navigation', 0);
     $this->controller->addMenuItem($item, 'concert', 20);
     $this->controller->addMenuItem($item2, 'actionButtons', 0);
 
     $expected = [
-      'localNavigation' => [
+      'navigation' => [
         'weight' => 2,
         'items' => [
           [
@@ -182,8 +182,8 @@ class MenuControllerTest extends TestBase
     $item2 = ['id' => 'test', 'url' => 'test2'];
 
     $this->setUpController();
-    $this->controller->addMenuItem($item2, 'localNavigation', 5);
-    $this->controller->addMenuItem($item2, 'localNavigation', 0);
+    $this->controller->addMenuItem($item2, 'navigation', 5);
+    $this->controller->addMenuItem($item2, 'navigation', 0);
     $this->controller->addMenuItem($item, 'concert', 20);
     $this->controller->addMenuItem($item2, 'actionButtons', 0);
 
@@ -215,7 +215,7 @@ class MenuControllerTest extends TestBase
         ],
         'type' => 'menu',
       ],
-      'localNavigation' => [
+      'navigation' => [
         'weight' => 2,
         'items' => [
           [
