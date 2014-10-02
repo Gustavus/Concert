@@ -134,7 +134,7 @@ class SiteNavController extends SharedController
     $this->setTitle('Create Local Navigation');
 
     if (self::isSiteNavShared($navToCreate)) {
-      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), true));
+      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), false));
     }
 
     $origGet = $_GET;

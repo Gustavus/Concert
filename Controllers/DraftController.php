@@ -126,7 +126,7 @@ class DraftController extends SharedController
       if ($_POST['action'] === 'publish') {
         // we want to publish the file.
         if (!$fm->acquireLock()) {
-          $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), false);
+          $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), true);
           return $this->displayPage($draftFilename, true);
         }
 
@@ -158,10 +158,10 @@ class DraftController extends SharedController
 
       $this->addConcertMessage($this->renderView('publishPendingDraftActions.html.twig',
           [
-            'url'     => $url,
+            'url'        => $url,
             'draftOwner' => $draft['username'],
           ]
-      ), false, true);
+      ), false);
     }
     return $this->displayPage($draftFilename, true);
   }
