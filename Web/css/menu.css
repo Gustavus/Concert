@@ -1,0 +1,278 @@
+@define {
+  menu-bg-color: #f8f8f8;
+  menu-color: #666;
+  menu-hidden-color: white;
+  menu-height: 45px;
+
+  button-primary: #$(brand-blue);
+  button-shadow-primary: l-adjust( #$(brand-blue) -10 );
+
+  button-secondary: #888;
+  button-shadow-secondary: l-adjust( #888 -15 );
+
+  button-success: #$(brand-green);
+  button-shadow-success: l-adjust( #$(brand-green) -15 );
+
+  button-danger: #$(brand-red);
+  button-shadow-danger: l-adjust( #$(brand-red) -15 );
+
+  message-color: #$(brand-blue);
+
+  message-error-color: #$(brand-red);
+}
+
+
+@in .concert-menu {
+
+  & {
+    background-color: $(menu-bg-color);
+    height: $(menu-height);
+    color: $(menu-color);
+    transition: height 0.25s ease-in-out, margin 0.25s ease-in-out;
+    position: relative;
+    z-index: 145;
+    text-align: left;
+    margin-bottom: 0;
+  }
+
+  &:after {
+    display: table;
+    content: '';
+    clear: both;
+  }
+
+  & a:not(.button), & a:not(.button):hover {
+    color: $(menu-color);
+  }
+
+  & .menu-content {
+    float: left;
+    height: $(menu-height);
+    opacity: 1;
+    transition: height 0.25s ease-in-out, opacity 0.25s ease-in-out;
+  }
+
+  & .menu-content.right {
+    float: right;
+  }
+
+  & .menu-bar {
+    margin: 0;
+  }
+
+  & .menu-item {
+    display: inline-block;
+    position: relative;
+  }
+
+  & .menu-item a.menu-item-label, & .menu-activate-button {
+      line-height: $(menu-height);
+      padding: 0 10px;
+      display: inline-block;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+  }
+
+  & .message-count {
+    background-color: $(menu-color);
+    color: $(menu-bg-color);
+    border-radius: 1em;
+    padding: 0 0.5em;
+  }
+
+  & .menu-item .menu-button, & .menu-item .menu-button:hover {
+    display: block;
+    background-color: $(button-primary);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 0.5em;
+    margin: 0 0.5em;
+    border-radius: 5px;
+    margin-top: 4px;
+    box-shadow: 0 2px 0 $(button-shadow-primary);
+    cursor: pointer;
+  }
+
+  & .menu-item .menu-button:active {
+    background-color: $(button-shadow-primary);
+  }
+
+  & .menu-item .menu-button.secondary, & .menu-item .menu-button.secondary:hover {
+    background-color: $(button-secondary);
+    box-shadow: 0 2px 0 $(button-shadow-secondary);
+  }
+
+  & .menu-item .menu-button.secondary:active {
+    background-color: $(button-shadow-secondary);
+  }
+
+  & .menu-item .menu-button.success, & .menu-item .menu-button.success:hover {
+    background-color: $(button-success);
+    box-shadow: 0 2px 0 $(button-shadow-success);
+  }
+
+  & .menu-item .menu-button.success:active {
+    background-color: $(button-shadow-success);
+  }
+
+  & .menu-item .menu-button.danger, & .menu-item .menu-button.danger:hover {
+    background-color: $(button-danger);
+    box-shadow: 0 2px 0 $(button-shadow-danger);
+  }
+
+  & .menu-item .menu-button.danger:active {
+    background-color: $(button-shadow-danger);
+  }
+
+  & .menu-activate-button {
+    transition: color 0.25s ease-in-out;
+  }
+
+  & .menu-activate-button:before {
+    display: inline-block;
+    content: '';
+    width: 21px;
+    height: $(menu-height);
+    vertical-align: bottom;
+    background-image: url(/images/iconic/raster/dark_gray/cog_16x16.png);
+    background-position: left center;
+    background-repeat: no-repeat;
+  }
+
+  & .menu-item:any(:hover, .open) a.menu-item-label{
+    background-color: $(menu-color);
+    color: $(menu-bg-color);
+    text-decoration: none;
+  }
+
+  & .menu-item:any(:hover, .open) .message-count {
+    color: $(menu-color);
+    background-color: $(menu-bg-color);
+  }
+
+  & .menu-dropdown {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: $(menu-height);
+    margin: 0;
+    list-style: none;
+    background: $(menu-bg-color);
+    border: 1px $(menu-color) solid;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+    min-width: 150px;
+    z-index: 150;
+  }
+
+  & .menu-item.open :any(.menu-dropdown, .messages-dropdown) {
+    display: block;
+  }
+
+  & .menu-dropdown-item a {
+    line-height: 2em;
+    padding: 0 0.25em;
+    display: block;
+  }
+
+  & .menu-dropdown-item a:any(:hover, :focus) {
+    background-color: $(menu-color);
+    color: $(menu-bg-color);
+    text-decoration: none;
+  }
+
+  & .messages-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: $(menu-height);
+    width: 300px;
+    background: $(menu-bg-color);
+    border: 1px $(menu-color) solid;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+    z-index: 150;
+  }
+
+  & .concert-message {
+    margin: 0.5em;
+    padding: 0.5em;
+    border: 1px solid $(message-color);
+    color: $(message-color);
+    border-radius: 3px;
+    box-shadow: 0 3px 0 $(message-color);
+  }
+
+  & .concert-message a:not(.button) {
+    color: $(message-color);
+    text-decoration: underline;
+  }
+
+  & .concert-message.concert-error {
+    border-color: $(message-error-color);
+    color: $(message-error-color);
+    box-shadow: 0 3px 0 $(message-error-color);
+  }
+
+  & .concert-message.concert-error a {
+    color: $(message-error-color);
+  }
+
+  &.hidden {
+    height: 0;
+  }
+
+  &.hidden .menu-content:not(.permanent) {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  &.hidden .menu-activate-button, &.hidden .menu-activate-button:hover {
+    color: white;
+  }
+
+  &.hidden .menu-activate-button:before {
+    background-image: url(/images/iconic/raster/white/cog_16x16.png);
+  }
+
+  @media screen and (max-width: 1175px) {
+    &.hidden {
+      margin-bottom: $(menu-height);
+    }
+  }
+
+  @media screen and (max-width: 700px) {
+    & {
+      height: auto;
+      transition: none;
+    }
+
+    & .menu-content, & .menu-content.right {
+      float: none;
+      height: auto;
+    }
+    & .menu-item {
+      display: block;
+    }
+    & .menu-item-label {
+      width: 100%;
+    }
+
+    & .menu-item-label, & .menu-item .menu-button {
+      display: block;
+      box-sizing: border-box;
+      margin-bottom: 0.5em;
+    }
+
+    & .menu-dropdown, & .messages-dropdown {
+      width: 100%;
+      font-size: 1.2em;
+    }
+  }
+
+}

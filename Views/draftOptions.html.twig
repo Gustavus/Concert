@@ -1,20 +1,21 @@
 {% spaceless %}
 <h2>Please select a draft to view</h2>
-
-<table class="fancy sortable">
+<table class="fancy sortable" style="width: 100%">
   <head>
     <tr>
-      <th>Draft Type</th>
-      <th>Draft Owner</th>
+      <th>Owner</th>
+      <th>Type</th>
+      <th>Last Modified</th>
       <th></th>
     </tr>
   </head>
   <body>
   {% for draft in drafts %}
     <tr>
-      <td>{{ draft.type|title }}</td>
-      <td>{{ draft.username }}</td>
-      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}{% if siteNav %}&amp;concertAction=siteNav{% endif %}" class="button">View Draft</a></td>
+      <td>{{ getFullNameFromUsername(draft.username) }}</td>
+      <td>{{ draft.type|un_camel_case|title }}</td>
+      <td>{{ draft.date|date('F j, Y')}}</td>
+      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}{% if siteNav %}&amp;concertAction=siteNav{% endif %}" class="button small">View Draft</a></td>
     </tr>
   {% endfor %}
   </body>

@@ -1,15 +1,6 @@
 {% spaceless %}
-<script>
-  Modernizr.load({
-    load: Gustavus.baseSrc,
-    complete: function() {
-      Extend.apply('page', $('#concertMessages'));
-    }
-  })
-</script>
-<div>
-  <h3>Would you like to publish this draft for {{ draftOwner }}?</h3>
+  <p> Would you like to publish these changes from {{ getFullNameFromUsername(draftOwner) }}?</p>
+  <div class="center">
     <a href="{{ url }}&amp;confirmPublish=true" id="publishPendingDraft" class="button blue thickbox">Publish</a><a href="{{ url }}&amp;confirmReject=true" class="button red thickbox" id="rejectPendingDraft">Reject</a>
-  {#</form>#}
-</div>
+  </div>
 {% endspaceless %}

@@ -8,11 +8,11 @@
       </label>
     </div>
     {%- if forPublish -%}
-      <button type="submit" name="action" value="publish">Publish</button>
+      <button type="submit" name="action" value="publish" class="button blue">Publish</button>
     {%- else -%}
-      <button type="submit" name="action" value="reject">Reject</button>
+      <button type="submit" name="action" value="reject" class="button red">Reject</button>
     {%- endif -%}
-    <button type="submit" name="action" value="cancel">Cancel</button>
+    &nbsp;<button type="submit" name="action" value="cancel">Cancel</button>
   </form>
 </div>
 {% endspaceless %}

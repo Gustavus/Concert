@@ -27,14 +27,6 @@
         {%- endfor -%}
       </ul>
     </div>
-    <div class="menu-content">
-      <ul class="menu-bar" id="primaryActions">
-        {%- if buttons|length > 0 -%}
-          {%- import 'actionButtons.js.twig' as actionButtons -%}
-          {{ actionButtons.renderButtons(buttons) }}
-        {%- endif -%}
-      </ul>
-    </div>
     <div class="menu-content right">
       <ul class="menu-bar">
         <li id="concertMessages" class="menu-item">
@@ -43,16 +35,24 @@
         </li>
         {% if showMenu %}
           <li class="menu-item">
-            <a href="?" class="menu-button danger quitConcert">Exit Concert</a>
+            <a href="?" class="menu-button danger quitConcert">Quit</a>
           </li>
         {% endif %}
       </ul>
     </div>
+    <div class="menu-content">
+      <ul class="menu-bar" id="primaryActions">
+        {%- if buttons|length > 0 -%}
+          {%- import 'actionButtons.js.twig' as actionButtons -%}
+          {{ actionButtons.renderButtons(buttons) }}
+        {%- endif -%}
+      </ul>
+    </div>
     <div class="clear"></div>
-    <link rel="stylesheet" href="/js/Gustavus/jquery/Dropdown.css" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{{ renderResource(['dropdown-css'])}}" media="screen" title="no title" charset="utf-8">
     <script>
 {#--#} Modernizr.load({
-{#--#}   load: [Gustavus.baseSrc, '/js/Gustavus/jquery/Dropdown.js'],
+{#--#}   load: [Gustavus.baseSrc, '{{ renderResource(['dropdown'])}}'],
 {#--#}   complete: function() {
 {#--#}     var $concertMenu = $('.concert-menu');
 {#--#}     $('.menu-activate-button').on('click.Concert.ShowMenu', function (e) {

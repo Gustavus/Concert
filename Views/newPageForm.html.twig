@@ -57,19 +57,22 @@
 </script>
 
 
-<div class="grid_30 alpha omega">
-  <div class="grid_15 alpha">
-    <h2>Please select a location for the new file.</h2>
+<div class="grid_19 alpha omega">
+  <div class="grid_18 alpha omega">
+    <h3>Create a New Page</h3>
+    <p><em>Please select where you would like your new page to exist.</em></p>
     <div id="toFileTreeSelector" class="fileTreeSelector"></div>
   </div>
 
-  <div class="grid_15 omega">
-    <h2>Please select a page to copy or a default starter page.</h2>
-    <div id="fromFileTreeSelector" class="fileTreeSelector"></div>
+  <div class="grid_18 alpha omega">
+    <label for="copyAFile"><input id="copyAFile" type="checkbox" class="doToggle" rel="#fromFileContainer"> I would like to copy a prexisting file.</label>
+    <div id="fromFileContainer" class="nodisplay">
+      <p><em>Please select the file you would like to copy.</em></p>
+      <div id="fromFileTreeSelector" class="fileTreeSelector"></div>
+    </div>
   </div>
-
-  <p class="grid_30 alpha omega">
-    <a href="#" id="createNewPage" class="button">Create new page</a>
+  <p class="grid_18 alpha omega">
+    <a href="#" id="createNewPage" class="button green">Create new page</a>
   </p>
 </div>
 

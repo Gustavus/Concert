@@ -115,7 +115,7 @@ if(jQuery) (function($){
             }
           }
           if (newFileName !== '') {
-            newFileName = newFileName.replace(' ', '');
+            newFileName = newFileName.replace(/\s/g, '');
             var newRel = $elem.attr('rel').replace(searchString, newFileName);
 
             // new folder added
