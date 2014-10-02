@@ -2,37 +2,61 @@
 {% spaceless %}
   {%- set showMenuTitle = 'Show Concert Menu' -%}
   {%- set hideMenuTitle = 'Hide Concert Menu' -%}
-  <div id="concertMenu">
-    <div id="showConcertMenu"><a href="#" id="showConcertMenuLink" title="{% if not showMenu %}{{ showMenuTitle }}{% else %}{{ hideMenuTitle }}{% endif %}"><img src="/images/iconic/raster/gray_light/cog_alt_16x16.png" alt="Open/Close Concert Menu" /></a></div>
-    <div id="concertMenuItems" class="left{% if not showMenu %} hidden{% endif %}">
-      <ul id="concertMenuBar" class="left">
+  {%- set buttons = [] -%}
+  <div id="concertMenu" class="concert-menu {% if not showMenu %} hidden{% endif %}">
+    <div class="menu-content permanent">
+      <a href="#" class="menu-activate-button menu-item" title="{% if not showMenu %}{{ showMenuTitle }}{% else %}{{ hideMenuTitle }}{% endif %}">
+        Concert
+      </a>
+    </div>
+    <div class="menu-content">
+      <ul class="menu-bar">
         {%- for groupName,group in menu -%}
-          <li class="concertMenuGroup">
-            <span class="concertMenuShowGroup">{{ groupName|un_camel_case|title }}</span>
-            <div class="concertItemGroupContainer">
-              <div class="concertItemGroup">
-                {%- for weight in group -%}
-                  <ul>
-                    {%- for item in weight -%}
-                      <li><a href="{{ item.url }}" class="concertMenuItem{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}"{% if item.id is defined %} id="{{ item.id }}"{% endif %}{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
-                    {%- endfor -%}
-                  </ul>
+          {%- if group.type == 'menu' -%}
+            <li class="menu-item">
+              <a id="menu-{{groupName}}" class="menu-item-label" href="#" data-toggle="dropdown">{{ groupName|un_camel_case|title }} ▾</a>
+              <ul class="menu-dropdown" role="menu" aria-labelledby="menu-{{groupName}}">
+                {%- for item in group.items -%}
+                  <li class="menu-dropdown-item"><a href="{{ item.url }}" class="{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}"{% if item.id is defined %} id="{{ item.id }}"{% endif %}{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
                 {%- endfor -%}
-              </div>
-            </div>
-          </li>
+              </ul>
+            </li>
+          {%- elseif group.type == 'buttons' -%}
+            {%- set buttons = group.items -%}
+          {%- endif -%}
         {%- endfor -%}
       </ul>
-      <div id="concertMessages" class="left"></div>
+    </div>
+    <div class="menu-content">
+      <ul class="menu-bar" id="primaryActions">
+        {%- if buttons|length > 0 -%}
+          {%- import 'actionButtons.js.twig' as actionButtons -%}
+          {{ actionButtons.renderButtons(buttons) }}
+        {%- endif -%}
+      </ul>
+    </div>
+    <div class="menu-content right">
+      <ul class="menu-bar">
+        <li id="concertMessages" class="menu-item">
+          <a class="menu-item-label" href="#" data-toggle="dropdown">Messages <span class="message-count" data-message-count>0</span> ▾</a>
+          <div class="messages-dropdown" data-message-area></div>
+        </li>
+        {% if showMenu %}
+          <li class="menu-item">
+            <a href="?" class="menu-button danger quitConcert">Exit Concert</a>
+          </li>
+        {% endif %}
+      </ul>
     </div>
     <div class="clear"></div>
+    <link rel="stylesheet" href="/js/Gustavus/jquery/Dropdown.css" media="screen" title="no title" charset="utf-8">
     <script>
 {#--#} Modernizr.load({
-{#--#}   load: Gustavus.baseSrc,
+{#--#}   load: [Gustavus.baseSrc, '/js/Gustavus/jquery/Dropdown.js'],
 {#--#}   complete: function() {
-{#--#}     $('#showConcertMenuLink').on('click', function(e) {
+{#--#}     var $concertMenu = $('.concert-menu');
+{#--#}     $('.menu-activate-button').on('click.Concert.ShowMenu', function (e) {
 {#--#}       e.preventDefault();
-{#--#}       var $concertMenu = $('#concertMenuItems');
 {#--#}       if ($concertMenu.hasClass('hidden')) {
 {#--#}         $(this).attr('title', '{{ hideMenuTitle }}');
 {#--#}         $concertMenu.removeClass('hidden');
@@ -41,6 +65,15 @@
 {#--#}         $concertMenu.addClass('hidden');
 {#--#}       }
 {#--#}     });
+{#--#}
+{#--#}     if (!$concertMenu.hasClass('hidden')) {
+{#--#}       $('#concertMessages a[data-toggle="dropdown"]').dropdown('show');
+{#--#}     } else {
+{#--#}       $('.menu-activate-button').one('click.Concert.ShowMessages', function (e) {
+{#--#}         $('#concertMessages a[data-toggle="dropdown"]').dropdown('show');
+{#--#}         return false;
+{#--#}       });
+{#--#}     }
 {#--#}
 {#--#}     Extend.add('page', function() {
 {#--#}       $('#cancelEditSiteNavMessage').on('click', function(e) {
@@ -54,6 +87,11 @@
   </div>
 {% endspaceless %}
 
+{#
+  Renders data attributes for thickbox.
+
+  param: item Array of thickbox data attributes to be converted into html. Associative array of dataName => dataValue
+#}
 {% macro renderThickboxData(item) %}
   {%- for datum,value in item.thickboxData %} data-thickbox-{{ datum }}="{{ value }}"{% endfor -%}
 {% endmacro renderThickboxData %}

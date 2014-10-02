@@ -43,10 +43,56 @@ class MenuController extends SharedController
    * Current menu
    *   Array of groups.
    *     Groups contain keys of weights and the items for each weight
+   *       Items contain keys of:
+   *       <ul>
+   *         <li>id</li>
+   *         <li>classes</li>
+   *         <li>url</li>
+   *         <li>thickbox: {boolean} Whether to use thickbox or not</li>
+   *         <li>text</li>
+   *         <li>thickboxData: Associative array of data attributes to pass to thickbox</li>
+   *       </ul>
+   *
+   * ie.
+   * <code>
+   * [
+   *   'concert' => [
+   *     '20' => [
+   *       [
+   *         'url'     => '?concert=edit',
+   *         'classes' => 'edit',
+   *         'text'    => 'Edit',
+   *       ],
+   *       [
+   *         'url'     => '?concert=stopEditing',
+   *         'classes' => 'stopEditing',
+   *         'text'    => 'Stop Editing',
+   *       ],
+   *     ],
+   *     '1' => [
+   *       [
+   *         'url'  => '?concert=quit',
+   *         'text' => 'Quit',
+   *       ],
+   *     ],
+   *   ],
+   * ];
+   * </code>
+   *
    *
    * @var array
    */
   private $menu;
+
+  /**
+   * Weights for menu groups
+   * @var array
+   */
+  private static $groupWeights = [
+    'concert'         => 0,
+    'drafts'          => 1,
+    'localNavigation' => 2,
+  ];
 
   /**
    * FileManager
@@ -97,7 +143,7 @@ class MenuController extends SharedController
     $this->addMiscellaneousButtons();
 
     if (!empty($this->menu)) {
-      ksort($this->menu);
+      $this->sortMenu();
       return $this->renderView('menu.html.twig', ['menu' => $this->menu, 'showMenu' => isset($_GET['concert'])]);
     }
     return '';
@@ -113,10 +159,52 @@ class MenuController extends SharedController
    */
   private function addMenuItem($item, $group = 'concert', $weight = 0)
   {
-    if (!isset($this->menu[$group][$weight])) {
-      $this->menu[$group][$weight] = [];
+    // set the item's weight
+    $item['weight'] = $weight;
+
+    if ($group === null) {
+      $group = 'concert';
     }
-    $this->menu[$group][$weight][] = $item;
+
+    $type = ($group === 'actionButtons') ? 'buttons': 'menu';
+
+    if (!isset($this->menu[$group])) {
+      $this->menu[$group] = [
+        'weight' => (isset(self::$groupWeights[$group]) ? self::$groupWeights[$group] : 0),
+        'items'  => [],
+        'type'   => $type,
+      ];
+    }
+
+    $this->menu[$group]['items'][] = $item;
+  }
+
+  /**
+   * Sorts the current menu by the specified weights
+   *
+   * @return void
+   */
+  private function sortMenu()
+  {
+    if (empty($this->menu)) {
+      return false;
+    }
+
+    $weightSorter = function($a, $b) {
+      if ($a['weight'] === $b['weight']) {
+        return 0;
+      } else if ($a['weight'] > $b['weight']) {
+        return 1;
+      } else {
+        return -1;
+      }
+    };
+
+    uasort($this->menu, $weightSorter);
+
+    foreach ($this->menu as $group => &$groupContents) {
+      usort($groupContents['items'], $weightSorter);
+    }
   }
 
   /**
@@ -149,7 +237,7 @@ class MenuController extends SharedController
 
       $item = [
         'text'     => 'Quit Concert',
-        'id'       => 'quitConcert',
+        'classes'  => 'quitConcert',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
       ];
@@ -190,6 +278,20 @@ class MenuController extends SharedController
         ];
 
         $this->addMenuItem($item, 'drafts');
+
+        // now add this to our actionButtons
+        $item['classes'] = 'primary';
+        $this->addMenuItem($item, 'actionButtons');
+
+        if (file_exists($this->filePath)) {
+          $item = [
+            'text'     => 'View Current Page',
+            'url'      => Utility::removeDocRootFromPath($this->filePath),
+            'classes'  => 'secondary',
+            'extraHTML'  => 'target="_blank"',
+          ];
+          $this->addMenuItem($item, 'actionButtons', 5);
+        }
       }
     } else if ($this->userIsEditingPublicDraft(Utility::removeDocRootFromPath($this->filePath))) {
       $draftName = self::guessDraftName($this->filePath);
@@ -323,7 +425,7 @@ class MenuController extends SharedController
         'thickboxData' => ['height' => '400px'],
       ];
 
-      $this->addMenuItem($item);
+      $this->addMenuItem($item, 'concert', 20);
     }
 
     if (file_exists($this->filePath) && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
@@ -335,7 +437,7 @@ class MenuController extends SharedController
         'classes'  => 'red',
       ];
 
-      $this->addMenuItem($item);
+      $this->addMenuItem($item, 'concert', 10);
     }
 
     if (self::userIsEditing() || self::userIsSaving()) {
@@ -368,6 +470,11 @@ class MenuController extends SharedController
         ];
 
         $this->addMenuItem($item);
+        if (!self::userIsViewingPublicDraft($this->filePath)) {
+          // now add this to our actionButtons if they aren't viewing a public draft.
+          $item['classes'] = 'primary';
+          $this->addMenuItem($item, 'actionButtons');
+        }
       } else {
         $query['concert'] = 'edit';
         $item = [
@@ -378,6 +485,11 @@ class MenuController extends SharedController
         ];
 
         $this->addMenuItem($item);
+        if (!self::userIsViewingPublicDraft($this->filePath)) {
+          // now add this to our actionButtons if they aren't viewing a public draft.
+          $item['classes'] = 'primary';
+          $this->addMenuItem($item, 'actionButtons');
+        }
       }
     }
   }
@@ -609,7 +721,7 @@ class MenuController extends SharedController
         if ($forSrcFile) {
           // we want our default templates on top
           foreach (Config::$templates as $templateIdentifier => $templateProperties) {
-            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
+            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
           }
         }
         // All dirs

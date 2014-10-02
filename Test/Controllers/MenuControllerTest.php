@@ -116,6 +116,128 @@ class MenuControllerTest extends TestBase
   /**
    * @test
    */
+  public function addMenuItem()
+  {
+    $item = ['id' => 'arst', 'url' => 'test'];
+
+    $item2 = ['id' => 'test', 'url' => 'test2'];
+
+    $this->setUpController();
+    $this->controller->addMenuItem($item2, 'localNavigation', 5);
+    $this->controller->addMenuItem($item2, 'localNavigation', 0);
+    $this->controller->addMenuItem($item, 'concert', 20);
+    $this->controller->addMenuItem($item2, 'actionButtons', 0);
+
+    $expected = [
+      'localNavigation' => [
+        'weight' => 2,
+        'items' => [
+          [
+            'id' => 'test',
+            'url' => 'test2',
+            'weight' => 5,
+          ],
+          [
+            'id' => 'test',
+            'url' => 'test2',
+            'weight' => 0,
+          ],
+        ],
+        'type' => 'menu',
+      ],
+      'concert' => [
+        'weight' => 0,
+        'items' => [
+          [
+            'id' => 'arst',
+            'url' => 'test',
+            'weight' => 20,
+          ],
+        ],
+        'type' => 'menu',
+      ],
+      'actionButtons' => [
+        'weight' => 0,
+        'items' => [
+          [
+            'id' => 'test',
+            'url' => 'test2',
+            'weight' => 0,
+          ],
+        ],
+        'type' => 'buttons',
+      ],
+    ];
+
+    $this->assertSame($expected, $this->controller->menu);
+  }
+
+  /**
+   * @test
+   */
+  public function sortMenu()
+  {
+    $item = ['id' => 'arst', 'url' => 'test'];
+
+    $item2 = ['id' => 'test', 'url' => 'test2'];
+
+    $this->setUpController();
+    $this->controller->addMenuItem($item2, 'localNavigation', 5);
+    $this->controller->addMenuItem($item2, 'localNavigation', 0);
+    $this->controller->addMenuItem($item, 'concert', 20);
+    $this->controller->addMenuItem($item2, 'actionButtons', 0);
+
+    $preSortedMenu = $this->controller->menu;
+    $this->controller->sortMenu();
+    $sortedMenu = $this->controller->menu;
+    $this->assertNotSame($preSortedMenu, $sortedMenu);
+
+    $expected = [
+      'actionButtons' => [
+        'weight' => 0,
+        'items' => [
+          [
+            'id' => 'test',
+            'url' => 'test2',
+            'weight' => 0,
+          ],
+        ],
+        'type' => 'buttons',
+      ],
+      'concert' => [
+        'weight' => 0,
+        'items' => [
+          [
+            'id' => 'arst',
+            'url' => 'test',
+            'weight' => 20,
+          ],
+        ],
+        'type' => 'menu',
+      ],
+      'localNavigation' => [
+        'weight' => 2,
+        'items' => [
+          [
+            'id' => 'test',
+            'url' => 'test2',
+            'weight' => 0,
+          ],
+          [
+            'id' => 'test',
+            'url' => 'test2',
+            'weight' => 5,
+          ],
+        ],
+        'type' => 'menu',
+      ],
+    ];
+    $this->assertSame($expected, $sortedMenu);
+  }
+
+  /**
+   * @test
+   */
   public function addDraftButtons()
   {
     $this->markTestSkipped('We need to finish menus.');
