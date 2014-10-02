@@ -782,7 +782,7 @@ class MainControllerTest extends TestBase
 
     $result = $this->controller->deletePage($filePath);
 
-    $this->assertTrue($result);
+    $this->assertSame(['action' => 'return', 'value' => true], $result);
 
     $this->unauthenticate();
     $this->destructDB();

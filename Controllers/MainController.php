@@ -262,7 +262,7 @@ class MainController extends SharedController
 
         $url = (!empty($redirectPath)) ? $redirectPath : Utility::removeDocRootFromPath($filePath);
         if (isset($_GET['barebones'])) {
-          return true;
+          return ['action' => 'return', 'value' => true];
         } else {
           return $this->redirect($url);
         }
@@ -282,7 +282,7 @@ class MainController extends SharedController
               $.post(url, data, function(response) {
                 $(\'#concertDelete .deleteAction\').colorbox.close();
 
-                if (response) {
+                if (response && response.redirectUrl) {
                   setTimeout(function() {
                     window.location = response.redirectUrl;
                   }, 2000);
@@ -297,7 +297,7 @@ class MainController extends SharedController
     // confirmation form
     $return = [
       'action' => 'return',
-      'value'  => $this->renderTemplate('confirmDelete.html.twig', ['actionUrl' => $_SERVER['REQUEST_URI'], 'filePath' => urlencode($filePath), 'scripts' => $scripts]),
+      'value'  => $this->renderTemplate('confirmDelete.html.twig', ['actionUrl' => $_SERVER['REQUEST_URI'], 'filePath' => $filePath, 'scripts' => $scripts]),
     ];
     return $return;
   }
@@ -423,7 +423,7 @@ class MainController extends SharedController
       $filePath = $params;
     }
 
-    // @todo does commenting this out break anything?
+    // @todo does commenting this out break anything? I hope not. It breaks editing drafts if it runs.
     // if (strpos($filePath, '.php') === false) {
     //   // make sure our filePath is a file
     //   $filePath = str_replace('//', '/', $filePath . DIRECTORY_SEPARATOR . 'index.php');
@@ -463,9 +463,7 @@ class MainController extends SharedController
       $isEditingPublicDraft = false;
       // check if it is a draft request
       if (self::isDraftRequest() || ($isEditingPublicDraft = $this->userIsEditingPublicDraft($filePath))) {
-        if (!$isEditingPublicDraft) {
-          $this->addMoshMenu();
-        }
+        $this->addMoshMenu();
         // pass onto draft controller to process this request
         return $this->forward('handleDraftActions', ['filePath' => $filePath]);
       }
