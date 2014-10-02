@@ -164,7 +164,11 @@ Gustavus.Concert = {
       });
       editor.on('blur', function(e) {
         // clean up content
-        editor.setContent(Gustavus.Concert.convertImageURLsToGIMLI(editor.getContent()), {format: 'raw'});
+        var content = Gustavus.Concert.mceCleanup(editor.getContent());
+        // convert images into GIMLI URLs.
+        content = Gustavus.Concert.convertImageURLsToGIMLI(content);
+
+        editor.setContent(content, {format: 'raw'});
         //console.log(editor.getContent());
         if (editableIsVisibleOnFocus === true) {
           $(editor.bodyElement).addClass('show');
@@ -330,18 +334,13 @@ Gustavus.Concert = {
   },
 
   /**
-   * Checks to see if the specified host is a Gustavus host or not
-   * @param  {String}  host Host to check
-   * @return {Boolean}
+   * Cleanup function for tinyMCE to strip empty paragraphs
+   * @param  {String} content Content to clean up
+   * @return {String} Cleaned content
    */
-  isGustavusHost: function(host) {
-    if (host.indexOf('gac.edu') !== -1) {
-      return true;
-    } else if (host.indexOf('gustavus.edu') !== -1) {
-      return true;
-    } else {
-      return false;
-    }
+  mceCleanup: function(content) {
+    var cleaned = content.replace(/<p>(?:[\s]|&nbsp;|<br[^>]*>)*<\/p>/g, '<br/>');
+    return cleaned;
   },
 
   /**
@@ -360,7 +359,7 @@ Gustavus.Concert = {
       var src = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
-      if (url.host && url.pathname && Gustavus.Concert.isGustavusHost(url.host)) {
+      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
         if (url.pathname.indexOf('/gimli/') === 0) {
           // already a gimli url
           // we may need to update the width and height
@@ -554,69 +553,71 @@ Gustavus.Concert = {
   }
 };
 
-$('#concertPublish').on('click', function(e) {
-  e.preventDefault();
-  Gustavus.Concert.saveEdits('publish');
-});
-
-$('#concertSavePrivateDraft').on('click', function(e) {
-  e.preventDefault();
-  var req = Gustavus.Concert.hasSharedDraft();
-  req.done(function(data) {
-    //console.log(data);
-    if (data) {
-      $('#confirmPrivateDraft').dialog({
-        modal: true,
-        buttons: {
-          'Save private draft': function() {
-            Gustavus.Concert.saveEdits('savePrivateDraft', false);
-            $(this).dialog('close');
-          },
-          Cancel: function() {
-            $(this).dialog('close');
-          }
-        }
-      });
-    } else {
-      Gustavus.Concert.saveEdits('savePrivateDraft', false);
-    }
-  })
-
-  req.fail(function() {
-    // something happened.
-    alert('The draft was not successfully saved');
-  })
-});
-
-$('#concertSavePublicDraft').on('click', function(e) {
-  e.preventDefault();
-  Gustavus.Concert.saveEdits('savePublicDraft', false);
-});
-
-$('#concertDiscardDraft').on('click', function(e) {
-  e.preventDefault();
-  Gustavus.Concert.saveEdits('discardDraft');
-});
-
-$('#concertStopEditing').on('click', function(e) {
-    //e.preventDefault();
-  var req = Gustavus.Concert.releaseLock();
-  req.done(function(data) {
-    if (!data) {
-      e.preventDefault();
-    }
-  })
-  req.fail(function() {
+$(document)
+  .on('click', '#concertPublish', function(e) {
     e.preventDefault();
+    Gustavus.Concert.saveEdits('publish');
   })
-  // @todo redirect to a url with concert=stopEditing
-});
 
-$('.quitConcert').on('click', function(e) {
-  Gustavus.Concert.releaseLock();
-});
+  .on('click', '#concertSavePrivateDraft', function(e) {
+    e.preventDefault();
+    var req = Gustavus.Concert.hasSharedDraft();
+    req.done(function(data) {
+      //console.log(data);
+      if (data) {
+        $('#confirmPrivateDraft').dialog({
+          modal: true,
+          buttons: {
+            'Save private draft': function() {
+              Gustavus.Concert.saveEdits('savePrivateDraft', false);
+              $(this).dialog('close');
+            },
+            Cancel: function() {
+              $(this).dialog('close');
+            }
+          }
+        });
+      } else {
+        Gustavus.Concert.saveEdits('savePrivateDraft', false);
+      }
+    })
 
-$('#toggleShowingEditableContent').on('click', function(e) {
-  e.preventDefault();
-  Gustavus.Concert.toggleShowingEditableContent($(this));
-});
+    req.fail(function() {
+      // something happened.
+      alert('The draft was not successfully saved');
+    })
+  })
+
+  .on('click', '#concertSavePublicDraft', function(e) {
+    e.preventDefault();
+    Gustavus.Concert.saveEdits('savePublicDraft', false);
+  })
+
+  .on('click', '#concertDiscardDraft', function(e) {
+    e.preventDefault();
+    Gustavus.Concert.saveEdits('discardDraft');
+  })
+
+  .on('click', '#concertStopEditing', function(e) {
+      //e.preventDefault();
+    var req = Gustavus.Concert.releaseLock();
+    req.done(function(data) {
+      if (!data) {
+        e.preventDefault();
+      }
+    })
+    req.fail(function() {
+      e.preventDefault();
+    })
+    // @todo redirect to a url with concert=stopEditing
+  })
+
+  .on('click', '.quitConcert', function(e) {
+    Gustavus.Concert.releaseLock();
+  });
+
+// @todo make this show up when you hover only
+// $('#toggleShowingEditableContent').on('click', function(e) {
+//   e.preventDefault();
+//   Gustavus.Concert.toggleShowingEditableContent($(this));
+// });
