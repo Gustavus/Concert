@@ -18,7 +18,8 @@ use Gustavus\Concourse\Controller as ConcourseController,
   Gustavus\Utility\File,
   Gustavus\Utility\Number,
   Gustavus\Utility\Set,
-  DateTime;
+  DateTime,
+  Twig_SimpleFunction;
 
 /**
  * Controller to handle shared functionality for other controllers
@@ -100,6 +101,21 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Gets the twig environment with our AfterGacTwigExtension
+   *
+   * {@inheritdoc}
+   */
+  protected function getTwigEnvironment($viewDir = null, $viewNamespace = null)
+  {
+    Filters::add('twigEnvironmentSetUp', function($twigEnv) {
+      $twigEnv->addFunction(new Twig_SimpleFunction('getFullNameFromUsername', [$this, 'getFullNameFromUsername']));
+      $twigEnv->addFunction(new Twig_SimpleFunction('removeDocRootFromPath', '\Gustavus\Concert\Utility::removeDocRootFromPath'));
+      return $twigEnv;
+    });
+    return parent::getTwigEnvironment($viewDir, $viewNamespace);
+  }
+
+  /**
    * Overrides visible buttons inserted by insertEditingResources
    *
    * @param  array $visibleButtons Array of buttons that we want to be visible
@@ -159,12 +175,6 @@ class SharedController extends ConcourseController
       $redirectPath = $filePath;
     }
     $redirectPath = Utility::removeDocRootFromPath($redirectPath);
-
-    if (!empty(self::$visibleEditingButtons)) {
-      $visibleButtons = self::$visibleEditingButtons;
-      // reset this back to null
-      self::$visibleEditingButtons = null;
-    }
 
     $resources = [
       'js' => [
@@ -232,13 +242,19 @@ class SharedController extends ConcourseController
 
     $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), $filePathFromDocRoot);
 
+    if (!empty(self::$visibleEditingButtons)) {
+      $visibleButtons = self::$visibleEditingButtons;
+      // reset this back to null
+      self::$visibleEditingButtons = null;
+    }
+
     if ($visibleButtons === null) {
       $visibleButtons = Config::$defaultEditingButtons;
     }
 
-    Filters::add('body', function($content) use ($userCanPublishFile, $visibleButtons, $additionalButtons) {
+    Filters::add('scripts', function($content) use ($userCanPublishFile, $visibleButtons, $additionalButtons) {
       return $content . $this->renderView(
-          'actionButtons.html.twig',
+          'actionButtons.js.twig',
           [
             'userCanPublishFile' => $userCanPublishFile,
             'visibleButtons'     => $visibleButtons,
@@ -443,14 +459,7 @@ class SharedController extends ConcourseController
 
       $owner = $fm->getLockOwner();
       if ($owner && $owner !== $this->getLoggedInUsername()) {
-        $peoplePuller = Campus::People($this->getApiKey());
-        $peoplePuller->setUsername($owner);
-        $person = $peoplePuller->current();
-        if (is_object($person)) {
-          $name = $person->getFullName();
-        } else {
-          $name = $owner;
-        }
+        $name = $this->getFullNameFromUsername($owner);
 
         $message = sprintf('%s %s currently holds the lock.', $message, $name);
         // lock couldn't be acquired due to lack of permissions or something else.
@@ -458,6 +467,24 @@ class SharedController extends ConcourseController
     }
 
     return $message;
+  }
+
+  /**
+   * Gets the full name of the person from the specified username
+   *
+   * @param  string $username Username to get the full name for
+   * @return string
+   */
+  public function getFullNameFromUsername($username)
+  {
+    $peoplePuller = Campus::People($this->getApiKey());
+    $peoplePuller->setUsername($username);
+    $person = $peoplePuller->current();
+    if (is_object($person)) {
+      return $person->getFullName();
+    } else {
+      return $username;
+    }
   }
 
   /**
@@ -485,15 +512,7 @@ class SharedController extends ConcourseController
     $forceHave = false;
     foreach ($openDrafts as $openDraft) {
       if ($openDraft['username'] !== $this->getLoggedInUsername()) {
-        $peoplePuller = Campus::People($this->getApiKey());
-        $peoplePuller->setUsername($openDraft['username']);
-        $person = $peoplePuller->current();
-        if (is_object($person)) {
-          $name = $person->getFullName();
-        } else {
-          // user couldn't be found in the campus api.
-          $name = $openDraft['username'];
-        }
+        $name = $this->getFullNameFromUsername($openDraft['username']);
       } else {
         $forceHave = true;
         $name = count($draftUsers) === 0 ? 'You' : 'you';

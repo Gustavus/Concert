@@ -194,20 +194,12 @@ class DraftController extends SharedController
       return $this->redirect((new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue());
     }
 
-    $messageAdditions = '';
-    if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
-      if (self::isRequestFromConcertRoot()) {
-        $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
-      } else {
-        $url = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'editDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
-      }
-      $messageAdditions = sprintf('<br/><a href="%s" class="button">Edit Draft</a>', $url);
-    }
-
-
     if (self::isRequestFromConcertRoot()) {
-      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.%s', Utility::removeDocRootFromPath($draft['destFilepath']), $messageAdditions);
+      $messageAdditions = sprintf('<br/>This draft will live at "%s" when published.', Utility::removeDocRootFromPath($draft['destFilepath']));
+    } else {
+      $messageAdditions = '';
     }
+
     $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
 
     // add a message saying that the draft is older than the published date of the page and it might be out of sync.

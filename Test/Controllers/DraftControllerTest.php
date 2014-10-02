@@ -173,7 +173,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains('Please select a draft', $actual['content']);
     $this->assertContains('testUser', $actual['content']);
-    $this->assertContains('jerry', $actual['content']);
+    $this->assertContains('Jerry', $actual['content']);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -400,7 +400,6 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $this->assertMessageInMessages('Edit Draft', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -431,7 +430,6 @@ class DraftControllerTest extends TestBase
     // we are forcing people to view public drafts from the location that they will live at
     $this->assertSame(['redirect' => 'https://beta.gac.edu/billy/concert/index.php?concert=viewDraft&concertDraft=edba98d222792b8363ebcdc9c56c67b8'], $actual);
 
-    $this->assertMessageInMessages('Edit Draft', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
