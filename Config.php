@@ -299,7 +299,7 @@ class Config
    */
   const SITE_ADMIN_ACCESS_LEVEL  = 'siteAdmin';
   /**
-   * This person can publish pending drafts for this site.
+   * This person can edit and upload, but just doesn't have admin privileges.
    */
   const SITE_EDITOR_ACCESS_LEVEL  = 'editor';
   /**
