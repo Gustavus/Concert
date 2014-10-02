@@ -595,6 +595,28 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
   /**
    * @test
    */
+  public function saveDraftNotAllowable()
+  {
+    $origAllowableDrafts = Config::$allowableDraftTypes;
+    Config::$allowableDraftTypes = [Config::PUBLIC_DRAFT];
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $this->assertFalse($this->fileManager->saveDraft(Config::PRIVATE_DRAFT));
+    $this->destructDB();
+    Config::$allowableDraftTypes = $origAllowableDrafts;
+  }
+
+  /**
+   * @test
+   */
   public function saveDraftNoLock()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);

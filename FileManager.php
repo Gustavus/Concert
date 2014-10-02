@@ -367,6 +367,10 @@ class FileManager
    */
   public function saveDraft($type, array $additionalUsers = null)
   {
+    if (!in_array($type, Config::$allowableDraftTypes)) {
+      // draft type is not allowed.
+      return false;
+    }
     if (!$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
       return false;

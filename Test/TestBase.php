@@ -102,6 +102,12 @@ class TestBase extends TestEM
     Config::$draftDir         = self::$testFileDir . '/drafts/';
     Config::$editableDraftDir = self::$testFileDir . '/editableDrafts/';
 
+    Config::$allowableDraftTypes = [
+      Config::PUBLIC_DRAFT,
+      Config::PRIVATE_DRAFT,
+      Config::PENDING_PUBLISH_DRAFT,
+    ];
+
     $dbal = DBAL::getDBAL('testDB', $this->getDBH());
     $this->set('PermissionsManager', 'dbal', $dbal);
     $this->set('Utility', 'dbal', $dbal);

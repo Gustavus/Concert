@@ -1,3 +1,4 @@
+{% import _self as self %}
 {% spaceless %}
 <h2>Please select a draft to view</h2>
 <table class="fancy sortable" style="width: 100%">
@@ -13,12 +14,18 @@
   {% for draft in drafts %}
     <tr>
       <td>{{ getFullNameFromUsername(draft.username) }}</td>
-      <td>{{ draft.type|un_camel_case|title }}</td>
+      <td>{{ self.renderType(draft.type) }}</td>
       <td>{{ draft.date|date('F j, Y')}}</td>
       <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}{% if siteNav %}&amp;concertAction=siteNav{% endif %}" class="button small">View Draft</a></td>
     </tr>
   {% endfor %}
   </body>
 </table>
-
 {% endspaceless %}
+
+{% macro renderType(draftType) %}
+  {% if draftType == 'public' %}
+    {% set draftType = 'shared' %}
+  {% endif %}
+  {{ draftType|un_camel_case|title }}
+{% endmacro renderType %}

@@ -546,6 +546,17 @@ class Config
   ];
 
   /**
+   * Draft types that can be used.
+   *
+   * @var array
+   */
+  public static $allowableDraftTypes = [
+    Config::PUBLIC_DRAFT,
+    //Config::PRIVATE_DRAFT, Disabled for now. You can only save a shared (public) draft.
+    Config::PENDING_PUBLISH_DRAFT,
+  ];
+
+  /**
    * Defines all of the possible templates a person can create a page from
    *   Key is the identifier.
    *   Value is an array with keys of name and location.
