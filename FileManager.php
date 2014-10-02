@@ -172,11 +172,14 @@ class FileManager
       # look for newlines and not an opening php or script tag
       (?:\?\>|</script>|(?:\A(?!(?:<\?|<script(?:[^>]+)?>))))
 
+      # make sure our next characters aren\'t opening script or php tags
+      (?!(?:<\?|<script(?:[^>]+)?>))
+
       # capture until we see the end of the file, an opening php tag, or an opening script tag
       (?P<content>.+?)(?=<\?(?:php)?|<script(?:[^>]+)?>|[\h*|\v*]*?\z)
     )';
 
-    // throw the two pieces together into one regex with s for PCRE_DOTALL and m for PCRE_MULTILINE
+    // throw the two pieces together into one regex with s for PCRE_DOTALL, m for PCRE_MULTILINE, and x for PCRE_EXTENDED
     $regex = sprintf('`%s|%s|%s`smx', $phpPiece, $scriptPiece, $contentPiece);
 
     preg_match_all($regex, $contents, $matches);

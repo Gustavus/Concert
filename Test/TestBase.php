@@ -221,11 +221,11 @@ class TestBase extends TestEM
   }
 
   /**
-   * Checks to see if a message exists in our message array
+   * Checks to see if a message exists in our message array.
    *
    * @param  string $searchMessage Message we want to find in our messages
    * @param  array  $messages      Array of arrays with keys of type and message
-   * @return boolean
+   * @return void
    */
   protected function assertMessageInMessages($searchMessage, $messages)
   {
@@ -462,6 +462,155 @@ arst
 ',
         6 => '
 ',
+      ],
+    ];
+
+  /**
+   * File 7 contents to test
+   * @var string
+   */
+  protected static $indexSevenContents = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];
+?><?php
+$config["focusBox"] = ob_get_contents();
+?>';
+
+  /**
+   * File 7 configuration array
+   * @var array
+   */
+  protected static $indexSevenConfigArray = [
+      'phpcontent' => [
+        0 => '
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+',
+        2 => '
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];
+',
+        3 => '
+$config["focusBox"] = ob_get_contents();
+',
+      ],
+      'scriptcontent' => [],
+      'content' => [
+        1 => '
+
+<p>This is some html content</p>
+
+'
+      ],
+    ];
+
+  /**
+   * File 8 contents to test
+   * @var string
+   */
+  protected static $indexEightContents = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();?><script>hello</script><script>arstarst</script><p>This is some html content</p><?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];
+?><?php
+$config["focusBox"] = ob_get_contents();
+?>';
+
+  /**
+   * File 8 configuration array
+   * @var array
+   */
+  protected static $indexEightConfigArray = [
+      'phpcontent' => [
+        0 => '
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();',
+        4 => '
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];
+',
+        5 => '
+$config["focusBox"] = ob_get_contents();
+',
+      ],
+      'scriptcontent' => [
+        1 => '<script>hello</script>',
+        2 => '<script>arstarst</script>',
+      ],
+      'content' => [
+        3 => '<p>This is some html content</p>'
       ],
     ];
 
