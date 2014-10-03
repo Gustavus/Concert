@@ -517,20 +517,21 @@ class PermissionsManager
    * Finds all of the sites that contain the current file.
    *
    * @param  string $filePath Path to the file we are searching for sites for.
+   * @param  boolean $includeSitePerms Whether to include site specific permissions or not.
    * @return array|null Array if sites are found, null otherwise.
    */
-  private static function findSitesContainingFile($filePath)
+  private static function findSitesContainingFile($filePath, $includeSitePerms = false)
   {
     $filePathArray = explode('/', str_replace('//', '/', $filePath));
 
     $searchKey = (empty($filePathArray[0])) ? 1 : 0;
-    $sites = self::getSitesFromBase('/' . $filePathArray[$searchKey]);
+    $sites = self::getSitesFromBase('/' . $filePathArray[$searchKey], $includeSitePerms);
     if (empty($sites)) {
       return null;
     }
     $foundSites = [];
     foreach ($sites as $site) {
-      if (strpos($filePath, $site) !== false) {
+      if (($includeSitePerms && strpos($filePath, $site['siteRoot']) !== false) || (!$includeSitePerms && strpos($filePath, $site) !== false)) {
         $foundSites[] = $site;
       }
     }
@@ -790,9 +791,10 @@ class PermissionsManager
    * Gets all the sites that exist inside the base site specified
    *
    * @param  string $siteBase Base directory to search for sites in
+   * @param  boolean $includeSitePerms Whether to include site specific permissions or not.
    * @return array
    */
-  private static function getSitesFromBase($siteBase)
+  private static function getSitesFromBase($siteBase, $includeSitePerms = false)
   {
     $dbal = self::getDBAL();
 
@@ -801,8 +803,41 @@ class PermissionsManager
       ->from('sites', 's')
       ->where('s.siteRoot LIKE :siteBase');
 
+    if ($includeSitePerms) {
+      $qb->addSelect('s.excludedFiles');
+    }
+
     $result = $dbal->fetchAll($qb->getSQL(), [':siteBase' => $siteBase . '%%']);
+    if ($includeSitePerms) {
+      return $result;
+    }
     return (new Set($result))->flattenValues()->getValue();
+  }
+
+  /**
+   * Gets permissions inherited from parent sites for the specified site
+   *
+   * @param  string $siteBase Site base to get inherited permissions for
+   * @return array|null  Array if any exist with keys of permissions. Null if none exist.
+   */
+  private static function getInheritedPermissionsForSite($siteBase)
+  {
+    $parentSites = self::findSitesContainingFile(str_replace('//', '/', $siteBase . '/index.php'), true);
+    if (empty($parentSites)) {
+      return null;
+    }
+
+    $perms = [];
+    foreach ($parentSites as $parentSite) {
+      if (!empty($parentSite['excludedFiles'])) {
+        if (!isset($perms['excludedFiles'])) {
+          $perms['excludedFiles'] = explode(',', $parentSite['excludedFiles']);
+        } else {
+          $perms['excludedFiles'] = array_unique(array_merge($perms['excludedFiles'], explode(',', $parentSite['excludedFiles'])));
+        }
+      }
+    }
+    return empty($perms) ? null : $perms;
   }
 
   /**
@@ -865,9 +900,23 @@ class PermissionsManager
         'excludedFiles' => ($sitePerms['excludedFiles']) ? explode(',', $sitePerms['excludedFiles']) : null,
       ];
 
-      if ($sitePerms['siteExcludedFiles']) {
-        // @todo should this also inherit from parent sites?
+      $inheritedPerms = self::getInheritedPermissionsForSite($sitePerms['siteRoot']);
+
+      if (!empty($sitePerms['siteExcludedFiles'])) {
         $sitePerms['siteExcludedFiles'] = explode(',', $sitePerms['siteExcludedFiles']);
+      }
+
+      if (!empty($inheritedPerms['excludedFiles'])) {
+        // we have inhrited permissions to add to our site.
+        if (empty($sitePerms['siteExcludedFiles'])) {
+          $sitePerms['siteExcludedFiles'] = $inheritedPerms['excludedFiles'];
+        } else {
+          // we need to merge them together.
+          $sitePerms['siteExcludedFiles'] = array_unique(array_merge($sitePerms['siteExcludedFiles'], $inheritedPerms['excludedFiles']));
+        }
+      }
+
+      if (!empty($sitePerms['siteExcludedFiles'])) {
         if (!is_array($returnArray[$sitePerms['siteRoot']]['excludedFiles'])) {
           $returnArray[$sitePerms['siteRoot']]['excludedFiles'] = $sitePerms['siteExcludedFiles'];
         } else {

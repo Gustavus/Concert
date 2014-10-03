@@ -209,6 +209,29 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function saveAndGetUserPermissionsExcludedSiteFilesWithInheritedSitePerms()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->assertNotFalse($this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', ['concourseApp/', 'private/*']]));
+    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/arst/', 'test', [], []]));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/billy/arst/' => [
+        'includedFiles' => null,
+        'excludedFiles' => ['concourseApp/', 'private/*'],
+        'accessLevel'   => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function getAllPermissionsForUserIncludeAndExcludeFileArrays()
   {
     $this->constructDB(['Sites', 'Permissions']);
@@ -413,6 +436,71 @@ class PermissionsManagerTest extends TestBase
     $actual = $this->call('PermissionsManager', 'getSitesFromBase', ['/arst']);
 
     $this->assertSame(['/arst/private/', '/arst/private/arst/'], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getSitesFromBaseIncludingPerms()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $actual = $this->call('PermissionsManager', 'getSitesFromBase', ['/arst', true]);
+
+    $this->assertSame([['siteRoot' => '/arst/private/', 'excludedFiles' => 'concourse'], ['siteRoot' => '/arst/private/arst/', 'excludedFiles' => null]], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSite()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/', true]);
+
+    $this->assertSame(['excludedFiles' => ['concourse']], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSiteMultiples()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/', 'gtsOnly']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse,private']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/', true]);
+
+    $this->assertSame(['excludedFiles' => ['gtsOnly', 'concourse', 'private']], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSiteNone()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/', true]);
+
+    $this->assertNull($actual);
 
     $this->destructDB();
   }
@@ -1571,6 +1659,25 @@ class PermissionsManagerTest extends TestBase
     $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
 
     $this->assertSame(['/billy/concert/', '/billy/'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findSitesContainingFileIncludingPerms()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy/', 'concourse/']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file), true]);
+
+    $this->assertSame([['siteRoot' => '/billy/', 'excludedFiles' => 'concourse/'], ['siteRoot' => '/billy/concert/', 'excludedFiles' => null]], $result);
     $this->destructDB();
   }
 
