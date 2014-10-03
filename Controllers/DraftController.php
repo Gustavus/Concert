@@ -567,7 +567,8 @@ class DraftController extends SharedController
       // we need to see if the filePath to copy is set in the referer
       $query = (new String($parts['query']))->splitQueryString()->getValue();
       if (isset($query['srcFilePath'])) {
-        return Utility::addDocRootToPath(urldecode($query['srcFilePath']));
+        $srcFilePath = urldecode($query['srcFilePath']);
+        return (isset(Config::$templates[$srcFilePath])) ? Config::$templates[$srcFilePath]['location'] : Utility::addDocRootToPath($srcFilePath);
       }
     }
     return Config::DEFAULT_TEMPLATE_PAGE;
