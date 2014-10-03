@@ -460,8 +460,10 @@ Gustavus.Concert = {
    */
   releaseLock: function(async) {
 
-    if (async === undefined) {
+    if (async === undefined || async === null) {
       async = true;
+    } else if (typeof async !== 'boolean') {
+      async = Boolean(async);
     }
 
     var data = {
@@ -495,45 +497,6 @@ Gustavus.Concert = {
       data: data,
       dataType: 'json',
     });
-  },
-
-  /**
-   * Toggles showing what contents can be edited
-   * @param  {jQuery} $button
-   * @return {undefined}
-   */
-  toggleShowingEditableContent: function($button) {
-    if ($button.data('show') === true) {
-      this.showEditableContent($button);
-    } else {
-      this.hideEditableContent($button);
-    }
-  },
-
-  /**
-   * Shows what contents can be edited
-   * @param  {jQuery} $button
-   * @return {undefined}
-   */
-  showEditableContent: function($button) {
-    $('div.editable').each(function() {
-      $(this).addClass('show');
-    })
-    $button.data('show', false);
-    $button.html('Don\'t show editable areas');
-  },
-
-  /**
-   * Hides showing what contents can be edited
-   * @param  {jQuery} $button
-   * @return {undefined}
-   */
-  hideEditableContent: function($button) {
-    $('div.editable.show').each(function() {
-      $(this).removeClass('show');
-    })
-    $button.data('show', true);
-    $button.html('Show editable areas');
   },
 
   /**
@@ -627,9 +590,3 @@ $(document)
 $(window).on('beforeunload', function () {
   Gustavus.Concert.releaseLock(false);
 });
-
-// @todo make this show up when you hover only
-// $('#toggleShowingEditableContent').on('click', function(e) {
-//   e.preventDefault();
-//   Gustavus.Concert.toggleShowingEditableContent($(this));
-// });

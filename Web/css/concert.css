@@ -5,7 +5,7 @@ div.editable {
   cursor: text !important;
 }
 
-div.editable.show {
+div.editable:any(:hover, :focus) {
   outline: 1px dashed #BBB;
 }
 
