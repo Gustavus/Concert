@@ -455,15 +455,22 @@ Gustavus.Concert = {
 
   /**
    * Releases the lock for the current file
+   * @param  {Boolean} [async=true] Make the request execute synchronously. If this is false then the jqXHR will not contain jQuery.Deferred methods.
    * @return {jqXHR} jQuery XMLHttpRequest (jqXHR) object
    */
-  releaseLock: function() {
+  releaseLock: function(async) {
+
+    if (async === undefined) {
+      async = true;
+    }
+
     var data = {
       'concertAction': ((this.isSiteNavRequest) ? 'stopEditingSiteNav' : 'stopEditing'),
       'filePath': this.filePath,
     };
 
     return $.ajax({
+      async: async,
       type: 'POST',
       url : this.baseUrl,
       data: data,
@@ -615,6 +622,11 @@ $(document)
   .on('click', '.quitConcert', function(e) {
     Gustavus.Concert.releaseLock();
   });
+
+// When the user leaves the page release the lock.
+$(window).on('beforeunload', function () {
+  Gustavus.Concert.releaseLock(false);
+});
 
 // @todo make this show up when you hover only
 // $('#toggleShowingEditableContent').on('click', function(e) {
