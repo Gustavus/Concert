@@ -518,7 +518,6 @@ Gustavus.Concert = {
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;
-      Gustavus.Concert.showEditableContent($('#toggleShowingEditableContent'));
     });
   }
 };
