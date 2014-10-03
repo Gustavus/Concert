@@ -209,8 +209,9 @@ class SharedController extends ConcourseController
                 Gustavus.Concert.redirectPath = "%3$s";
                 Gustavus.Concert.allowCode = %4$s;
                 Gustavus.Concert.isAdmin = %5$s;
-                Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%6$s";
-                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%6$s/",
+                Gustavus.Concert.isSiteNavRequest = %6$s;
+                Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%7$s";
+                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%7$s/",
                 Gustavus.Concert.init();
               }
             });
@@ -220,6 +221,7 @@ class SharedController extends ConcourseController
           $redirectPath,
           $allowCode ? 'true' : 'false',
           $isAdmin,
+          self::isSiteNavRequest() ? 'true' : 'false',
           $siteAccessKey
       );
       return $content . $script;
@@ -686,7 +688,16 @@ class SharedController extends ConcourseController
     if (isset($_POST['filePath']) && (strpos($_POST['filePath'], 'site_nav.php') !== false || strpos($_POST['filePath'], 'concertAction=siteNav') !== false)) {
       return true;
     }
-    return ((isset($_GET['concert']) && ($_GET['concert'] === 'siteNav' || $_GET['concert'] === 'stopEditingSiteNav')) || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav'));
+    return ((isset($_GET['concert']) && ($_GET['concert'] === 'siteNav' || $_GET['concert'] === 'stopEditingSiteNav')) || (isset($_GET['concertAction']) && $_GET['concertAction'] === 'siteNav') || self::userIsRequestingSiteNavLockRelease());
+  }
+
+  /**
+   * Checks if the user is requesting to release the lock for a site nav
+   * @return boolean
+   */
+  protected static function userIsRequestingSiteNavLockRelease()
+  {
+    return (isset($_POST['concertAction']) && $_POST['concertAction'] === 'stopEditingSiteNav');
   }
 
   /**
@@ -716,7 +727,7 @@ class SharedController extends ConcourseController
    */
   protected static function isRequestingLockRelease()
   {
-    return (isset($_POST['concertAction']) && $_POST['concertAction'] === 'stopEditing');
+    return ((isset($_POST['concertAction']) && $_POST['concertAction'] === 'stopEditing') || self::userIsRequestingSiteNavLockRelease());
   }
 
   /**

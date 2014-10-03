@@ -353,7 +353,7 @@ class SiteNavController extends SharedController
       // case self::userIsDeleting():
       //     return $this->delete($params['filePath']);
 
-      case self::userIsDoneEditing():
+      case (self::userIsDoneEditing() || self::isRequestingLockRelease()):
           return $this->stopEditing($params['filePath']);
 
       case self::isRevisionRequest():

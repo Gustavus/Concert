@@ -459,7 +459,7 @@ Gustavus.Concert = {
    */
   releaseLock: function() {
     var data = {
-      'concertAction': 'stopEditing',
+      'concertAction': ((this.isSiteNavRequest) ? 'stopEditingSiteNav' : 'stopEditing'),
       'filePath': this.filePath,
     };
 
