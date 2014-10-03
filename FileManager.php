@@ -839,12 +839,19 @@ class FileManager
       // we are trying to delete this file
       return $this->deleteFile();
     } else if ($result['action'] === Config::CREATE_HTTPD_DIRECTORY_STAGE) {
-      // we are trying to delete this file
+      // we are wanting to create a directory writable by the httpd user.
       if ($this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP)) {
         unlink($this->filePath);
         return true;
       }
       return false;
+    } else if ($result['action'] === Config::CREATE_HTTPD_DIR_HTACCESS_STAGE) {
+      // make sure the directory exists.
+      $this->ensureDirectoryExists(dirname($result['destFilepath']), Config::HTTPD_USER, Config::HTTPD_GROUP);
+      if (symlink(Config::MEDIA_DIR_HTACCESS_TEMPLATE, $result['destFilepath'])) {
+        unlink($this->filePath);
+        return true;
+      }
     }
 
     // now we set our current username to be the username that staged the file, so we can check permissions and publish it for them

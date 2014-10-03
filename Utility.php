@@ -147,7 +147,7 @@ class Utility
 
     if (!file_exists($uploadLocation . '.htaccess')) {
       $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($uploadLocation) . '.htaccess', null, self::getDBAL());
-      if ($fm->stageFile(Config::PUBLISH_STAGE, file_get_contents(Config::MEDIA_DIR_HTACCESS_TEMPLATE))) {
+      if ($fm->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, '')) {
         $staged = true;
       }
     }

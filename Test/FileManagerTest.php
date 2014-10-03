@@ -1963,6 +1963,34 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function stageAndPublishFileHTTPDDirHtaccess()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $this->assertFalse(is_dir(self::$testFileDir . '/httpdDir/'));
+    $this->assertFalse(is_link(self::$testFileDir . '/httpdDir/.htaccess'));
+
+    $this->buildFileManager('bvisto', self::$testFileDir . '/httpdDir/.htaccess');
+
+    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, ''));
+
+    $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir/.htaccess', 'username' => 'bvisto', 'action' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE]], $stagedEntry);
+
+    $this->fileManager->publishFile();
+
+    $this->assertTrue(is_link(self::$testFileDir . '/httpdDir/.htaccess'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function publishFileNotRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);

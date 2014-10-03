@@ -275,6 +275,10 @@ class Config
    * Stage for specifing an undo restore stage
    */
   const CREATE_HTTPD_DIRECTORY_STAGE = 'createHTTPDDir';
+  /**
+   * Stage for specifing an undo restore stage
+   */
+  const CREATE_HTTPD_DIR_HTACCESS_STAGE = 'createHTTPDHtaccess';
 
 
   // Access Levels

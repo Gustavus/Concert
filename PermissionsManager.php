@@ -866,6 +866,7 @@ class PermissionsManager
       ];
 
       if ($sitePerms['siteExcludedFiles']) {
+        // @todo should this also inherit from parent sites?
         $sitePerms['siteExcludedFiles'] = explode(',', $sitePerms['siteExcludedFiles']);
         if (!is_array($returnArray[$sitePerms['siteRoot']]['excludedFiles'])) {
           $returnArray[$sitePerms['siteRoot']]['excludedFiles'] = $sitePerms['siteExcludedFiles'];

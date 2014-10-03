@@ -183,7 +183,7 @@ class UtilityTest extends TestBase
     $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
 
     // now for thumbs dir
-    $this->buildFileManager('bvisto', $baseSite . 'files/thumbs/');
+    $this->buildFileManager('root', $baseSite . 'files/thumbs/');
     $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
 
     $expected = [[
@@ -192,17 +192,23 @@ class UtilityTest extends TestBase
       'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
     ]];
     $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+    $this->assertTrue($this->fileManager->publishFile());
+    $this->assertTrue(is_dir($baseSite . 'files/thumbs/'));
 
     // now make sure .htaccess file was inserted
-    $this->buildFileManager('bvisto', $baseSite . 'files/.htaccess');
+    $this->buildFileManager('root', $baseSite . 'files/.htaccess');
     $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
 
     $expected = [[
       'destFilepath' => $baseSite . 'files/.htaccess',
       'username'     => 'bvisto',
-      'action'       => Config::PUBLISH_STAGE,
+      'action'       => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE,
     ]];
     $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+    $this->assertTrue($this->fileManager->publishFile());
+    $this->assertTrue(file_exists($baseSite . 'files/.htaccess'));
+    $this->assertTrue(is_link($baseSite . 'files/.htaccess'));
+    $this->assertSame(Config::MEDIA_DIR_HTACCESS_TEMPLATE, readlink($baseSite . 'files/.htaccess'));
 
     $this->unauthenticate();
     $this->destructDB();
