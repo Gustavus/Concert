@@ -52,7 +52,7 @@ class SiteNavController extends SharedController
 
     $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
 
-    if (isset($moshResult['action']) && $moshResult['action'] === 'return'){
+    if (isset($moshResult['action']) && $moshResult['action'] === 'return') {
       if (!is_string($moshResult['value'])) {
         $moshResult['value'] = '';
       }
