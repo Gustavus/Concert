@@ -198,6 +198,63 @@ class MainControllerTest extends TestBase
   /**
    * @test
    */
+  public function editExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test', null, 'concourse']);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $this->assertFalse($this->controller->edit('billy/concert/concourse/index.php'));
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function editIncluded()
+  {
+    mkdir(self::$testFileDir . 'billy/concert/concourse/user/', 0777, true);
+    file_put_contents(self::$testFileDir . 'billy/concert/concourse/user/index.php', 'arst');
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir . 'billy/concert/', 'test', 'concourse/user', 'concourse']);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $this->assertContains('arst', $this->controller->edit(self::$testFileDir . 'billy/concert/concourse/user/index.php'));
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function editSiteExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['billy/concert/', 'concourse2/*']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test', null, '']);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $this->assertFalse($this->controller->edit('billy/concert/concourse2/index.php'));
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function editOpenDraft()
   {
     $filePath = self::$testFileDir . 'index.php';

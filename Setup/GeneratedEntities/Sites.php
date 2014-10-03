@@ -28,6 +28,13 @@ class Sites
      */
     private $siteroot;
 
+    /**
+     * @var string
+     *
+     * @Column(name="excludedFiles", type="string", length=512, nullable=true)
+     */
+    private $excludedFiles;
+
 
     /**
      * Get id

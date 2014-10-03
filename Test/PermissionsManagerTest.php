@@ -156,7 +156,53 @@ class PermissionsManagerTest extends TestBase
       ],
     ];
 
+    $this->assertSame($expected, $permissions);
+    $this->destructDB();
+  }
 
+  /**
+   * @test
+   */
+  public function saveAndGetUserPermissionsExcludedSiteFiles()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->assertNotFalse($this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', 'concourseApp/*']));
+    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test']));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/billy' => [
+        'includedFiles' => null,
+        'excludedFiles' => ['concourseApp/*'],
+        'accessLevel'   => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveAndGetUserPermissionsExcludedSiteFilesWithUserExcludes()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->assertNotFalse($this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', ['concourseApp/', 'private/*']]));
+    $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']]));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/billy' => [
+        'includedFiles' => ['files/*', 'private/public/*'],
+        'excludedFiles' => ['private/*', 'protected/*', 'concourseApp/'],
+        'accessLevel'   => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
     $this->destructDB();
   }
 

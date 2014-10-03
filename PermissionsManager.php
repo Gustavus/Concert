@@ -844,6 +844,7 @@ class PermissionsManager
       ->addSelect('p.includedFiles')
       ->addSelect('p.excludedFiles')
       ->addSelect('s.siteRoot')
+      ->addSelect('s.excludedFiles as siteExcludedFiles')
       ->from('permissions', 'p')
       ->innerJoin('p', 'sites', 's', 'p.site_id = s.id')
       ->where('p.username = :username');
@@ -863,6 +864,16 @@ class PermissionsManager
         'includedFiles' => ($sitePerms['includedFiles']) ? explode(',', $sitePerms['includedFiles']) : null,
         'excludedFiles' => ($sitePerms['excludedFiles']) ? explode(',', $sitePerms['excludedFiles']) : null,
       ];
+
+      if ($sitePerms['siteExcludedFiles']) {
+        $sitePerms['siteExcludedFiles'] = explode(',', $sitePerms['siteExcludedFiles']);
+        if (!is_array($returnArray[$sitePerms['siteRoot']]['excludedFiles'])) {
+          $returnArray[$sitePerms['siteRoot']]['excludedFiles'] = $sitePerms['siteExcludedFiles'];
+        } else {
+          $returnArray[$sitePerms['siteRoot']]['excludedFiles'] = array_unique(array_merge($returnArray[$sitePerms['siteRoot']]['excludedFiles'], $sitePerms['siteExcludedFiles']));
+        }
+      }
+
       // now add accessLevels to our array
       if ($sitePerms['accessLevel']) {
         $accessLevels = array_filter(explode(',', $sitePerms['accessLevel']));
@@ -1027,20 +1038,25 @@ class PermissionsManager
    * Saves a new site if it doesn't yet exist.
    *
    * @param  string $siteRoot Base url of the site to create
+   * @param  string|array $excludedFiles Files the user doesn't have access to
    *
    * @throws  RuntimeException If something failed when inserting
    * @return string|boolean  ID of the already existing site or a newly one. False if something failed.
    */
-  private static function saveNewSiteIfNeeded($siteRoot)
+  private static function saveNewSiteIfNeeded($siteRoot, $excludedFiles = null)
   {
     $id = self::getSiteId($siteRoot);
 
     if ($id !== null) {
       return $id;
     } else {
+      if (is_array($excludedFiles)) {
+        // convert this to a comma separated string of filenames
+        $excludedFiles = implode(',', $excludedFiles);
+      }
       $dbal = self::getDBAL();
       // we need to create this site.
-      $insertResult = $dbal->insert('sites', ['siteRoot' => $siteRoot]);
+      $insertResult = $dbal->insert('sites', ['siteRoot' => $siteRoot, 'excludedFiles' => $excludedFiles]);
       if ($insertResult) {
         return $dbal->lastInsertId();
       } else {
