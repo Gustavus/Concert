@@ -266,7 +266,13 @@ class DraftController extends SharedController
       ]
     ];
 
-    $this->insertEditingResources($this->buildUrl('editDraft', ['draftName' => $draftName]), null, ['saveDraft'], $additionalButtons);
+    $buttons = ['saveDraft'];
+
+    if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
+      $buttons[] = 'discardDraft';
+    }
+
+    $this->insertEditingResources($this->buildUrl('editDraft', ['draftName' => $draftName]), null, $buttons, $additionalButtons);
 
     $draftFilename = $draftFM->makeEditableDraft();
 
