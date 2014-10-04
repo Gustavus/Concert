@@ -128,6 +128,7 @@ Gustavus.Concert = {
     allow_script_urls: false,
     relative_urls: false,
     forced_root_block : '',
+    force_p_newlines: true,
     //invalid_elements http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
@@ -156,6 +157,9 @@ Gustavus.Concert = {
       {title: 'Striped', value: 'striped'},
       {title: 'Sortable', value: 'sortable'}
     ],
+    table_advtab: false,
+    table_cell_advtab: false,
+    table_row_advtab: false,
     setup : function(editor) {
       var editableIsVisibleOnFocus = false;
       editor.on('focus', function(e) {
@@ -370,13 +374,13 @@ Gustavus.Concert = {
 
       var url = Gustavus.Utility.URL.parseURL(src);
       if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
-        if (url.pathname.indexOf('/gimli/') === 0) {
+        if (url.pathname.indexOf('/gimli/') === 0 || url.pathname.indexOf('/slir/') === 0) {
           // already a gimli url
           // we may need to update the width and height
-          var widthMatches = url.pathname.match('^/gimli/[^w]*?(w[,.:x]?([0-9]+))');
+          var widthMatches = url.pathname.match('^/(?:gimli|slir)/[^w]*?(w[,.:x]?([0-9]+))');
           var currentWidth = widthMatches ? widthMatches[2] : null;
 
-          var heightMatches = url.pathname.match('^/gimli/[^h]*?(h[,.:x]?([0-9]+))');
+          var heightMatches = url.pathname.match('^/(?:gimli|slir)/[^h]*?(h[,.:x]?([0-9]+))');
           var currentHeight = heightMatches ? heightMatches[2] : null;
           if (currentWidth == width && currentHeight == height) {
             // nothing to do
@@ -384,9 +388,15 @@ Gustavus.Concert = {
           }
           // now we need to adjust the gimli parameters
           if (currentWidth) {
+            if (!width) {
+              width = currentWidth;
+            }
             url.pathname = url.pathname.replace(widthMatches[1], 'w' + width);
           }
           if (currentHeight) {
+            if (!height) {
+              width = currentHeight;
+            }
             url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
           }
           $this.attr('src', Gustavus.Utility.URL.buildURL(url, true));
