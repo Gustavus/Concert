@@ -483,6 +483,25 @@ class DraftController extends SharedController
   }
 
   /**
+   * Handles editing drafts
+   *   Forwards onto mosh to edit.
+   *
+   * @param  array $params Params from mosh
+   * @return array
+   */
+  private function editDraft($params)
+  {
+    $origGet = $_GET;
+    $_GET['concert'] = 'edit';
+    $_GET['concertMoshed'] = 'false';
+    $_GET['forwardedFrom'] = 'draftController';
+    $result = $this->forward('mosh', $params);
+    // reset get
+    self::setGET($origGet);
+    return $result;
+  }
+
+  /**
    * Handles draft requests
    *
    * @param  array  $params Params to pass onto the correct handler
@@ -511,6 +530,9 @@ class DraftController extends SharedController
           return $result;
         }
           return ['action' => 'return', 'value' => $result];
+
+      case $this->userIsEditingDraft():
+          return $this->editDraft($params);
 
       case self::userIsSavingDraft():
           return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];

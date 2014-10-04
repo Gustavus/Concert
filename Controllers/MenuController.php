@@ -470,8 +470,8 @@ class MenuController extends SharedController
         ];
 
         $this->addMenuItem($item);
-        if (!self::userIsViewingPublicDraft($this->filePath)) {
-          // now add this to our actionButtons if they aren't viewing a public draft.
+        if (!self::userIsViewingPublicDraft($this->filePath) && !self::userIsEditingDraft()) {
+          // now add this to our actionButtons if they aren't viewing a public draft or editing a draft.
           $item['classes'] = 'primary';
           $this->addMenuItem($item, 'actionButtons');
         }

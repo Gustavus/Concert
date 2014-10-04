@@ -541,7 +541,7 @@ class SharedController extends ConcourseController
       } else {
         $message = Config::OUTDATED_DRAFT_MESSAGE;
       }
-      $this->addConcertMessage($message);
+      $this->addConcertMessage($message, true);
     }
   }
 
@@ -882,7 +882,7 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Checks to see if the user is editing the site nav
+   * Checks to see if the request was forwarded from the site nav controller.
    *
    * @return boolean
    */
@@ -892,13 +892,23 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Checks to see if the request was forwarded from the draft controller.
+   *
+   * @return boolean
+   */
+  protected static function isForwardedFromDraftController()
+  {
+    return (isset($_GET['forwardedFrom']) && $_GET['forwardedFrom'] === 'draftController');
+  }
+
+  /**
    * Checks to see if we are forwarding internally
    *
    * @return boolean
    */
   protected static function isInternalForward()
   {
-    return (self::isForwardedFromSiteNav());
+    return (self::isForwardedFromSiteNav() || self::isForwardedFromDraftController());
   }
 
 
