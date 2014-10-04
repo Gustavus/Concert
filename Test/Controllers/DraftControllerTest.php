@@ -592,9 +592,7 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->editPublicDraft(['draftName' => basename($draftName)]);
 
     $this->assertContains($_POST['1'], file_get_contents($draftName));
-    $this->assertSame('return', $actual['action']);
-    $this->assertTrue($actual['value']);
-    $this->assertNotEmpty($actual['redirectUrl']);
+    $this->assertContains('redirectUrl', $actual);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -657,8 +655,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains($_POST['1'], file_get_contents($draftName));
     $this->assertSame('return', $actual['action']);
-    $this->assertTrue($actual['value']);
-    $this->assertNotEmpty($actual['redirectUrl']);
+    $this->assertContains('redirectUrl', $actual['value']);
     $this->unauthenticate();
     $this->destructDB();
   }

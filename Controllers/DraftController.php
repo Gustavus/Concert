@@ -251,11 +251,7 @@ class DraftController extends SharedController
 
     if ($this->getMethod() === 'POST' && $draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
       $draftFM->stopEditing();
-      return [
-        'action' => 'return',
-        'value'  => true,
-        'redirectUrl' => $buttonUrl,
-      ];
+      return json_encode(['redirectUrl' => $buttonUrl]);
     }
 
     $additionalButtons = [
