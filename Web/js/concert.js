@@ -344,6 +344,16 @@ Gustavus.Concert = {
   },
 
   /**
+   * Cleanup function for editable content to strip editing leftovers
+   * @param  {String} content Content to clean up
+   * @return {String} Cleaned content
+   */
+  cleanUpContent: function(content) {
+    var cleaned = content.replace(/<br.data-mce[^>]*>/g, '');
+    return cleaned;
+  },
+
+  /**
    * Function for tinyMCE to convert image urls into GIMLI urls
    * @param  {String} content Content to convert URLs for
    * @return {String} Adjusted content
@@ -409,7 +419,7 @@ Gustavus.Concert = {
     var edits = {};
     $('div.editable').each(function() {
       var $this = $(this);
-      edits[$this.data('index')] = $this.html();
+      edits[$this.data('index')] = Gustavus.Concert.cleanUpContent($this.html());
     });
     return edits;
   },
