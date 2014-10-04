@@ -855,7 +855,7 @@ class MenuController extends SharedController
   /**
    * Removes concert query params from an array
    *
-   * @param  array $query Array to remove concert parameters from
+   * @param  array &$query Array to remove concert parameters from
    * @return void
    */
   private static function removeConcertQueryParams(&$query)
