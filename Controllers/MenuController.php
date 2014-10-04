@@ -144,7 +144,19 @@ class MenuController extends SharedController
 
     if (!empty($this->menu)) {
       $this->sortMenu();
-      return $this->renderView('menu.html.twig', ['menu' => $this->menu, 'showMenu' => isset($_GET['concert'])]);
+
+      $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
+      $query = $this->queryParams;
+      self::removeConcertQueryParams($query);
+      $quitURL = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+
+      return $this->renderView('menu.html.twig',
+          [
+            'menu'     => $this->menu,
+            'showMenu' => isset($_GET['concert']),
+            'quitURL'  => $quitURL,
+          ]
+      );
     }
     return '';
   }
