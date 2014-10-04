@@ -377,7 +377,8 @@ class MainController extends SharedController
     $moshed = self::alreadyMoshed();
     // revisions doesn't like concertMoshed being set in GET.
     unset($_GET['concertMoshed']);
-    $this->setContent($revisionsAPI->render());
+    // render(true) so we get the content returned to us.
+    $this->setContent($revisionsAPI->render(true));
     if ($moshed) {
       self::markMoshed();
     }
