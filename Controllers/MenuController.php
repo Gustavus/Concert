@@ -267,6 +267,7 @@ class MenuController extends SharedController
           $query = $this->queryParams;
           self::removeConcertQueryParams($query);
           $query['concert'] = 'editDraft';
+          $query['concertDraft'] = $draft['draftFilename'];
           $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
 

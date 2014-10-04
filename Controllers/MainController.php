@@ -111,7 +111,7 @@ class MainController extends SharedController
       $this->addConcertMessage($this->renderOpenDraftMessage($fm), false);
     }
 
-    if (self::userIsEditingDraft() || ($fm->draftExists() && $fm->userHasOpenDraft())) {
+    if ($fm->draftExists() && $fm->userHasOpenDraft()) {
       $editDraft = true;
       // add a message saying that the draft is older than the published date of the page and it might be out of sync.
       $this->addOutdatedDraftMessageIfNeeded($fm->getDraft());

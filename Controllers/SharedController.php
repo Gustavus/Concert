@@ -892,23 +892,13 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Checks to see if the request was forwarded from the draft controller.
-   *
-   * @return boolean
-   */
-  protected static function isForwardedFromDraftController()
-  {
-    return (isset($_GET['forwardedFrom']) && $_GET['forwardedFrom'] === 'draftController');
-  }
-
-  /**
    * Checks to see if we are forwarding internally
    *
    * @return boolean
    */
   protected static function isInternalForward()
   {
-    return (self::isForwardedFromSiteNav() || self::isForwardedFromDraftController());
+    return (self::isForwardedFromSiteNav());
   }
 
 
