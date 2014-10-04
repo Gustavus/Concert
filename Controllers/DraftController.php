@@ -313,7 +313,7 @@ class DraftController extends SharedController
     if ($fm->editFile($_POST)) {
       $draftType = (self::userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
       if ($fm->saveDraft($draftType)) {
-        return true;
+        return json_encode(['redirectUrl' => PageUtil::getReferer()]);
       }
     }
   }
@@ -349,7 +349,7 @@ class DraftController extends SharedController
     if ($fm->editFile($_POST)) {
       $draftType = (self::userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
       if ($fm->saveDraft($draftType)) {
-        return true;
+        return json_encode(['redirectUrl' => PageUtil::getReferer()]);
       }
     }
   }

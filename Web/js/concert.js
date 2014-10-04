@@ -557,7 +557,7 @@ $(document)
           }
         });
       } else {
-        Gustavus.Concert.saveEdits('savePrivateDraft', false);
+        Gustavus.Concert.saveEdits('savePrivateDraft', true);
       }
     })
 
@@ -569,7 +569,7 @@ $(document)
 
   .on('click', '#concertSavePublicDraft', function(e) {
     e.preventDefault();
-    Gustavus.Concert.saveEdits('savePublicDraft', false);
+    Gustavus.Concert.saveEdits('savePublicDraft', true);
   })
 
   .on('click', '#concertDiscardDraft', function(e) {
