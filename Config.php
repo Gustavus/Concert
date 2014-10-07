@@ -330,6 +330,10 @@ class Config
    * Access level that can't upload files
    */
   const NO_UPLOAD_ACCESS_LEVEL = 'noUpload';
+  /**
+   * Access level that can modify banners
+   */
+  const BANNER_ACCESS_LEVEL = 'banner';
 
   /**
    * Global permissions for super users
