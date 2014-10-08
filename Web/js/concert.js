@@ -374,13 +374,17 @@ Gustavus.Concert = {
 
       var url = Gustavus.Utility.URL.parseURL(src);
       if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
-        if (url.pathname.indexOf('/gimli/') === 0 || url.pathname.indexOf('/slir/') === 0) {
-          // already a gimli url
+        if (url.pathname.indexOf('/slir/') === 0) {
+          // we have a slir request. We want this converted to gimli.
+          url.pathname = url.pathname.replace('/slir/', '/gimli/');
+        }
+        if (url.pathname.indexOf('/gimli/') === 0) {
+          // we have a gimli url
           // we may need to update the width and height
-          var widthMatches = url.pathname.match('^/(?:gimli|slir)/[^w]*?(w[,.:x]?([0-9]+))');
+          var widthMatches = url.pathname.match('^/gimli/[^w]*?(w[,.:x]?([0-9]+))');
           var currentWidth = widthMatches ? widthMatches[2] : null;
 
-          var heightMatches = url.pathname.match('^/(?:gimli|slir)/[^h]*?(h[,.:x]?([0-9]+))');
+          var heightMatches = url.pathname.match('^/gimli/[^h]*?(h[,.:x]?([0-9]+))');
           var currentHeight = heightMatches ? heightMatches[2] : null;
           if (currentWidth == width && currentHeight == height) {
             // nothing to do
