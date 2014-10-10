@@ -376,7 +376,7 @@ class SiteNavControllerTest extends TestBase
 
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 
-    $this->assertContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
+    $this->assertContains('aren\'t any revisions', $actual['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();

@@ -1445,7 +1445,7 @@ class MainControllerTest extends TestBase
 
     $actual = $this->controller->handleRevisions($filePath);
 
-    $this->assertContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
+    $this->assertContains('aren\'t any revisions', $actual['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
