@@ -279,7 +279,11 @@ class DraftController extends SharedController
     // add a message saying that the draft is older than the published date of the page and it might be out of sync.
     $this->addOutdatedDraftMessageIfNeeded($draft);
 
-    return $this->displayPage($draftFilename, true);
+    $page = $this->displayPage($draftFilename, true);
+
+    // remove our editable draft since it doesn't need to sit around anywhere anymore.
+    unlink($draftFilename);
+    return $page;
   }
 
   /**

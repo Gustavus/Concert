@@ -137,7 +137,11 @@ class MainController extends SharedController
       return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return $this->displayPage($draftFilename, true);
+    $page = $this->displayPage($draftFilename, true);
+
+    // remove our editable draft since it doesn't need to sit around anywhere anymore.
+    unlink($draftFilename);
+    return $page;
   }
 
   /**
@@ -210,7 +214,11 @@ class MainController extends SharedController
       return $this->renderErrorPage(Config::GENERIC_ERROR_MESSAGE);
     }
 
-    return $this->displayPage($draftFilename, true);
+    $page = $this->displayPage($draftFilename, true);
+
+    // remove our editable draft since it doesn't need to sit around anywhere anymore.
+    unlink($draftFilename);
+    return $page;
   }
 
   /**
