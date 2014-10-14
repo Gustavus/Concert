@@ -1242,7 +1242,7 @@ more html
     $this->buildFileManager('jerry', $draftFilePath);
 
 
-    $this->fileManager->setUserIsEditingDraft();
+    $this->fileManager->setUserIsEditingPublicDraft();
 
 
     $draft = $this->fileManager->getDraft($this->fileManager->getDraftFileName());
@@ -1302,7 +1302,7 @@ more html
     $this->buildFileManager('bvisto', $draftFilePath);
 
 
-    $this->fileManager->setUserIsEditingDraft();
+    $this->fileManager->setUserIsEditingPublicDraft();
 
 
     $draft = $this->fileManager->getDraft($this->fileManager->getDraftFileName());
@@ -1348,9 +1348,23 @@ more html
 
     $this->buildFileManager('jerry', '/billy/files/testFile');
 
-    $this->fileManager->setUserIsEditingDraft();
+    $this->fileManager->setUserIsEditingPublicDraft();
 
     $this->assertSame(Config::PUBLIC_ACCESS_LEVEL, $this->fileManager->forceAccessLevel());
+  }
+
+  /**
+   * @test
+   */
+  public function forceAccessLevelNonPublicDraft()
+  {
+    $_SERVER['REQUEST_URI'] = RoutingUtil::buildUrl(Config::ROUTING_LOCATION, 'editDraft', ['draftName' => 'testFile']) . '?concert=test';
+
+    $this->buildFileManager('jerry', '/billy/files/testFile');
+
+    $this->fileManager->setUserIsEditingDraft();
+
+    $this->assertFalse($this->fileManager->forceAccessLevel());
   }
 
   /**
@@ -1374,7 +1388,7 @@ more html
 
     $this->buildFileManager('bvisto', '/billy/files/testFile');
     $this->assertFalse($this->fileManager->userCanEditPart('Title'));
-    $this->fileManager->setUserIsEditingDraft();
+    $this->fileManager->setUserIsEditingPublicDraft();
     $this->assertTrue($this->fileManager->userCanEditPart('Title'));
     $this->destructDB();
   }
@@ -1586,7 +1600,6 @@ more html
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
@@ -1597,7 +1610,7 @@ more html
 
     $this->assertTrue($draftFilePath !== false);
 
-    $this->buildFileManager('testUser', $draftFilePath);
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php', $draftFilePath);
     $this->fileManager->setUserIsEditingDraft();
 
     $draft = $this->fileManager->getDraft(basename($draftFilePath));
@@ -1635,8 +1648,8 @@ more html
     $this->fileManager->stopEditing();
 
     $this->buildFileManager('jerry', $draftFilePath);
-    $this->fileManager->setUserIsEditingDraft();
-    $this->assertTrue($this->fileManager->userIsEditingDraft);
+    $this->fileManager->setUserIsEditingPublicDraft();
+    $this->assertTrue($this->fileManager->userIsEditingPublicDraft);
 
     $this->assertTrue($this->fileManager->acquireLock());
 

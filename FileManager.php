@@ -74,11 +74,18 @@ class FileManager
   private $revisionsAPI;
 
   /**
-   * Flag that lets us know if the user is editing a public draft or not
+   * Flag that lets us know if the user is editing a draft or not
    *
    * @var boolean
    */
   private $userIsEditingDraft = false;
+
+  /**
+   * Flag that lets us know if the user is editing a public draft or not
+   *
+   * @var boolean
+   */
+  private $userIsEditingPublicDraft = false;
 
   /**
    * Flag that lets us know if the user is editing a draft of the current file or not
@@ -376,7 +383,7 @@ class FileManager
       return false;
     }
 
-    if ($this->userIsEditingDraft) {
+    if ($this->userIsEditingPublicDraft) {
       // we simply want to save our current configuration
       return $this->saveFile($this->filePath, $this->assembleFile(false));
     }
@@ -1211,10 +1218,20 @@ class FileManager
    */
   private function forceAccessLevel()
   {
-    if ($this->userIsEditingDraft) {
+    if ($this->userIsEditingPublicDraft) {
       return Config::PUBLIC_ACCESS_LEVEL;
     }
     return false;
+  }
+
+  /**
+   * Sets a flag so we know that the user is editing a draft
+   *
+   * @return  void
+   */
+  public function setUserIsEditingDraft()
+  {
+    $this->userIsEditingDraft = true;
   }
 
   /**
@@ -1222,9 +1239,11 @@ class FileManager
    *
    * @return  void
    */
-  public function setUserIsEditingDraft()
+  public function setUserIsEditingPublicDraft()
   {
-    $this->userIsEditingDraft = true;
+    $this->userIsEditingPublicDraft = true;
+    // a public draft is also a draft.
+    $this->setUserIsEditingDraft();
   }
 
   /**
@@ -1243,7 +1262,7 @@ class FileManager
    */
   public function userCanEditFile()
   {
-    if ($this->userIsEditingDraft) {
+    if ($this->userIsEditingPublicDraft) {
       // we need to check that the user has access to edit this draft.
       $draft = $this->getDraft(basename($this->filePath));
 
@@ -1388,6 +1407,9 @@ class FileManager
         $fm = new FileManager($this->username, $draft['destFilepath'], null, $this->getDBAL());
         $fm->setUserIsEditingDraft();
         $fm->setUserIsEditingDraftForFile();
+        if ($this->userIsEditingPublicDraft) {
+          $fm->setUserIsEditingPublicDraft();
+        }
         $fm->destroyLock();
       }
     }
@@ -1536,12 +1558,21 @@ class FileManager
    */
   private function acquireLockForDraft()
   {
-    $draft = $this->getDraft(basename($this->filePath));
+    if ($this->userIsEditingPublicDraft) {
+      // we need to search for a certain draft in case this person isn't the owner
+      $draft = $this->getDraft(basename($this->filePath));
+    } else {
+      // user is editing a draft that they own
+      $draft = $this->getDraft();
+    }
 
     if ($draft) {
       $fm = new FileManager($this->username, $draft['destFilepath'], null, $this->getDBAL());
       $fm->setUserIsEditingDraft();
       $fm->setUserIsEditingDraftForFile();
+      if ($this->userIsEditingPublicDraft) {
+        $fm->setUserIsEditingPublicDraft();
+      }
 
       if ($this->acquireLock(true) && $fm->acquireLock(true)) {
         return true;
@@ -1550,6 +1581,9 @@ class FileManager
         $fm->stopEditing();
         return false;
       }
+    } else if (!$this->userIsEditingPublicDraft && $this->userIsEditingDraft) {
+      // user might be trying to save a draft for the first time.
+      return $this->acquireLock(true);
     }
 
     return false;
