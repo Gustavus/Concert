@@ -142,7 +142,8 @@ Gustavus.Concert = {
       {title: 'Fancy', value: 'fancy'}
     ],
     filemanager_title:"Responsive Filemanager" ,
-    external_plugins: { "filemanager" : "/concert/filemanager/plugin.min.js"},
+    external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
+
     //toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
     // importcss_append: true,
     // importcss_merge_classes: true,
@@ -151,15 +152,20 @@ Gustavus.Concert = {
     //visualblocks_default_state: true,
     //forced_root_block: false,
     resize: false,
+    // table configuration
     table_class_list: [
       {title: 'None', value: ''},
       {title: 'Fancy', value: 'fancy'},
-      {title: 'Striped', value: 'striped'},
-      {title: 'Sortable', value: 'sortable'}
     ],
     table_advtab: false,
     table_cell_advtab: false,
     table_row_advtab: false,
+    table_default_styles: {
+      // this makes the table a lot easier to edit.
+      width: '100%'
+    },
+    table_tab_navigation: true,
+
     setup : function(editor) {
       var editableIsVisibleOnFocus = false;
       editor.on('focus', function(e) {
@@ -221,7 +227,7 @@ Gustavus.Concert = {
     //   '-dt,'+
     //   '-abbr[title],'+
     //   '-acronym[title]',
-    //extended_valid_elements: 'br',
+    //extended_valid_elements: 'tr',
     //theme_advanced_disable: ["code"],
 
     // menu : { // this is the complete default configuration
@@ -431,50 +437,66 @@ Gustavus.Concert = {
    */
   buildEditsObject: function() {
     var edits = {};
-    $('div.editable').each(function() {
-      var $this = $(this);
-      edits[$this.data('index')] = Gustavus.Concert.cleanUpContent($this.html());
-    });
+    for (i in tinymce.editors) {
+      if (tinymce.editors[i].isDirty()) {
+        var $element = $(tinymce.editors[i].getElement());
+        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent($element.html());
+      }
+    }
     return edits;
   },
 
   /**
    * Sends a post request with the edited contents
    * @param {String} action Action we are saving for
-   * @param {Boolean} allowRedirects Whether or not to redirect on save
+   * @param {Boolean} [allowRedirects=true] Whether or not to redirect on save
+   * @param {Boolean} [redirectAfterTimeout=false] Whether to redirect after a timeout or just redirect
    * @return {undefined}
    */
-  saveEdits: function(action, allowRedirects) {
+  saveEdits: function(action, allowRedirects, redirectAfterTimeout) {
     if (allowRedirects == undefined) {
       allowRedirects = true;
     }
     var edits = this.buildEditsObject();
+
     edits.concertAction = 'save';
     edits.saveAction = action;
     edits.filePath = this.filePath;
     // console.log(this.baseUrl);
+    $('body').css('cursor', 'progress');
     $.ajax({
       type: 'POST',
-      //url: window.location.href,
       url : this.baseUrl,
       data: edits,
       dataType: 'json',
       success: function(data) {
         if (data && data.error) {
+          $('body').css('cursor');
           alert(data.reason);
         } else if (allowRedirects) {
           if (data && data.redirectUrl) {
-            window.location = data.redirectUrl;
+            var redirectUrl = data.redirectUrl;
           } else {
-            window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
+            var redirectUrl = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing'});
+          }
+          if (redirectAfterTimeout) {
+            setTimeout(function() {
+              window.location = redirectUrl;
+            }, 2000);
+          } else {
+            window.location = redirectUrl;
           }
         }
+        $('body').css('cursor');
       },
       error: function() {
+        $('body').css('cursor');
         // @todo add a failed message
         alert('Something unexpected happened. Please try again. If your problem persists, please email <a href="mailto:web@gustavus.edu">web@gustavus.edu</a> with details on what is going on.');
       }
     });
+    // reset it just in case we get hit here.
+    $('body').css('cursor');
   },
 
   /**
@@ -549,7 +571,7 @@ Gustavus.Concert = {
 $(document)
   .on('click', '#concertPublish', function(e) {
     e.preventDefault();
-    Gustavus.Concert.saveEdits('publish');
+    Gustavus.Concert.saveEdits('publish', true, true);
   })
 
   .on('click', '#concertSavePrivateDraft', function(e) {
