@@ -112,9 +112,13 @@ class MainController extends SharedController
     }
 
     if ($fm->draftExists() && $fm->userHasOpenDraft()) {
+      $draft = $fm->getDraft();
+      // we want to re-create our FileManager to be based off of the current draft.
+      $fm = new FileManager($this->getLoggedInUsername(), $filePath, Config::$draftDir . $draft['draftFilename'], $this->getDB());
+      $fm->setUserIsEditingDraft();
       $editDraft = true;
       // add a message saying that the draft is older than the published date of the page and it might be out of sync.
-      $this->addOutdatedDraftMessageIfNeeded($fm->getDraft());
+      $this->addOutdatedDraftMessageIfNeeded($draft);
     } else {
       $editDraft = false;
     }

@@ -232,7 +232,7 @@ class DraftController extends SharedController
 
     // now we need to make a fileManager to edit the current draft
     $draftFM = new FileManager($this->getLoggedInUsername(), $draftFilePath, null, $this->getDB());
-    $draftFM->setUserIsEditingDraft();
+    $draftFM->setUserIsEditingPublicDraft();
 
     if (!PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
       return $this->renderErrorPage('Oops! It looks like you don\'t have access to edit this draft.');
@@ -305,6 +305,14 @@ class DraftController extends SharedController
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
+    $draft = $fm->getDraft();
+
+    if ($draft) {
+      // now build a FileManager based off of our draft
+      $fm = new FileManager($this->getLoggedInUsername(), $filePath, Config::$draftDir . $draft['draftFilename'], $this->getDB());
+    }
+    // tell the FileManager that we are editing a draft so it can create the correct locks
+    $fm->setUserIsEditingDraft();
 
     if (!$fm->acquireLock()) {
       return $this->renderErrorPage($this->renderLockNotAcquiredMessage($fm));
@@ -546,7 +554,7 @@ class DraftController extends SharedController
 
     $draftFM = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
-    $draftFM->setUserIsEditingDraft();
+    $draftFM->setUserIsEditingPublicDraft();
     $draftFM->stopEditing();
 
     return [
