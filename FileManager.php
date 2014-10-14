@@ -288,7 +288,9 @@ class FileManager
         unset($edits[$key]);
       }
     }
-    return $this->getFileConfiguration()->editFile($edits);
+    $this->getFileConfiguration()->editFile($edits);
+    // editFile only tells us that the file was edited. We might be dealing with publishing a draft that isn't being edited
+    return true;
   }
 
   /**
