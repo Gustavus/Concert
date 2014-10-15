@@ -10,7 +10,8 @@ use Gustavus\Concert\Config,
   Gustavus\Revisions\API as RevisionsAPI,
   Gustavus\Utility\PageUtil,
   Gustavus\Gatekeeper\Gatekeeper,
-  Gustavus\Doctrine\DBAL;
+  Gustavus\Doctrine\DBAL,
+  DateTime;
 
 /**
  * Class containing utility functions
@@ -156,5 +157,25 @@ class Utility
       // we staged something. give it a second to publish the file.
       sleep(1);
     }
+  }
+
+  /**
+   * Checks to see if a draft has been edited by a collaborator
+   *
+   * @param  array $draft Array representing a draft
+   * @return boolean
+   */
+  public static function sharedDraftHasBeenEditedByCollaborator($draft)
+  {
+    $draftPath = Config::$draftDir . $draft['draftFilename'];
+    // add a little time to the draft time just in case there was a lag somewhere
+    $draftTimestamp = (int) (new DateTime($draft['date']))->modify('+30 seconds')->format('U');
+    $draftFileTimestamp = filemtime($draftPath);
+
+    if ($draftTimestamp < $draftFileTimestamp) {
+      // this draft has been edited since it was modified by the owner
+      return true;
+    }
+    return false;
   }
 }

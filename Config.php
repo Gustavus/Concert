@@ -248,6 +248,10 @@ class Config
    * Additional message to display to the owner of the draft telling them that they may need to discard it.
    */
   const OUTDATED_DRAFT_MESSAGE_OWNER_ADDITIONS = 'Please discard this draft before continuing otherwise you might over-write any changes made since this draft was created.';
+  /**
+   * Additional message to display to the owner of the draft telling them that they may need to discard it.
+   */
+  const DRAFT_EDITED_BY_COLLABORATOR_MESSAGE = 'It looks a collaborator has edited your draft since your last save.';
 
   // Staged file stages
 

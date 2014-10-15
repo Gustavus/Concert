@@ -119,6 +119,10 @@ class MainController extends SharedController
       $editDraft = true;
       // add a message saying that the draft is older than the published date of the page and it might be out of sync.
       $this->addOutdatedDraftMessageIfNeeded($draft);
+      if (Utility::sharedDraftHasBeenEditedByCollaborator($draft)) {
+        // this draft has been modified since the owner last saved it.
+        $this->addConcertMessage(Config::DRAFT_EDITED_BY_COLLABORATOR_MESSAGE);
+      }
     } else {
       $editDraft = false;
     }

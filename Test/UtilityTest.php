@@ -9,7 +9,9 @@ namespace Gustavus\Concert\Test;
 
 use Gustavus\Concert\Utility,
   Gustavus\Doctrine\DBAL,
-  Gustavus\Concert\Config;
+  Gustavus\Concert\Config,
+  Gustavus\Concert\FileConfiguration,
+  DateTime;
 
 /**
  * Class to test Utility class
@@ -34,6 +36,15 @@ class UtilityTest extends TestBase
    */
   public function setUp()
   {
+    if (!is_dir(self::$testFileDir . 'drafts')) {
+      mkdir(self::$testFileDir . 'drafts');
+    }
+    if (!is_dir(self::$testFileDir . 'staged')) {
+      mkdir(self::$testFileDir . 'staged');
+    }
+    if (!is_dir(self::$testFileDir . 'editableDrafts')) {
+      mkdir(self::$testFileDir . 'editableDrafts');
+    }
     parent::setUp();
   }
 
@@ -210,6 +221,31 @@ class UtilityTest extends TestBase
     $this->assertTrue(is_link($baseSite . 'files/.htaccess'));
     $this->assertSame(Config::MEDIA_DIR_HTACCESS_TEMPLATE, readlink($baseSite . 'files/.htaccess'));
 
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function sharedDraftHasBeenEditedByCollaborator()
+  {
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', 'admin']);
+    $this->authenticate('bvisto');
+
+    $this->buildFileManager('bvisto', '/billy/concert/index.php');
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+    $draft = $this->fileManager->getDraft();
+
+    $this->assertFalse(Utility::sharedDraftHasBeenEditedByCollaborator($draft));
+
+    $draft['date'] = (new DateTime($draft['date']))->modify('-30 minutes')->format('y-m-d g:i:s');
+    $this->assertTrue(Utility::sharedDraftHasBeenEditedByCollaborator($draft));
     $this->unauthenticate();
     $this->destructDB();
   }
