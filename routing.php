@@ -77,6 +77,9 @@ return [
   'emailSharedDraft' => [
     'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyUsersOfSharedDraft',
   ],
+  'emailSharedDraftSaved' => [
+    'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyOwnerOfDraftEdit',
+  ],
   'emailPendingDraft' => [
     'handler' => 'Gustavus\Concert\Controllers\EmailController:notifyPublishersOfPendingDraft',
   ],

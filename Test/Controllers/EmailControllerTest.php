@@ -10,10 +10,12 @@ namespace Gustavus\Concert\Test\Controllers;
 use Gustavus\Test\TestObject,
   Gustavus\Concert\Test\TestBase,
   Gustavus\Concert\Controllers\EmailController,
+  Gustavus\Concert\Controllers\SharedController,
   Gustavus\Concert\Config,
   Gustavus\Concert\Utility,
   Gustavus\Utility\String,
-  Gustavus\Utility\Set;
+  Gustavus\Utility\Set,
+  Campus\Pull\People as CampusPeople;
 
 /**
  * Tests for EmailController
@@ -147,6 +149,130 @@ class EmailControllerTest extends TestBase
     }
 
     $this->checkSentEmailContents(['to' => $expectedTo], 'Unable to email users about shared draft', 'A draft has been shared with users, but they don\'t exist in the campusAPI', true);
+  }
+
+  /**
+   * @test
+   */
+  public function notifyOwnerOfDraftEdit()
+  {
+    $this->setUpController();
+
+    $draft = [
+      'destFilepath'    => '/cis/www/billy/concert/',
+      'draftFilename'   => md5('/cis/www/billy/concert/'),
+      'type'            => Config::PUBLIC_DRAFT,
+      'username'        => $this->findEmployeeUsername(),
+      'additionalUsers' => null,
+    ];
+
+    $this->authenticate('testUser');
+    $result = $this->controller->notifyOwnerOfDraftEdit(['draft' => $draft]);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+    $expectedBcc[$draft['username'] . '@gustavus.edu'] = null;
+
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'has edited a draft', 'has edited the draft you shared', true);
+
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function notifyOwnerOfDraftEditMale()
+  {
+    $this->setUpController();
+
+    $draft = [
+      'destFilepath'    => '/cis/www/billy/concert/',
+      'draftFilename'   => md5('/cis/www/billy/concert/'),
+      'type'            => Config::PUBLIC_DRAFT,
+      'username'        => $this->findEmployeeUsername(),
+      'additionalUsers' => null,
+    ];
+
+    $peoplePuller = new CampusPeople((new TestObject(new SharedController))->getApiKey());
+    $peoplePuller->setGender('m');
+
+    $username = $peoplePuller->current()->getUsername();
+    $this->authenticate($username);
+    $result = $this->controller->notifyOwnerOfDraftEdit(['draft' => $draft]);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+    $expectedBcc[$draft['username'] . '@gustavus.edu'] = null;
+
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'has edited a draft', 'has edited the draft you shared with him', true);
+
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function notifyOwnerOfDraftEditFemale()
+  {
+    $this->setUpController();
+
+    $draft = [
+      'destFilepath'    => '/cis/www/billy/concert/',
+      'draftFilename'   => md5('/cis/www/billy/concert/'),
+      'type'            => Config::PUBLIC_DRAFT,
+      'username'        => $this->findEmployeeUsername(),
+      'additionalUsers' => null,
+    ];
+
+    $peoplePuller = new CampusPeople((new TestObject(new SharedController))->getApiKey());
+    $peoplePuller->setGender('f');
+
+    $username = $peoplePuller->current()->getUsername();
+    $this->authenticate($username);
+    $result = $this->controller->notifyOwnerOfDraftEdit(['draft' => $draft]);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+    $expectedBcc[$draft['username'] . '@gustavus.edu'] = null;
+
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'has edited a draft', 'has edited the draft you shared with her', true);
+
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function notifyOwnerOfDraftEditFakePerson()
+  {
+    $this->setUpController();
+
+    $draft = [
+      'destFilepath'    => '/cis/www/billy/concert/',
+      'draftFilename'   => md5('/cis/www/billy/concert/'),
+      'type'            => Config::PUBLIC_DRAFT,
+      'username'        => 'fakeUser',
+      'additionalUsers' => null,
+    ];
+
+    $username = $this->findEmployeeUsername();
+    $this->authenticate($username);
+    $result = $this->controller->notifyOwnerOfDraftEdit(['draft' => $draft]);
+
+    $expectedTo = [];
+    foreach (Config::$adminEmails as $adminEmail) {
+      $expectedTo[$adminEmail] = null;
+    }
+
+    $this->checkSentEmailContents(['to' => $expectedTo], 'Unable to notify', 'draft has been edited, but the owner', true);
+
+    $this->unauthenticate();
   }
 
   /**

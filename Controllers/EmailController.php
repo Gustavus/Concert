@@ -38,7 +38,7 @@ class EmailController extends SharedController
     $draftOwner   = $peoplePuller->setUsername($draft['username'])->current();
 
     if (is_object($draftOwner)) {
-      $name    = $draftOwner->getFullName();
+      $name    = $draftOwner->getFullName(false);
       $replyTo = $draftOwner->getGustavusEmailAddress();
     } else {
       $name    = $draft['username'];
@@ -88,6 +88,73 @@ class EmailController extends SharedController
   }
 
   /**
+   * Notifies users that a draft has been shared with them
+   *
+   * @param  array  $params Params with keys of draft, and username
+   * @return string
+   */
+  public function notifyOwnerOfDraftEdit(array $params)
+  {
+    assert('isset($params[\'draft\'])');
+
+    $draft     = $params['draft'];
+
+    $currentUser = $this->getLoggedInPerson();
+
+    if (is_object($currentUser)) {
+      $name = $currentUser->getFullName(false);
+      $replyTo     = 'no-reply@gustavus.edu';
+    } else {
+      $name    = $this->getLoggedInUsername();
+      $replyTo = 'no-reply@gustavus.edu';
+    }
+
+    $peoplePuller = new CampusPeople($this->getApiKey());
+    $draftOwner   = $peoplePuller->setUsername($draft['username'])->current();
+
+    if (!is_object($draftOwner) || $draftOwner->isFake()) {
+      $body = sprintf('A shared draft has been edited, but the owner (%s) was unable to be notified.', $draft['username']);
+      $message = (new EmailMessage)
+        ->setSubject('Unable to notify owner of draft edit for: ' . Utility::removeDocRootFromPath($draft['destFilepath']))
+        ->setFrom('concert@gustavus.edu')
+        ->setReplyTo('no-reply@gustavus.edu')
+        ->setTo(Config::$adminEmails)
+        ->setBody($body)
+        ->setDebuggingRecipients(Config::$devEmails);
+
+      return $message->send();
+    } else {
+      $to = $draftOwner->getGustavusEmailAddress();
+    }
+
+    if ($currentUser->isFake()) {
+      $pronoun = 'them';
+    } else {
+      $pronoun = $currentUser->isFemale() ? 'her' : 'him';
+    }
+
+    $subject = sprintf('%s has edited a draft you shared with %s.', $name, $pronoun);
+
+    $body = sprintf('%s has edited the draft you shared with %s for the page: %s.',
+        $name,
+        $pronoun,
+        Utility::removeDocRootFromPath($draft['destFilepath'])
+    );
+
+    $bcc = array_merge(Config::$devEmails, [$to]);
+
+    $message = (new EmailMessage)
+      ->setSubject($subject)
+      ->setFrom('concert@gustavus.edu')
+      ->setReplyTo($replyTo)
+      ->setBcc($bcc)
+      ->setBody($body)
+      ->setDebuggingRecipients(Config::$devEmails);
+
+    return $message->send();
+  }
+
+  /**
    * Notify publishers that a draft has been submitted pending their approval.
    *   If no publishers exist, a notification will be sent to the admins alerting them of this.
    *
@@ -106,7 +173,7 @@ class EmailController extends SharedController
     $draftOwner   = $peoplePuller->setUsername($draft['username'])->current();
 
     if (is_object($draftOwner)) {
-      $name    = $draftOwner->getFullName();
+      $name    = $draftOwner->getFullName(false);
       $replyTo = $draftOwner->getGustavusEmailAddress();
     } else {
       $name    = $draft['username'];
@@ -135,7 +202,7 @@ class EmailController extends SharedController
       $person = $peoplePuller->setUsername($publisher)->current();
       if (is_object($person)) {
         $bcc[] = $person->getGustavusEmailAddress();
-        $publisherNames[] = $person->getFullName();
+        $publisherNames[] = $person->getFullName(false);
       }
     }
 
@@ -200,7 +267,7 @@ class EmailController extends SharedController
 
     if ($loggedInPerson !== null && !$loggedInPerson->isFake()) {
       $replyTo   = $loggedInPerson->getGustavusEmailAddress();
-      $publisher = $loggedInPerson->getFullName();
+      $publisher = $loggedInPerson->getFullName(false);
     } else {
       $replyTo = 'no-reply@gustavus.edu';
       $publisher = $this->getLoggedInUsername();
@@ -248,7 +315,7 @@ class EmailController extends SharedController
 
     if ($loggedInPerson !== null && !$loggedInPerson->isFake()) {
       $replyTo   = $loggedInPerson->getGustavusEmailAddress();
-      $publisher = $loggedInPerson->getFullName();
+      $publisher = $loggedInPerson->getFullName(false);
     } else {
       $replyTo = 'no-reply@gustavus.edu';
       $publisher = $this->getLoggedInUsername();
