@@ -441,7 +441,7 @@ class MenuController extends SharedController
       $this->addMenuItem($item, null, 20);
     }
 
-    if (file_exists($this->filePath) && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
+    if (!self::isSiteNavRequest() && file_exists($this->filePath) && PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $query['concert'] = 'delete';
       $item = [
         'text'     => 'Delete Page',
@@ -453,7 +453,7 @@ class MenuController extends SharedController
       $this->addMenuItem($item, null, 10);
     }
 
-    if (self::userIsEditing() || self::userIsSaving()) {
+    if (!self::isSiteNavRequest() && (self::userIsEditing() || self::userIsSaving())) {
       $query['concert'] = 'stopEditing';
       $item = [
         'text'     => 'Stop Editing',
@@ -498,7 +498,7 @@ class MenuController extends SharedController
         ];
 
         $this->addMenuItem($item);
-        if (!self::userIsViewingDraft($this->filePath) && !self::userIsEditingDraft()) {
+        if (!self::isSiteNavRequest() && !self::userIsViewingDraft($this->filePath) && !self::userIsEditingDraft()) {
           // now add this to our actionButtons if they aren't viewing a public draft.
           $item['classes'] = 'primary';
           $this->addMenuItem($item, 'actionButtons');
@@ -574,7 +574,7 @@ class MenuController extends SharedController
       //   $this->addMenuItem($item, 'navigation', 20);
     }
 
-    if (!self::isGlobalNav($siteNav) && !(self::userIsEditing() || self::userIsCreatingSiteNav())) {
+    if (!self::isGlobalNav($siteNav) && !((self::isSiteNavRequest() && self::userIsEditing()) || self::userIsCreatingSiteNav())) {
       // the site nav exists in the current site.
       //
       // give them the option to edit the current site nav or the inherited nav.
@@ -601,7 +601,7 @@ class MenuController extends SharedController
       $this->addMenuItem($item, 'navigation', 20);
     }
 
-    if (!(self::userIsEditing() || self::userIsCreatingSiteNav()) && $isInheritedNav) {
+    if (!((self::isSiteNavRequest() && self::userIsEditing()) || self::userIsCreatingSiteNav()) && $isInheritedNav) {
       $query = $this->queryParams;
       self::removeConcertQueryParams($query);
       $query['concert']       = 'createSiteNav';
