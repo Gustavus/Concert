@@ -127,9 +127,14 @@ Gustavus.Concert = {
     convert_urls: false, // prevent messing with URLs
     allow_script_urls: false,
     relative_urls: false,
-    forced_root_block : '',
-    force_p_newlines: true,
-    //invalid_elements http://www.tinymce.com/wiki.php/Configuration:invalid_elements
+
+    forced_root_block: '',
+    element_format: 'xhtml',
+    //force_p_newlines: true, deprecated
+    invalid_elements: 'script',
+    // we don't want to keep our styles when we hit return/enter.
+    keep_styles: false,
+
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
     menubar: 'edit insert view format table tools',
@@ -167,11 +172,6 @@ Gustavus.Concert = {
     table_tab_navigation: true,
 
     setup : function(editor) {
-      var editableIsVisibleOnFocus = false;
-      editor.on('focus', function(e) {
-        editableIsVisibleOnFocus = $(editor.bodyElement).hasClass('show');
-        $(editor.bodyElement).removeClass('show');
-      });
       editor.on('blur', function(e) {
         // clean up content
         var content = Gustavus.Concert.mceCleanup(editor.getContent());
@@ -179,10 +179,6 @@ Gustavus.Concert = {
         content = Gustavus.Concert.convertImageURLsToGIMLI(content);
 
         editor.setContent(content, {format: 'raw'});
-        //console.log(editor.getContent());
-        if (editableIsVisibleOnFocus === true) {
-          $(editor.bodyElement).addClass('show');
-        }
       });
       //http://www.tinymce.com/wiki.php/api4:class.tinymce.ResizeEvent
       // editor.on('ObjectResized', function(e) {
@@ -252,10 +248,11 @@ Gustavus.Concert = {
    * @return {Object} Configuration object built off of this.tinyMCEDefaultConfig
    */
   buildDefaultTinyMCEConfig: function() {
-    var config = this.tinyMCEDefaultConfig;
+    // clone our default config so we aren't modifying the default
+    var config = $.extend(true, {}, this.tinyMCEDefaultConfig);
 
     var plugins = [
-      "advlist autolink lists link image charmap print preview anchor",
+      "advlist autolink lists link image charmap print anchor",
       "searchreplace visualblocks fullscreen",
       "insertdatetime media table contextmenu paste responsivefilemanager",
       "spellchecker" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
@@ -269,6 +266,7 @@ Gustavus.Concert = {
     config.selector = "div.editable.default";
 
     config.style_formats = this.tinyMceDefaultMenu;
+    config.forced_root_block = 'p';
 
     return config;
   },
@@ -278,7 +276,8 @@ Gustavus.Concert = {
    * @return {Object} Configuration object built off of this.tinyMCEDefaultConfig
    */
   buildTitleTinyMCEConfig: function() {
-    var config = this.tinyMCEDefaultConfig;
+    // clone our default config so we aren't modifying the default
+    var config = $.extend(true, {}, this.tinyMCEDefaultConfig);
 
     var plugins = [
       "autolink link searchreplace visualblocks contextmenu paste",
@@ -304,7 +303,8 @@ Gustavus.Concert = {
    * @return {Object} Configuration object built off of this.tinyMCEDefaultConfig
    */
   buildSiteNavTinyMCEConfig: function() {
-    var config = this.tinyMCEDefaultConfig;
+    // clone our default config so we aren't modifying the default
+    var config = $.extend(true, {}, this.tinyMCEDefaultConfig);
 
     var plugins = [
       "autolink lists link searchreplace visualblocks contextmenu paste",
@@ -360,6 +360,7 @@ Gustavus.Concert = {
    */
   cleanUpContent: function(content) {
     var cleaned = content.replace(/<br.data-mce[^>]*>/g, '');
+    cleaned = cleaned.replace(/<tr class="odd">/g, '<tr>');
     return cleaned;
   },
 
@@ -491,7 +492,8 @@ Gustavus.Concert = {
       },
       error: function() {
         $('body').css('cursor');
-        // @todo add a failed message
+        // @todo add a failed message.
+        // Is this resolved? Should this be a jquery dialog? Or a colorbox window?
         alert('Something unexpected happened. Please try again. If your problem persists, please email <a href="mailto:web@gustavus.edu">web@gustavus.edu</a> with details on what is going on.');
       }
     });
@@ -615,16 +617,17 @@ $(document)
 
   .on('click', '#concertStopEditing', function(e) {
       //e.preventDefault();
-    var req = Gustavus.Concert.releaseLock();
-    req.done(function(data) {
-      if (!data) {
-        e.preventDefault();
-      }
-    })
-    req.fail(function() {
-      e.preventDefault();
-    })
-    // @todo redirect to a url with concert=stopEditing
+    // we don't need this if we redirect to a url where the lock will get released there. Why do the extra work?
+    // var req = Gustavus.Concert.releaseLock();
+    // req.done(function(data) {
+    //   if (!data) {
+    //     e.preventDefault();
+    //   }
+    // })
+    // req.fail(function() {
+    //   e.preventDefault();
+    // })
+    window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing', 'concertAction': 'siteNav'});
   })
 
   .on('click', '.quitConcert', function(e) {
