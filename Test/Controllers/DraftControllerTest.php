@@ -240,7 +240,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draft' => basename($draftName)]));
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draftName' => basename($draftName)]));
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -267,7 +267,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draft' => basename($draftName)]));
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draftName' => basename($draftName)]));
     $this->assertMessageInMessages('will live at', $this->controller->getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
@@ -347,7 +347,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $actual = $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draft' => basename($draftName)]);
+    $actual = $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draftName' => basename($draftName)]);
     $this->assertContains('could not be found', $actual['content']);
     $this->unauthenticate();
     $this->destructDB();
@@ -366,6 +366,7 @@ class DraftControllerTest extends TestBase
     $this->buildFileManager('testUser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
+    $this->authenticate('testUser2');
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
     $this->setUpController();
@@ -373,6 +374,35 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName)]);
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function renderPublicDraftOwnedByCurrentUser()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $filePath = str_replace('//', '/', $_SERVER['DOCUMENT_ROOT'] . '/billy/concert/index.php');
+
+    $this->buildFileManager('testUser', $filePath);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $this->authenticate('testUser');
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->setUpController();
+
+    $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName), 'filePath' => $filePath]);
+
+    $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+    $this->assertMessageInMessages('users can see it by going to', $this->controller->getConcertMessages());
+
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -390,9 +420,9 @@ class DraftControllerTest extends TestBase
     $this->buildFileManager('testUser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
-    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['testUser2']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testUser2');
 
     $this->setUpController();
 
@@ -417,9 +447,9 @@ class DraftControllerTest extends TestBase
     $this->buildFileManager('testUser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
-    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['testUser2']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testUser2');
 
     $this->setUpController();
     // make it look like it is coming from the concert root
@@ -449,7 +479,7 @@ class DraftControllerTest extends TestBase
 
     $draftName = $this->fileManager->saveDraft(Config::PRIVATE_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testUser2');
 
     $this->setUpController();
 
@@ -482,7 +512,7 @@ class DraftControllerTest extends TestBase
 
     $actual = $this->controller->editPublicDraft(['draftName' => basename($draftName)]);
 
-    $this->assertContains('specified draft doesn\'t exist', $actual['content']);
+    $this->assertContains(Config::DRAFT_NON_EXISTENT, $actual['content']);
     $this->unauthenticate();
     $this->destructDB();
   }

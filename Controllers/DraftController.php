@@ -36,8 +36,8 @@ class DraftController extends SharedController
   public function showDraft($params)
   {
     $filePath = $params['filePath'];
-    if (isset($params['draft'])) {
-      $draft = $params['draft'];
+    if (isset($params['draftName'])) {
+      $draft = $params['draftName'];
     } else {
       $draft = null;
     }
@@ -56,7 +56,7 @@ class DraftController extends SharedController
     $drafts = $fm->findDraftsForCurrentUser($draft);
 
     if (empty($drafts)) {
-      return $this->renderErrorPage('Oops! It looks like there aren\'t any drafts to show');
+      return $this->renderErrorPage(Config::NO_DRAFTS_MESSAGE);
     }
 
     if (!$showSingle && $draft === null && count($drafts) > 0) {
@@ -71,7 +71,7 @@ class DraftController extends SharedController
       $messageAdditions = '';
 
       if ($draft['type'] === Config::PUBLIC_DRAFT) {
-        $messageAdditions .= sprintf('This draft is a shared draft. Other users can see if by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
+        $messageAdditions .= sprintf(' This draft is a shared draft. Other users can see it by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
       }
 
       if (self::isRequestFromConcertRoot()) {
@@ -181,6 +181,9 @@ class DraftController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('drafts', ['draftName' => '']), null, $this->getDB());
 
     $draft = $fm->getDraft($draftName);
+    if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
+      return $this->showDraft($params);
+    }
 
     $filePathFromDocRoot = Utility::removeDocRootFromPath($draft['destFilepath']);
 
@@ -225,7 +228,7 @@ class DraftController extends SharedController
     $draft = $fm->getDraft($draftName);
 
     if (empty($draft)) {
-      return $this->renderErrorPage('Oops! It looks like the specified draft doesn\'t exist.');
+      return $this->renderErrorPage(Config::DRAFT_NON_EXISTENT);
     }
 
     $draftFilePath = Config::$draftDir . $draftName;
@@ -235,7 +238,7 @@ class DraftController extends SharedController
     $draftFM->setUserIsEditingPublicDraft();
 
     if (!PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
-      return $this->renderErrorPage('Oops! It looks like you don\'t have access to edit this draft.');
+      return $this->renderErrorPage(Config::DRAFT_NOT_EDITABLE_MESSAGE);
     }
 
     // we need to create a lock on the draft file as well as the file the draft represents
@@ -516,7 +519,7 @@ class DraftController extends SharedController
           return ['action' => 'return', 'value' => $this->renderPublicDraft($params)];
 
       case self::userIsViewingDraft():
-        $params['draft'] = self::getDraftFromRequest();
+        $params['draftName'] = self::getDraftFromRequest();
           return ['action' => 'return', 'value' => $this->showDraft($params)];
 
       case $this->userIsEditingPublicDraft($_SERVER['REQUEST_URI']):

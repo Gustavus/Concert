@@ -124,6 +124,7 @@ class TestBase extends TestEM
    */
   public function tearDown()
   {
+    $this->set('Controllers\SharedController', 'messages', []);
     $this->set('PermissionsManager', 'dbal', null);
     $cache = $this->call('PermissionsManager', 'getCache');
     if (is_object($cache)) {

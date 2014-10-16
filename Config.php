@@ -170,21 +170,6 @@ class Config
   const GENERIC_ERROR_MESSAGE = 'Oops! Something unexpected happened. Please try your request again, or contact <a href="mailto:web@gustavus.edu">web@gustavus.edu</a>.';
 
   /**
-   * Note to let people know they are looking at a draft
-   */
-  const DRAFT_NOTE = 'Note: You are viewing a draft and not a published page.';
-
-  /**
-   * Note to let people know they are looking at a draft
-   */
-  const SITE_NAV_DRAFT_NOTE = 'Note: You are viewing a draft of the site nav and not a published site nav.';
-
-  /**
-   * Message to display if the draft doesn't exist.
-   */
-  const DRAFT_NON_EXISTENT = 'Oops! It looks like this draft doesn\'t exist.';
-
-  /**
    * Message to display if someone is editing a site nav that is being inherited
    */
   const EDITING_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are editing a site nav that will be shared by other pages and directories in';
@@ -200,6 +185,18 @@ class Config
   const DEFAULT_PAGE_SAVED_MESSAGE = 'Oops! It looks like you didn\'t modify the template before saving.';
 
   /**
+   * Message to display for special files. (symlinks)
+   */
+  const SPECIAL_FILE_MESSAGE = 'This is a special file that cannot be edited in Concert. Please contact <a href="mailto:web@gustavus.edu">Web Services</a> to edit this file.';
+
+  /**
+   * Message to use to prompt someone to continue editing their draft
+   */
+  const CONTINUE_EDITING_MESSAGE = 'It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?';
+
+  // Revision messages
+
+  /**
    * Message to display if the page has been restored from a previous revision
    */
   const RESTORED_MESSAGE = 'The page has been restored.';
@@ -208,16 +205,6 @@ class Config
    * Message to display if the page revision restoration has been undone
    */
   const UNDO_RESTORE_MESSAGE = 'The page restoration has been undone.';
-
-  /**
-   * Message to display if the owner of a pending draft couldn't be contacted
-   */
-  const DRAFT_REJECTION_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been rejected.';
-
-  /**
-   * Message to display if the owner of a pending draft couldn't be contacted
-   */
-  const DRAFT_PUBLISHED_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been published.';
 
   /**
    * Message to display to people who can't manage revisions, but are trying
@@ -229,20 +216,47 @@ class Config
    */
   const NOT_ALLOWED_TO_VIEW_REVISIONS = 'Oops! It appears that you don\'t have access to view revisions for this page.';
 
-  /**
-   * Message to display for special files. (symlinks)
-   */
-  const SPECIAL_FILE_MESSAGE = 'This is a special file that cannot be edited in Concert. Please contact <a href="mailto:web@gustavus.edu">Web Services</a> to edit this file.';
+  // Draft messages
 
   /**
-   * Message to use to prompt someone to continue editing their draft
+   * Note to let people know they are looking at a draft
    */
-  const CONTINUE_EDITING_MESSAGE = 'It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?';
+  const DRAFT_NOTE = 'Note: You are viewing a draft and not a published page.';
+
+  /**
+   * Note to let people know they are looking at a draft
+   */
+  const SITE_NAV_DRAFT_NOTE = 'Note: You are viewing a draft of the site nav and not a published site nav.';
+
+  /**
+   * Message to display if the draft doesn't exist.
+   */
+  const DRAFT_NON_EXISTENT = 'Oops! It looks like this draft doesn\'t exist.';
+
+  /**
+   * Message to display if no drafts exist.
+   */
+  const NO_DRAFTS_MESSAGE = 'Oops! It looks like there aren\'t any drafts to show';
+
+  /**
+   * Message to display if the draft isn't editable.
+   */
+  const DRAFT_NOT_EDITABLE_MESSAGE = 'Oops! It looks like you don\'t have access to edit this draft.';
 
   /**
    * Message to use when the draft is older than the page the draft represents
    */
   const OUTDATED_DRAFT_MESSAGE = 'It appears that this draft was created off of an older version of the page and may be out of date.';
+
+  /**
+   * Message to display if the owner of a pending draft couldn't be contacted
+   */
+  const DRAFT_REJECTION_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been rejected.';
+
+  /**
+   * Message to display if the owner of a pending draft couldn't be contacted
+   */
+  const DRAFT_PUBLISHED_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been published.';
 
   /**
    * Additional message to display to the owner of the draft telling them that they may need to discard it.
