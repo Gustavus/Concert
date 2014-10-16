@@ -92,7 +92,7 @@ class UtilityTest extends TestBase
   public function removeDocRootFromPath()
   {
     $this->assertNotEmpty($_SERVER['DOCUMENT_ROOT']);
-    $filePath = $_SERVER['DOCUMENT_ROOT'] . 'index.php';
+    $filePath = str_replace('//', '/', $_SERVER['DOCUMENT_ROOT'] . '/index.php');
 
     $this->assertSame('/index.php', Utility::removeDocRootFromPath($filePath));
   }
@@ -117,7 +117,7 @@ class UtilityTest extends TestBase
     $filePath = 'index.php';
 
     $this->assertNotEmpty($_SERVER['DOCUMENT_ROOT']);
-    $this->assertSame($_SERVER['DOCUMENT_ROOT'] . 'index.php', Utility::addDocRootToPath($filePath));
+    $this->assertSame(str_replace('//', '/', $_SERVER['DOCUMENT_ROOT'] . '/index.php'), Utility::addDocRootToPath($filePath));
   }
 
   /**

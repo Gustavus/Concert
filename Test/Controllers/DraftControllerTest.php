@@ -1380,7 +1380,7 @@ class DraftControllerTest extends TestBase
 
     $result = $this->controller->getFilePathToCopy();
 
-    $this->assertSame($_SERVER['DOCUMENT_ROOT'] . 'billy/concert/index.php', $result);
+    $this->assertSame(str_replace('//', '/', $_SERVER['DOCUMENT_ROOT'] . '/billy/concert/index.php'), $result);
   }
 
   /**

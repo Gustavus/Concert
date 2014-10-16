@@ -98,6 +98,7 @@ class TestBase extends TestEM
    */
   public function setUp()
   {
+    $_SERVER['HTTP_HOST'] = 'beta.gac.edu';
     Config::$stagingDir       = self::$testFileDir . '/staging/';
     Config::$draftDir         = self::$testFileDir . '/drafts/';
     Config::$editableDraftDir = self::$testFileDir . '/editableDrafts/';
