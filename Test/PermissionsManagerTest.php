@@ -1889,11 +1889,41 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
-  public function findPublishersForFileNone()
+  public function findPublishersForFileSuperUser()
   {
     $file = '/cis/www/billy/concert/index.php';
     $this->constructDB(['Sites', 'Permissions']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SUPER_USER]);
+
+    $result = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($file));
+
+    $this->assertSame(['bvisto'], $result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findPublishersForFileNone()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/', Config::SUPER_USER]);
+
+    $result = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($file));
+
+    $this->assertNull($result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function findPublishersForFileOnlyEditorExists()
+  {
+    $file = '/cis/www/billy/concert/index.php';
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_EDITOR_ACCESS_LEVEL]);
 
     $result = PermissionsManager::findPublishersForFile(Utility::removeDocRootFromPath($file));
 

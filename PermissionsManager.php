@@ -600,7 +600,7 @@ class PermissionsManager
    * @param  array $sites Array of sites to sort
    * @return array Sorted array. The deepest sites will be first.
    */
-  private static function sortSitesByDepth($sites)
+  private static function sortSitesByDepth(array $sites)
   {
     usort($sites, function($a, $b) {
       return strlen($b) - strlen($a);
@@ -658,6 +658,10 @@ class PermissionsManager
   public static function findPublishersForFile($filePath)
   {
     $sites = self::findSitesContainingFile($filePath);
+
+    if (empty($sites)) {
+      return null;
+    }
 
     $sites = self::sortSitesByDepth($sites);
 

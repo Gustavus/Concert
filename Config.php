@@ -427,6 +427,7 @@ class Config
   public static $publishPendingDraftsAccessLevels = [
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
+    self::SUPER_USER,
   ];
 
   /**
@@ -437,6 +438,7 @@ class Config
   public static $manageRevisionsAccessLevels = [
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
+    self::SUPER_USER,
   ];
 
   /**
