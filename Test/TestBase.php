@@ -142,6 +142,7 @@ class TestBase extends TestEM
   public static function tearDownAfterClass()
   {
     self::removeFiles(self::$testFileDir);
+    parent::tearDownAfterClass();
   }
 
   /**
