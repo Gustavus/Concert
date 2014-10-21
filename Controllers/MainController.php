@@ -17,6 +17,7 @@ use Gustavus\Concert\Config,
   Gustavus\Extensibility\Actions,
   Gustavus\Extensibility\Filters,
   Gustavus\Revisions\API as RevisionsAPI,
+  Config as GACConfig,
   InvalidArgumentException;
 
 /**
@@ -429,6 +430,12 @@ class MainController extends SharedController
    */
   public function mosh($params)
   {
+    if (GACConfig::isProductionBackup()) {
+      // we don't want people to edit or do anything if we are working on our backup server
+      return [
+        'action' => 'none',
+      ];
+    }
     if (is_array($params)) {
       if (isset($params['dbal'])) {
         $this->setDBAL($params['dbal']);
