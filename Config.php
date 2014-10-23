@@ -172,12 +172,12 @@ class Config
   /**
    * Message to display if someone is editing a site nav that is being inherited
    */
-  const EDITING_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are editing a site nav that will be shared by other pages and directories in';
+  const EDITING_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are editing a menu that is shared by other pages and directories in';
 
   /**
    * Message to display if someone is creating a site nav that is being shared by
    */
-  const CREATE_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are creating a site nav that will be shared with other pages and directories in';
+  const CREATE_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are creating a menu that will be shared with other pages and directories in';
 
   /**
    * Message to display to people who didn't modify a starter page before saving
@@ -192,7 +192,7 @@ class Config
   /**
    * Message to use to prompt someone to continue editing their draft
    */
-  const CONTINUE_EDITING_MESSAGE = 'It looks like you were in the process of editing this page but left before finishing. Would you like to <a href="?concert=edit">continue</a>?';
+  const CONTINUE_EDITING_MESSAGE = 'It looks like you left this page before you finished editing it. Would you like to <a href="?concert=edit">continue</a>?';
 
   // Revision messages
 
@@ -226,7 +226,7 @@ class Config
   /**
    * Note to let people know they are looking at a draft
    */
-  const SITE_NAV_DRAFT_NOTE = 'Note: You are viewing a draft of the site nav and not a published site nav.';
+  const SITE_NAV_DRAFT_NOTE = 'Note: You are viewing a draft of the menu and not a published menu.';
 
   /**
    * Message to display if the draft doesn't exist.
@@ -246,28 +246,31 @@ class Config
   /**
    * Message to use when the draft is older than the page the draft represents
    */
-  const OUTDATED_DRAFT_MESSAGE = 'It appears that this draft was created off of an older version of the page and may be out of date.';
+  const OUTDATED_DRAFT_MESSAGE = 'This draft was created from an older version of the page and may be out of date.';
 
   /**
    * Message to display if the owner of a pending draft couldn't be contacted
    */
-  const DRAFT_REJECTION_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been rejected.';
+  const DRAFT_REJECTION_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified that their draft has been rejected.';
 
   /**
    * Message to display if the owner of a pending draft couldn't be contacted
    */
-  const DRAFT_PUBLISHED_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified to inform them that their draft has been published.';
+  const DRAFT_PUBLISHED_NOT_SENT_MESSAGE = 'The owner of the draft couldn\'t be notified that their draft has been published.';
 
   /**
    * Additional message to display to the owner of the draft telling them that they may need to discard it.
    */
-  const OUTDATED_DRAFT_MESSAGE_OWNER_ADDITIONS = 'Please discard this draft before continuing otherwise you might over-write any changes made since this draft was created.';
+  const OUTDATED_DRAFT_MESSAGE_OWNER_ADDITIONS = 'Saving this draft may overwrite changes made since its creation.';
+
   /**
    * Additional message to display to the owner of the draft telling them that they may need to discard it.
    */
-  const DRAFT_EDITED_BY_COLLABORATOR_MESSAGE = 'It looks a collaborator has edited your draft since your last save.';
+  const DRAFT_EDITED_BY_COLLABORATOR_MESSAGE = 'A collaborator has edited your draft since your last save.';
+
 
   // Staged file stages
+
 
   /**
    * Stage for specifing a deletion

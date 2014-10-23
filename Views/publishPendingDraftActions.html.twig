@@ -1,5 +1,5 @@
 {% spaceless %}
-  <p> Would you like to publish these changes from {{ getFullNameFromUsername(draftOwner) }}?</p>
+  <p> Would you like to publish the changes made by {{ getFullNameFromUsername(draftOwner) }}?</p>
   <div class="center">
     <a href="{{ url }}&amp;confirmPublish=true" id="publishPendingDraft" class="button blue thickbox">Publish</a><a href="{{ url }}&amp;confirmReject=true" class="button red thickbox" id="rejectPendingDraft">Reject</a>
   </div>

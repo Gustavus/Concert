@@ -1312,7 +1312,7 @@ class MainControllerTest extends TestBase
 
     $this->assertSame(['action' => 'none'], $actual);
 
-    $this->assertMessageInMessages('process of editing this page but left', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages(Config::CONTINUE_EDITING_MESSAGE, $this->controller->getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();

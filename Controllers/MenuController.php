@@ -91,7 +91,7 @@ class MenuController extends SharedController
   private static $groupWeights = [
     'file'    => 0,
     'drafts'     => 1,
-    'navigation' => 2,
+    'menu' => 2,
   ];
 
   /**
@@ -552,12 +552,12 @@ class MenuController extends SharedController
       $query['concert']       = 'stopEditingSiteNav';
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
-        'text'     => 'Stop editing local navigation',
+        'text'     => 'Stop editing menu',
         'url'      => $url,
         'thickbox' => false,
       ];
 
-      $this->addMenuItem($item, 'navigation', 20);
+      $this->addMenuItem($item, 'menu', 20);
       // disabled drafts for siteNavs
       // } else if (($draft = $fm->getDraftForUser($this->getLoggedInUsername())) !== false) {
       //   // the user has a draft of the site nav they can continue editing.
@@ -571,7 +571,7 @@ class MenuController extends SharedController
       //     'thickbox' => false,
       //   ];
 
-      //   $this->addMenuItem($item, 'navigation', 20);
+      //   $this->addMenuItem($item, 'menu', 20);
     }
 
     if (!self::isGlobalNav($siteNav) && !((self::isSiteNavRequest() && self::userIsEditing()) || self::userIsCreatingSiteNav())) {
@@ -585,7 +585,7 @@ class MenuController extends SharedController
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
 
       $item = [
-        'text'     => $isInheritedNav ? 'Edit inherited local navigation' : 'Edit local navigation',
+        'text'     => $isInheritedNav ? 'Edit inherited menu' : 'Edit menu',
         'url'      => $url,
         'thickbox' => false,
       ];
@@ -598,7 +598,7 @@ class MenuController extends SharedController
         $item['thickboxData'] = ['html' => $html];
       }
 
-      $this->addMenuItem($item, 'navigation', 20);
+      $this->addMenuItem($item, 'menu', 20);
     }
 
     if (!((self::isSiteNavRequest() && self::userIsEditing()) || self::userIsCreatingSiteNav()) && $isInheritedNav) {
@@ -608,7 +608,7 @@ class MenuController extends SharedController
       $query['concertAction'] = 'siteNav';
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
-        'text'     => 'Create local navigation',
+        'text'     => 'Create menu',
         'url'      => $url,
         'thickbox' => false,
       ];
@@ -621,7 +621,7 @@ class MenuController extends SharedController
         $item['thickboxData'] = ['html' => $html];
       }
 
-      $this->addMenuItem($item, 'navigation', 20);
+      $this->addMenuItem($item, 'menu', 20);
     }
 
     if (!self::isRevisionRequest() || !self::isSiteNavRequest()) {
@@ -630,11 +630,11 @@ class MenuController extends SharedController
       $query['concert']         = 'revisions';
       $query['concertAction']   = 'siteNav';
       $item = [
-        'text'     => $isInheritedNav ? 'View inherited local navigation revisions' : 'View local navigation revisions',
+        'text'     => $isInheritedNav ? 'View inherited menu revisions' : 'View menu revisions',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query),
         'thickbox' => false,
       ];
-      $this->addMenuItem($item, 'navigation', 20);
+      $this->addMenuItem($item, 'menu', 20);
     }
 
 
@@ -658,7 +658,7 @@ class MenuController extends SharedController
     //     $query['concert'] = 'viewDraft';
     //     if (self::isSiteNavRequest()) {
     //       $query['concertAction'] = 'siteNav';
-    //       $text = 'View all local navigation drafts';
+    //       $text = 'View all local menu drafts';
     //     } else {
     //       $text = 'View all drafts';
     //     }
@@ -671,7 +671,7 @@ class MenuController extends SharedController
     //       'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
     //     ];
 
-    //     $this->addMenuItem($item, 'navigation', 20);
+    //     $this->addMenuItem($item, 'menu', 20);
     //   }
     // }
 
@@ -683,13 +683,13 @@ class MenuController extends SharedController
     //   $query['concert'] = 'delete';
     //   $query['concertAction'] = 'siteNav';
     //   $item = [
-    //     'text'     => 'Delete Local Navigation',
+    //     'text'     => 'Delete Local menu',
     //     'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
     //     'thickbox' => true,
     //     'classes'  => 'red',
     //   ];
 
-    //   $this->addMenuItem($item, 'navigation', 20);
+    //   $this->addMenuItem($item, 'menu', 20);
     // }
   }
 

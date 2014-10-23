@@ -71,7 +71,7 @@ class DraftController extends SharedController
       $messageAdditions = '';
 
       if ($draft['type'] === Config::PUBLIC_DRAFT) {
-        $messageAdditions .= sprintf(' This draft is a shared draft. Other users can see it by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
+        $messageAdditions .= sprintf(' This is a shared draft. Other users can see it by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
       }
 
       if (self::isRequestFromConcertRoot()) {
@@ -84,7 +84,7 @@ class DraftController extends SharedController
     $draftFilename = $fm->getDraftFileName($draft['username'], true);
 
     if (!$draftFilename || !file_exists($draftFilename)) {
-      return $this->renderErrorPage('Oops! It appears as if the draft could not be found.');
+      return $this->renderErrorPage('Oops! It appears that the draft could not be found.');
     }
 
     if ($draft['type'] === Config::PENDING_PUBLISH_DRAFT && PermissionsManager::userCanPublishPendingDrafts($this->getLoggedInUsername(), $filePath)) {
