@@ -11,7 +11,6 @@ Extend.add('autocompleteUser', function() {
         var url = $this.data('autocompletepath');
 
         url = url.replace(encodeURIComponent('{value}'), encodeURIComponent(req.term));
-        console.log(url);
 
         $.getJSON(
           url,
