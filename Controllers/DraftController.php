@@ -87,7 +87,7 @@ class DraftController extends SharedController
       return $this->renderErrorPage('Oops! It appears that the draft could not be found.');
     }
 
-    if ($draft['type'] === Config::PENDING_PUBLISH_DRAFT && PermissionsManager::userCanPublishPendingDrafts($this->getLoggedInUsername(), $filePath)) {
+    if ($draft['type'] === Config::PENDING_PUBLISH_DRAFT && PermissionsManager::userCanPublishPendingDrafts($this->getLoggedInUsername(), $filePathFromDocRoot)) {
       // this draft is pending publish, and the user has access to publish drafts.
       return $this->handlePendingDraft($draft, $fm);
     }
