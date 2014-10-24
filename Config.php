@@ -336,10 +336,6 @@ class Config
    */
   const AUTHOR_ACCESS_LEVEL = 'author';
   /**
-   * Access level that can only view sites (non editing)
-   */
-  const VIEWER_ACCESS_LEVEL = 'viewer';
-  /**
    * Access level that can't create new files
    */
   const NON_CREATION_ACCESS_LEVEL = 'noCreate';
@@ -384,7 +380,6 @@ class Config
    * @var array
    */
   public static $nonEditableAccessLevels = [
-    self::VIEWER_ACCESS_LEVEL,
   ];
 
   /**
