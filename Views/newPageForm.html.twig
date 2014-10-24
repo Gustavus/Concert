@@ -19,7 +19,6 @@
           script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'toFile'}) }}'
         }, function (file) {
           newFile = file;
-          console.log('new filename ' + newFile)
         });
 
         $('#fromFileTreeSelector').fileTree({
@@ -27,7 +26,6 @@
           script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'fromFile'}) }}'
         }, function (file) {
           fromFile = file;
-          console.log('from filename ' + fromFile)
         });
 
         $('#createNewPage').on('click', function(e) {

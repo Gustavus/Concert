@@ -36,7 +36,6 @@ class Utility
   private static function getDBAL()
   {
     if (empty(self::$dbal)) {
-      var_dump('no dbal');
       self::$dbal = DBAL::getDBAL(Config::DB);
     }
     return self::$dbal;
