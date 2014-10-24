@@ -95,6 +95,7 @@ class DraftController extends SharedController
     // add a message saying that the draft is older than the published date of the page and it might be out of sync.
     $this->addOutdatedDraftMessageIfNeeded($draft);
 
+    $this->addNoRobotsTag();
     return $this->displayPage($draftFilename, true);
   }
 
@@ -163,6 +164,8 @@ class DraftController extends SharedController
           ]
       ), false);
     }
+
+    $this->addNoRobotsTag();
     return $this->displayPage($draftFilename, true);
   }
 
@@ -208,6 +211,7 @@ class DraftController extends SharedController
     // add a message saying that the draft is older than the published date of the page and it might be out of sync.
     $this->addOutdatedDraftMessageIfNeeded($draft);
 
+    $this->addNoRobotsTag();
     return $this->displayPage(Config::$draftDir . $draftName, true);
   }
 
@@ -282,6 +286,7 @@ class DraftController extends SharedController
 
     // add a message saying that the draft is older than the published date of the page and it might be out of sync.
     $this->addOutdatedDraftMessageIfNeeded($draft);
+    $this->addNoRobotsTag();
 
     $page = $this->displayPage($draftFilename, true);
 
