@@ -502,7 +502,7 @@ class MainController extends SharedController
           $this->setConcertMessage(null, false);
         }
 
-        if (!file_exists($filePath) && PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $filePathFromDocRoot)) {
+        if (!file_exists($filePath)) {
           // we need to check to see if the user is trying to create a new page
           $result = $this->handleNewPageRequest($filePath);
 

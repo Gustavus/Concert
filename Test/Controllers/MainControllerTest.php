@@ -1260,6 +1260,36 @@ class MainControllerTest extends TestBase
   /**
    * @test
    */
+  public function moshEditFileNonExistentNoCreation()
+  {
+    $docRoot = $_SERVER['DOCUMENT_ROOT'];
+    $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $filePath = self::$testFileDir . 'index.php';
+    if (file_exists($filePath)) {
+      unlink($filePath);
+    }
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'noCreate']);
+
+    $this->authenticate('bvisto');
+    $_GET['concert'] = 'edit';
+    $this->setUpController();
+
+    $actual = $this->controller->mosh($filePath);
+
+    $this->assertSame(['action' => 'none'], $actual);
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessages());
+
+    $this->unauthenticate();
+    $this->destructDB();
+    $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+  }
+
+  /**
+   * @test
+   */
   public function moshStopEditingFile()
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
