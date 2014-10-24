@@ -63,13 +63,10 @@ Gustavus.Concert = {
     ]},
     {title: 'Classes', items: [
       {title: 'Disabled', selector: '*', classes: 'disabled'},
-      {title: 'Message', selector: '*', inline : 'span', classes: 'message'},
-      {title: 'Highlight', selector: '*', inline : 'span',  classes: 'highlight'},
-      {title: 'Box', selector: '*', inline : 'span',  classes: 'box'},
-      {title: 'Boxright', selector: '*', inline : 'span',  classes: 'boxright'},
-      {title: 'Boxleft', selector: '*', inline : 'span',  classes: 'boxleft'},
+      {title: 'Message', selector: 'p,div', classes: 'message'},
+      {title: 'Highlight', selector: 'p,div', classes: 'highlight'},
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
-      {title: 'Fancy', selector: 'table,img',  classes: 'fancy'},
+      {title: 'Fancy', selector: 'table,img', classes: 'fancy'},
       {title: 'Striped', selector: 'table', classes: 'striped'},
       {title: 'Sortable', selector: 'table', classes: 'sortable'},
       {title: 'Left', selector: 'img', classes: 'left'},
@@ -149,13 +146,6 @@ Gustavus.Concert = {
     filemanager_title:"Responsive Filemanager" ,
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
-    //toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-    // importcss_append: true,
-    // importcss_merge_classes: true,
-    // importcss_groups: true,
-    // importcss_file_filter: '/templates/css/contribute-user.css',
-    //visualblocks_default_state: true,
-    //forced_root_block: false,
     resize: false,
     // table configuration
     table_class_list: [
@@ -180,52 +170,7 @@ Gustavus.Concert = {
 
         editor.setContent(content, {format: 'raw'});
       });
-      //http://www.tinymce.com/wiki.php/api4:class.tinymce.ResizeEvent
-      // editor.on('ObjectResized', function(e) {
-      //   var $elem = $(e);
-      //   console.log($elem.parent());
-      //   if ($elem.parent().length < 1) {
-      //     var width;
-      //   } else {
-      //     var parentWidth = $elem.parent().width();
-      //     var elemWidth = $elem.width();
-      //     if (elemWidth > parentWidth) {
-      //       // not allowed
-      //       var width = '100';
-      //     } else {
-      //       var width = parentWidth / elemWidth;
-      //     }
-      //   }
-      //   if (width) {
-      //     width += '%';
-      //   }
-      //   $elem.width(width);
-      //   console.log('resize', width);
-      // })
-
     },
-    //entities: '38,amp,34,quot,60,lt,62,gt',
-    // valid_elements: '+a[!href|title|target],'+
-    //   '-strong/b,'+
-    //   '-em/i,'+
-    //   '-small,'+
-    //   '-cite,'+
-    //   '-blockquote[cite],'+
-    //   'br,'+
-    //   '-p[class<leadin?message],'+
-    //   '-span[class<pullquote?pullquoteright?pullquoteleft],'+
-    //   '-h4/h1/h2/h3/h5/h6,'+
-    //   '-ul,'+
-    //   '-ol,'+
-    //   '-li,'+
-    //   '-dl,'+
-    //   '-dd,'+
-    //   '-dt,'+
-    //   '-abbr[title],'+
-    //   '-acronym[title]',
-    //extended_valid_elements: 'tr',
-    //theme_advanced_disable: ["code"],
-
     // menu : { // this is the complete default configuration
     //   file   : {title : 'File'  , items : 'newdocument'},
     //   edit   : {title : 'Edit'  , items : 'undo redo | cut copy paste pastetext | selectall'},
@@ -463,7 +408,6 @@ Gustavus.Concert = {
     edits.concertAction = 'save';
     edits.saveAction = action;
     edits.filePath = this.filePath;
-    // console.log(this.baseUrl);
     $('body').css('cursor', 'progress');
     $.ajax({
       type: 'POST',
@@ -580,31 +524,29 @@ $(document)
 
   .on('click', '#concertSavePrivateDraft', function(e) {
     e.preventDefault();
-    var req = Gustavus.Concert.hasSharedDraft();
-    req.done(function(data) {
-      //console.log(data);
-      if (data) {
-        $('#confirmPrivateDraft').dialog({
-          modal: true,
-          buttons: {
-            'Save private draft': function() {
-              Gustavus.Concert.saveEdits('savePrivateDraft', false);
-              $(this).dialog('close');
-            },
-            Cancel: function() {
-              $(this).dialog('close');
+    Gustavus.Concert.hasSharedDraft()
+      .done(function(data) {
+        if (data) {
+          $('#confirmPrivateDraft').dialog({
+            modal: true,
+            buttons: {
+              'Save private draft': function() {
+                Gustavus.Concert.saveEdits('savePrivateDraft', false);
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                $(this).dialog('close');
+              }
             }
-          }
-        });
-      } else {
-        Gustavus.Concert.saveEdits('savePrivateDraft', true);
-      }
-    })
-
-    req.fail(function() {
-      // something happened.
-      alert('The draft was not successfully saved');
-    })
+          });
+        } else {
+          Gustavus.Concert.saveEdits('savePrivateDraft', true);
+        }
+      })
+      .fail(function() {
+        // something happened.
+        alert('The draft was not successfully saved');
+      })
   })
 
   .on('click', '#concertSavePublicDraft', function(e) {
@@ -614,45 +556,33 @@ $(document)
 
   .on('click', '#concertDiscardDraft', function(e) {
     e.preventDefault();
-    var req = Gustavus.Concert.hasSharedDraft();
-    req.done(function(data) {
-      if (data) {
-        $('#confirmDiscardDraft').dialog({
-          modal: true,
-          buttons: {
-            'Discard Draft': function() {
-              Gustavus.Concert.saveEdits('discardDraft', true);
-              $(this).dialog('close');
-            },
-            Cancel: function() {
-              $(this).dialog('close');
+    Gustavus.Concert.hasSharedDraft()
+      .done(function(data) {
+        if (data) {
+          $('#confirmDiscardDraft').dialog({
+            modal: true,
+            buttons: {
+              'Discard Draft': function() {
+                Gustavus.Concert.saveEdits('discardDraft', true);
+                $(this).dialog('close');
+              },
+              Cancel: function() {
+                $(this).dialog('close');
+              }
             }
-          }
-        });
-      } else {
-        Gustavus.Concert.saveEdits('discardDraft', true);
-      }
-    })
-
-    req.fail(function() {
-      // something happened.
-      alert('The draft was not successfully discarded');
-    })
+          });
+        } else {
+          Gustavus.Concert.saveEdits('discardDraft', true);
+        }
+      })
+      .fail(function() {
+        // something happened.
+        alert('The draft was not successfully discarded');
+      });
   })
 
   .on('click', '#concertStopEditing', function(e) {
-      //e.preventDefault();
-    // we don't need this if we redirect to a url where the lock will get released there. Why do the extra work?
-    // var req = Gustavus.Concert.releaseLock();
-    // req.done(function(data) {
-    //   if (!data) {
-    //     e.preventDefault();
-    //   }
-    // })
-    // req.fail(function() {
-    //   e.preventDefault();
-    // })
-    window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing', 'concertAction': 'siteNav'});
+    window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing', 'concertAction': 'menu'});
   })
 
   .on('click', '.quitConcert', function(e) {
