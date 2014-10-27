@@ -739,7 +739,7 @@ class MenuController extends SharedController
         }
         // All dirs
         foreach ($files as $file) {
-          if (file_exists($absDir . $file) && $file != '.' && $file != '..' && is_dir($absDir . $file)) {
+          if (file_exists($absDir . $file) && $file != '.' && $file != '..' && is_dir($absDir . $file) && !in_array($file, Config::$fileTreeExcludedFolders)) {
             $return .= sprintf('<li class="directory collapsed"><a href="#" rel="%s">%s</a></li>', htmlentities($dir . $file . DIRECTORY_SEPARATOR), htmlentities($file));
           }
         }

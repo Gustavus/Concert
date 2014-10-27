@@ -631,4 +631,13 @@ class Config
   public static $adminEmails = [
     'web+concert@gustavus.edu'
   ];
+
+  /**
+   * Folders to exclude when building a file tree for creating new pages.
+   *
+   * @var array
+   */
+  public static $fileTreeExcludedFolders = [
+    'files',
+  ];
 }
