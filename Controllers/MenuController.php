@@ -624,7 +624,7 @@ class MenuController extends SharedController
       $this->addMenuItem($item, 'menu', 20);
     }
 
-    if (!self::isRevisionRequest() || !self::isSiteNavRequest()) {
+    if (!self::isGlobalNav($siteNav) && (!self::isRevisionRequest() || !self::isSiteNavRequest())) {
       $query = $this->queryParams;
       self::removeConcertQueryParams($query);
       $query['concert']         = 'revisions';
