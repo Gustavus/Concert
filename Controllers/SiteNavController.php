@@ -35,7 +35,7 @@ class SiteNavController extends SharedController
    */
   private function edit($siteNav)
   {
-    $this->setTitle('Edit Local Navigation');
+    $this->setTitle('Edit Menu');
 
     $origGet = $_GET;
 
@@ -131,7 +131,7 @@ class SiteNavController extends SharedController
       $navToCreateFrom = self::getSiteNavToCreateFrom();
     }
 
-    $this->setTitle('Create Local Navigation');
+    $this->setTitle('Create Menu');
 
     if (self::isSiteNavShared($navToCreate)) {
       $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), false));
