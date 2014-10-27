@@ -133,9 +133,10 @@ class SharedController extends ConcourseController
    * @param string $redirectPath Path to redirect to on edit
    * @param  array $visibleButtons Array of buttons that we want to display
    * @param  array $additionalButtons Array of arrays of additional buttons to add. Sub-arrays must have indexes of 'url', 'id', and 'text'.
+   * @param  array $additionalJSOptions Associative array of additional properties to insert into the javascript
    * @return void
    */
-  protected function insertEditingResources($filePath, $redirectPath = null, array $visibleButtons = null, array $additionalButtons = null)
+  protected function insertEditingResources($filePath, $redirectPath = null, array $visibleButtons = null, array $additionalButtons = null, array $additionalJSOptions = null)
   {
     // set things up for fileManager
     // set the language file to use since filemanager tries to use relative paths.
@@ -191,11 +192,17 @@ class SharedController extends ConcourseController
       $originalFilePath = $filePath;
     }
 
-    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $resources, $allowCode, $siteAccessKey) {
+    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $resources, $allowCode, $siteAccessKey, $additionalJSOptions) {
       if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
         $isAdmin = 'true';
       } else {
         $isAdmin = 'false';
+      }
+
+      if (!empty($additionalJSOptions)) {
+        $additionalJSOptions = (new Set($additionalJSOptions))->toSentence('Gustavus.Concert.{{ key }} = {% if value == \'true\' or value == \'false\' %}{{ value }}{% else %}"{{ value }}"{% endif %};', '', 0, ' ');
+      } else {
+        $additionalJSOptions = '';
       }
 
       $script = sprintf(
@@ -211,7 +218,8 @@ class SharedController extends ConcourseController
                 Gustavus.Concert.isAdmin = %5$s;
                 Gustavus.Concert.isSiteNavRequest = %6$s;
                 Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%7$s";
-                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%7$s/",
+                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%7$s/";
+                %8$s
                 Gustavus.Concert.init();
               }
             });
@@ -222,7 +230,8 @@ class SharedController extends ConcourseController
           $allowCode ? 'true' : 'false',
           $isAdmin,
           self::isSiteNavRequest() ? 'true' : 'false',
-          $siteAccessKey
+          $siteAccessKey,
+          $additionalJSOptions
       );
       return $content . $script;
     }, 11);
