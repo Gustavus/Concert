@@ -183,7 +183,13 @@ class MainController extends SharedController
   private function createNewPage($filePath, $fromFilePath = null)
   {
     if ($fromFilePath === null) {
-      $fromFilePath = Config::DEFAULT_TEMPLATE_PAGE;
+      if (isset($_POST['fromFilePath'])) {
+        // our from file path is specified here.
+        $fromFilePath = $_POST['fromFilePath'];
+      } else {
+        // default to our default template.
+        $fromFilePath = Config::DEFAULT_TEMPLATE_PAGE;
+      }
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
@@ -215,7 +221,7 @@ class MainController extends SharedController
       return true;
     }
 
-    $this->insertEditingResources($filePath, self::findRedirectPath());
+    $this->insertEditingResources($filePath, self::findRedirectPath(), null, null, ['isCreation' => 'true', 'fromFilePath' => $fromFilePath]);
 
     $draftFilename = $fm->makeEditableDraft($editDraft);
 

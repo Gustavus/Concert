@@ -408,6 +408,9 @@ Gustavus.Concert = {
     edits.concertAction = 'save';
     edits.saveAction = action;
     edits.filePath = this.filePath;
+    if (this.isCreation && this.fromFilePath) {
+      edits.fromFilePath = this.fromFilePath;
+    }
     $('body').css('cursor', 'progress');
     $.ajax({
       type: 'POST',
