@@ -143,7 +143,7 @@ Gustavus.Concert = {
       {title: 'None', value: ''},
       {title: 'Fancy', value: 'fancy'}
     ],
-    filemanager_title:"Responsive Filemanager" ,
+    filemanager_title: "Concert File Manager" ,
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
     resize: false,
