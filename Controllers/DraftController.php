@@ -184,20 +184,22 @@ class DraftController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('drafts', ['draftName' => '']), null, $this->getDB());
 
     $draft = $fm->getDraft($draftName);
-    if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
-      return $this->showDraft($params);
-    }
 
     $filePathFromDocRoot = Utility::removeDocRootFromPath($draft['destFilepath']);
-
-    if ($draft['type'] !== Config::PUBLIC_DRAFT) {
-      return PageUtil::renderPageNotFound(true);
-    }
 
     $shouldRedirectToFullPath = true;
     if (self::isRequestFromConcertRoot() && $shouldRedirectToFullPath) {
       // we are using this location as a url shortener
       return $this->redirect((new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue());
+    }
+
+    if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
+      $params['filePath'] = $draft['destFilepath'];
+      return $this->showDraft($params);
+    }
+
+    if ($draft['type'] !== Config::PUBLIC_DRAFT) {
+      return PageUtil::renderPageNotFound(true);
     }
 
     if (self::isRequestFromConcertRoot()) {
