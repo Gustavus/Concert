@@ -420,7 +420,7 @@ class PermissionsManager
       return false;
     }
     // We need to check to see if their accessLevel permits editing banners.
-    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], [Config::BANNER_ACCESS_LEVEL])) {
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$manageBannersAccessLevels)) {
       return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
     }
     // the current user's access level doesn't allow editing banners

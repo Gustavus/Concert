@@ -470,6 +470,17 @@ class Config
   ];
 
   /**
+   * Access levels that can edit banners
+   *
+   * @var array
+   */
+  public static $manageBannersAccessLevels = [
+    self::SUPER_USER,
+    self::ADMIN_ACCESS_LEVEL,
+    self::BANNER_ACCESS_LEVEL,
+  ];
+
+  /**
    * Directory drafts are saved in
    *
    * @var string
