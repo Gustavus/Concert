@@ -89,9 +89,9 @@ class MenuController extends SharedController
    * @var array
    */
   private static $groupWeights = [
-    'file'    => 0,
-    'drafts'     => 1,
-    'menu' => 2,
+    'file'   => 0,
+    'drafts' => 1,
+    'menu'   => 2,
   ];
 
   /**
