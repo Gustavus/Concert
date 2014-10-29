@@ -135,7 +135,7 @@ Gustavus.Concert = {
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
     menubar: 'edit insert view format table tools',
-    toolbar: "insertfile undo redo | styleselect | bold italic | bullist numlist | link image responsivefilemanager | spellchecker",
+    toolbar: "insertfile undo redo | styleselect | bold italic | bullist numlist | link anchor image responsivefilemanager | spellchecker",
 
     // media
     image_advtab: false,
