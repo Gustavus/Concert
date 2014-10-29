@@ -259,7 +259,10 @@ class DraftController extends SharedController
     }
 
     if ($this->getMethod() === 'POST' && $draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
-      $this->forward('emailSharedDraftSaved', ['draft' => $draft]);
+      if ($draft['username'] !== $this->getLoggedInUsername()) {
+        // alert the owner that their draft has been edited by a collaborator.
+        $this->forward('emailSharedDraftSaved', ['draft' => $draft]);
+      }
       $draftFM->stopEditing();
       return json_encode(['redirectUrl' => $buttonUrl]);
     }
