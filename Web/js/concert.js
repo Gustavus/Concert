@@ -305,6 +305,10 @@ Gustavus.Concert = {
    */
   cleanUpContent: function(content) {
     var cleaned = content.replace(/<br.data-mce[^>]*>/g, '');
+    // get rid of mce-item* stuff that tinymce doesn't always clean up.
+    cleaned = cleaned.replace(/ ?mce-item[^>" ]*/g, '');
+    // get rid of any empty classes we may have.
+    cleaned = cleaned.replace(/class=""/g, '');
     cleaned = cleaned.replace(/<tr class="odd">/g, '<tr>');
     return cleaned;
   },
