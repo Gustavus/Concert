@@ -9,7 +9,8 @@ namespace Gustavus\Concert;
 use Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
   Gustavus\GACCache\GlobalCache,
-  Gustavus\Utility\Set;
+  Gustavus\Utility\Set,
+  DateTime;
 
 /**
  * Class for managing permissions
@@ -872,6 +873,44 @@ class PermissionsManager
   }
 
   /**
+   * Checks to see if permissions for a site have expired
+   *
+   * @param  array $sitePerms Array of site permissions
+   * @return boolean True if permissions have expired. False otherwise.
+   */
+  private static function haveSitePermissionsExpired($sitePerms)
+  {
+    if (empty($sitePerms['expirationDate'])) {
+      return false;
+    }
+    $expirationDate = new DateTime($sitePerms['expirationDate']);
+    if ((int) $expirationDate->format('U') < time()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Removes any expired permissions a person may have.
+   *
+   * @param  array $permissions Array of permissions from getAllPermissionsForUser
+   * @return array|null
+   */
+  private static function removeExpiredPermissions($permissions)
+  {
+    if (empty($permissions)) {
+      return null;
+    }
+
+    $permissions = array_filter($permissions, function($sitePerms) {
+      return !self::haveSitePermissionsExpired($sitePerms);
+    });
+
+    return empty($permissions) ? null : $permissions;
+  }
+
+  /**
    * Gets all permissions for a user
    *
    *   Returns an array with keys of siteRoots. Those keys contain arrays with keys of accessLevel, includedFiles, and excludedFiles. Those keys will either be an array of values, or null.
@@ -898,7 +937,7 @@ class PermissionsManager
     if (!$refreshCache && (!isset($_GET['refresh']) || $_GET['refresh'] === 'false')) {
       $cachedResult = self::getCache()->getValue(self::buildCacheKey($username), $found);
       if ($found) {
-        return $cachedResult;
+        return self::removeExpiredPermissions($cachedResult);
       }
     }
     $ttl = 43200; // 60*60*12 = 43200
@@ -909,6 +948,7 @@ class PermissionsManager
     $qb->select('p.accessLevel')
       ->addSelect('p.includedFiles')
       ->addSelect('p.excludedFiles')
+      ->addSelect('p.expirationDate')
       ->addSelect('s.siteRoot')
       ->addSelect('s.excludedFiles as siteExcludedFiles')
       ->from('permissions', 'p')
@@ -926,9 +966,15 @@ class PermissionsManager
     $returnArray = [];
 
     foreach ($result as $sitePerms) {
+      if (self::haveSitePermissionsExpired($sitePerms)) {
+        // their permissions have expired.
+        continue;
+      }
       $returnArray[$sitePerms['siteRoot']] = [
         'includedFiles' => ($sitePerms['includedFiles']) ? explode(',', $sitePerms['includedFiles']) : null,
         'excludedFiles' => ($sitePerms['excludedFiles']) ? explode(',', $sitePerms['excludedFiles']) : null,
+        // @todo. Now do something with this.
+        'expirationDate' => ($sitePerms['expirationDate']) ?: null,
       ];
 
       $inheritedPerms = self::getInheritedPermissionsForSite($sitePerms['siteRoot']);
@@ -966,7 +1012,7 @@ class PermissionsManager
 
     self::getCache()->setValue(self::buildCacheKey($username), $returnArray, $ttl);
 
-    return $returnArray;
+    return empty($returnArray) ? null : $returnArray;
   }
 
   /**
@@ -1038,7 +1084,7 @@ class PermissionsManager
    * @throws  UnexpectedValueException If the siteId isn't found or created
    * @return boolean  True on success or if the specified permissions are already set. False on failure
    */
-  public static function saveUserPermissions($username, $siteRoot, $accessLevel, $includedFiles = null, $excludedFiles = null)
+  public static function saveUserPermissions($username, $siteRoot, $accessLevel, $includedFiles = null, $excludedFiles = null, DateTime $expirationDate = null)
   {
     $siteId = self::saveNewSiteIfNeeded($siteRoot);
     if (!$siteId) {
@@ -1076,10 +1122,12 @@ class PermissionsManager
       return true;
     }
 
+    $properties = ['accessLevel' => $accessLevel, 'includedFiles' => $includedFiles, 'excludedFiles' => $excludedFiles, 'expirationDate' => $expirationDate];
+
     if ($result) {
-      $result = $dbal->update('permissions', ['accessLevel' => $accessLevel, 'includedFiles' => $includedFiles, 'excludedFiles' => $excludedFiles], ['username' => $username, 'site_id' => $siteId]);
+      $result = $dbal->update('permissions', ['accessLevel' => $accessLevel, 'includedFiles' => $includedFiles, 'excludedFiles' => $excludedFiles, 'expirationDate' => $expirationDate], ['username' => $username, 'site_id' => $siteId], [null, null, null, 'datetime']);
     } else {
-      $result = $dbal->insert('permissions', ['username' => $username, 'site_id' => $siteId, 'accessLevel' => $accessLevel, 'includedFiles' => $includedFiles, 'excludedFiles' => $excludedFiles]);
+      $result = $dbal->insert('permissions', ['username' => $username, 'site_id' => $siteId, 'accessLevel' => $accessLevel, 'includedFiles' => $includedFiles, 'excludedFiles' => $excludedFiles, 'expirationDate' => $expirationDate], [null, null, null, null, null, 'datetime']);
     }
 
     if ($result) {

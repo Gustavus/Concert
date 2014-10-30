@@ -43,6 +43,13 @@ class Permissions
     private $excludedfiles;
 
     /**
+     * @var string
+     *
+     * @Column(name="expirationDate", type="datetime", nullable=true)
+     */
+    private $expirationDate;
+
+    /**
      * @var \Sites
      *
      * @Id

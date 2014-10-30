@@ -9,7 +9,8 @@ namespace Gustavus\Concert\Test;
 
 use Gustavus\Concert\PermissionsManager,
   Gustavus\Concert\Config,
-  Gustavus\Concert\Utility;
+  Gustavus\Concert\Utility,
+  DateTime;
 
 /**
  * Class to test PermissionManager class
@@ -115,14 +116,16 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'includedFiles' => null,
-        'excludedFiles' => null,
-        'accessLevel'   => ['admin'],
+        'includedFiles'  => null,
+        'excludedFiles'  => null,
+        'expirationDate' => null,
+        'accessLevel'    => ['admin'],
       ],
       '/arst' => [
-        'includedFiles' => ['files/*'],
-        'excludedFiles' => ['private/*'],
-        'accessLevel'   => ['admin'],
+        'includedFiles'  => ['files/*'],
+        'excludedFiles'  => ['private/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['admin'],
       ],
     ];
 
@@ -150,9 +153,120 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'includedFiles' => ['files/*', 'private/public/*'],
-        'excludedFiles' => ['private/*', 'protected/*'],
-        'accessLevel'   => ['test'],
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveAndGetUserPermissionsWithExpirationDate()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $expirationDate = new DateTime('+1 day');
+    $this->assertTrue(PermissionsManager::saveUserPermissions('bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*'], $expirationDate));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/billy' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => $expirationDate->format('Y-m-d H:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveAndGetUserPermissionsWithExpiredExpirationDate()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $expirationDate = new DateTime('-1 day');
+    $this->assertTrue(PermissionsManager::saveUserPermissions('bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*'], $expirationDate));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $this->assertNull($permissions);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveAndGetUserPermissionsWithExpiredSite()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $expirationDate = new DateTime('-1 day');
+    $this->assertTrue(PermissionsManager::saveUserPermissions('bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*'], $expirationDate));
+    $this->assertTrue(PermissionsManager::saveUserPermissions('bvisto', '/arst', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/arst' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function saveAndGetUserPermissionsWithExpiredSiteFromCache()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $expirationDate = new DateTime('+1 second');
+    $this->assertTrue(PermissionsManager::saveUserPermissions('bvisto', '/billy', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*'], $expirationDate));
+    $this->assertTrue(PermissionsManager::saveUserPermissions('bvisto', '/arst', 'test', ['files/*', 'private/public/*'], ['private/*', 'protected/*']));
+
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/billy' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => $expirationDate->format('Y-m-d H:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+      '/arst' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $permissions);
+
+    // let the cached expiration date become expired.
+    sleep(2);
+    $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/arst' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
       ],
     ];
 
@@ -173,9 +287,10 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'includedFiles' => null,
-        'excludedFiles' => ['concourseApp/*'],
-        'accessLevel'   => ['test'],
+        'includedFiles'  => null,
+        'excludedFiles'  => ['concourseApp/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
       ],
     ];
 
@@ -196,9 +311,10 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'includedFiles' => ['files/*', 'private/public/*'],
-        'excludedFiles' => ['private/*', 'protected/*', 'concourseApp/'],
-        'accessLevel'   => ['test'],
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*', 'concourseApp/'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
       ],
     ];
 
@@ -219,9 +335,10 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy/arst/' => [
-        'includedFiles' => null,
-        'excludedFiles' => ['concourseApp/', 'private/*'],
-        'accessLevel'   => ['test'],
+        'includedFiles'  => null,
+        'excludedFiles'  => ['concourseApp/', 'private/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
       ],
     ];
 
@@ -243,18 +360,176 @@ class PermissionsManagerTest extends TestBase
 
     $expected = [
       '/billy' => [
-        'includedFiles' => ['files/*', 'images/*'],
-        'excludedFiles' => ['secure/*', 'protected/private.php'],
-        'accessLevel'   => ['admin'],
+        'includedFiles'  => ['files/*', 'images/*'],
+        'excludedFiles'  => ['secure/*', 'protected/private.php'],
+        'expirationDate' => null,
+        'accessLevel'    => ['admin'],
       ],
       '/arst' => [
-        'includedFiles' => ['files/*'],
-        'excludedFiles' => ['private/*'],
-        'accessLevel'   => ['admin'],
+        'includedFiles'  => ['files/*'],
+        'excludedFiles'  => ['private/*'],
+        'expirationDate' => null,
+        'accessLevel'    => ['admin'],
       ],
     ];
 
     $this->assertSame($expected, $actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function removeExpiredPermissions()
+  {
+    $expirationDate = new DateTime('+1 day');
+
+    $permissions = [
+      '/billy' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => $expirationDate->format('Y-m-d G:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+      '/arst' => [
+        'includedFiles'  => null,
+        'excludedFiles'  => null,
+        'expirationDate' => (new DateTime('-2 days'))->format('Y-m-d G:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+      '/test' => [
+        'includedFiles'  => null,
+        'excludedFiles'  => null,
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $actual = $this->call('PermissionsManager', 'removeExpiredPermissions', [$permissions]);
+
+    $expected = [
+      '/billy' => [
+        'includedFiles'  => ['files/*', 'private/public/*'],
+        'excludedFiles'  => ['private/*', 'protected/*'],
+        'expirationDate' => $expirationDate->format('Y-m-d G:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+      '/test' => [
+        'includedFiles'  => null,
+        'excludedFiles'  => null,
+        'expirationDate' => null,
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $this->assertSame($expected, $actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function removeExpiredPermissionsEmpty()
+  {
+    $expirationDate = new DateTime('+1 day');
+
+    $permissions = [];
+
+    $actual = $this->call('PermissionsManager', 'removeExpiredPermissions', [$permissions]);
+
+    $this->assertSame(null, $actual);
+
+    $actual = $this->call('PermissionsManager', 'removeExpiredPermissions', [null]);
+
+    $this->assertSame(null, $actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function removeExpiredPermissionsAllExpired()
+  {
+    $expirationDate = new DateTime('+1 day');
+
+    $permissions = [
+      '/arst' => [
+        'includedFiles'  => null,
+        'excludedFiles'  => null,
+        'expirationDate' => (new DateTime('-2 days'))->format('Y-m-d G:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+      '/test' => [
+        'includedFiles'  => null,
+        'excludedFiles'  => null,
+        'expirationDate' => (new DateTime('-5 hours'))->format('Y-m-d G:i:s'),
+        'accessLevel'    => ['test'],
+      ],
+    ];
+
+    $actual = $this->call('PermissionsManager', 'removeExpiredPermissions', [$permissions]);
+
+    $this->assertSame(null, $actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function haveSitePermissionsExpiredEmptyExpirationDate()
+  {
+    $expirationDate = new DateTime('+1 day');
+
+    $sitePerms = [
+      'includedFiles'  => null,
+      'excludedFiles'  => null,
+      'expirationDate' => null,
+      'accessLevel'    => ['test'],
+    ];
+
+    $actual = $this->call('PermissionsManager', 'haveSitePermissionsExpired', [$sitePerms]);
+
+    $this->assertFalse($actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function haveSitePermissionsExpiredExpired()
+  {
+    $expirationDate = new DateTime('+1 day');
+
+    $sitePerms = [
+      'includedFiles'  => null,
+      'excludedFiles'  => null,
+      'expirationDate' => (new DateTime('+2 days'))->format('Y-m-d G:i:s'),
+      'accessLevel'    => ['test'],
+    ];
+
+    $actual = $this->call('PermissionsManager', 'haveSitePermissionsExpired', [$sitePerms]);
+
+    $this->assertFalse($actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function haveSitePermissionsExpired()
+  {
+    $expirationDate = new DateTime('+1 day');
+
+    $sitePerms = [
+      'includedFiles'  => null,
+      'excludedFiles'  => null,
+      'expirationDate' => (new DateTime('-2 days'))->format('Y-m-d G:i:s'),
+      'accessLevel'    => ['test'],
+    ];
+
+    $actual = $this->call('PermissionsManager', 'haveSitePermissionsExpired', [$sitePerms]);
+
+    $this->assertTrue($actual);
     $this->destructDB();
   }
 
@@ -290,7 +565,12 @@ class PermissionsManagerTest extends TestBase
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'siteAdmin', 'files/*', 'private/*']);
 
-    $expected = ['includedFiles' => null, 'excludedFiles' => null, 'accessLevel' => ['siteAdmin']];
+    $expected = [
+      'includedFiles'  => null,
+      'excludedFiles'  => null,
+      'expirationDate' => null,
+      'accessLevel'    => ['siteAdmin']
+    ];
 
     $this->assertSame($expected, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
 
