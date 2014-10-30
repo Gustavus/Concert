@@ -1127,7 +1127,7 @@ class FileManager
     return $dbal->executeUpdate(
         $qb->getSQL(),
         [
-          ':publishedDate' => new \DateTime,
+          ':publishedDate' => new DateTime,
           ':username'      => $this->username,
           ':srcFilename'   => basename($stagedFilePath),
         ],
@@ -1352,7 +1352,7 @@ class FileManager
       'filepathHash' => $this->getFilePathHash(),
       'filepath'     => $this->filePath,
       'username'     => $this->username,
-      'date'         => new \DateTime(),
+      'date'         => new DateTime(),
     ];
     $propertyTypes = [
       null,
@@ -1380,7 +1380,7 @@ class FileManager
       'filepathHash' => $this->getFilePathHash(),
       'filepath'     => $this->filePath,
       'username'     => $this->username,
-      'date'         => new \DateTime(),
+      'date'         => new DateTime(),
     ];
     $propertyTypes = [
       null,
