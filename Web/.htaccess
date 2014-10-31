@@ -12,6 +12,8 @@ RewriteRule js/.+\.js$ - [L]
 RewriteRule js/.+\.css$ - [L]
 RewriteRule js/.+\.gif$ - [L]
 
+RewriteRule icons/.+$ - [L]
+
 # allow tinymce fonts
 RewriteRule js/tinymce.+$ - [L]
 RewriteRule css/.+\.css$ - [L]
