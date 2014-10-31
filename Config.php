@@ -619,6 +619,7 @@ class Config
     'forwardedFrom',
     'concertDraft',
     'draftAction',
+    'srcFilePath',
   ];
 
   /**
