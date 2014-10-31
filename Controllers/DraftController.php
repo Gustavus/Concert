@@ -271,7 +271,7 @@ class DraftController extends SharedController
       [
         'url'  => $buttonUrl,
         'id'   => 'concertStopEditing',
-        'text' => 'Stop editing draft',
+        'text' => 'Stop Editing Draft',
       ]
     ];
 
