@@ -406,13 +406,18 @@ class SharedController extends ConcourseController
    * @param boolean $isError Whether it is an error message or not
    * @return  void
    */
-  protected function addConcertMessage($message, $isError = false)
+  protected function addConcertMessage($message, $type = 'message')
   {
     if (empty($message)) {
       return false;
     }
+
+    if (!in_array($type, ['error', 'alert', 'message'])) {
+      // default type to message if it is an unsupported type
+      $type = 'message';
+    }
     $message = [
-      'type'    => ($isError? 'error' : 'message'),
+      'type'    => $type,
       'message' => $message,
     ];
 

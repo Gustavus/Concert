@@ -77,7 +77,7 @@ class DraftController extends SharedController
       if (self::isRequestFromConcertRoot()) {
         $messageAdditions .= sprintf('<br/>This draft will live at "%s" when published.', Utility::removeDocRootFromPath($draft['destFilepath']));
       }
-      $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
+      $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions);
     }
 
 
@@ -127,7 +127,7 @@ class DraftController extends SharedController
       if ($_POST['action'] === 'publish') {
         // we want to publish the file.
         if (!$fm->acquireLock()) {
-          $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), true);
+          $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), 'error');
           return $this->displayPage($draftFilename, true);
         }
 
@@ -162,7 +162,7 @@ class DraftController extends SharedController
             'url'        => $url,
             'draftOwner' => $draft['username'],
           ]
-      ), false);
+      ));
     }
 
     $this->addNoRobotsTag();
@@ -208,7 +208,7 @@ class DraftController extends SharedController
       $messageAdditions = '';
     }
 
-    $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions, false);
+    $this->addConcertMessage(Config::DRAFT_NOTE . $messageAdditions);
 
     // add a message saying that the draft is older than the published date of the page and it might be out of sync.
     $this->addOutdatedDraftMessageIfNeeded($draft);

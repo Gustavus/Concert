@@ -94,22 +94,22 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!$fm->userCanEditFile()) {
-      $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, true);
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, 'error');
       return false;
     }
 
     if ($fm->isNonEditableFile()) {
-      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, true);
+      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), true);
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), 'error');
       return false;
     }
 
     if ($fm->draftExists()) {
-      $this->addConcertMessage($this->renderOpenDraftMessage($fm), false);
+      $this->addConcertMessage($this->renderOpenDraftMessage($fm));
     }
 
     if ($fm->draftExists() && $fm->userHasOpenDraft()) {
@@ -195,12 +195,12 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
     if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-      $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, true);
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, 'error');
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), true);
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), 'error');
       return false;
     }
 
@@ -251,17 +251,17 @@ class MainController extends SharedController
     }
 
     if ($fm->isNonEditableFile()) {
-      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, true);
+      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
       return false;
     }
 
     if (!PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-      $this->addConcertMessage(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, true);
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, 'error');
       return false;
     }
 
     if (!$fm->acquireLock()) {
-      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), true);
+      $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), 'error');
       return false;
     }
 
@@ -342,7 +342,7 @@ class MainController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-      $this->addConcertMessage(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, true);
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, 'error');
       return false;
     }
 
@@ -531,7 +531,7 @@ class MainController extends SharedController
           $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
           if ($fm->userHasLock()) {
             // user has a lock for this page.
-            $this->addConcertMessage(Config::CONTINUE_EDITING_MESSAGE, false);
+            $this->addConcertMessage(Config::CONTINUE_EDITING_MESSAGE);
           }
         }
       }

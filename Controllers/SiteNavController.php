@@ -47,7 +47,7 @@ class SiteNavController extends SharedController
     $_GET['concertMoshed'] = 'false';
 
     if (self::isSiteNavShared($siteNav)) {
-      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($siteNav), false));
+      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($siteNav), false), 'alert');
     }
 
     $moshResult = $this->forward('mosh', ['filePath' => $siteNav, 'dbal' => $this->getDB()]);
@@ -134,7 +134,7 @@ class SiteNavController extends SharedController
     $this->setTitle('Create Menu');
 
     if (self::isSiteNavShared($navToCreate)) {
-      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), false));
+      $this->addConcertMessage(Utility::buildSharedSiteNavNote(dirname($navToCreate), false), 'alert');
     }
 
     $origGet = $_GET;
