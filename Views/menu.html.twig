@@ -64,6 +64,11 @@
 {#--#}         } else {
 {#--#}           $(this).attr('title', '{{ showMenuTitle }}');
 {#--#}           $concertMenu.addClass('hidden');
+{#--#}
+{#--#}           var $concertBar = $('#concertMenu');
+{#--#}           $concertBar.css('position', '');
+{#--#}           $concertBar.css('width', '');
+{#--#}           $concertBar.css('opacity', '');
 {#--#}         }
 {#--#}       });
 {#--#}
@@ -79,10 +84,16 @@
 {#--#}       $(window).scroll(function() {
 {#--#}         var $concertMenu = $('#concertMenu');
 {#--#}         if ($concertMenu.hasClass('hidden')) {
+{#--#}           if ($(window).scrollTop() > 0) {
+{#--#}             $concertMenu.css('position', '');
+{#--#}             $concertMenu.css('width', '');
+{#--#}             $concertMenu.css('opacity', '');
+{#--#}           }
 {#--#}           /* we don't want to scroll a hidden element */
 {#--#}           return;
 {#--#}         }
-{#--#}         if ($(window).scrollTop() > 0) {
+{#--#}         // make sure the window isn't too narrow, otherwise we could be covering everything they can see.
+{#--#}         if ($(window).width() > 700 && $(window).scrollTop() > 0) {
 {#--#}           $concertMenu.css('position', 'fixed');
 {#--#}           $concertMenu.css('width', '100%');
 {#--#}           $concertMenu.css('opacity', '0.9');
