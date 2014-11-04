@@ -276,18 +276,6 @@ class SharedController extends ConcourseController
   }
 
   /**
-   * Adds a meta tag telling robots not to index this page.
-   *
-   * @return  void
-   */
-  protected function addNoRobotsTag()
-  {
-    Filters::add('head', function($content) {
-      return $content . '<meta name="robots" content="noindex" />';
-    });
-  }
-
-  /**
    * Marks a resource as added
    *
    * @param  array $resources Array of resources that have been added
