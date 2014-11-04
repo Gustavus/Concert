@@ -251,16 +251,25 @@ class MainController extends SharedController
     }
 
     if ($fm->isNonEditableFile()) {
+      if (isset($_GET['barebones'])) {
+        return ['action' => 'return', 'value' => self::buildConcertMessageDiv(Config::SPECIAL_FILE_MESSAGE, 'error')];
+      }
       $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
       return false;
     }
 
     if (!PermissionsManager::userCanDeletePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
+      if (isset($_GET['barebones'])) {
+        return ['action' => 'return', 'value' => self::buildConcertMessageDiv(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, 'error')];
+      }
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_DELETE_MESSAGE, 'error');
       return false;
     }
 
     if (!$fm->acquireLock()) {
+      if (isset($_GET['barebones'])) {
+        return ['action' => 'return', 'value' => self::buildConcertMessageDiv($this->renderLockNotAcquiredMessage($fm), 'error')];
+      }
       $this->addConcertMessage($this->renderLockNotAcquiredMessage($fm), 'error');
       return false;
     }
