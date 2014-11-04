@@ -92,7 +92,7 @@
 {#--#}           /* we don't want to scroll a hidden element */
 {#--#}           return;
 {#--#}         }
-{#--#}         // make sure the window isn't too narrow, otherwise we could be covering everything they can see.
+{#--#}         /* make sure the window isn't too narrow, otherwise we could be covering everything they can see. */
 {#--#}         if ($(window).width() > 700 && $(window).scrollTop() > 0) {
 {#--#}           $concertMenu.css('position', 'fixed');
 {#--#}           $concertMenu.css('width', '100%');
