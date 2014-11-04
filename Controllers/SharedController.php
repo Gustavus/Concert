@@ -403,7 +403,7 @@ class SharedController extends ConcourseController
    * Adds a message to the page
    *
    * @param string  $message Message to add
-   * @param boolean $isError Whether it is an error message or not
+   * @param boolean $type Message type. Either error, alert, or message (default)
    * @return  void
    */
   protected function addConcertMessage($message, $type = 'message')
@@ -426,6 +426,27 @@ class SharedController extends ConcourseController
     } else {
       self::$messages[] = $message;
     }
+  }
+
+  /**
+   * Builds a message to be thrown into colorbox or anywhere else
+   *
+   * @param string  $message Message to add
+   * @param boolean $type Message type. Either error, alert, or message (default)
+   * @return  void
+   */
+  protected static function buildConcertMessageDiv($message, $type = 'message')
+  {
+    if (empty($message)) {
+      return false;
+    }
+
+    if (!in_array($type, ['error', 'alert', 'message'])) {
+      // default type to message if it is an unsupported type
+      $type = 'message';
+    }
+
+    return sprintf('<div class="concert-message concert-%s">%s</div>', $type, $message);
   }
 
   /**
