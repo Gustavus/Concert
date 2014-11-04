@@ -267,7 +267,9 @@ class MainController extends SharedController
 
     if ($fm->draftExists()) {
       // someone has a draft open for this page.
-      $this->setSessionMessage($this->renderOpenDraftMessage($fm), false);
+      $message = $this->renderOpenDraftMessage($fm);
+    } else {
+      $message = '';
     }
 
     if ($this->getMethod() === 'POST' && isset($_POST['filePath'], $_POST['concertAction'], $_POST['deleteAction'])) {
@@ -320,7 +322,7 @@ class MainController extends SharedController
     // confirmation form
     $return = [
       'action' => 'return',
-      'value'  => $this->renderTemplate('confirmDelete.html.twig', ['actionUrl' => $_SERVER['REQUEST_URI'], 'filePath' => $filePath, 'scripts' => $scripts]),
+      'value'  => $this->renderTemplate('confirmDelete.html.twig', ['actionUrl' => $_SERVER['REQUEST_URI'], 'filePath' => $filePath, 'scripts' => $scripts, 'message' => $message]),
     ];
     return $return;
   }
