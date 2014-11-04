@@ -433,7 +433,7 @@ class SharedController extends ConcourseController
    *
    * @param string  $message Message to add
    * @param boolean $type Message type. Either error, alert, or message (default)
-   * @return  void
+   * @return string
    */
   protected static function buildConcertMessageDiv($message, $type = 'message')
   {
