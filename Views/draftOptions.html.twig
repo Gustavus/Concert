@@ -16,7 +16,7 @@
       <td>{{ getFullNameFromUsername(draft.username) }}</td>
       <td>{{ self.renderType(draft.type) }}</td>
       <td>{{ draft.date|date('F j, Y')}}</td>
-      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}{% if siteNav %}&amp;concertAction=siteNav{% endif %}" class="button small">View Draft</a></td>
+      <td><a href="?concert=viewDraft&amp;concertDraft={{ draft.draftFilename }}{% if siteNav %}&amp;concertAction=siteNav{% endif %}" class="concert-button secondary">View Draft</a></td>
     </tr>
   {% endfor %}
   </body>

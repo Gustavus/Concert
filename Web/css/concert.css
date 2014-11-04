@@ -1,4 +1,30 @@
 @import "/css/template/variables.css";
+
+@define {
+  concert-white: #f8f8f8;
+  concert-gray: #3d3d3e;
+
+  menu-height: 45px;
+
+  button-primary: #$(brand-blue);
+  button-active-primary: l-adjust( #$(brand-blue) -10 );
+
+  button-secondary: #888;
+  button-active-secondary: l-adjust( #888 -15 );
+
+  button-success: #$(brand-green);
+  button-active-success: l-adjust( #$(brand-green) -15 );
+
+  button-danger: #$(brand-red);
+  button-active-danger: l-adjust( #$(brand-red) -15 );
+
+  message-color: #$(brand-blue);
+  message-error-color: #$(brand-red);
+  message-alert-color: #$(brand-orange);
+}
+
+@import "messages.css";
+@import "buttons.css";
 @import "menu.css";
 
 div.editable {

@@ -172,12 +172,12 @@ class Config
   /**
    * Message to display if someone is editing a site nav that is being inherited
    */
-  const EDITING_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are editing a menu that is shared by other pages and directories in';
+  const EDITING_SHARED_SITE_NAV_NOTE_START = '<strong><em>Warning!</em></strong> You are editing a menu that is shared by other pages and directories in';
 
   /**
    * Message to display if someone is creating a site nav that is being shared by
    */
-  const CREATE_SHARED_SITE_NAV_NOTE_START = '<span style="color: red">Warning!</span> You are creating a menu that will be shared with other pages and directories in';
+  const CREATE_SHARED_SITE_NAV_NOTE_START = '<strong><em>Warning!</em></strong> You are creating a menu that will be shared with other pages and directories in';
 
   /**
    * Message to display to people who didn't modify a starter page before saving

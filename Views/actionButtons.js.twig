@@ -1,6 +1,6 @@
 {% import _self as self %}
 {% spaceless %}
-{% set reviewButton %}<a id="concertPublish" class="concert button blue">{% if userCanPublishFile %}Publish{% else %}Submit for Review{% endif %}</a>{% endset %}
+{% set reviewButton %}<a id="concertPublish" class="concert concert-button blue">{% if userCanPublishFile %}Publish{% else %}Submit for Review{% endif %}</a>{% endset %}
 
 {% set reviewButtonText %}
   {%- if userCanPublishFile %}Publish{% else %}Submit for Review{% endif -%}
@@ -81,7 +81,7 @@
 #}
 {% macro renderButton(button) -%}
   <li class="menu-item">
-    <a {% if button.url %}href="{{ button.url }}"{% endif %} id="{{ button.id }}" class="menu-button{% if button.classes %} {{ button.classes }}{% endif %}"{% if button.extraHTML %}{{ button.extraHTML|raw }}{% endif %}>{{ button.text }}</a>
+    <a {% if button.url %}href="{{ button.url }}"{% endif %} id="{{ button.id }}" class="concert-button{% if button.classes %} {{ button.classes }}{% endif %}"{% if button.extraHTML %}{{ button.extraHTML|raw }}{% endif %}>{{ button.text }}</a>
   </li>
 {%- endmacro renderButton %}
 

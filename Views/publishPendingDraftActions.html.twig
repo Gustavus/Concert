@@ -1,6 +1,6 @@
 {% spaceless %}
   <p> Would you like to publish the changes made by {{ getFullNameFromUsername(draftOwner) }}?</p>
   <div class="center">
-    <a href="{{ url }}&amp;confirmPublish=true" id="publishPendingDraft" class="button blue thickbox">Publish</a><a href="{{ url }}&amp;confirmReject=true" class="button red thickbox" id="rejectPendingDraft">Reject</a>
+    <a href="{{ url }}&amp;confirmPublish=true" id="publishPendingDraft" class="concert-button thickbox">Publish</a><a href="{{ url }}&amp;confirmReject=true" class="concert-button danger thickbox" id="rejectPendingDraft">Reject</a>
   </div>
 {% endspaceless %}

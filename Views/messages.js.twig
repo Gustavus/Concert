@@ -23,6 +23,6 @@
 
 {% macro build(messages) %}
   {% for message in messages %}
-    <div class="concert-message {%if message.type != 'message' %} concert-{{ message.type }}{% endif %}">{{ message.message|raw }}</div>
+    <div class="concert-message{%if message.type != 'message' %} concert-{{ message.type }}{% endif %}">{{ message.message|raw }}</div>
   {% endfor %}
 {% endmacro %}
