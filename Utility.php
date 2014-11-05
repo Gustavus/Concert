@@ -91,9 +91,10 @@ class Utility
    *
    * @param  string $filePath Full path to the file
    * @param  \Doctrine\DBAL\Connection $dbal     Doctrine connection to use
+   * @param  boolean $canManageRevisions Whether the current user can manage revisions or not. They won't be able to restore revisions if they can't manage them.
    * @return API
    */
-  public static function getRevisionsAPI($filePath, $dbal)
+  public static function getRevisionsAPI($filePath, $dbal, $canManageRevisions = false)
   {
     // note: changing this will ruin past revisions. (Unless you update them in the table)
     $filePathHash = md5($filePath);
@@ -106,6 +107,7 @@ class Utility
       'rowId'             => 0,
       'splitStrategy'     => 'sentenceOrTag',
       'dbal'              => $dbal,
+      'allowRestore'      => $canManageRevisions,
     );
 
     return new RevisionsAPI($params);

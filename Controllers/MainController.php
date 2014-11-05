@@ -348,7 +348,7 @@ class MainController extends SharedController
     // we don't want this set anymore
     unset($_GET['forwardedFrom']);
 
-    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->getDB());
+    $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->getDB(), PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath)));
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
@@ -362,51 +362,50 @@ class MainController extends SharedController
       return implode("\n\r", $contentArr['content']);
     });
 
-    Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm, $redirectPath) {
+    if (PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
+      // user can manage revisions. Now add the restore hook action.
+      Actions::add(RevisionsAPI::RESTORE_HOOK, function($revisionContent, $oldMessage, $restoreAction) use ($filePath, $fm, $redirectPath) {
 
-      if (!PermissionsManager::userCanManageRevisions($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-        return $this->redirectWithMessage($_SERVER['REQUEST_URI'], Config::NOT_ALLOWED_TO_MANAGE_REVISIONS);
-      }
+        if (!$fm->acquireLock()) {
+          return $this->redirectWithMessage($_SERVER['REQUEST_URI'], $this->renderLockNotAcquiredMessage($fm));
+        }
+        switch ($restoreAction) {
+          case RevisionsAPI::UNDO_ACTION:
+            $action = Config::UNDO_RESTORE_STAGE;
+              break;
+          case RevisionsAPI::RESTORE_ACTION:
+          default:
+            $action = Config::RESTORE_STAGE;
+              break;
+        }
 
-      if (!$fm->acquireLock()) {
-        return $this->redirectWithMessage($_SERVER['REQUEST_URI'], $this->renderLockNotAcquiredMessage($fm));
-      }
-      switch ($restoreAction) {
-        case RevisionsAPI::UNDO_ACTION:
-          $action = Config::UNDO_RESTORE_STAGE;
-            break;
-        case RevisionsAPI::RESTORE_ACTION:
-        default:
-          $action = Config::RESTORE_STAGE;
-            break;
-      }
+        $fm->stageFile($action, $revisionContent);
+        $redirectPath = ($redirectPath === null) ? $filePath : $redirectPath;
 
-      $fm->stageFile($action, $revisionContent);
-      $redirectPath = ($redirectPath === null) ? $filePath : $redirectPath;
+        $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
-      $redirectPath = Utility::removeDocRootFromPath($redirectPath);
+        $query = [
+          'concert' => 'revisions',
+        ];
+        if (isset($_GET['concertAction'])) {
+          $query['concertAction'] = $_GET['concertAction'];
+        }
 
-      $query = [
-        'concert' => 'revisions',
-      ];
-      if (isset($_GET['concertAction'])) {
-        $query['concertAction'] = $_GET['concertAction'];
-      }
+        if ($restoreAction === RevisionsAPI::UNDO_ACTION) {
+          $_POST = [];
 
-      if ($restoreAction === RevisionsAPI::UNDO_ACTION) {
-        $_POST = [];
+          $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
+          return $this->redirectWithMessage($url, Config::UNDO_RESTORE_MESSAGE);
 
-        $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
-        return $this->redirectWithMessage($url, Config::UNDO_RESTORE_MESSAGE);
+        } else {
+          $_POST = [];
 
-      } else {
-        $_POST = [];
-
-        $query['revisionsAction'] = 'thankYou';
-        $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
-        return $this->redirectWithMessage($url, Config::RESTORED_MESSAGE);
-      }
-    });
+          $query['revisionsAction'] = 'thankYou';
+          $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
+          return $this->redirectWithMessage($url, Config::RESTORED_MESSAGE);
+        }
+      });
+    }
 
     $moshed = self::alreadyMoshed();
     // revisions doesn't like concertMoshed being set in GET.
