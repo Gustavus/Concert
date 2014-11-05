@@ -1581,8 +1581,6 @@ class MainControllerTest extends TestBase
 
     $actual = $this->controller->handleRevisions($filePath);
 
-    $this->assertContains(Config::NOT_ALLOWED_TO_MANAGE_REVISIONS, $actual['value']['content']);
-
     $filePathHash = $this->fileManager->getFilePathHash();
     $this->buildFileManager('root', Config::$stagingDir . $filePathHash);
     // publish the file to trigger a revision
