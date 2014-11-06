@@ -114,14 +114,14 @@
   {%- if privateDraftDialogHTML -%}
     {# We need to insert html for the confirmation dialog for converting a shared draft to private #}
     <div id="confirmPrivateDraft" title="Save Private Draft" class="nodisplay">
-      <p>This draft is shared. Converting it to a private draft will remove any sharing functionality.</p>
+      <p class="concert-message concert-alert">This draft is shared. Converting it to a private draft will remove any sharing functionality.</p>
     </div>
   {%- endif -%}
 
   {%- if discardDraftDialogHTML -%}
     {# We need to insert html for the confirmation dialog for converting a shared draft to private #}
     <div id="confirmDiscardDraft" title="Discard Draft" class="nodisplay">
-      <p>This draft is shared. Discarding it may also discard any changes made by collaborators.</p>
+      <p class="concert-message concert-alert">This draft is shared. Discarding it may also discard any changes made by collaborators.</p>
     </div>
   {%- endif -%}
 {% endmacro renderButtons %}
