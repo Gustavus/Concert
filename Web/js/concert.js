@@ -592,8 +592,36 @@ $(document)
     window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing', 'concertAction': 'menu'});
   })
 
-  .on('click', '.quitConcert', function(e) {
-    Gustavus.Concert.releaseLock();
+  .on('click', 'a.quitConcert', function(e) {
+    e.preventDefault();
+    var dirtyEditor = false
+    for (i in tinymce.editors) {
+      if (tinymce.editors[i].isDirty()) {
+        dirtyEditor = true;
+        break;
+      }
+    }
+
+    if (dirtyEditor) {
+      $('#confirmQuit').dialog({
+        modal: true,
+        buttons: {
+          'Quit': function() {
+            Gustavus.Concert.releaseLock();
+            $(this).dialog('close');
+            // redirect to the link's href
+            window.location = e.target.href;
+          },
+          Cancel: function() {
+            $(this).dialog('close');
+          }
+        }
+      });
+    } else {
+      Gustavus.Concert.releaseLock();
+      // redirect to the link's href
+      window.location = e.target.href;
+    }
   });
 
 // When the user leaves the page release the lock.
