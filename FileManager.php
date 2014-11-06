@@ -851,6 +851,10 @@ class FileManager
       // we are wanting to create a directory writable by the httpd user.
       if ($this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP)) {
         unlink($this->filePath);
+        $this->username = $result['username'];
+        if (!$this->markStagedFileAsPublished($this->filePath)) {
+          trigger_error(sprintf('The directory: "%s" was created for the staged file "%s", but could not be marked as published in the DB', $result['destFilepath'], $this->filePath));
+        }
         return true;
       }
       return false;
@@ -859,6 +863,10 @@ class FileManager
       $this->ensureDirectoryExists(dirname($result['destFilepath']), Config::HTTPD_USER, Config::HTTPD_GROUP);
       if (symlink(Config::MEDIA_DIR_HTACCESS_TEMPLATE, $result['destFilepath'])) {
         unlink($this->filePath);
+        $this->username = $result['username'];
+        if (!$this->markStagedFileAsPublished($this->filePath)) {
+          trigger_error(sprintf('The directory: "%s" was created for the staged file "%s", but could not be marked as published in the DB', $result['destFilepath'], $this->filePath));
+        }
         return true;
       }
     }

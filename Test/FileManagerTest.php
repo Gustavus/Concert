@@ -1968,6 +1968,9 @@ echo $config["content"];';
 
     $this->fileManager->publishFile();
 
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+    $this->assertEmpty($stagedEntry);
+
     $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
 
     $this->destructDB();
