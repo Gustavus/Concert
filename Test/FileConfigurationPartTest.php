@@ -476,9 +476,82 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function editValueNotSafeContent()
+  {
+    $this->buildFileConfigurationPart();
+    $actual = $this->part->editValue('0', '<?php brand new content');
+
+    $this->assertTrue($actual);
+    $this->assertSame('', $this->part->getContent());
+    $this->assertSame($this->partParams['content'], $this->part->getValueBeforeEdit());
+  }
+
+  /**
+   * @test
+   */
   public function getValueBeforeEdit()
   {
     $this->buildFileConfigurationPart();
     $this->assertNull($this->part->getValueBeforeEdit());
+  }
+
+  /**
+   * @test
+   */
+  public function sanitize()
+  {
+    $content = '<?php echo "Haha!"?> <script>test</script> hello';
+
+    $result = $this->call('FileConfigurationPart', 'sanitize', [$content]);
+
+    $this->assertSame(' hello', $result);
+  }
+
+  /**
+   * @test
+   */
+  public function sanitizeNothingSafe()
+  {
+    $content = '<?php echo "Haha!"?> <script>test</script>';
+
+    $result = $this->call('FileConfigurationPart', 'sanitize', [$content]);
+
+    $this->assertSame('', $result);
+  }
+
+  /**
+   * @test
+   */
+  public function sanitizeAllPHP()
+  {
+    $content = '<?php echo "Haha!" <script>test</script>';
+
+    $result = $this->call('FileConfigurationPart', 'sanitize', [$content]);
+
+    $this->assertSame('', $result);
+  }
+
+  /**
+   * @test
+   */
+  public function sanitizeAllScript()
+  {
+    $content = '<script>test</script>';
+
+    $result = $this->call('FileConfigurationPart', 'sanitize', [$content]);
+
+    $this->assertSame('', $result);
+  }
+
+  /**
+   * @test
+   */
+  public function sanitizeAllSafe()
+  {
+    $content = '<p>test</p>';
+
+    $result = $this->call('FileConfigurationPart', 'sanitize', [$content]);
+
+    $this->assertSame($content, $result);
   }
 }

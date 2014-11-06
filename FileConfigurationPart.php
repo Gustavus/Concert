@@ -262,6 +262,26 @@ class FileConfigurationPart
   }
 
   /**
+   * Sanitizes contents. Removes php and scripts.
+   *
+   * @param  string $content Content to sanitize
+   * @return string
+   */
+  private static function sanitize($content)
+  {
+    $separated = FileManager::separateContentByType($content);
+
+    if (isset($separated[Config::OTHER_CONTENT_TYPE])) {
+      $filtered = array_filter($separated[Config::OTHER_CONTENT_TYPE], function($value) {
+          return preg_match('`^\s+$`', $value) !== 1;
+      });
+      return implode("\n", $filtered);
+    } else {
+      return '';
+    }
+  }
+
+  /**
    * Edits the node's value specified by $index with $newContent.
    *
    * @param  string $index      Identifier for this node
@@ -270,6 +290,9 @@ class FileConfigurationPart
    */
   public function editValue($index, $newContent)
   {
+    // sanitize our contents
+    $newContent = self::sanitize($newContent);
+
     if (!$this->isPHPContent() && in_array($this->getContentType(), Config::$editableContentTypes)) {
       // save our original value before editing
       $this->valuesBeforeEdit = $this->content;
@@ -283,6 +306,7 @@ class FileConfigurationPart
       return false;
     }
 
+    // @todo When we enable php editing, we want to make sure this content doesn't get thrown in double quotes and get evaluated.
     // make sure our editable nodes are built.
     if (empty($this->editablePHPNodeValues)) {
       $this->buildEditablePHPNodes();
