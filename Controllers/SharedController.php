@@ -263,6 +263,10 @@ class SharedController extends ConcourseController
       $visibleButtons = Config::$defaultEditingButtons;
     }
 
+    if (($pos = array_search('discardDraft', $visibleButtons)) !== false && !(new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB()))->userHasOpenDraft()) {
+      unset($visibleButtons[$pos]);
+    }
+
     Filters::add('scripts', function($content) use ($userCanPublishFile, $visibleButtons, $additionalButtons) {
       return $content . $this->renderView(
           'actionButtons.js.twig',
