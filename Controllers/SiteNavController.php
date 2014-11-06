@@ -155,6 +155,9 @@ class SiteNavController extends SharedController
     }
     // we don't want our temporary GET parameters for moshing set anymore.
     self::setGET($origGet);
+    if ($this->getMethod() === 'POST') {
+      return true;
+    }
 
     return $this->renderPage();
   }
