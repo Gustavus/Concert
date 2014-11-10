@@ -70,7 +70,7 @@
     height: $(menu-height);
     vertical-align: bottom;
     background-image: url(/gimli/w100/concert/icons/concert-logo-dark.png);
-    background-size: 20px 20px;
+    background-size: 20px;
     background-position: left center;
     background-repeat: no-repeat;
   }
