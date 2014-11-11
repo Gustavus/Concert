@@ -713,8 +713,6 @@ class MenuController extends SharedController
     $absDir = $root . $dir;
     $return = '';
 
-    $newIndexFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s">index.php</a></li>', htmlentities($dir . 'index.php'));
-
     $newFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s">+newFile</a></li>', htmlentities($dir . 'concertNewFile'));
 
     $newFolderHTML = sprintf('<li class="directory collapsed"><a href="#" rel="%s">+newFolder</a></li>', htmlentities($dir . 'concertNewFolder/'));
@@ -762,6 +760,7 @@ class MenuController extends SharedController
       }
     } else {
       if (!$forSrcFile) {
+        $newIndexFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s" class="selected">index.php</a></li>', htmlentities($dir . 'index.php'));
         $return = sprintf('<ul class="jqueryFileTree" style="display: none;">%s%s%s</ul>', $newIndexFileHTML, $newFileHTML, $newFolderHTML);
       }
     }
