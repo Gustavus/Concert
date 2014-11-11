@@ -90,6 +90,7 @@ if(jQuery) (function($){
             $elem.parent().find('UL').remove(); // cleanup
             showTree( $elem.parent(), escape($elem.attr('rel').match( /.*\// )) );
             $elem.parent().removeClass('collapsed').addClass('expanded');
+            $elem.parents('.fileTreeSelector').find('.selected').removeClass('selected');
           } else {
             // Collapse
             $elem.parent().find('UL').slideUp({ duration: o.collapseSpeed, easing: o.collapseEasing });
@@ -164,6 +165,7 @@ if(jQuery) (function($){
                 $(this).dialog('destroy');
               },
               Cancel: function() {
+                $elem.removeClass('selected');
                 $(this).dialog('close');
                 $(this).dialog('destroy');
               }

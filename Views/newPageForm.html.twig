@@ -37,21 +37,31 @@
             }
           }
 
-          window.location = Gustavus.Utility.URL.urlify(newFile, {'concert': 'edit', 'srcFilePath': encodeURIComponent(fromFile)});
+          if (!newFile) {
+            var $selectedNewFile = $('#toFileTreeSelector .selected');
+            if ($selectedNewFile.length > 0) {
+              newFile = $selectedNewFile.attr('rel');
+            }
+          }
+          if (newFile) {
+            window.location = Gustavus.Utility.URL.urlify(newFile, {'concert': 'edit', 'srcFilePath': encodeURIComponent(fromFile)});
+          } else {
+            $('#noFileSelectedDialog').dialog({
+              title: 'No location selected',
+              width: 300,
+              draggable: false,
+              modal: true,
+              buttons: {
+                Ok: function() {
+                  $(this).dialog('close');
+                }
+              }
+            });
+          }
         });
       });
     }
   });
-
-  // $('#newPageSelect .createPage').click(function(e) {
-  //   e.preventDefault();
-
-  //   var newFile = $('#newPageSelect #theFile').val();
-
-  //   console.log(newFile);
-
-  //   $('#concertDelete .deleteAction').colorbox.close();
-  // })
 </script>
 
 
@@ -76,8 +86,11 @@
 
 <div id="newFileNameDialog" class="nodisplay">
   <form>
-    <input id="theFile" type="text" name="theFile" style="width: 100%;" />
+    <input id="theFile" type="text" name="theFile" style="width: 100%;" autofocus />
     <button id="newFileNameSubmit" type="submit" class="nodisplay">Create a new file</button>
   </form>
+</div>
+<div id="noFileSelectedDialog" class="nodisplay">
+  <p class="concert-message concert-alert">Please select where you would like your new page to exist.</p>
 </div>
 {% endspaceless %}
