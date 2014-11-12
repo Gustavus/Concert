@@ -144,6 +144,7 @@ if(jQuery) (function($){
             $('#newFileNameDialog').dialog('close');
             $('#newFileNameDialog').dialog('destroy');
           });
+          $elem.parents('.fileTreeSelector').find('.selected').not($elem).removeClass('selected');
 
           var dialogTitle = forDirectory ? 'New folder name' : 'New file name';
 
