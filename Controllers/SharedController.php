@@ -18,6 +18,7 @@ use Gustavus\Concourse\Controller as ConcourseController,
   Gustavus\Utility\File,
   Gustavus\Utility\Number,
   Gustavus\Utility\Set,
+  Gustavus\Utility\PageUtil,
   DateTime,
   Twig_SimpleFunction;
 
@@ -388,6 +389,16 @@ class SharedController extends ConcourseController
    */
   public function getConcertMessages()
   {
+    $sessionMessage = self::getConcertSessionMessage();
+    if (!empty($sessionMessage)) {
+      // add session messages
+      if (empty(self::$messages)) {
+        self::$messages = [$sessionMessage];
+      } else {
+        self::$messages[] = $sessionMessage;
+      }
+    }
+
     return self::$messages;
   }
 
@@ -395,7 +406,7 @@ class SharedController extends ConcourseController
    * Adds a message to the page
    *
    * @param string  $message Message to add
-   * @param boolean $type Message type. Either error, alert, or message (default)
+   * @param string  $type Message type. Either error, alert, or message (default)
    * @return  void
    */
   protected function addConcertMessage($message, $type = 'message')
@@ -424,7 +435,7 @@ class SharedController extends ConcourseController
    * Builds a message to be thrown into colorbox or anywhere else
    *
    * @param string  $message Message to add
-   * @param boolean $type Message type. Either error, alert, or message (default)
+   * @param string  $type Message type. Either error, alert, or message (default)
    * @return string
    */
   protected static function buildConcertMessageDiv($message, $type = 'message')
@@ -445,20 +456,64 @@ class SharedController extends ConcourseController
    * Sets a message for the page
    *
    * @param string  $message Message to set
-   * @param boolean $isError Whether it is an error message or not
+   * @param string  $type Message type. Either error, alert, or message (default)
    * @return  void
    */
-  protected function setConcertMessage($message, $isError = false)
+  protected function setConcertMessage($message, $type = 'message')
   {
     if (!empty($message)) {
+      if (!in_array($type, ['error', 'alert', 'message'])) {
+        // default type to message if it is an unsupported type
+        $type = 'message';
+      }
       $message = [
-        'type'    => ($isError ? 'error' : 'message'),
+        'type'    => $type,
         'message' => $message,
       ];
       self::$messages = [$message];
     } else {
       self::$messages = [];
     }
+  }
+
+  /**
+   * Sets the concert message to be displayed on the next time the page is loaded
+   *
+   * @param string  $message message to display
+   * @param boolean $type Message type. Either error, alert, or message (default)
+   * @param string $location Location of the page the message is to be displayed on
+   * @return  void
+   */
+  public static function setConcertSessionMessage($message = '', $type = 'message', $location = null)
+  {
+    PageUtil::startSessionIfNeeded();
+    $location = PageUtil::buildMessageKey($location);
+
+    if (!in_array($type, ['error', 'alert', 'message'])) {
+      // default type to message if it is an unsupported type
+      $type = 'message';
+    }
+
+    $_SESSION['concertMessages'][$location] = ['type' => $type, 'message' => $message];
+  }
+
+  /**
+   * Gets the concert session message out of the session for the current page if it has one
+   *
+   * @param  string $location Location of the current page. Uses $_SERVER['SCRIPT_NAME'] if nothing set.
+   * @return array|null null if nothing exists
+   */
+  public static function getConcertSessionMessage($location = null)
+  {
+    PageUtil::startSessionIfNeeded();
+    $key = PageUtil::buildMessageKey($location);
+
+    if (isset($_SESSION['concertMessages'][$key])) {
+      $message = $_SESSION['concertMessages'][$key];
+      unset($_SESSION['concertMessages'][$key]);
+      return $message;
+    }
+    return null;
   }
 
   /**
@@ -508,6 +563,17 @@ class SharedController extends ConcourseController
     }
 
     return $message;
+  }
+
+  /**
+   * Builds a message to display on successful publish
+   *
+   * @param  string $file Path to the file we published
+   * @return string
+   */
+  protected function buildPublishSuccessMessage($file)
+  {
+    return sprintf('Contratulations! You have successfully published %s.<br /><a href="%s" class="concert-button primary">View Recent Activity</a>', Utility::removeDocRootFromPath($file), $this->buildUrl('recentActivity'));
   }
 
   /**

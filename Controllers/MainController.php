@@ -139,6 +139,12 @@ class MainController extends SharedController
       // trying to save an edit
       $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
       if ($userCanPublish && $fm->stageFile()) {
+        $location = (new String(Utility::removeDocRootFromPath($filePath)))
+          ->removeQueryStringParams(Config::$concertGETKeys)
+          ->addQueryString(['concert' => 'stopEditing'])
+          ->buildUrl()
+          ->getValue();
+        self::setConcertSessionMessage($this->buildPublishSuccessMessage($filePath), null, $location);
         return true;
       } else if (!$userCanPublish) {
         return $this->savePendingDraft($fm);
@@ -573,7 +579,7 @@ class MainController extends SharedController
         $this->addMoshMenu();
         if (!self::isInternalForward()) {
           // we don't want to clear any messages if we have forwarded back to here
-          $this->setConcertMessage(null, false);
+          $this->setConcertMessage(null);
         }
 
         if (!file_exists($filePath)) {
