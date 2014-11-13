@@ -480,7 +480,6 @@ class MainController extends SharedController
       $this->setTitle('Recent Concert Activity');
       return $this->renderTemplate('recentActivity.html.twig', ['drafts' => $drafts, 'published' => $published, 'isBarebones' => false]);
     }
-    // @todo view all activity for a user. Get this from staged files. Do we want to include drafts?
   }
 
   /**
