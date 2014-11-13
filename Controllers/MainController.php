@@ -527,12 +527,6 @@ class MainController extends SharedController
       $filePath = $params;
     }
 
-    // @todo does commenting this out break anything? I hope not. It breaks editing drafts if it runs.
-    // if (strpos($filePath, '.php') === false) {
-    //   // make sure our filePath is a file
-    //   $filePath = str_replace('//', '/', $filePath . DIRECTORY_SEPARATOR . 'index.php');
-    // }
-
     if ($this->isLoggedIn() && !self::alreadyMoshed()) {
       // let ourselves know that we have already moshed this request.
       self::markMoshed();

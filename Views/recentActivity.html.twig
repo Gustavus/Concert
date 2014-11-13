@@ -1,0 +1,95 @@
+{% spaceless %}
+{% import _self as self %}
+{% if drafts|length > 0 and published|length > 0 and isBarebones %}
+  {% set columns = 2 %}
+{% else %}
+  {% set columns = 1 %}
+{% endif %}
+
+
+
+{%- if columns == 2 -%}
+  <div class="grid_48 alpha omega">
+    <div class="grid_24 alpha">
+{%- else -%}
+  <div class="grid_36 alpha omega">
+{%- endif -%}
+
+  {%- if drafts|length > 0 -%}
+    <table class="fancy sortable" style="width: 100%;">
+      <legend>Drafts</legend>
+      <thead>
+        <tr>
+          <th>Page Destination</th>
+          <th>Draft Date</th>
+          <th>Draft Type</th>
+          <th>Is Shared</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <body>
+        {%- for draft in drafts -%}
+          <tr>
+            <td><a href="{{ removeDocRootFromPath(draft['destFilepath']) }}">{{ removeDocRootFromPath(draft['destFilepath']) }}</a></td>
+            <td>{{ draft['date']|date('F j, Y') }}</td>
+            <td>{{ self.renderDraftType(draft['type']) }}</td>
+            <td>{% if draft['additionalUsers'] %}&#x2713;{% endif %}</td>
+            <td><a href="{{ buildUrl('drafts', {'draft': draft['draftFilename']} ) }}" class="button small">View Draft</a></td>
+          </tr>
+        {%- endfor -%}
+      </body>
+    </table>
+  {%- endif -%}
+
+  {%- if columns == 2 -%}
+    </div>
+  {%- endif -%}
+
+  {%- if columns == 2 -%}
+    <div class="grid_24 omega">
+  {%- endif -%}
+
+  {%- if published|length > 0 -%}
+    <table class="fancy sortable" style="width: 100%;">
+      <legend>Published Pages</legend>
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>Date</th>
+          <th>Date Published</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <body>
+        {%- for page in published -%}
+          <tr>
+            <td><a href="{{ removeDocRootFromPath(page['destFilepath']) }}">{{ removeDocRootFromPath(page['destFilepath']) }}</a></td>
+            <td>{{ page['date']|date('F j, Y') }}</td>
+            <td>{{ page['publishedDate']|date('F j, Y') }}</td>
+            <td>{{ self.renderAction(page['action']) }}</td>
+          </tr>
+        {%- endfor -%}
+      </body>
+    </table>
+
+  {%- endif -%}
+
+  {%- if columns == 2 -%}
+    </div>
+  {%- endif -%}
+</div>
+{% endspaceless %}
+
+{% macro renderAction(action) %}
+  {%- if action == 'publishPending' -%}
+    {%- set action = 'publishedPendingDraft' -%}
+  {%- endif -%}
+  {{ action|un_camel_case|title }}
+{% endmacro renderAction %}
+
+{% macro renderDraftType(type) %}
+  {%- if type == 'pendingPublish' -%}
+    {%- set type = 'submittedForReview' -%}
+  {%- endif -%}
+  {{ type|un_camel_case|title }}
+{% endmacro renderDraftType %}
