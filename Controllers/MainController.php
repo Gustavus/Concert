@@ -70,6 +70,13 @@ class MainController extends SharedController
       }
     }
 
+    if ($this->getMethod() === 'POST' && strpos($params['request'], 'execute.php') !== false) {
+      // we need to make sure the thumb path is full.
+      if (isset($_POST['path_thumb'])) {
+        $_POST['path_thumb'] = Utility::addDocRootToPath($_POST['path_thumb']);
+      }
+    }
+
     if (strpos($params['request'], 'ajax_calls.php') !== false && isset($_GET['sub_action'], $_GET['file']) && $_GET['sub_action'] === 'preview') {
       $_GET['file'] = Utility::addDocRootToPath($_GET['file']);
     }
@@ -417,6 +424,57 @@ class MainController extends SharedController
     }
 
     return ['action' => 'return', 'value' => $this->renderPage()];
+  }
+
+  /**
+   * Renders a person's recent activity
+   *
+   * @return string
+   */
+  public function viewRecentActivity()
+  {
+    $dbal = $this->getDB();
+    $username = $this->getLoggedInUsername();
+
+    // drafts
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('destFilepath')
+      ->addSelect('draftFilename')
+      ->addSelect('type')
+      ->addSelect('additionalUsers')
+      ->addSelect('date')
+      ->from('drafts', 'd')
+      ->where('username = :username')
+      ->orderBy('date', 'DESC')
+      ->setMaxResults('10');
+
+    $drafts =  $dbal->fetchAll($qb->getSQL(), [':username' => $username]);
+
+    // staged files
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('destFilepath')
+      ->addSelect('action')
+      ->addSelect('date')
+      ->addSelect('publishedDate')
+      ->from('stagedFiles', 'sf')
+      ->where('username = :username')
+      ->andWhere('action NOT IN (:httpdDir, :httpdHtAccess)')
+      ->orderBy('publishedDate', 'DESC')
+      ->setMaxResults('10');
+
+    $published = $dbal->fetchAll($qb->getSQL(), [
+        ':username' => $username,
+        ':httpdDir' => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+        ':httpdHtAccess' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE
+    ]);
+
+    if (isset($_GET['barebones'])) {
+      return $this->renderView('recentActivity.html.twig', ['drafts' => $drafts, 'published' => $published, 'isBarebones' => true]);
+    } else {
+      $this->setTitle('Recent Concert Activity');
+      return $this->renderTemplate('recentActivity.html.twig', ['drafts' => $drafts, 'published' => $published, 'isBarebones' => false]);
+    }
+    // @todo view all activity for a user. Get this from staged files. Do we want to include drafts?
   }
 
   /**

@@ -256,6 +256,13 @@ class MenuController extends SharedController
 
       $this->addMenuItem($item, null, 50);
     }
+
+    $item = [
+      'text'     => 'Recent Activity',
+      'url'      => $this->buildUrl('recentActivity'),
+      'thickbox' => true,
+    ];
+    $this->addMenuItem($item, null, 49);
   }
 
   /**

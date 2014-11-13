@@ -91,16 +91,21 @@ return [
   ],
   // FileManager requests
   'fileManagerRequest' => [
-    'route' => '/filemanager/{request}',
+    'route'   => '/filemanager/{request}',
     'handler' => 'Gustavus\Concert\Controllers\MainController:handleFileManagerRequest',
   ],
   'fileManagerResources' => [
-    'route' => '/filemanager/{request=*}',
+    'route'   => '/filemanager/{request=*}',
     'handler' => 'Gustavus\Concert\Controllers\MainController:handleFileManagerRequest',
   ],
   // used for building urls
   'fileManager' => [
-    'route' => '/filemanager/{request}',
+    'route'   => '/filemanager/{request}',
     'handler' => null,
+  ],
+  'recentActivity' => [
+    'route'     => '/recentActivity',
+    'handler'   => 'Gustavus\Concert\Controllers\MainController:viewRecentActivity',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
 ];
