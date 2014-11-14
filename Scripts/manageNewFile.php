@@ -14,6 +14,7 @@ $pwu_data = posix_getpwuid(posix_geteuid());
 $username = $pwu_data['name'];
 
 if ($username !== 'root') {
+  // this should only be run as root. Other users won't have permissions to save the file properly.
   echo 'This should only be run as root.';
   exit;
 }
@@ -25,4 +26,5 @@ if (isset($argv[2]) && !isset($_SERVER['HOSTNAME'])) {
   $_SERVER['HOSTNAME'] = $argv[2];
 }
 
+// Attempt to publish this file.
 echo (new \Gustavus\Concert\FileManager($username, $argv[1]))->publishFile();
