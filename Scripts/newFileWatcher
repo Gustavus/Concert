@@ -1,15 +1,8 @@
 #!/bin/bash
 
-#/usr/bin/inotifywait -m -e modify /cis/www-etc/lib/Gustavus/Concert/staging/ 2>&- | awk '$2 == "MODIFY" { print $3; fflush() }' |
-#/usr/bin/inotifywait --syslog -m -e create --format %f /cis/www-etc/lib/Gustavus/Concert/staging 2>&- |
+# Watch for new files and run manageNewFile on any new one we see.
 /usr/bin/inotifywait -m -e create --format %f /cis/www-etc/lib/Gustavus/Concert/staging 2>&- |
   while read file
     do
-      # we need the server name because php may not have it set depending on how this gets called.
-      serverName=`uname -n`
-
-      result=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/manageNewFile.php /cis/www-etc/lib/Gustavus/Concert/staging/$file $serverName`
-      date=`date --rfc-3339=seconds`
-      message="New file: $file was found on $date. File handling result: $result"
-      echo $message >> /cis/lib/Gustavus/Concert/Scripts/Logs/watcher_log
+      /cis/lib/Gustavus/Concert/Scripts/manageNewFile $file
     done

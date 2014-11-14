@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# we need the server name because php may not have it set depending on how this gets called.
+serverName=`uname -n`
+# The first parameter will be the file to publish
+file=`basename $1`
+
+# The second parameter will be the type of file to specify in the log.
+if [ -z "$2" ]; then
+  fileType='New file'
+else
+  fileType=$2
+fi
+
+# Run manageNewFile.php on our specified staged file
+result=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/manageNewFile.php /cis/www-etc/lib/Gustavus/Concert/staging/$file $serverName`
+date=`date --rfc-3339=seconds`
+message="$fileType: $file was found on $date. File handling result: $result"
+# Write this message to our log
+echo $message >> /cis/lib/Gustavus/Concert/Scripts/Logs/watcher_log
