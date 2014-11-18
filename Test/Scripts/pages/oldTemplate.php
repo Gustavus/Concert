@@ -86,6 +86,7 @@ use Gustavus\SocialMedia\SocialMedia,
 your local navigation, please contact Web Services at
 web@gustavus.edu.</p>
 &nbsp;
+<!-- InstanceBeginNonEditable name="LocalNavigation" --><!-- InstanceEndNonEditable -->
 </div>
 <div id="page-content" class="grid_36 prefix_1 suffix_1 clearfix">
 <div id="breadcrumb-trail">You are here: <a href="http://gustavus.edu">Home</a> / <a href="http://gustavus.edu">Section</a> / </div>

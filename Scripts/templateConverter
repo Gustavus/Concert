@@ -1,0 +1,56 @@
+#!/bin/bash
+
+if [ `whoami` != 'root' ]; then
+  echo "This script should be run as root."
+  exit
+fi
+
+if [ -z "$1" ]; then
+  #prompt for path
+  pwd=`pwd`
+  echo -n "Directory to convert pages: [$pwd] "
+  read path
+else
+  path=$1
+fi
+
+# No path was specified, so we fall back to the current directory
+if [ -z "$path" ]; then
+  path=$pwd
+fi
+
+
+dirName=`basename $path`
+parentDir=`dirname $path`
+archive="${parentDir}/${dirName}Bkup.tar.gz"
+
+if [ -a "$archive" ]; then
+  echo "It looks like this directory has already been converted"
+  exit
+fi
+
+pushd $path > /dev/null
+tar -zcvf $archive .
+popd > /dev/null
+
+
+echo Directory contents backed up to $archive
+
+echo -e "\nConverting pages\n"
+
+red='\e[0;31m'
+green='\e[0;32m'
+nc='\e[0m'
+
+find $path -type f -name \*.php | grep -v 'bkup' 2>&- |
+  while read file
+    do
+      conversion=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/runTemplateConverter.php $file false`
+
+      if [ "$conversion" == 'true' ]; then
+        echo -e "${green}Converted:${nc} ${file}"
+      else
+        echo -e "${red}Didn't Convert:${nc} ${file}"
+      fi
+    done
+
