@@ -2468,44 +2468,6 @@ echo $config["content"];';
   /**
    * @test
    */
-  public function getGroupForFile()
-  {
-    $filename = self::$testFileDir . 'index.php';
-    file_put_contents($filename, self::$indexContents);
-    chgrp($filename, 'www');
-
-    $this->buildFileManager('root', $filename);
-
-    $this->assertSame('www', $this->fileManager->getGroupForFile($filename));
-  }
-
-  /**
-   * @test
-   */
-  public function getGroupForFileNonExistent()
-  {
-    $fileName = self::$testFileDir . 'test/index.php';
-    $this->buildFileManager('root', $fileName);
-
-    $this->assertSame('www', $this->fileManager->getGroupForFile($fileName));
-  }
-
-  /**
-   * @test
-   */
-  public function getGroupForFileFileNotExistingYet()
-  {
-    $filename = self::$testFileDir . 'arst.php';
-    chgrp(self::$testFileDir, 'www');
-
-    $this->buildFileManager('root', $filename);
-
-    $this->assertSame('www', $this->fileManager->getGroupForFile($filename));
-  }
-
-  /**
-   * @test
-   */
   public function ensureDirectoryExists()
   {
     $dir = self::$testFileDir . 'arst';

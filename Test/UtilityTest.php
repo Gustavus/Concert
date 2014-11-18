@@ -249,4 +249,37 @@ class UtilityTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
   }
+
+  /**
+   * @test
+   */
+  public function getGroupForFile()
+  {
+    $filename = self::$testFileDir . 'index.php';
+    file_put_contents($filename, self::$indexContents);
+    chgrp($filename, 'www');
+
+    $this->assertSame('www', Utility::getGroupForFile($filename));
+  }
+
+  /**
+   * @test
+   */
+  public function getGroupForFileNonExistent()
+  {
+    $fileName = self::$testFileDir . 'test/index.php';
+
+    $this->assertSame('www', Utility::getGroupForFile($fileName));
+  }
+
+  /**
+   * @test
+   */
+  public function getGroupForFileFileNotExistingYet()
+  {
+    $filename = self::$testFileDir . 'arst.php';
+    chgrp(self::$testFileDir, 'www');
+
+    $this->assertSame('www', Utility::getGroupForFile($filename));
+  }
 }

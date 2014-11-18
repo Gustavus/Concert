@@ -884,7 +884,7 @@ class FileManager
       return false;
     }
     // all of our checks are out of the way. Now to move the file
-    $group = $this->getGroupForFile($destination);
+    $group = Utility::getGroupForFile($destination);
     $owner = $this->username;
 
     // make sure the destination directory exists in case someone is adding a directory
@@ -1145,33 +1145,6 @@ class FileManager
           ':srcFilename'   => null,
         ]
     );
-  }
-
-  /**
-   * Gets the best group to use for files
-   *   If the file doesn't already exist, we will want to look backwards through the directories and use the closest directory's group.
-   *   <strong>Note:</strong> This should only be called by publishFile.
-   *
-   * @param  string $filePath Path of the file to guess the group for
-   *
-   * @return string
-   */
-  private function getGroupForFile($filePath)
-  {
-    if (file_exists($filePath)) {
-      $path = $filePath;
-    } else {
-      $dir = dirname($filePath);
-      while (!is_dir($dir)) {
-        $dir = dirname($dir);
-      }
-      $path = $dir;
-    }
-
-    $gid       = filegroup($path);
-    $groupInfo = posix_getgrgid($gid);
-    $group     = $groupInfo['name'];
-    return $group;
   }
 
   /**
