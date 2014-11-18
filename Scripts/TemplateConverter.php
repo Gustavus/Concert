@@ -178,7 +178,7 @@ class TemplateConverter
     $firstPHPBlock = $this->getFirstPHPBlock();
 
     // remove template/request.class.php.
-    $firstPHPBlock = preg_replace('`require_once\h*[\'"]template/request.class.php[\'"]\h*?;\h*?\v`', '', $firstPHPBlock);
+    $firstPHPBlock = preg_replace('`require_once\h*?\(?\h*?[\'"].*?template/request.class.php\h*?[\'"]\h*?\)?\h*?;\h*?\v`', '', $firstPHPBlock);
 
     preg_match('`(use [^;]+;)`sx', $firstPHPBlock, $matches);
 

@@ -299,4 +299,239 @@ ob_start();
 
     $this->assertSame(file_get_contents(self::TEMPLATE_FILE_DIR . 'expectedIndexWithLocalNav.php'), $actual);
   }
+
+  /**
+   * @test
+   */
+  public function convertWithLocalNavAndFocusBoxAndFullPathToTemplateRequest()
+  {
+    $this->setUpConverter('indexWithLocalNavFullRequireOnce.php');
+    $actual = $this->templateConverter->convert();
+
+    $this->assertSame(file_get_contents(self::TEMPLATE_FILE_DIR . 'expectedIndexWithLocalNav.php'), $actual);
+  }
+
+  /**
+   * @test
+   */
+  public function convertFirstPHPBlockWithRequireOnceFunctionCall()
+  {
+    $this->setUpConverter('oldTemplate.php');
+
+    $firstBlock = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once(\'template/request.class.php\');
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString;
+?>';
+    $this->templateConverter->firstPHPBlock = $firstBlock;
+
+    $expected = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString,
+    Gustavus\TemplateBuilder\Builder;
+
+Builder::init();
+
+$templateBuilderProperties = [];
+ob_start();
+?>';
+
+    $this->assertSame($expected, $this->templateConverter->convertFirstPHPBlock());
+  }
+
+  /**
+   * @test
+   */
+  public function convertFirstPHPBlockWithRequireOnceFunctionCallSpaces()
+  {
+    $this->setUpConverter('oldTemplate.php');
+
+    $firstBlock = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once ( \' template/request.class.php \' );
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString;
+?>';
+    $this->templateConverter->firstPHPBlock = $firstBlock;
+
+    $expected = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString,
+    Gustavus\TemplateBuilder\Builder;
+
+Builder::init();
+
+$templateBuilderProperties = [];
+ob_start();
+?>';
+
+    $this->assertSame($expected, $this->templateConverter->convertFirstPHPBlock());
+  }
+
+  /**
+   * @test
+   */
+  public function convertFirstPHPBlockWithRequireOnceSpaces()
+  {
+    $this->setUpConverter('oldTemplate.php');
+
+    $firstBlock = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once   \'  template/request.class.php  \'  ;
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString;
+?>';
+    $this->templateConverter->firstPHPBlock = $firstBlock;
+
+    $expected = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString,
+    Gustavus\TemplateBuilder\Builder;
+
+Builder::init();
+
+$templateBuilderProperties = [];
+ob_start();
+?>';
+
+    $this->assertSame($expected, $this->templateConverter->convertFirstPHPBlock());
+  }
+
+  /**
+   * @test
+   */
+  public function convertFirstPHPBlockWithRequireOnceRelativePaths()
+  {
+    $this->setUpConverter('oldTemplate.php');
+
+    $firstBlock = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once \'../../../template/request.class.php\';
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString;
+?>';
+    $this->templateConverter->firstPHPBlock = $firstBlock;
+
+    $expected = '<?php
+$templatePreferences  = array(
+  \'localNavigation\'   => TRUE,
+  \'auxBox\'        => false,
+  \'templateRevision\'    => 1,
+//  \'focusBoxColumns\'   => 10,
+  \'bannerDirectory\'   => \'alumni\',
+//  \'view\'          => \'template/views/general.html\',
+);
+
+require_once \'rssgrabber/rssgrabber.class.php\';
+require_once \'/cis/www/calendar/classes/puller.class.php\';
+
+use Gustavus\SocialMedia\SocialMedia,
+    Gustavus\Resources\Resource,
+    Gustavus\TwigFactory\TwigFactory,
+    Gustavus\Utility\String as GACString,
+    Gustavus\TemplateBuilder\Builder;
+
+Builder::init();
+
+$templateBuilderProperties = [];
+ob_start();
+?>';
+
+    $this->assertSame($expected, $this->templateConverter->convertFirstPHPBlock());
+  }
 }
