@@ -53,12 +53,23 @@ class TemplateConverter
    * @var array
    */
   private static $pageSections = [
-    'Head'       => 'head',
-    'JavaScript' => 'javascripts',
-    'Title'      => 'title',
-    'Subtitle'   => 'subtitle',
-    'Content'    => 'content',
-    'FocusBox'   => 'focusBox',
+    'Head'            => 'head',
+    'JavaScript'      => 'javascripts',
+    'LocalNavigation' => 'localNavigation',
+    'Title'           => 'title',
+    'Subtitle'        => 'subtitle',
+    'Content'         => 'content',
+    'FocusBox'        => 'focusBox',
+  ];
+
+  /**
+   * Mapping of page sections.
+   * Array with key of original template section identifier and value of new identifier
+   *
+   * @var array
+   */
+  private static $ignoreEmptyPageSections = [
+    'LocalNavigation',
   ];
 
   /**
@@ -103,7 +114,6 @@ class TemplateConverter
    */
   private function extractSection($sectionName)
   {
-    // @todo what happens if you have localNavigation set in <div id="local-navigation"
     assert('is_string($sectionName)');
 
     $pattern  = sprintf('`<!--\s*InstanceBegin(?>Non)?Editable(?>[^>]*?name=)"%s".*?-->(.*)`s', preg_quote($sectionName));
@@ -168,7 +178,7 @@ class TemplateConverter
     $firstPHPBlock = $this->getFirstPHPBlock();
 
     // remove template/request.class.php.
-    $firstPHPBlock = preg_replace("`require_once.['\"]template/request.class.php['\"].?;\n`", '', $firstPHPBlock);
+    $firstPHPBlock = preg_replace('`require_once\h*[\'"]template/request.class.php[\'"]\h*?;\h*?\v`', '', $firstPHPBlock);
 
     preg_match('`(use [^;]+;)`sx', $firstPHPBlock, $matches);
 
@@ -247,11 +257,16 @@ class TemplateConverter
     $i = 0;
     $lastI = count(self::$pageSections);
     foreach (self::$pageSections as $oldSectionName => $newSectionName) {
-      if (++$i === $lastI) {
+      ++$i;
+      $section = $this->extractSection($oldSectionName);
+      if (in_array($oldSectionName, self::$ignoreEmptyPageSections) && empty($section)) {
+        // the current section is empty, and in our ignored array. Don't actually put this into the template.
+        continue;
+      }
+      if ($i === $lastI) {
         // we are on our last iteration and need to adjust the view.
         $propertyAssignmentView = "\n<?php\n\${$this->propertiesVariableName}['%s'] = ob_get_contents();\nob_clean();\n\necho (new {$this->builderAlias}(\${$this->propertiesVariableName}, \$templatePreferences))->render();\n?>";
       }
-      $section = $this->extractSection($oldSectionName);
       if (empty($section)) {
         $newPage .= sprintf($propertyAssignmentView, $newSectionName);
       } else {

@@ -288,4 +288,15 @@ ob_start();
 
     $this->assertSame(file_get_contents(self::TEMPLATE_FILE_DIR . 'expectedTemplate.php'), $actual);
   }
+
+  /**
+   * @test
+   */
+  public function convertWithLocalNavAndFocusBox()
+  {
+    $this->setUpConverter('indexWithLocalNav.php');
+    $actual = $this->templateConverter->convert();
+
+    $this->assertSame(file_get_contents(self::TEMPLATE_FILE_DIR . 'expectedIndexWithLocalNav.php'), $actual);
+  }
 }
