@@ -135,6 +135,7 @@ Gustavus.Concert = {
     element_format: 'xhtml',
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
+    extended_valid_elements: 'i[class]',
     // we don't want to keep our styles when we hit return/enter.
     keep_styles: false,
 
