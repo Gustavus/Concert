@@ -583,10 +583,24 @@ class PermissionsManager
     }
 
     if (self::isUserSuperUser($username)) {
-      return Config::$superUserPermissions;
+      $superUserPerms = Config::$superUserPermissions;
+
+      $siteLevelPerms = self::getInheritedPermissionsForSite($siteRoot);
+      if (!empty($siteLevelPerms['excludedFiles'])) {
+        // excluded files exist on the site. We want superUsers to respect these
+        $superUserPerms['excludedFiles'] = $siteLevelPerms['excludedFiles'];
+      }
+      return $superUserPerms;
     }
     if (self::isUserAdmin($username)) {
-      return Config::$adminPermissions;
+      $adminPerms = Config::$adminPermissions;
+
+      $siteLevelPerms = self::getInheritedPermissionsForSite($siteRoot);
+      if (!empty($siteLevelPerms['excludedFiles'])) {
+        // excluded files exist on the site. We want admins to respect these
+        $adminPerms['excludedFiles'] = $siteLevelPerms['excludedFiles'];
+      }
+      return $adminPerms;
     }
     if (isset($perms[$siteRoot])) {
       return $perms[$siteRoot];

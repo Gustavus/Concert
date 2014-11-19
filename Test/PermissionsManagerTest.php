@@ -593,6 +593,51 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function getUserPermissionsForSiteSuperUserWithExcludedFiles()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', ['index.php']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', Config::SUPER_USER]);
+
+    $expectedPerms = Config::$superUserPermissions;
+    $expectedPerms['excludedFiles'] = ['index.php'];
+    $this->assertSame($expectedPerms, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getUserPermissionsForSiteAdmin()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', Config::ADMIN_ACCESS_LEVEL]);
+
+    $this->assertSame(Config::$adminPermissions, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getUserPermissionsForSiteAdminWithExcludedFiles()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', ['index.php']]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', Config::ADMIN_ACCESS_LEVEL]);
+
+    $expectedPerms = Config::$adminPermissions;
+    $expectedPerms['excludedFiles'] = ['index.php'];
+    $this->assertSame($expectedPerms, PermissionsManager::getUserPermissionsForSite('bvisto', '/billy'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function getUserPermissionsForSiteNoMatches()
   {
     $this->constructDB(['Sites', 'Permissions']);
