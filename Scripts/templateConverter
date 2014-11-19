@@ -29,28 +29,45 @@ if [ -a "$archive" ]; then
   exit
 fi
 
+logFile="${parentDir}/${dirName}Conversion.log"
+echo "Converting directory: ${path}"
+echo "The log file will live at ${logFile}"
+echo -e "Backing up the directory" > $logFile
 pushd $path > /dev/null
-tar -zcvf $archive .
+# only output errors to log file. Everything else will go to /dev/null
+tar -zcvf $archive . 1> /dev/null 2>> $logFile
 popd > /dev/null
 
 
-echo Directory contents backed up to $archive
+echo Directory contents backed up to $archive >> $logFile
 
-echo -e "\nConverting pages\n"
-
-red='\e[0;31m'
-green='\e[0;32m'
+blackWithRedBackground='\e[0;30;41m'
+blackWithGreenBackground='\e[0;30;42m'
+whiteWithBlueBackground='\e[0;37;44m'
 nc='\e[0m'
+
+echo -e "\n${whiteWithBlueBackground}Converting pages${nc}\n" >> $logFile
 
 find $path -type f -name \*.php | grep -v 'bkup' 2>&- |
   while read file
     do
+      echo -n "."
       conversion=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/runTemplateConverter.php $file false`
 
       if [ "$conversion" == 'true' ]; then
-        echo -e "${green}Converted:${nc} ${file}"
+        echo -e "${blackWithGreenBackground}Converted:${nc} ${file}" >> $logFile
       else
-        echo -e "${red}Didn't Convert:${nc} ${file}"
+        echo -e "${blackWithRedBackground}Didn't Convert:${nc} ${file}" >> $logFile
       fi
     done
 
+echo -e "\nDone!" >> $logFile
+echo -e "\nDone!"
+
+convertedFiles=`grep Converted $logFile | wc -l`
+skippedFiles=`grep "Didn't Convert" $logFile | wc -l`
+echo -e "\n${convertedFiles} files converted" >> $logFile
+echo "${skippedFiles} files skipped" >> $logFile
+
+echo -e "\n${convertedFiles} files converted"
+echo "${skippedFiles} files skipped"
