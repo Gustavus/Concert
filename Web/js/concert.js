@@ -27,6 +27,12 @@ Gustavus.Concert = {
   redirectPath: '',
 
   /**
+   * Flag to ignore dirty editors
+   * @type {Boolean}
+   */
+  ignoreDirtyEditors: false,
+
+  /**
    * TinyMCE menu configuration for default content
    * @type {Array}
    */
@@ -163,6 +169,7 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
+        Gustavus.Concert.ignoreDirtyEditors = false;
         // clean up content
         var content = Gustavus.Concert.mceCleanup(editor.getContent());
         // convert images into GIMLI URLs.
@@ -407,6 +414,7 @@ Gustavus.Concert = {
     if (allowRedirects == undefined) {
       allowRedirects = true;
     }
+    this.ignoreDirtyEditors = true;
     var edits = this.buildEditsObject();
 
     edits.concertAction = 'save';
@@ -498,6 +506,21 @@ Gustavus.Concert = {
       data: data,
       dataType: 'json',
     });
+  },
+
+  /**
+   * Checks to see if the any of the tinymce editors are dirty
+   * @return {Boolean}
+   */
+  hasDirtyEditor: function() {
+    var dirtyEditor = false
+    for (i in tinymce.editors) {
+      if (tinymce.editors[i].isDirty()) {
+        dirtyEditor = true;
+        break;
+      }
+    }
+    return dirtyEditor;
   },
 
   /**
@@ -594,15 +617,9 @@ $(document)
 
   .on('click', 'a.quitConcert', function(e) {
     e.preventDefault();
-    var dirtyEditor = false
-    for (i in tinymce.editors) {
-      if (tinymce.editors[i].isDirty()) {
-        dirtyEditor = true;
-        break;
-      }
-    }
+    Gustavus.Concert.ignoreDirtyEditors = true;
 
-    if (dirtyEditor) {
+    if (Gustavus.Concert.hasDirtyEditor()) {
       $('#confirmQuit').dialog({
         modal: true,
         buttons: {
@@ -613,6 +630,7 @@ $(document)
             window.location = e.target.href;
           },
           Cancel: function() {
+            Gustavus.Concert.ignoreDirtyEditors = false;
             $(this).dialog('close');
           }
         }
@@ -625,6 +643,14 @@ $(document)
   });
 
 // When the user leaves the page release the lock.
-$(window).on('beforeunload', function () {
-  Gustavus.Concert.releaseLock(false);
-});
+$(window)
+  .on('beforeunload', function() {
+    if (!Gustavus.Concert.ignoreDirtyEditors && Gustavus.Concert.hasDirtyEditor()) {
+      return 'It looks like you have made changes. You will lose these changes if you continue.';
+    }
+    $(window).off('unload');
+    Gustavus.Concert.releaseLock(false);
+  })
+  .on('unload', function() {
+    Gustavus.Concert.releaseLock(false);
+  });
