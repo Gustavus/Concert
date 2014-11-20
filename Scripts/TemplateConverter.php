@@ -19,6 +19,13 @@ use RuntimeException;
 class TemplateConverter
 {
   /**
+   * Path to the page we are converting
+   *
+   * @var string
+   */
+  private $filePath;
+
+  /**
    * Contents of the page we are converting
    *
    * @var string
@@ -83,6 +90,7 @@ class TemplateConverter
    */
   public function __construct($filePath)
   {
+    $this->filePath = $filePath;
     if (file_exists($filePath)) {
       $this->pageContent = file_get_contents($filePath);
     } else {
@@ -100,6 +108,14 @@ class TemplateConverter
     $firstPHPBlock = $this->getFirstPHPBlock();
     if (strpos($firstPHPBlock, '$templatePreferences') !== false && strpos($firstPHPBlock, 'template/request.class.php') !== false) {
       // we have a templated page.
+      // now we need to make sure it isn't using deprecated template functionality
+      if (preg_match('`^.*?global.*\$template.*?$`m', $this->pageContent)) {
+        // looks like it is including page templates.
+        return [
+          'error' => 'deprecation',
+          'message' => sprintf('It looks like %s is using the deprecated global "$template feature". Not converting.', $this->filePath),
+        ];
+      }
       return true;
     } else {
       return false;

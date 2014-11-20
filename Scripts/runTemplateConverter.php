@@ -50,9 +50,39 @@ if ($username !== 'root') {
   exit;
 }
 
-// @todo Finish this. Need a script that loops through all php files in a directory and passes them to this script.
+/**
+ * Builds an error message from an array with keys of error and message
+ *
+ * @param  Array $errorArray Array with keys of error and message
+ * @return string
+ */
+function buildErrorMessage($errorArray) {
+  assert('is_array($errorArray) && isset($errorArray[\'error\'], $errorArray[\'message\'])');
+  $blackWithRedBackground = "\e[0;30;41m";
+  $nc = "\e[0m";
+  switch ($errorArray['error']) {
+    case 'deprecation':
+    default:
+        return sprintf('%sDeprecation!%s %s', $blackWithRedBackground, $nc, $errorArray['message']);
+  }
+  return '';
+}
+
 $filePath = $argv[1];
-$newPageContents = (new TemplateConverter($filePath))->convert();
+$newPageContents = false;
+$templateConverter = new TemplateConverter($filePath);
+$isPageTemplated = $templateConverter->isPageTemplated();
+if ($isPageTemplated === true) {
+  $newPageContents = $templateConverter->convert();
+} else if ($isPageTemplated === false) {
+  echo 'false';
+  return;
+} else {
+  assert('is_array($isPageTemplated) && isset($isPageTemplated[\'error\'], $isPageTemplated[\'message\'])');
+
+  echo buildErrorMessage($isPageTemplated);
+  return;
+}
 if (!$newPageContents) {
   echo 'false';
   return;

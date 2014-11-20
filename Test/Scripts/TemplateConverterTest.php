@@ -114,6 +114,19 @@ use Gustavus\SocialMedia\SocialMedia,
   /**
    * @test
    */
+  public function isPageTemplatedDeprecated()
+  {
+    $this->setUpConverter('alumni-submit.php');
+    $result = $this->templateConverter->isPageTemplated();
+
+    $this->assertTrue(is_array($result));
+    $this->assertSame(['error', 'message'], array_keys($result));
+    $this->assertSame('deprecation', $result['error']);
+  }
+
+  /**
+   * @test
+   */
   public function extractSection()
   {
     $this->setUpConverter('oldTemplate.php');

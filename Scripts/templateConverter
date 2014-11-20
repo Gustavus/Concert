@@ -44,6 +44,7 @@ echo Directory contents backed up to $archive >> $logFile
 blackWithRedBackground='\e[0;30;41m'
 blackWithGreenBackground='\e[0;30;42m'
 whiteWithBlueBackground='\e[0;37;44m'
+orange='\e[0;33m'
 nc='\e[0m'
 
 echo -e "\n${whiteWithBlueBackground}Converting pages${nc}\n" >> $logFile
@@ -56,8 +57,11 @@ find $path -type f -name \*.php | grep -v 'bkup' 2>&- |
 
       if [ "$conversion" == 'true' ]; then
         echo -e "${blackWithGreenBackground}Converted:${nc} ${file}" >> $logFile
+      elif [ "$conversion" == 'false' ]; then
+        echo -e "${orange}Didn't Convert:${nc} ${file}" >> $logFile
       else
-        echo -e "${blackWithRedBackground}Didn't Convert:${nc} ${file}" >> $logFile
+        # conversion output has our message built for us already.
+        echo -e "${blackWithRedBackground}Error:${nc} $conversion" >> $logFile
       fi
     done
 
@@ -66,8 +70,11 @@ echo -e "\nDone!"
 
 convertedFiles=`grep Converted $logFile | wc -l`
 skippedFiles=`grep "Didn't Convert" $logFile | wc -l`
+errorCount=`grep Error $logFile | wc -l`
 echo -e "\n${convertedFiles} files converted" >> $logFile
 echo "${skippedFiles} files skipped" >> $logFile
+echo "${errorCount} errors" >> $logFile
 
 echo -e "\n${convertedFiles} files converted"
 echo "${skippedFiles} files skipped"
+echo "${errorCount} errors"
