@@ -5,12 +5,16 @@
  */
 
 namespace Gustavus\Concert;
-use InvalidArgumentException,
-  PHPParser_Node_Expr_Array,
-  PHPParser_Parser,
-  PHPParser_NodeTraverser,
-  PHPParser_PrettyPrinter_Default,
-  PHPParser_Lexer;
+
+require_once '/cis/lib/Gustavus/Concert/Assets/Composer/vendor/autoload.php';
+
+use Gustavus\Utility\Set,
+  InvalidArgumentException,
+  PhpParser\Node\Expr\Array_ as PHPParserArray,
+  PhpParser\Parser,
+  PhpParser\NodeTraverser,
+  PhpParser\PrettyPrinter\Standard as PrettyPrinter,
+  PhpParser\Lexer;
 
 /**
  * Object representing an individual piece of the file configuration
@@ -124,7 +128,9 @@ class FileConfigurationPart
   {
     if ($this->isPHPContent()) {
       if (Config::ALLOW_PHP_EDITS && in_array($this->getContentType(), Config::$editableContentTypes) && ($wrapEditableContent || $this->edited)) {
-        $prettyPrinter = new GustavusPrettyPrinter;
+        // @todo convert GustavusPrettyPrinter to the new version once we start allowing php edits.
+        //$prettyPrinter = new GustavusPrettyPrinter;
+        $prettyPrinter = new PrettyPrinter;
         $this->buildEditablePHPNodes($wrapEditableContent);
         return str_replace('    ', '  ', $prettyPrinter->prettyPrint($this->phpNodes));
       }
@@ -148,7 +154,7 @@ class FileConfigurationPart
     if (!$this->isPHPContent()) {
       return false;
     }
-    $parser = new PHPParser_Parser(new PHPParser_Lexer);
+    $parser = new Parser(new Lexer);
 
     return $parser->parse(sprintf('<?php %s ?>', $this->content));
   }
@@ -166,7 +172,7 @@ class FileConfigurationPart
     } else {
       if (!isset($this->phpNodes)) {
         $phpNodes = $this->parseContent();
-        $traverser = new PHPParser_NodeTraverser;
+        $traverser = new NodeTraverser;
         $this->phpNodes = $traverser->traverse($phpNodes);
       }
     }
@@ -196,7 +202,219 @@ class FileConfigurationPart
   private function wrapEditableContent($content, $subKey = null, $subSubKey = null)
   {
     $index = $this->buildEditableIndex($subKey, $subSubKey);
-    return sprintf('<div class="editable" data-index="%s">%s</div>%s', $index, trim($content), Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $closingDiv = sprintf('</div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+    $openingDiv = sprintf('<div class="editable" data-index="%s">', $index);
+    if (!self::isPHPContent()) {
+      // we need to look for un-matched tags
+      $offsetOffset = 0;
+      $offsets = $this->getUnMatchedOffsets($content);
+
+      if (!empty($offsets['closing'])) {
+        // we have unMatched closing tags
+        // we need to insert our editable div after the last one.
+        // closing divs are sorted in reverse order they are found, so we don't need to do any sorting here.
+        foreach ($offsets['closing'] as $closingOffset) {
+          // set this before using it since we want to insert things after it.
+          $offsetOffset += $closingOffset['length'];
+          $content = sprintf(
+              '%s%s%s',
+              substr($content, 0, $offsetOffset + $closingOffset['offset']),
+              $openingDiv,
+              substr($content, $offsetOffset + $closingOffset['offset'])
+          );
+          // add the openingDiv into our offset and remove the current offset length since it is already included in the string.
+          $offsetOffset += strlen($openingDiv) - $closingOffset['length'];
+          // set our opening div to an empty string so we don't insert it again
+          $openingDiv = '';
+          break;
+        }
+      }
+
+      if (!empty($offsets['opening'])) {
+        // we have unMatched opening tags
+        // we need to insert our ending editable div before the first one.
+        // closing divs are sorted in the order they are found, so we don't need to do any sorting here.
+        foreach ($offsets['opening'] as $openingOffset) {
+          $content = sprintf(
+              '%s%s%s',
+              substr($content, 0, $offsetOffset + $openingOffset['offset']),
+              $closingDiv,
+              substr($content, $offsetOffset + $openingOffset['offset'])
+          );
+          // set this after we use it since we want to insert things before it.
+          $offsetOffset += $openingOffset['length'] + strlen($closingDiv);
+          // set our closing div to an empty string so we don't insert it again
+          $closingDiv = '';
+          break;
+        }
+      }
+    }
+
+    return sprintf('%s%s%s', $openingDiv, trim($content), $closingDiv);
+  }
+
+  /**
+   * Gets offsets for un-matched opening and closing tags
+   *
+   * @param  string $content Content to search for un-matched tags
+   * @return array Array with keys of opening and closing and values are an array of their respective offsets (offset) and string length (length).
+   *   Opening array will be sorted in the order they are found.
+   *   Closing array will be sorted in reverse order they exist in the content.
+   */
+  private function getUnMatchedOffsets($content)
+  {
+    // we need to make sure all divs have been closed otherwise our editable div will get ruined.
+    preg_match_all('`(?P<closing></[^>]+>)|(?P<selfclosing><[^!>]+/>)|(?P<opening><[^!>]+>)`x', $content, $matches, PREG_OFFSET_CAPTURE);
+
+    // flattener that changes the values of the array to the first index. (The second index will be the offset from the PREG_OFFSET_CAPTURE option)
+    $flattener = function($value) {
+      return $value[0];
+    };
+
+    if (isset($matches['opening'])) {
+      $opening = array_filter($matches['opening']);
+      $flattenedOpening = array_filter(array_map($flattener, $opening));
+    } else {
+      $opening = [];
+    }
+    if (isset($matches['closing'])) {
+      $closing = array_filter($matches['closing']);
+      $flattenedClosing = array_filter(array_map($flattener, $closing));
+    } else {
+      $closing = [];
+    }
+
+    $unMatchedOpening = $this->findUnMatchedOpeningTags($flattenedOpening, $flattenedClosing);
+    $unMatchedOpeningOffsets = [];
+    if (!empty($unMatchedOpening)) {
+      // make sure we are sorted by keys
+      ksort($unMatchedOpening);
+      // we have unmatched opening tags
+      foreach ($unMatchedOpening as $key => $unMatched) {
+        $unMatchedOpeningOffsets[] = [
+          'offset' => $opening[$key][1],
+          'length' => strlen($unMatched),
+        ];
+      }
+    }
+
+    $unMatchedClosing = $this->findUnMatchedClosingTags($flattenedOpening, $flattenedClosing);
+    $unMatchedClosingOffsets = [];
+    if (!empty($unMatchedClosing)) {
+      // make sure we are sorted by keys in reverse order
+      krsort($unMatchedClosing);
+      // we have unmatched closing tags
+      foreach ($unMatchedClosing as $key => $unMatched) {
+        $unMatchedClosingOffsets[] = [
+          'offset' => $closing[$key][1],
+          'length' => strlen($unMatched),
+        ];
+      }
+    }
+
+    return [
+      'opening' => $unMatchedOpeningOffsets,
+      'closing' => $unMatchedClosingOffsets,
+    ];
+  }
+
+
+  /**
+   * Finds any keys that are less than the specified key
+   *
+   * @param  array $array Array to filter
+   * @param  integer $key   Key we want our found keys to be less than.
+   * @return array
+   */
+  private function findKeysLessThanKey(Array $array, $key) {
+    $newArray = [];
+    foreach ($array as $arrKey => $arrValue) {
+      if ($arrKey < $key) {
+        $newArray[$arrKey] = $arrValue;
+      } else {
+        break;
+      }
+    }
+    return $newArray;
+  }
+
+  /**
+   * Finds any keys that are greater than the specified key
+   *
+   * @param  array $array Array to filter
+   * @param  integer $key   Key we want our found keys to be greater than.
+   * @return array
+   */
+  private function findKeysGreaterThanKey(Array $array, $key) {
+    $newArray = [];
+    foreach ($array as $arrKey => $arrValue) {
+      if ($arrKey > $key) {
+        $newArray[$arrKey] = $arrValue;
+      }
+    }
+    return $newArray;
+  }
+
+  /**
+   * Finds any opening tags that don't have a closing tag to go along with them
+   *
+   * @param  array  $opening Array of opening tags
+   * @param  array  $closing Array of closing tags
+   * @return array  Array of opening tags that aren't matched
+   */
+  private function findUnMatchedOpeningTags(Array $opening, Array $closing)
+  {
+    // let's try looking at our first closing tag and finding anything that matches
+    foreach ($closing as $key => $closingTag) {
+      preg_match('`</(\w+)`', $closingTag, $tagMatch);
+      if (!isset($tagMatch[1])) {
+        // tag not found
+        continue;
+      }
+      $tagMatch = $tagMatch[1];
+      $openingPriorToCurr = $this->findKeysLessThanKey($opening, $key);
+      krsort($openingPriorToCurr);
+      foreach ($openingPriorToCurr as $openingKey => $openingTag) {
+        if (preg_match(sprintf('`<%s`', $tagMatch), $openingTag)) {
+          // we have a matching tag.
+          // now let's unset this key from our original opening tags.
+          unset($opening[$openingKey]);
+          break;
+        }
+      }
+    }
+    return $opening;
+  }
+
+  /**
+   * Finds any closing tags that don't have an opening tag to go along with them
+   *
+   * @param  array  $opening Array of opening tags
+   * @param  array  $closing Array of closing tags
+   * @return array  Array of closing tags that aren't matched
+   */
+  private function findUnMatchedClosingTags(Array $opening, Array $closing)
+  {
+    // let's try looking at our first closing tag and finding anything that matches
+    foreach ($opening as $key => $openingTag) {
+      preg_match('`<(\w+)`', $openingTag, $tagMatch);
+      if (!isset($tagMatch[1])) {
+        // tag not found
+        continue;
+      }
+      $tagMatch = $tagMatch[1];
+      $closingAfterCurr = $this->findKeysGreaterThanKey($closing, $key);
+      foreach ($closingAfterCurr as $closingKey => $closingTag) {
+        if (preg_match(sprintf('`</%s`', $tagMatch), $closingTag)) {
+          // we have a matching tag.
+          // now let's unset this key from our original closing tags.
+          unset($closing[$closingKey]);
+          break;
+        }
+      }
+    }
+    return $closing;
   }
 
   /**
@@ -235,7 +453,7 @@ class FileConfigurationPart
     foreach ($this->phpNodes as $key => &$node) {
       if (in_array($node->getType(), Config::$editablePHPNodeTypes)) {
         // we can edit this node
-        if ($node->expr instanceof PHPParser_Node_Expr_Array) {
+        if ($node->expr instanceof PHPParserArray) {
           // we need to look into the array to find our values
           foreach ($node->expr->items as $subKey => &$item) {
             if (in_array($item->value->getType(), Config::$editablePHPExprTypes)) {
@@ -294,10 +512,40 @@ class FileConfigurationPart
     $newContent = self::sanitize($newContent);
 
     if (!$this->isPHPContent() && in_array($this->getContentType(), Config::$editableContentTypes)) {
+      // non php content is editable
       // save our original value before editing
       $this->valuesBeforeEdit = $this->content;
-      // non php content is editable
-      $this->content = $newContent;
+
+      //Now we need to see if we have un-matched tags. We don't want to destroy these since these aren't sent when editing a page.
+      $startReplacementOffset = 0;
+      $endReplacementOffset   = strlen($this->content);
+
+      $offsets = $this->getUnMatchedOffsets($this->content);
+
+      if (!empty($offsets['closing'])) {
+        // we have unMatched closing tags
+        // closing divs are sorted in reverse order they are found, so we don't need to do any sorting here.
+        foreach ($offsets['closing'] as $closingOffset) {
+          // we want to start our replacement after the un-matched closing tag
+          $startReplacementOffset = $closingOffset['offset'] + $closingOffset['length'];
+        }
+      }
+
+      if (!empty($offsets['opening'])) {
+        // we have unMatched opening tags
+        // closing divs are sorted in the order they are found, so we don't need to do any sorting here.
+        foreach ($offsets['opening'] as $openingOffset) {
+          // we want to end our replacement before the un-matched opening tag.
+          $endReplacementOffset = $openingOffset['offset'];
+        }
+      }
+
+      $this->content = sprintf(
+          '%s%s%s',
+          substr($this->content, 0, $startReplacementOffset),
+          $newContent,
+          substr($this->content, $endReplacementOffset)
+      );
       $this->edited = true;
       return true;
     }

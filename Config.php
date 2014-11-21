@@ -85,7 +85,7 @@ class Config
   const FILE_MANAGER_LOCATION = '/cis/www/concert/filemanager';
 
   /**
-   * HTML comment that gets added after the closing tag for an editable div to make it easier to identify it
+   * HTML comment that gets added after the closing tag for an editable div to make it easier to identify it.
    */
   const EDITABLE_DIV_CLOSING_IDENTIFIER = '<!--endeditablediv-->';
 

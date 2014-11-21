@@ -166,7 +166,7 @@ class FileConfigurationPartTest extends TestBase
     $actual = $part->getContent(true);
     $this->assertContains($editablePiece, $actual);
     $this->assertContains($this->wrappedEditableIdentifier, $actual);
-    $this->assertContains('></span', str_replace($editablePiece, '', $actual));
+    $this->assertContains('<div class="editable" data-index="0-0"></div', str_replace($editablePiece, '', $actual));
   }
 
   /**
@@ -489,6 +489,91 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function editValueHTMLUnMatchedTags()
+  {
+    $this->partParams['content'] = '</div><div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+<div>';
+    $this->buildFileConfigurationPart();
+    $actual = $this->part->editValue('0', 'brand new content');
+
+    $this->assertTrue($actual);
+    $this->assertSame('</div>brand new content<div>', $this->part->getContent());
+    $this->assertSame($this->partParams['content'], $this->part->getValueBeforeEdit());
+  }
+
+  /**
+   * @test
+   */
+  public function editValueHTMLUnMatchedStartTag()
+  {
+    $this->partParams['content'] = '<div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+<div>';
+    $this->buildFileConfigurationPart();
+    $actual = $this->part->editValue('0', 'brand new content');
+
+    $this->assertTrue($actual);
+    $this->assertSame('brand new content<div>', $this->part->getContent());
+    $this->assertSame($this->partParams['content'], $this->part->getValueBeforeEdit());
+  }
+
+  /**
+   * @test
+   */
+  public function editValueHTMLUnMatchedEndTag()
+  {
+    $this->partParams['content'] = '<div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+</div>
+';
+    $this->buildFileConfigurationPart();
+    $actual = $this->part->editValue('0', 'brand new content');
+
+    $this->assertTrue($actual);
+    $this->assertSame(rtrim($this->partParams['content']) . 'brand new content', $this->part->getContent());
+    $this->assertSame($this->partParams['content'], $this->part->getValueBeforeEdit());
+  }
+
+  /**
+   * @test
+   */
   public function getValueBeforeEdit()
   {
     $this->buildFileConfigurationPart();
@@ -553,5 +638,375 @@ class FileConfigurationPartTest extends TestBase
     $result = $this->call('FileConfigurationPart', 'sanitize', [$content]);
 
     $this->assertSame($content, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentClosingDivs()
+  {
+    $content = '<div class="grid_36 alpha omega">
+<img src="arst/arst/asrt" />
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+
+<div class="grid_36 alpha omega">';
+
+    $expected = sprintf('<div class="editable" data-index="0"><div class="grid_36 alpha omega">
+<img src="arst/arst/asrt" />
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+
+</div>%s<div class="grid_36 alpha omega">',Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentOpeningDivs()
+  {
+    $content = '<div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+</div><!-- this div doesn\'t have an opening tag -->
+';
+
+    $expected = sprintf('<div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+</div><div class="editable" data-index="0"><!-- this div doesn\'t have an opening tag --></div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentUnMatchedOpeningAndClosingDivs()
+  {
+    $content = '</div><div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+<div>
+';
+
+    $expected = sprintf('</div><div class="editable" data-index="0"><div class="grid_36 alpha omega">
+
+  <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
+  /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
+
+<p>In addition to the gatherings noted on other pages, Gustavus also encourages alumni stay connected to the College through these events. </p>
+<ul>
+  <li><strong>Gustie Breakfasts</strong> - Engage with other alumni and learn something new about your alma mater at the monthly Gustavus alumni breakfast. Gustie Breakfasts are held on campus the second Wednesday of each month and in the Twin Cities on the third Wednesday of each month. <a href="/alumni/events/gustiebreakfast/index.php">Full list of Gustie Breakfasts online</a>.</li>
+  <li><strong>Faculty and Administrator Service Awards Dinner</strong> - The College and the Gustavus Alumni Association recognizes 2014 retirees and the commitment of faculty and administrators who have served the College 10, 15, 20, 25, 30, 35, 40, and 45 years. The event is held on May 21, 1014 in the Alumni Hall. <a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">Register here</a>.</li>
+  <li><strong>Gustavus Networking Event</strong> - Join Gustavus alumni and currents students for a bi-annual evening of networking. <a href="/calendar/gustavus-networking-event-3/40314">More information about the Gustavus Networking events is available online</a>.</li>
+  <li><strong>Gustavus Alumni College</strong> - The Alumni Association offers a series of presentations and lectures by current and emeritus faculty and distinguished alumni. Learn more [LINK to /gather/alumnicollege]</li>
+  <li><strong>Athletics Hall of Fame</strong> - The Gustavus Adolphus College Hall of Fame was established in 1978 at which time 19 "Charter Members" were inducted either as coaches or as athletes. Gustavus inducts new members into its Athletics Hall of Fame each fall. Athletics Hall of Fame Day is celebrated annually in the Fall. <a href="/athletics/halloffame/">Checkout the Hall of Fame</a>.</li>
+</ul>
+</div>
+</div>%s<div>', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedOpeningTagsSimple()
+  {
+    $opening = [
+      0 => '<div class="grid_36 alpha omega">',
+      1 => '<div>',
+      2 => '<p>',
+    ];
+
+    $closing = [
+      3 => '</p>',
+      4 => '</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedOpeningTags($opening, $closing);
+    $this->assertSame([0 => $opening[0]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedOpeningTagsSimpleEnd()
+  {
+    $opening = [
+      0 => '<div class="grid_36 alpha omega">',
+      1 => '<div>',
+      2 => '<p>',
+      6 => '<div>',
+    ];
+
+    $closing = [
+      3 => '</p>',
+      4 => '</div>',
+      5 => '</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedOpeningTags($opening, $closing);
+    $this->assertSame([6 => $opening[6]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedOpeningTagsSimpleMiddleAndEnd()
+  {
+    $opening = [
+      0 => '<div class="grid_36 alpha omega">',
+      1 => '<div>',
+      2 => '<span>',
+      3 => '<p>',
+      7 => '<div>',
+    ];
+
+    $closing = [
+      4 => '</p>',
+      5 => '</div>',
+      6 => '</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedOpeningTags($opening, $closing);
+    $this->assertSame([2 => $opening[2], 7 => $opening[7]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedOpeningTags()
+  {
+    $opening = [
+      0 => '<div class="grid_36 alpha omega">',
+      2 => '<p>',
+      3 => '<a href="/alumni/gather/reunions/spring.php">',
+      5 => '<a href="\n  /alumni/gather/networking.php">',
+      7 => '<a href="/alumni/gather/chapters/events.php">',
+      9 => '<a href="/alumni/gather/homecoming.php">',
+      11 => '<a href="/alumni/gather/reunions/fall.php">',
+      14 => '<p>',
+      16 => '<ul>',
+      17 => '<li>',
+      18 => '<strong>',
+      20 => '<a href="/alumni/events/gustiebreakfast/index.php">',
+      23 => '<li>',
+      24 => '<strong>',
+      26 => '<a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">',
+      29 => '<li>',
+      30 => '<strong>',
+      32 => '<a href="/calendar/gustavus-networking-event-3/40314">',
+      35 => '<li>',
+      36 => '<strong>',
+      39 => '<li>',
+      40 => '<strong>',
+      42 => '<a href="/athletics/halloffame/">',
+      47 => '<div class="grid_36 alpha omega">',
+    ];
+
+    $closing = [
+      4 => '</a>',
+      6 => '</a>',
+      8 => '</a>',
+      10 => '</a>',
+      12 => '</a>',
+      13 => '</p>',
+      15 => '</p>',
+      19 => '</strong>',
+      21 => '</a>',
+      22 => '</li>',
+      25 => '</strong>',
+      27 => '</a>',
+      28 => '</li>',
+      31 => '</strong>',
+      33 => '</a>',
+      34 => '</li>',
+      37 => '</strong>',
+      38 => '</li>',
+      41 => '</strong>',
+      43 => '</a>',
+      44 => '</li>',
+      45 => '</ul>',
+      46 => '</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedOpeningTags($opening, $closing);
+    $this->assertSame([47 => $opening[47]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedClosingTagsSimple()
+  {
+    $opening = [
+      0 => '<div class="grid_36 alpha omega">',
+      1 => '<div>',
+      2 => '<p>',
+    ];
+
+    $closing = [
+      3 => '</p>',
+      4 => '</div>',
+      5 => '</div>',
+      6 => '</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedClosingTags($opening, $closing);
+    $this->assertSame([6 => $closing[6]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedClosingTagsSimpleStart()
+  {
+    $opening = [
+      1 => '<div class="grid_36 alpha omega">',
+      2 => '<div>',
+      3 => '<p>',
+    ];
+
+    $closing = [
+      0 => '</div>',
+      4 => '</p>',
+      5 => '</div>',
+      6 => '</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedClosingTags($opening, $closing);
+    $this->assertSame([0 => $closing[0]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findUnMatchedClosingTags()
+  {
+    $opening = [
+      0 => '<div class="grid_36 alpha omega">',
+      1 => '<p>',
+      2 => '<a href="/alumni/gather/reunions/spring.php">',
+      4 => '<a href="\n  /alumni/gather/networking.php">',
+      6 => '<a href="/alumni/gather/chapters/events.php">',
+      8 => '<a href="/alumni/gather/homecoming.php">',
+      10 => '<a href="/alumni/gather/reunions/fall.php">',
+      13 => '<p>',
+      15 => '<ul>',
+      16 => '<li>',
+      17 => '<strong>',
+      19 => '<a href="/alumni/events/gustiebreakfast/index.php">',
+      22 => '<li>',
+      23 => '<strong>',
+      25 => '<a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">',
+      28 => '<li>',
+      29 => '<strong>',
+      31 => '<a href="/calendar/gustavus-networking-event-3/40314">',
+      34 => '<li>',
+      35 => '<strong>',
+      38 => '<li>',
+      39 => '<strong>',
+      41 => '<a href="/athletics/halloffame/">',
+    ];
+
+    $closing = [
+      3 =>'</a>',
+      5 =>'</a>',
+      7 =>'</a>',
+      9 =>'</a>',
+      11 =>'</a>',
+      12 =>'</p>',
+      14 =>'</p>',
+      18 =>'</strong>',
+      20 =>'</a>',
+      21 =>'</li>',
+      24 =>'</strong>',
+      26 =>'</a>',
+      27 =>'</li>',
+      30 =>'</strong>',
+      32 =>'</a>',
+      33 =>'</li>',
+      36 =>'</strong>',
+      37 =>'</li>',
+      40 =>'</strong>',
+      42 =>'</a>',
+      43 =>'</li>',
+      44 =>'</ul>',
+      45 =>'</div>',
+      46 =>'</div>',
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->findUnMatchedClosingTags($opening, $closing);
+    $this->assertSame([46 => $closing[46]], $result);
   }
 }
