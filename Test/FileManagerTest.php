@@ -453,6 +453,36 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
   /**
    * @test
    */
+  public function makeEditableDraftWithPHPInsideOfDiv()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/cis/lib/Gustavus/Concert/Test/Scripts/pages/', 'test']);
+
+    $this->buildFileManager('testUser', '/cis/lib/Gustavus/Concert/Test/Scripts/pages/phpInsideOfDiv.php');
+
+    $filename = $this->fileManager->makeEditableDraft(true);
+    $this->assertContains(self::$testFileDir, $filename);
+
+
+    //$edits = ['1' => '<p>This is some edited html content</p>'];
+
+    // $this->fileManager->editFile($edits);
+    // $this->fileManager->saveDraft(Config::PRIVATE_DRAFT);
+
+    $expected = file_get_contents('/cis/lib/Gustavus/Concert/Test/Scripts/pages/expectedEditablePHPInsideOfDiv.php');
+
+    $draftFile = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertSame($expected, $draftFile);
+    $this->destructDB();
+  }
+
+
+  /**
+   * @test
+   */
   public function getDraftFileName()
   {
     $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
