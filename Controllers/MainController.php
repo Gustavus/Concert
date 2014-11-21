@@ -98,7 +98,7 @@ class MainController extends SharedController
    */
   private function edit($filePath)
   {
-    if (!Utility::isPageEditable($filePath)) {
+    if (!self::isForwardedFromSiteNav() && !Utility::isPageEditable($filePath)) {
       $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
       return false;
     }
@@ -210,7 +210,7 @@ class MainController extends SharedController
       }
     }
 
-    if (!Utility::isPageEditable($fromFilePath)) {
+    if (!self::isForwardedFromSiteNav() && !Utility::isPageEditable($fromFilePath)) {
       $this->addConcertMessage(Config::SPECIAL_FILE_COPY_MESSAGE, 'error');
       return false;
     }
@@ -267,7 +267,7 @@ class MainController extends SharedController
    */
   private function deletePage($filePath)
   {
-    if (!Utility::isPageEditable($filePath)) {
+    if (!self::isForwardedFromSiteNav() && !Utility::isPageEditable($filePath)) {
       $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
       return false;
     }
