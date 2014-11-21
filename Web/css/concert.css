@@ -30,6 +30,7 @@
 div.editable {
   cursor: text !important;
   min-height: 20px;
+  clear:left;
 }
 
 div.editable:after {
