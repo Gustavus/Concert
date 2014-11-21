@@ -185,9 +185,14 @@ class Config
   const DEFAULT_PAGE_SAVED_MESSAGE = 'Oops! It looks like you didn\'t modify the template before saving.';
 
   /**
-   * Message to display for special files. (symlinks)
+   * Message to display for special files. (symlinks or non-editable files)
    */
   const SPECIAL_FILE_MESSAGE = 'This is a special file that cannot be edited in Concert. Please contact <a href="mailto:web@gustavus.edu">Web Services</a> to edit this file.';
+
+  /**
+   * Message to display for special files. (symlinks or non-editable files)
+   */
+  const SPECIAL_FILE_COPY_MESSAGE = 'This is a special file that cannot be copied in Concert. Please contact <a href="mailto:web@gustavus.edu">Web Services</a> for more information.';
 
   /**
    * Message to use to prompt someone to continue editing their draft
@@ -416,9 +421,9 @@ class Config
    * @var array
    */
   public static $siteNavAccessLevels = [
-    self::SITE_ADMIN_ACCESS_LEVEL,
-    self::ADMIN_ACCESS_LEVEL,
     self::SUPER_USER,
+    self::ADMIN_ACCESS_LEVEL,
+    self::SITE_ADMIN_ACCESS_LEVEL,
   ];
 
   /**

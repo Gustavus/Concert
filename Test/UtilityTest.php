@@ -282,4 +282,34 @@ class UtilityTest extends TestBase
 
     $this->assertSame('www', Utility::getGroupForFile($filename));
   }
+
+  /**
+   * @test
+   */
+  public function isPageEditable()
+  {
+    $page = '/cis/lib/Gustavus/Concert/Test/Scripts/pages/oldTemplate.php';
+
+    $this->assertFalse(Utility::isPageEditable($page));
+  }
+
+  /**
+   * @test
+   */
+  public function isPageEditableTrue()
+  {
+    $page = '/cis/lib/Gustavus/Concert/Test/Scripts/pages/expectedTemplate.php';
+
+    $this->assertTrue(Utility::isPageEditable($page));
+  }
+
+  /**
+   * @test
+   */
+  public function isPageEditableTrueWithAlias()
+  {
+    $page = '/cis/lib/Gustavus/Concert/Test/Scripts/pages/newPageWithBuilderAlias.php';
+
+    $this->assertTrue(Utility::isPageEditable($page));
+  }
 }

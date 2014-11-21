@@ -7,7 +7,8 @@
 
 namespace Gustavus\Concert\Scripts;
 
-use RuntimeException;
+use Gustavus\Concert\Utility,
+  RuntimeException;
 
 /**
  * Class to handle converting a specific page
@@ -155,31 +156,7 @@ class TemplateConverter
       return $this->firstPHPBlock;
     }
 
-    $firstPHPRegex = '`(?:
-      # Make sure we are at the beginning of the file
-      ^
-      # look for newlines or spaces
-      (?:\A[\h*\v*])?
-
-      # look for an opening php tag
-      (
-        (?:<\?)(?:php)?
-
-        # capture everything until the end of the file or a closing php tag
-        .+?
-          (?:\?>|(?:\?>)?[\h\v]*?\z)
-      )
-    )`smx';
-    //s for PCRE_DOTALL, m for PCRE_MULTILINE, and x for PCRE_EXTENDED
-
-    preg_match($firstPHPRegex, $this->pageContent, $matches);
-
-    if (isset($matches[1])) {
-      $this->firstPHPBlock = $matches[1];
-    } else {
-      $this->firstPHPBlock = null;
-    }
-
+    $this->firstPHPBlock = Utility::getFirstPHPBlock($this->pageContent, true);
     return $this->firstPHPBlock;
   }
 

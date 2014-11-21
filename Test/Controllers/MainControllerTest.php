@@ -106,6 +106,11 @@ class MainControllerTest extends TestBase
           return 'renderPageNotFound';
         }
     );
+    self::$overrideToken['isPageEditable'] = override_method('\Gustavus\Concert\Utility', 'isPageEditable', function() {
+          // just return true;
+          return true;
+        }
+    );
     parent::setUpBeforeClass();
   }
 

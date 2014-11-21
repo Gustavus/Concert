@@ -206,4 +206,72 @@ class Utility
     $group     = $groupInfo['name'];
     return $group;
   }
+
+  /**
+   * Grabs the first block of php code
+   *
+   * @param  string $page Either the page contents or a file path
+   * @param  boolean $isPageContent Tells us if the page specified in $page is a file path or page contents.
+   * @return string
+   */
+  public static function getFirstPHPBlock($page, $isPageContent = false)
+  {
+    $firstPHPRegex = '`(?:
+      # Make sure we are at the beginning of the file
+      ^
+      # look for newlines or spaces
+      (?:\A[\h*\v*])?
+
+      # look for an opening php tag
+      (
+        (?:<\?)(?:php)?
+
+        # capture everything until the end of the file or a closing php tag
+        .+?
+          (?:\?>|(?:\?>)?[\h\v]*?\z)
+      )
+    )`smx';
+    //s for PCRE_DOTALL, m for PCRE_MULTILINE, and x for PCRE_EXTENDED
+
+    if (!$isPageContent) {
+      $page = file_get_contents($page);
+    }
+
+    preg_match($firstPHPRegex, $page, $matches);
+
+    if (isset($matches[1])) {
+      return $matches[1];
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Checks to see if the page can be edited
+   *
+   * @param  string $page Either the page contents or a file path
+   * @param  boolean $isPageContent Tells us if the page specified in $page is a file path or page contents.
+   * @return boolean
+   */
+  public static function isPageEditable($page, $isPageContent = false)
+  {
+    if (!$isPageContent) {
+      $page = file_get_contents($page);
+    }
+
+    $firstPHPBlock = self::getFirstPHPBlock($page, true);
+    if (strpos($firstPHPBlock, '$templatePreferences') !== false && preg_match('`TemplateBuilder\\\Builder(?:\h*as\h*([^;]+))?`sx', $firstPHPBlock, $matches)) {
+      // we also need to verify that builder::init is called.
+      if (isset($matches[1])) {
+        // template builder is included as an alias
+        $builderAlias = $matches[1];
+      } else {
+        $builderAlias = 'Builder';
+      }
+      if (strpos($page, sprintf('%s::init()', $builderAlias)) !== false) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

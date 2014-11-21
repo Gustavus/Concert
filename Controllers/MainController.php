@@ -98,6 +98,11 @@ class MainController extends SharedController
    */
   private function edit($filePath)
   {
+    if (!Utility::isPageEditable($filePath)) {
+      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
+      return false;
+    }
+
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!$fm->userCanEditFile()) {
@@ -205,6 +210,11 @@ class MainController extends SharedController
       }
     }
 
+    if (!Utility::isPageEditable($fromFilePath)) {
+      $this->addConcertMessage(Config::SPECIAL_FILE_COPY_MESSAGE, 'error');
+      return false;
+    }
+
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
     if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
@@ -257,6 +267,11 @@ class MainController extends SharedController
    */
   private function deletePage($filePath)
   {
+    if (!Utility::isPageEditable($filePath)) {
+      $this->addConcertMessage(Config::SPECIAL_FILE_MESSAGE, 'error');
+      return false;
+    }
+
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (!file_exists($filePath)) {
