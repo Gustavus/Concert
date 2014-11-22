@@ -273,16 +273,18 @@ class FileConfigurationPart
     };
 
     if (isset($matches['opening'])) {
-      $opening = array_filter($matches['opening']);
+      $opening          = array_filter($matches['opening']);
       $flattenedOpening = array_filter(array_map($flattener, $opening));
     } else {
-      $opening = [];
+      $opening          = [];
+      $flattenedOpening = [];
     }
     if (isset($matches['closing'])) {
-      $closing = array_filter($matches['closing']);
+      $closing          = array_filter($matches['closing']);
       $flattenedClosing = array_filter(array_map($flattener, $closing));
     } else {
-      $closing = [];
+      $closing          = [];
+      $flattenedClosing = [];
     }
 
     $unMatchedOpening = $this->findUnMatchedOpeningTags($flattenedOpening, $flattenedClosing);
@@ -327,7 +329,8 @@ class FileConfigurationPart
    * @param  integer $key   Key we want our found keys to be less than.
    * @return array
    */
-  private function findKeysLessThanKey(Array $array, $key) {
+  private function findKeysLessThanKey(Array $array, $key)
+  {
     $newArray = [];
     foreach ($array as $arrKey => $arrValue) {
       if ($arrKey < $key) {
@@ -346,7 +349,8 @@ class FileConfigurationPart
    * @param  integer $key   Key we want our found keys to be greater than.
    * @return array
    */
-  private function findKeysGreaterThanKey(Array $array, $key) {
+  private function findKeysGreaterThanKey(Array $array, $key)
+  {
     $newArray = [];
     foreach ($array as $arrKey => $arrValue) {
       if ($arrKey > $key) {
