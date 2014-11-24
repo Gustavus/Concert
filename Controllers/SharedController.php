@@ -580,6 +580,7 @@ class SharedController extends ConcourseController
    * Builds a message to display after successfully saving a draft
    *
    * @param  array $draft Draft that has been saved
+   * @param  boolean $showPublicUrl Whether to show the url users can access your draft with or not
    * @return string
    */
   protected function buildDraftSavedSuccessMessage(array $draft, $showPublicUrl = true)
