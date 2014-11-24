@@ -121,7 +121,7 @@ class Utility
   public static function getUploadLocation()
   {
     if (isset($_SESSION['concertCMS']['currentParentSiteBase'])) {
-      $uploadLocation = str_replace('//', '/', $_SESSION['concertCMS']['currentParentSiteBase'] . '/files/');
+      $uploadLocation = str_replace('//', '/', $_SESSION['concertCMS']['currentParentSiteBase'] . '/concertFiles/');
       self::ensureUploadDirectoriesExist($uploadLocation);
       return $uploadLocation;
     } else {

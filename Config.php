@@ -655,6 +655,6 @@ class Config
    * @var array
    */
   public static $fileTreeExcludedFolders = [
-    'files',
+    'concertFiles',
   ];
 }
