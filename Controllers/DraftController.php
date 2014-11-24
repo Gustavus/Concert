@@ -264,6 +264,10 @@ class DraftController extends SharedController
         $this->forward('emailSharedDraftSaved', ['draft' => $draft]);
       }
       $draftFM->stopEditing();
+
+      $redirectLocation = (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
+
+      self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft, false), null, $redirectLocation);
       return json_encode(['redirectUrl' => $buttonUrl]);
     }
 
@@ -335,6 +339,11 @@ class DraftController extends SharedController
     if ($fm->editFile($_POST)) {
       $draftType = (self::userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
       if ($fm->saveDraft($draftType)) {
+        if (!is_array($draft)) {
+          // make sure we have the draft we just saved.
+          $draft = $fm->getDraft();
+        }
+        self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, PageUtil::getReferer());
         return json_encode(['redirectUrl' => PageUtil::getReferer()]);
       }
     }
@@ -371,6 +380,11 @@ class DraftController extends SharedController
     if ($fm->editFile($_POST)) {
       $draftType = (self::userIsSavingPrivateDraft()) ? Config::PRIVATE_DRAFT : Config::PUBLIC_DRAFT;
       if ($fm->saveDraft($draftType)) {
+        if (!is_array($draft)) {
+          // make sure we have the draft we just saved.
+          $draft = $fm->getDraft();
+        }
+        self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, PageUtil::getReferer());
         return json_encode(['redirectUrl' => PageUtil::getReferer()]);
       }
     }

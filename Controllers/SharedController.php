@@ -577,6 +577,27 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Builds a message to display after successfully saving a draft
+   *
+   * @param  array $draft Draft that has been saved
+   * @return string
+   */
+  protected function buildDraftSavedSuccessMessage(array $draft, $showPublicUrl = true)
+  {
+    if ($showPublicUrl && $draft['type'] === Config::PUBLIC_DRAFT) {
+      $messageAdditions = sprintf(' Other users can see it by going to: <a href="%1$s">%1$s</a>.', $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true));
+    } else {
+      $messageAdditions = '';
+    }
+    return sprintf(
+        'Contratulations! You have successfully saved a draft for %s. %s<br /><a href="%s" class="concert-button primary">View Recent Activity</a>',
+        Utility::removeDocRootFromPath($draft['destFilepath']),
+        $messageAdditions,
+        $this->buildUrl('recentActivity')
+    );
+  }
+
+  /**
    * Gets the full name of the person from the specified username
    *
    * @param  string $username Username to get the full name for
