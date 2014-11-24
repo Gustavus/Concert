@@ -229,6 +229,9 @@ class MainController extends SharedController
 
     if ($fm->draftExists() && $fm->userHasOpenDraft()) {
       $editDraft = true;
+      $draft = $fm->getDraft();
+      // we want our FileManager to be based off of the draft they have created.
+      $fm = new FileManager($this->getLoggedInUsername(), $filePath, Config::$draftDir . $draft['draftFilename'], $this->getDB());
     } else {
       $editDraft = false;
     }
@@ -641,7 +644,7 @@ class MainController extends SharedController
       case 'hasSharedDraft':
         $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
         $draft = $fm->getDraftForUser($this->getLoggedInUsername());
-          return ($draft['type'] === Config::PUBLIC_DRAFT);
+          return ($draft['type'] === Config::PUBLIC_DRAFT && !empty($draft['additionalUsers']));
       default:
           return false;
     }

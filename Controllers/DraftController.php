@@ -384,8 +384,9 @@ class DraftController extends SharedController
           // make sure we have the draft we just saved.
           $draft = $fm->getDraft();
         }
-        self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, PageUtil::getReferer());
-        return json_encode(['redirectUrl' => PageUtil::getReferer()]);
+        $redirectUrl = (new String(PageUtil::getReferer()))->removeQueryStringParams(['srcFilePath'])->getValue();
+        self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, $redirectUrl);
+        return json_encode(['redirectUrl' => $redirectUrl]);
       }
     }
   }
