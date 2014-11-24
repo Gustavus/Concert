@@ -234,7 +234,7 @@ class MenuController extends SharedController
       self::removeConcertQueryParams($params);
       $params['concert'] = 'revisions';
       $item = [
-        'text'     => 'View page revisions',
+        'text'     => 'View Page Revisions',
         'url'      => (new String($pathFromDocRoot))->addQueryString($params)->buildUrl()->getValue(),
         'thickbox' => false,
       ];
@@ -395,7 +395,7 @@ class MenuController extends SharedController
           $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
-          'text'         => 'Add collaborators to your draft',
+          'text'         => 'Add Collaborators to Your Draft',
           'url'          => $url,
           'classes'      => 'green',
           'thickboxData' => ['height' => '400px'],
@@ -415,7 +415,7 @@ class MenuController extends SharedController
       $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
 
       $item = [
-        'text' => 'View all drafts',
+        'text' => 'View All Drafts',
         'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
       ];
 
@@ -484,7 +484,7 @@ class MenuController extends SharedController
           $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
-          'text'     => 'Continue draft',
+          'text'     => 'Continue Draft',
           'url'      => $url,
           'thickbox' => false,
         ];
@@ -559,7 +559,7 @@ class MenuController extends SharedController
       $query['concert']       = 'stopEditingSiteNav';
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
-        'text'     => 'Stop editing menu',
+        'text'     => 'Stop Editing Menu',
         'url'      => $url,
         'thickbox' => false,
       ];
@@ -592,7 +592,7 @@ class MenuController extends SharedController
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
 
       $item = [
-        'text'     => $isInheritedNav ? 'Edit inherited menu' : 'Edit menu',
+        'text'     => $isInheritedNav ? 'Edit Inherited Menu' : 'Edit Menu',
         'url'      => $url,
         'thickbox' => false,
       ];
@@ -615,7 +615,7 @@ class MenuController extends SharedController
       $query['concertAction'] = 'siteNav';
       $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
-        'text'     => 'Create menu',
+        'text'     => 'Create Menu',
         'url'      => $url,
         'thickbox' => false,
       ];
@@ -637,7 +637,7 @@ class MenuController extends SharedController
       $query['concert']         = 'revisions';
       $query['concertAction']   = 'siteNav';
       $item = [
-        'text'     => $isInheritedNav ? 'View inherited menu revisions' : 'View menu revisions',
+        'text'     => $isInheritedNav ? 'View Inherited Menu Revisions' : 'View Menu Revisions',
         'url'      => (new String($pathFromDocRoot))->addQueryString($query),
         'thickbox' => false,
       ];
