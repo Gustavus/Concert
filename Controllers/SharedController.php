@@ -76,6 +76,10 @@ class SharedController extends ConcourseController
 
     $localNavigation = [
       [
+        'url'  => $this->buildUrl('dashboard'),
+        'text' => 'Dashboard',
+      ],
+      [
         'url'  => $this->buildUrl('recentActivity'),
         'text' => 'Recent Activity',
       ],

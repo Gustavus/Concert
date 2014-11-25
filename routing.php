@@ -8,9 +8,9 @@ use Gustavus\Concert\Config,
   Gustavus\Gatekeeper\Gatekeeper;
 
 return [
-  'index' => [
+  'dashboard' => [
     'route'   => '/',
-    'handler' => 'Gustavus\Concert\Controllers\MainController:viewRecentActivity',
+    'handler' => 'Gustavus\Concert\Controllers\MainController:dashboard',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
   'moshRequest' => [

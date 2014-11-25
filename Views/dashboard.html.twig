@@ -1,0 +1,26 @@
+{% spaceless %}
+<h2>Your Sites</h2>
+{%- if sites|length > 0 -%}
+  <input type="text" name="filter" class="filter" id="filterOrganizations" placeholder="Type to filter" style="position:relative;left:60%;width:40%;" />
+  <table class="fancy sortable filterable" style="width:100%;">
+    <thead>
+      <tr>
+        <th>Site</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for site in sites -%}
+        <tr>
+          <td><a href="{{ makeUrl(site) }}">{{ makeUrl(site) }}</a></td>
+        </tr>
+      {%- endfor -%}
+    </tbody>
+  </table>
+{%- else -%}
+  <p class="message">It looks like you don't have access to any sites.</p>
+{%- endif -%}
+
+<h2>Your Recent Activity</h2>
+{{ recentActivity|raw }}
+
+{% endspaceless %}

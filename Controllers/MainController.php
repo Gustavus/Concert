@@ -17,6 +17,7 @@ use Gustavus\Concert\Config,
   Gustavus\Extensibility\Actions,
   Gustavus\Extensibility\Filters,
   Gustavus\Revisions\API as RevisionsAPI,
+  Gustavus\Resources\Resource,
   Config as GACConfig,
   InvalidArgumentException;
 
@@ -457,8 +458,27 @@ class MainController extends SharedController
    */
   public function viewRecentActivity()
   {
+    $recentActivity = $this->getRecentActivity();
+
+    if (isset($_GET['barebones'])) {
+      return $this->renderView('recentActivity.html.twig', ['drafts' => $recentActivity['drafts'], 'published' => $recentActivity['published'], 'isBarebones' => true]);
+    } else {
+      $this->setTitle('Recent Concert Activity');
+      return $this->renderTemplate('recentActivity.html.twig', ['drafts' => $recentActivity['drafts'], 'published' => $recentActivity['published'], 'isBarebones' => false]);
+    }
+  }
+
+  /**
+   * Gets all recent activity for the logged in user
+   *
+   * @return array Array with keys of drafts and published
+   */
+  private function getRecentActivity()
+  {
     $dbal = $this->getDB();
     $username = $this->getLoggedInUsername();
+
+    $return = [];
 
     // drafts
     $qb = $dbal->createQueryBuilder();
@@ -472,7 +492,7 @@ class MainController extends SharedController
       ->orderBy('date', 'DESC')
       ->setMaxResults('10');
 
-    $drafts =  $dbal->fetchAll($qb->getSQL(), [':username' => $username]);
+    $return['drafts'] =  $dbal->fetchAll($qb->getSQL(), [':username' => $username]);
 
     // staged files
     $qb = $dbal->createQueryBuilder();
@@ -486,18 +506,49 @@ class MainController extends SharedController
       ->orderBy('publishedDate', 'DESC')
       ->setMaxResults('10');
 
-    $published = $dbal->fetchAll($qb->getSQL(), [
+    $return['published'] = $dbal->fetchAll($qb->getSQL(), [
         ':username' => $username,
         ':httpdDir' => Config::CREATE_HTTPD_DIRECTORY_STAGE,
         ':httpdHtAccess' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE
     ]);
 
-    if (isset($_GET['barebones'])) {
-      return $this->renderView('recentActivity.html.twig', ['drafts' => $drafts, 'published' => $published, 'isBarebones' => true]);
+    return $return;
+  }
+
+  /**
+   * Renders the dashboard for the current user
+   *
+   * @return string
+   */
+  public function dashboard()
+  {
+    $recentActivity = $this->getRecentActivity();
+
+    $recentActivity = $this->renderView('recentActivity.html.twig', ['drafts' => $recentActivity['drafts'], 'published' => $recentActivity['published'], 'isBarebones' => false]);
+
+    if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername())) {
+      $sites = PermissionsManager::getSitesFromBase('/');
     } else {
-      $this->setTitle('Recent Concert Activity');
-      return $this->renderTemplate('recentActivity.html.twig', ['drafts' => $drafts, 'published' => $published, 'isBarebones' => false]);
+      $sites = PermissionsManager::getSitesForUser($this->getLoggedInUsername());
     }
+
+    $this->addJavascripts(
+        sprintf(
+            '<script type="text/javascript">
+            Modernizr.load({
+              load: "%s",
+              complete: function() {
+                $(".filterable")
+                  .liveFilter();
+              }
+            });
+            </script>',
+            Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
+        )
+    );
+
+    $this->setSubTitle('Dashboard');
+    return $this->renderTemplate('dashboard.html.twig', ['recentActivity' => $recentActivity, 'sites' => $sites]);
   }
 
   /**
