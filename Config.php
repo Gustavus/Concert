@@ -363,8 +363,6 @@ class Config
    * @var array
    */
   public static $availableAccessLevels = [
-    self::ADMIN_ACCESS_LEVEL          => 'Global Admin',
-    self::SUPER_USER                  => 'Global Super User',
     self::SITE_ADMIN_ACCESS_LEVEL     => 'Site Admin',
     self::SITE_EDITOR_ACCESS_LEVEL    => 'Site Editor',
     self::SITE_PUBLISHER_ACCESS_LEVEL => 'Site Publisher',
@@ -373,6 +371,8 @@ class Config
     self::NON_DELETION_ACCESS_LEVEL   => 'Non Deletion',
     self::NO_UPLOAD_ACCESS_LEVEL      => 'No Upload',
     self::BANNER_ACCESS_LEVEL         => 'Banner',
+    self::ADMIN_ACCESS_LEVEL          => 'Global Admin',
+    self::SUPER_USER                  => 'Global Super User',
   ];
 
   /**
