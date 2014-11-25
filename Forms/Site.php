@@ -68,13 +68,29 @@ class Site
       ];
     }
 
-    $children[] = [
-      'name'            => 'excludedfilessection',
-      'type'            => 'section',
-      'title'           => 'Site Level Excluded Files',
-      'container-class' => 'grid_34 alpha omega prefix_1 suffix_1',
-      'children'        => [
-        [
+    $excludedFilesChildren = [];
+    if (empty($site['excludedFiles'])) {
+      $excludedFilesChildren[] = [
+        'name'            => 'excludedfile',
+        'type'            => 'section',
+        'container-class' => 'grid_32 prefix_1 suffix_1 alpha omega',
+        'duplicatable'    => true,
+        'children'        => [
+          [
+            'name'               => 'file',
+            'type'               => 'text',
+            'title'              => 'Excluded File',
+            'subtitle'           => '&nbsp;',
+            'container-class'    => 'grid_16',
+          ],
+          $addButton,
+          $deleteButton,
+        ],
+      ];
+    } else {
+      $excludedFiles = explode(',', $site['excludedFiles']);
+      foreach ($excludedFiles as $excludedFile) {
+        $excludedFilesChildren[] = [
           'name'            => 'excludedfile',
           'type'            => 'section',
           'container-class' => 'grid_32 prefix_1 suffix_1 alpha omega',
@@ -84,14 +100,22 @@ class Site
               'name'               => 'file',
               'type'               => 'text',
               'title'              => 'Excluded File',
+              'value'              => $excludedFile,
               'subtitle'           => '&nbsp;',
               'container-class'    => 'grid_16',
             ],
             $addButton,
             $deleteButton,
           ],
-        ],
-      ],
+        ];
+      }
+    }
+    $children[] = [
+      'name'            => 'excludedfilessection',
+      'type'            => 'section',
+      'title'           => 'Site Level Excluded Files',
+      'container-class' => 'grid_34 alpha omega prefix_1 suffix_1',
+      'children'        => $excludedFilesChildren,
     ];
 
     $children[] = [
