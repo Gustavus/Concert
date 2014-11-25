@@ -76,27 +76,61 @@ class SharedController extends ConcourseController
 
     $localNavigation = [
       [
-        'url' => $this->buildUrl('recentActivity'),
+        'url'  => $this->buildUrl('recentActivity'),
         'text' => 'Recent Activity',
-      ]
+      ],
+      [
+        'heading'        => true,
+        'text'           => 'Help',
+        'toggleChildren' => true,
+        'items'          => [
+          [
+            'url'  => 'https://gustavus.edu/gts/Concert',
+            'text' => 'Instructions'
+          ],
+          [
+            'url'       => 'https://gustavus.edu/gts/Restricted:ConcertTroubleshooting',
+            'text'      => 'Troubleshooting',
+            'visibleTo' => [
+              'concert' => [
+                'all',
+                'callbacks' => [
+                  [
+                    'callback'   => 'hasDepartment',
+                    'parameters' => 'Gustavus Technology Services'
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+      ],
     ];
 
     if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername())) {
+      // user can manage permissions
       $localNavigation = array_merge(
           $localNavigation,
           [
             [
-              'url'  => $this->buildUrl('sites'),
-              'text' => 'View Sites',
-            ],
-            [
-              'url'  => $this->buildUrl('createSite'),
-              'text' => 'Create Site',
-            ],
-            [
-              'url'  => $this->buildUrl('userSearch'),
-              'text' => 'User Search',
-            ],
+              'heading'        => true,
+              'text'           => 'Permissions',
+              'toggleChildren' => true,
+              'items'          => [
+                [
+                  'url'  => $this->buildUrl('sites'),
+                  'text' => 'View Sites',
+                ],
+                [
+                  'url'  => $this->buildUrl('createSite'),
+                  'text' => 'Create Site',
+                ],
+                [
+                  'url'  => $this->buildUrl('userSearch'),
+                  'text' => 'User Search',
+                ],
+              ],
+            ]
           ]
       );
     }
