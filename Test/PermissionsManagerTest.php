@@ -46,7 +46,7 @@ class PermissionsManagerTest extends TestBase
    */
   public function saveNewSiteIfNeeded()
   {
-    $this->constructDB(['Sites']);
+    $this->constructDB(['Sites', 'Permissions']);
     $this->assertSame('1', $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy']));
     // verifies that a new one isn't created.
     $this->assertSame('1', $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy']));

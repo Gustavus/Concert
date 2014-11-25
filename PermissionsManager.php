@@ -10,7 +10,8 @@ use Gustavus\Concert\Config,
   Gustavus\Doctrine\DBAL,
   Gustavus\GACCache\GlobalCache,
   Gustavus\Utility\Set,
-  DateTime;
+  DateTime,
+  UnexpectedValueException;
 
 /**
  * Class for managing permissions
@@ -56,6 +57,17 @@ class PermissionsManager
   private static function buildCacheKey($username)
   {
     return 'concertSitePermissions-' . $username;
+  }
+
+  /**
+   * Clears the permission cache for the specified user.
+   *
+   * @param  string $username Username to clear cache for.
+   * @return void
+   */
+  private static function clearUsersCachedPermissions($username)
+  {
+    self::getCache()->clearValue(self::buildCacheKey($username));
   }
 
   /**
@@ -838,9 +850,10 @@ class PermissionsManager
    *
    * @param  string $siteBase Base directory to search for sites in
    * @param  boolean $includeSitePerms Whether to include site specific permissions or not.
+   * @param  boolean $includeSiteId Whether to include the site id or not.
    * @return array
    */
-  private static function getSitesFromBase($siteBase, $includeSitePerms = false)
+  public static function getSitesFromBase($siteBase, $includeSitePerms = false, $includeSiteId = false)
   {
     $dbal = self::getDBAL();
 
@@ -852,8 +865,43 @@ class PermissionsManager
     if ($includeSitePerms) {
       $qb->addSelect('s.excludedFiles');
     }
+    if ($includeSiteId) {
+      $qb->addSelect('s.id');
+    }
 
     $result = $dbal->fetchAll($qb->getSQL(), [':siteBase' => $siteBase . '%%']);
+    if ($includeSitePerms) {
+      return $result;
+    }
+    return (new Set($result))->flattenValues()->getValue();
+  }
+
+  /**
+   * Gets all the sites that exist for a specific user
+   *
+   * @param  string $username Username to get sites for
+   * @param  boolean $includeSitePerms Whether to include site specific permissions or not.
+   * @param  boolean $includeSiteId Whether to include the site id or not.
+   * @return array
+   */
+  public static function getSitesForUser($username, $includeSitePerms = false, $includeSiteId = false)
+  {
+    $dbal = self::getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->select('s.siteRoot')
+      ->from('sites', 's')
+      ->innerJoin('s', 'permissions', 'p', 'p.site_id = s.id')
+      ->where('p.username = :username');
+
+    if ($includeSitePerms) {
+      $qb->addSelect('s.excludedFiles');
+    }
+    if ($includeSiteId) {
+      $qb->addSelect('s.id');
+    }
+
+    $result = $dbal->fetchAll($qb->getSQL(), [':username' => $username]);
     if ($includeSitePerms) {
       return $result;
     }
@@ -987,7 +1035,6 @@ class PermissionsManager
       $returnArray[$sitePerms['siteRoot']] = [
         'includedFiles' => ($sitePerms['includedFiles']) ? explode(',', $sitePerms['includedFiles']) : null,
         'excludedFiles' => ($sitePerms['excludedFiles']) ? explode(',', $sitePerms['excludedFiles']) : null,
-        // @todo. Now do something with this.
         'expirationDate' => ($sitePerms['expirationDate']) ?: null,
       ];
 
@@ -1065,11 +1112,16 @@ class PermissionsManager
    *
    * @param  string $username Username of the user to delete
    * @param  string $siteRoot Root of the site to delete the user from
+   * @param  boolean $siteRootIsSiteId Flag to specify that the specified siteRoot is actually the site's ID.
    * @return boolean
    */
-  public static function deleteUserFromSite($username, $siteRoot)
+  public static function deleteUserFromSite($username, $siteRoot, $siteRootIsSiteId = false)
   {
-    $siteId = self::getSiteId($siteRoot);
+    if ($siteRootIsSiteId) {
+      $siteId = intval($siteRoot);
+    } else {
+      $siteId = self::getSiteId($siteRoot);
+    }
 
     if ($siteId === null) {
       // the specified site root doesn't exist. There can't be a user here.
@@ -1080,7 +1132,7 @@ class PermissionsManager
     $result = $dbal->delete('permissions', ['site_id' => $siteId, 'username' => $username]);
 
     if ($result > 0) {
-      self::getCache()->clearValue(self::buildCacheKey($username));
+      self::clearUsersCachedPermissions($username);
       return true;
     }
     return false;
@@ -1094,13 +1146,19 @@ class PermissionsManager
    * @param  string|array $includedFiles Files the user has access to.
    *   Note: This overrides any files that match an excludedFiles pattern, but not a file directly.
    * @param  string|array $excludedFiles Files the user doesn't have access to
+   * @param  DateTime $expirationDate Date this person's permissions expire
+   * @param  boolean $siteRootIsSiteId Flag to specify that the specified siteRoot is actually the site's ID.
    *
    * @throws  UnexpectedValueException If the siteId isn't found or created
    * @return boolean  True on success or if the specified permissions are already set. False on failure
    */
-  public static function saveUserPermissions($username, $siteRoot, $accessLevel, $includedFiles = null, $excludedFiles = null, DateTime $expirationDate = null)
+  public static function saveUserPermissions($username, $siteRoot, $accessLevel, $includedFiles = null, $excludedFiles = null, DateTime $expirationDate = null, $siteRootIsSiteId = false)
   {
-    $siteId = self::saveNewSiteIfNeeded($siteRoot);
+    if ($siteRootIsSiteId) {
+      $siteId = intval($siteRoot);
+    } else {
+      $siteId = self::saveNewSiteIfNeeded($siteRoot);
+    }
     if (!$siteId) {
       throw new UnexpectedValueException('$siteId doesn\'t appear to be a valid id.');
     }
@@ -1131,11 +1189,6 @@ class PermissionsManager
 
     $result = $dbal->fetchAssoc($qb->getSQL(), [':username' => $username, ':siteId' => $siteId]);
 
-    if ($result && $result['accessLevel'] === $accessLevel && $result['includedFiles'] === $includedFiles && $result['excludedFiles'] === $excludedFiles) {
-      // nothing to do. User already exists in the requested state
-      return true;
-    }
-
     $properties = ['accessLevel' => $accessLevel, 'includedFiles' => $includedFiles, 'excludedFiles' => $excludedFiles, 'expirationDate' => $expirationDate];
 
     if ($result) {
@@ -1146,7 +1199,7 @@ class PermissionsManager
 
     if ($result) {
       // clear this person out of cache so they get the new values
-      self::getCache()->clearValue(self::buildCacheKey($username));
+      self::clearUsersCachedPermissions($username);
       return true;
     }
 
@@ -1159,7 +1212,7 @@ class PermissionsManager
    * @param  string $siteRoot Base url of the site to get the id for
    * @return string|null String of the id if found. Null otherwise
    */
-  private static function getSiteId($siteRoot)
+  public static function getSiteId($siteRoot)
   {
     $dbal = self::getDBAL();
 
@@ -1186,7 +1239,7 @@ class PermissionsManager
    * @throws  RuntimeException If something failed when inserting
    * @return string|boolean  ID of the already existing site or a newly one. False if something failed.
    */
-  private static function saveNewSiteIfNeeded($siteRoot, $excludedFiles = null)
+  public static function saveNewSiteIfNeeded($siteRoot, $excludedFiles = null)
   {
     $id = self::getSiteId($siteRoot);
 
@@ -1200,11 +1253,106 @@ class PermissionsManager
       $dbal = self::getDBAL();
       // we need to create this site.
       $insertResult = $dbal->insert('sites', ['siteRoot' => $siteRoot, 'excludedFiles' => $excludedFiles]);
+      // clear global admins cached permissions
+      self::clearAdminsFromCache();
       if ($insertResult) {
         return $dbal->lastInsertId();
       } else {
         throw new RuntimeException('Inserting a new site didn\'t update any rows.');
       }
+    }
+  }
+
+  /**
+   * Saves a new site if it doesn't yet exist.
+   *
+   * @param  integer $siteId Id of the site to update
+   * @param  string|array $excludedFiles Files the user doesn't have access to
+   *
+   * @return integer Number of rows affected
+   */
+  public static function updateSite($siteId, $excludedFiles = null)
+  {
+    if (is_array($excludedFiles)) {
+      // convert this to a comma separated string of filenames
+      $excludedFiles = implode(',', $excludedFiles);
+    }
+    $dbal = self::getDBAL();
+
+    self::clearCacheForSite($siteId);
+    // clear global admins cached permissions
+    self::clearAdminsFromCache();
+
+    return $dbal->update('sites', ['excludedFiles' => $excludedFiles], ['id' => $siteId]);
+  }
+
+  /**
+   * Deletes a specified site
+   *
+   * @param  integer $siteId ID of the site to delete
+   * @return void
+   */
+  public static function deleteSite($siteId)
+  {
+    $dbal = self::getDBAL();
+
+    self::clearCacheForSite($siteId);
+    self::clearAdminsFromCache();
+    $dbal->delete('sites', ['id' => $siteId]);
+    $dbal->delete('permissions', ['site_id' => $siteId]);
+  }
+
+  /**
+   * Gets all admints and super users
+   *
+   * @return array Array of usernames of admins and super users
+   */
+  private static function getAllSuperUsersAndAdmins()
+  {
+    $dbal = self::getDBAL();
+    $qb = $dbal->createQueryBuilder();
+    $qb->select('username')
+      ->from('permissions', 'p')
+      ->where('accessLevel = :superUserLevel')
+      ->orWhere('accessLevel = :adminLevel');
+
+    $result = $dbal->fetchAll($qb->getSQL(), [':superUserLevel' => Config::SUPER_USER, ':adminLevel' => Config::ADMIN_ACCESS_LEVEL]);
+
+    return (new Set($result))->flattenValues()->getValue();
+  }
+
+  /**
+   * Clears all admins from cache
+   *
+   * @return void
+   */
+  private static function clearAdminsFromCache()
+  {
+    $admins = self::getAllSuperUsersAndAdmins();
+    foreach ($admins as $admin) {
+      // clear all permissions for admins.
+      self::clearUsersCachedPermissions($admin);
+    }
+  }
+
+  /**
+   * Clears all cached permissions for all users attached to a site
+   *
+   * @param  integer $siteId Site id to clear cache for
+   * @return void
+   */
+  private static function clearCacheForSite($siteId)
+  {
+    $dbal = self::getDBAL();
+    $qb = $dbal->createQueryBuilder();
+    $qb->select('username')
+      ->from('permissions', 'p')
+      ->where('site_id = :siteId');
+
+    $result = $dbal->fetchAll($qb->getSQL(), [':siteId' => $siteId]);
+
+    foreach ((new Set($result))->flattenValues()->getValue() as $username) {
+      self::clearUsersCachedPermissions($username);
     }
   }
 }
