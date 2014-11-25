@@ -532,6 +532,11 @@ class MainController extends SharedController
       $sites = PermissionsManager::getSitesForUser($this->getLoggedInUsername());
     }
 
+    if (($foundIndex = array_search('/', $sites)) !== false) {
+      // the base site is in our sites. Remove it.
+      unset($sites[$foundIndex]);
+    }
+
     $this->addJavascripts(
         sprintf(
             '<script type="text/javascript">

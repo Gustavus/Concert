@@ -1776,4 +1776,100 @@ class MainControllerTest extends TestBase
     $this->destructDB();
     Config::$manageRevisionsAccessLevels = $origManageRevAccessLevels;
   }
+
+  /**
+   * @test
+   */
+  public function viewRecentActivityNothing()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+
+    $this->authenticate('bvisto');
+    $_GET['concert'] = 'edit';
+    $this->setUpController();
+
+    $actual = $this->controller->viewRecentActivity();
+
+    $this->assertContains('don\'t have any recent activity', $actual['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function viewRecentActivity()
+  {
+    $docRoot = $_SERVER['DOCUMENT_ROOT'];
+    $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'test']);
+
+    $this->authenticate('bvisto');
+    $_POST['saveAction'] = 'savePublicDraft';
+    $this->setUpController();
+
+    // save a draft
+    $actual = $this->controller->mosh($filePath);
+
+    $this->assertSame(['action', 'value'], array_keys($actual));
+
+    // now view our recent activity
+    $actual = $this->controller->viewRecentActivity();
+
+    $this->assertNotContains('don\'t have any recent activity', $actual['content']);
+    $this->assertContains('<table', $actual['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+    $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+  }
+
+  /**
+   * @test
+   */
+  public function dashboardNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+
+    $this->authenticate('bvisto');
+    $this->setUpController();
+
+    $actual = $this->controller->dashboard();
+
+    $this->assertContains('don\'t have any recent activity', $actual['content']);
+    $this->assertContains('Sites', $actual['content']);
+    $this->assertContains('don\'t have access to any sites', $actual['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function dashboard()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'test']);
+
+    $this->authenticate('bvisto');
+    $this->setUpController();
+
+    $actual = $this->controller->dashboard();
+
+    $this->assertContains('don\'t have any recent activity', $actual['content']);
+    $this->assertContains('Sites', $actual['content']);
+    $this->assertNotContains('don\'t have access to any sites', $actual['content']);
+    $this->assertContains('<table', $actual['content']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
 }
