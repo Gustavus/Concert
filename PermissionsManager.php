@@ -97,7 +97,7 @@ class PermissionsManager
 
     // find the location of the file in respect to the siteRoot.
     // make sure our site has a "/" at the beginning and end for searching
-    $site = str_replace('//', '/', sprintf('/%s/', $site));
+    $site = preg_replace('`/+`', '/', sprintf('/%s/', $site));
     // make sure filePath has a leading "/";
     $filePath   = str_replace('//', '/', '/' . $filePath);
     $pathInSite = trim(substr($filePath, strlen($site) - 1), '/');
@@ -123,6 +123,14 @@ class PermissionsManager
     $filePathSearch = '';
     // storage for the latest rule the file name was found in.
     $foundRule = null;
+
+    // first check if the site is excluding or including everything.
+    if (in_array('/*', $sitePerms['includedFiles'])) {
+      $foundRule = 'included';
+    }
+    if (in_array('/*', $sitePerms['excludedFiles'])) {
+      $foundRule = 'excluded';
+    }
 
     foreach ($filePathArray as $filePathPart) {
       $filePathSearch .= $filePathPart . '/';
@@ -466,10 +474,18 @@ class PermissionsManager
   private static function adjustPermissionFiles($files)
   {
     foreach ($files as &$file) {
+      if ($file === '/*') {
+        // we are already excluding everything properly.
+        continue;
+      } else if ($file === '*') {
+        // shorthand way for excluding everything. Lets make this a little more uniform.
+        $file = '/*';
+        continue;
+      }
       $isDir = (strpos($file, '.') === false) ? true : false;
       $file = trim(str_replace('//', '/', $file), '/');
 
-      if ($isDir && substr($file, count($file) - 3) !== '/*') {
+      if ($isDir && substr($file, -2) !== '/*') {
         // treat directories as wildcards.
         $file .= '/*';
       }
@@ -1118,7 +1134,7 @@ class PermissionsManager
   public static function deleteUserFromSite($username, $siteRoot, $siteRootIsSiteId = false)
   {
     if ($siteRootIsSiteId) {
-      $siteId = intval($siteRoot);
+      $siteId = $siteRoot;
     } else {
       $siteId = self::getSiteId($siteRoot);
     }
@@ -1155,7 +1171,7 @@ class PermissionsManager
   public static function saveUserPermissions($username, $siteRoot, $accessLevel, $includedFiles = null, $excludedFiles = null, DateTime $expirationDate = null, $siteRootIsSiteId = false)
   {
     if ($siteRootIsSiteId) {
-      $siteId = intval($siteRoot);
+      $siteId = $siteRoot;
     } else {
       $siteId = self::saveNewSiteIfNeeded($siteRoot);
     }

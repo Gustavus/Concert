@@ -937,6 +937,34 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function checkIncludedAndExcludedFilesForAccessExcludedWildCardEverything()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/*'],
+      'includedFiles' => null,
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessExcludedEverything()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['/'],
+      'includedFiles' => null,
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
   public function accessLevelExistsInArray()
   {
     $accessLevels = ['test', 'admin'];
@@ -1833,7 +1861,6 @@ class PermissionsManagerTest extends TestBase
     $this->destructDB();
   }
 
-
   /**
    * @test
    */
@@ -1841,6 +1868,17 @@ class PermissionsManagerTest extends TestBase
   {
     $files = ['/arst', '/private//*', 'secure', 'files/private.php'];
     $expected = ['arst/*', 'private/*', 'secure/*', 'files/private.php'];
+
+    $this->assertSame($expected, $this->call('PermissionsManager', 'adjustPermissionFiles', [$files]));
+  }
+
+  /**
+   * @test
+   */
+  public function adjustPermissionFilesEverythingWildCard()
+  {
+    $files = ['/arst', '/*', 'secure', 'files/private.php', '/', '*'];
+    $expected = ['arst/*', '/*', 'secure/*', 'files/private.php', '/*', '/*'];
 
     $this->assertSame($expected, $this->call('PermissionsManager', 'adjustPermissionFiles', [$files]));
   }
