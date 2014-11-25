@@ -8,15 +8,14 @@ use Gustavus\Concert\Config,
   Gustavus\Gatekeeper\Gatekeeper;
 
 return [
-  // 'edit' => [
-  //   'route'   => '/edit',
-  //   'handler' => 'Gustavus\Concert\Controllers\MainController:edit',
-  //   //'visibleTo' => ['Concert', ['all', 'callbacks' => ['Gustavus\Concert\Config::canEditPage']]]
-  // ],
-  'moshRequest' => [
+  'index' => [
     'route'   => '/',
+    'handler' => 'Gustavus\Concert\Controllers\MainController:viewRecentActivity',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'moshRequest' => [
+    'route'   => '/mosh',
     'handler' => 'Gustavus\Concert\Controllers\MainController:handleMoshRequest',
-    //'visibleTo' => ['Concert', ['all', 'callbacks' => ['Gustavus\Concert\Config::canEditPage']]]
   ],
   // mosh action for forwarding
   'mosh' => [
@@ -106,6 +105,32 @@ return [
   'recentActivity' => [
     'route'     => '/recentActivity',
     'handler'   => 'Gustavus\Concert\Controllers\MainController:viewRecentActivity',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  // Permissions
+  'sites' => [
+    'route'     => '/permissions/sites',
+    'handler'   => 'Gustavus\Concert\Controllers\PermissionsController:showSites',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'editSite' => [
+    'route'     => '/permissions/editSite/{site=\d+}',
+    'handler'   => 'Gustavus\Concert\Controllers\PermissionsController:editSite',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'deleteSite' => [
+    'route'     => '/permissions/deleteSite/{site=\d+}',
+    'handler'   => 'Gustavus\Concert\Controllers\PermissionsController:deleteSite',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'createSite' => [
+    'route'     => '/permissions/createSite',
+    'handler'   => 'Gustavus\Concert\Controllers\PermissionsController:createSite',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'userSearch' => [
+    'route'     => '/permissions/userSearch',
+    'handler'   => 'Gustavus\Concert\Controllers\PermissionsController:userSearch',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
 ];

@@ -12,7 +12,7 @@ Gustavus.Concert = {
    * Base url for ajax requests
    * @type {String}
    */
-  baseUrl: '/concert/',
+  baseUrl: '/concert/mosh/',
 
   /**
    * File path of the page we are editing
