@@ -358,6 +358,24 @@ class Config
   const BANNER_ACCESS_LEVEL = 'banner';
 
   /**
+   * All available access levels with brief description
+   *
+   * @var array
+   */
+  public static $availableAccessLevels = [
+    self::ADMIN_ACCESS_LEVEL          => 'Global Admin',
+    self::SUPER_USER                  => 'Global Super User',
+    self::SITE_ADMIN_ACCESS_LEVEL     => 'Site Admin',
+    self::SITE_EDITOR_ACCESS_LEVEL    => 'Site Editor',
+    self::SITE_PUBLISHER_ACCESS_LEVEL => 'Site Publisher',
+    self::AUTHOR_ACCESS_LEVEL         => 'Site Author',
+    self::NON_CREATION_ACCESS_LEVEL   => 'Non Creation',
+    self::NON_DELETION_ACCESS_LEVEL   => 'Non Deletion',
+    self::NO_UPLOAD_ACCESS_LEVEL      => 'No Upload',
+    self::BANNER_ACCESS_LEVEL         => 'Banner',
+  ];
+
+  /**
    * Global permissions for super users
    *
    * @var array
