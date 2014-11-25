@@ -70,7 +70,37 @@ class SharedController extends ConcourseController
    */
   protected function getLocalNavigation()
   {
-    return $this->localNavigation;
+    if (!empty($this->localNavigation)) {
+      return $this->localNavigation;
+    }
+
+    $localNavigation = [
+      [
+        'url' => $this->buildUrl('recentActivity'),
+        'text' => 'Recent Activity',
+      ]
+    ];
+
+    if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername())) {
+      $localNavigation = array_merge(
+          $localNavigation,
+          [
+            [
+              'url'  => $this->buildUrl('sites'),
+              'text' => 'View Sites',
+            ],
+            [
+              'url'  => $this->buildUrl('createSite'),
+              'text' => 'Create Site',
+            ],
+            [
+              'url'  => $this->buildUrl('userSearch'),
+              'text' => 'User Search',
+            ],
+          ]
+      );
+    }
+    return $localNavigation;
   }
 
   /**
@@ -287,7 +317,7 @@ class SharedController extends ConcourseController
    * @param  string $type     Type of resources we are marking
    * @return void
    */
-  private static function markResourcesAdded($resources, $type = 'js')
+  protected static function markResourcesAdded($resources, $type = 'js')
   {
     if (!isset(self::$addedResources[$type]) || !is_array(self::$addedResources[$type])) {
       self::$addedResources[$type] = $resources;
@@ -303,7 +333,7 @@ class SharedController extends ConcourseController
    * @param  string  $type     Type of resource to check
    * @return boolean
    */
-  private static function isResourceAdded($resource, $type = 'js')
+  protected static function isResourceAdded($resource, $type = 'js')
   {
     return (isset(self::$addedResources[$type]) && in_array($resource, self::$addedResources[$type]));
   }
