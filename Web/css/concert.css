@@ -64,3 +64,12 @@ div.editable:any(:hover, :focus) {
 .fileTreeSelector .disabled {
   opacity: 0.5;
 }
+
+#filterSites {
+  margin-top: 15px;
+  width: 100%;
+}
+
+table.fullWidth {
+  width: 100%;
+}

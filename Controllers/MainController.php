@@ -552,6 +552,12 @@ class MainController extends SharedController
         )
     );
 
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+    $this->addStylesheets(sprintf(
+        '<link rel="stylesheet" type="text/css" href="%s" />',
+        $cssResource
+    ));
+
     $this->setSubTitle('Dashboard');
     return $this->renderTemplate('dashboard.html.twig', ['recentActivity' => $recentActivity, 'sites' => $sites]);
   }
