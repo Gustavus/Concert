@@ -36,6 +36,13 @@ class PermissionsManager
   private static $cache;
 
   /**
+   * Time to live for caching
+   *   60*60*12 = 43200
+   * @var integer
+   */
+  private static $ttl = 43200;
+
+  /**
    * Gets the current cache
    *
    * @return \Gustavus\GACCache\CacheDataStore
@@ -57,6 +64,17 @@ class PermissionsManager
   private static function buildCacheKey($username)
   {
     return 'concertSitePermissions-' . $username;
+  }
+
+  /**
+   * Sanitizes keys for caching.
+   *
+   * @param  string $key
+   * @return string sanitized key
+   */
+  private static function sanitizeKey($key)
+  {
+    return preg_replace('`[^A-Za-z0-9\-_.+@]`', '_', $key);
   }
 
   /**
@@ -871,6 +889,22 @@ class PermissionsManager
    */
   public static function getSitesFromBase($siteBase, $includeSitePerms = false, $includeSiteId = false)
   {
+    // make the key that the current request will exist in inside of our cached results
+    $currRequestCacheKey = self::sanitizeKey(sprintf(
+        'concertSitesFromBase-%s-%s-%s',
+        $siteBase,
+        ($includeSitePerms ? 'true' : 'false'),
+        ($includeSiteId ? 'true' : 'false')
+    ));
+
+    $sitesFromBaseCacheKey = 'concertSitesFromBaseResults';
+    $cachedSitesFromBase = self::getCache()->getValue($sitesFromBaseCacheKey, $found);
+    if ($found) {
+      // we now need to see if our key is in the resultset
+      if (isset($cachedSitesFromBase[$currRequestCacheKey])) {
+        return $cachedSitesFromBase[$currRequestCacheKey];
+      }
+    }
     $dbal = self::getDBAL();
 
     $qb = $dbal->createQueryBuilder();
@@ -886,10 +920,28 @@ class PermissionsManager
     }
 
     $result = $dbal->fetchAll($qb->getSQL(), [':siteBase' => $siteBase . '%%']);
-    if ($includeSitePerms) {
-      return $result;
+    if (!$includeSitePerms) {
+      $result = (new Set($result))->flattenValues()->getValue();
     }
-    return (new Set($result))->flattenValues()->getValue();
+    // now we need to store our result in cache.
+    if ($found) {
+      // we have cached sites, but not this particular request.
+      $cachedSitesFromBase[$currRequestCacheKey] = $result;
+    } else {
+      $cachedSitesFromBase = [$currRequestCacheKey => $result];
+    }
+    self::getCache()->setValue($sitesFromBaseCacheKey, $cachedSitesFromBase, self::$ttl);
+    return $result;
+  }
+
+  /**
+   * Clears the cache for all getSitesFromBase requests
+   *
+   * @return void
+   */
+  private static function clearSitesFromBaseCache()
+  {
+    self::getCache()->clearValue('concertSitesFromBaseResults');
   }
 
   /**
@@ -1018,7 +1070,6 @@ class PermissionsManager
         return self::removeExpiredPermissions($cachedResult);
       }
     }
-    $ttl = 43200; // 60*60*12 = 43200
 
     $dbal = self::getDBAL();
 
@@ -1037,7 +1088,7 @@ class PermissionsManager
 
     if (!$result) {
       // person doesn't have any permissions. We should save this so we don't check again.
-      self::getCache()->setValue(self::buildCacheKey($username), null, $ttl);
+      self::getCache()->setValue(self::buildCacheKey($username), null, self::$ttl);
       return null;
     }
 
@@ -1087,7 +1138,7 @@ class PermissionsManager
       }
     }
 
-    self::getCache()->setValue(self::buildCacheKey($username), $returnArray, $ttl);
+    self::getCache()->setValue(self::buildCacheKey($username), $returnArray, self::$ttl);
 
     return empty($returnArray) ? null : $returnArray;
   }
@@ -1271,6 +1322,8 @@ class PermissionsManager
       $insertResult = $dbal->insert('sites', ['siteRoot' => $siteRoot, 'excludedFiles' => $excludedFiles]);
       // clear global admins cached permissions
       self::clearAdminsFromCache();
+      // clear our sitesFromBase results
+      self::clearSitesFromBaseCache();
       if ($insertResult) {
         return $dbal->lastInsertId();
       } else {
@@ -1316,6 +1369,8 @@ class PermissionsManager
     self::clearAdminsFromCache();
     $dbal->delete('sites', ['id' => $siteId]);
     $dbal->delete('permissions', ['site_id' => $siteId]);
+    // clear our sitesFromBase results
+    self::clearSitesFromBaseCache();
   }
 
   /**
