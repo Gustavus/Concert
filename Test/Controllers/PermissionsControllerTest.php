@@ -13,7 +13,8 @@ use Gustavus\Test\TestObject,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
-  Gustavus\Doctrine\DBAL;
+  Gustavus\Doctrine\DBAL,
+  DateTime;
 
 /**
  * Test controller for PermissionsController
@@ -294,7 +295,7 @@ class PermissionsControllerTest extends TestBase
               ],
               'includedfiles'  => 'include.php',
               'excludedfiles'  => 'private.php',
-              'expirationdate' => '2014-11-26',
+              'expirationdate' => (new DateTime('+1 day'))->format('Y-m-d'),
             ],
           ],
         ],
@@ -343,7 +344,7 @@ class PermissionsControllerTest extends TestBase
               ],
               'includedfiles'  => 'include.php',
               'excludedfiles'  => 'private.php',
-              'expirationdate' => '2014-11-26',
+              'expirationdate' => (new DateTime('+1 day'))->format('Y-m-d'),
             ],
           ],
         ],
@@ -427,7 +428,7 @@ class PermissionsControllerTest extends TestBase
               ],
               'includedfiles'  => 'include.php',
               'excludedfiles'  => 'private.php',
-              'expirationdate' => '2014-11-26',
+              'expirationdate' => (new DateTime('+1 day'))->format('Y-m-d'),
             ],
           ],
         ],
@@ -444,6 +445,56 @@ class PermissionsControllerTest extends TestBase
     $perms = PermissionsManager::getAllPermissionsForUser('jerry');
 
     $this->assertTrue(isset($perms['/billy']));
+    $this->destructDB();
+    $this->unauthenticate();
+  }
+
+  /**
+   * @test
+   */
+  public function editSitePostExpired()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    PermissionsManager::saveUserPermissions('bvisto', '/billy', Config::SUPER_USER);
+
+    $this->authenticate('bvisto');
+    $_POST = [
+      'editsite' => [
+        'excludedfilessection' => [
+          'excludedfile' => [
+            [
+              'file' => 'test.php'
+            ],
+          ],
+        ],
+        'peoplesection' => [
+          'personpermissions' => [
+            [
+              'username' => 'jerry',
+              'accesslevel' => [
+                'siteAdmin',
+                'editor',
+              ],
+              'includedfiles'  => 'include.php',
+              'excludedfiles'  => 'private.php',
+              'expirationdate' => (new DateTime('-1 day'))->format('Y-m-d'),
+            ],
+          ],
+        ],
+      ],
+    ];
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+
+    $this->setUpController();
+    $actual = $this->controller->editSite(['site' => 1]);
+
+    $this->assertSame(['redirect'], array_keys($actual));
+
+    $perms = PermissionsManager::getAllPermissionsForUser('jerry');
+
+    // these permissions should be expired.
+    $this->assertFalse(isset($perms['/billy']));
     $this->destructDB();
     $this->unauthenticate();
   }
@@ -477,7 +528,7 @@ class PermissionsControllerTest extends TestBase
               ],
               'includedfiles'  => 'include.php',
               'excludedfiles'  => 'private.php',
-              'expirationdate' => '2014-11-26',
+              'expirationdate' => (new DateTime('+1 day'))->format('Y-m-d'),
             ],
           ],
         ],
