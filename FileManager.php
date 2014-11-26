@@ -95,6 +95,22 @@ class FileManager
   private $userIsEditingDraftForFile = false;
 
   /**
+   * Storage for cached drafts so we don't need to keep making requests to get them
+   *   Keyed by draftFilename
+   *
+   * @var array
+   */
+  private static $cachedDrafts = [];
+
+  /**
+   * Storage for cached drafts by name so we don't need to keep making requests to get them
+   *   Keyed by draftName
+   *
+   * @var array
+   */
+  private static $cachedDraftsByName = [];
+
+  /**
    * Object constructor
    *
    * @param string $username Username of the person trying to edit the file
@@ -392,6 +408,7 @@ class FileManager
 
     $draftName = $this->getFilePathHash();
     $draftFilename = $this->getDraftFileName();
+
     $dbal = $this->getDBAL();
 
     if ($additionalUsers !== null && $additionalUsers !== false) {
@@ -428,6 +445,9 @@ class FileManager
     } else {
       $result = $dbal->insert('drafts', $properties, $propertyTypes);
     }
+    // clear our draft caches
+    unset(self::$cachedDrafts[$draftFilename]);
+    self::$cachedDraftsByName = [];
     if ($result) {
       // now we just have to save the draft
       if (!is_dir(Config::$draftDir)) {
@@ -467,6 +487,9 @@ class FileManager
     }
 
     $result = $dbal->update('drafts', $properties, ['draftFilename' => $draft['draftFilename']]);
+    // clear our draft caches
+    unset(self::$cachedDrafts[$draft['draftFilename']]);
+    self::$cachedDraftsByName = [];
     return ($result > 0);
   }
 
@@ -485,6 +508,9 @@ class FileManager
     $dbal = $this->getDBAL();
 
     $dbal->delete('drafts', ['draftFilename' => $draftFilename]);
+    // clear our draft caches
+    unset(self::$cachedDrafts[$draftFilename]);
+    self::$cachedDraftsByName = [];
 
     foreach ([Config::$draftDir, Config::$editableDraftDir] as $draftDir) {
       $fileName = $draftDir . $draftFilename;
@@ -503,6 +529,22 @@ class FileManager
    */
   public function getDrafts($type = null)
   {
+    $draftName = $this->getFilePathHash();
+
+    if ($type === null) {
+      $cacheKey = $draftName;
+    } else {
+      if (is_array($type)) {
+        $cacheTypeKey = implode('-', $type);
+      } else {
+        $cacheTypeKey = $type;
+      }
+      $cacheKey = sprintf('%s-%s', $draftName, $cacheTypeKey);
+    }
+    if (isset(self::$cachedDraftsByName[$cacheKey])) {
+      return self::$cachedDraftsByName[$cacheKey];
+    }
+
     $dbal = $this->getDBAL();
 
     $qb = $dbal->createQueryBuilder();
@@ -516,7 +558,7 @@ class FileManager
       ->where('draftName = ?')
       ->orderBy('date', 'DESC');
 
-    $properties = [$this->getFilePathHash()];
+    $properties = [$draftName];
     $propertyTypes = [null];
 
     if ($type !== null) {
@@ -536,6 +578,7 @@ class FileManager
         $resultPiece['additionalUsers'] = explode(',', $resultPiece['additionalUsers']);
       }
     }
+    self::$cachedDraftsByName[$cacheKey] = $result;
     return $result;
   }
 
@@ -547,6 +590,10 @@ class FileManager
    */
   public function getDraftForUser($username)
   {
+    $draftFilename = $this->getDraftFileName($username);
+    if (isset(self::$cachedDrafts[$draftFilename])) {
+      return self::$cachedDrafts[$draftFilename];
+    }
     $dbal = $this->getDBAL();
 
     $qb = $dbal->createQueryBuilder();
@@ -559,10 +606,11 @@ class FileManager
       ->from('drafts', 'd')
       ->where('draftFilename = :draftFilename');
 
-    $result = $dbal->fetchAssoc($qb->getSQL(), [':draftFilename' => $this->getDraftFileName($username)]);
+    $result = $dbal->fetchAssoc($qb->getSQL(), [':draftFilename' => $draftFilename]);
     if (!empty($result['additionalUsers'])) {
       $result['additionalUsers'] = explode(',', $result['additionalUsers']);
     }
+    self::$cachedDrafts[$draftFilename] = $result;
     return $result;
   }
 
@@ -576,6 +624,9 @@ class FileManager
   {
     if ($draftFilename === null) {
       $draftFilename = $this->getDraftFileName();
+    }
+    if (isset(self::$cachedDrafts[$draftFilename])) {
+      return self::$cachedDrafts[$draftFilename];
     }
     $dbal = $this->getDBAL();
 
@@ -592,11 +643,13 @@ class FileManager
     $result =  $dbal->fetchAssoc($qb->getSQL(), [':draftFilename' => $draftFilename]);
     if ($result['type'] === Config::PRIVATE_DRAFT && !PermissionsManager::userOwnsDraft($this->username, $result)) {
       // person can't view this private draft.
+      self::$cachedDrafts[$draftFilename] = false;
       return false;
     }
     if (!empty($result['additionalUsers'])) {
       $result['additionalUsers'] = explode(',', $result['additionalUsers']);
     }
+    self::$cachedDrafts[$draftFilename] = $result;
     return $result;
   }
 

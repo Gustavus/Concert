@@ -111,6 +111,8 @@ class TestBase extends TestEM
 
     $dbal = DBAL::getDBAL('testDB', $this->getDBH());
     $this->set('PermissionsManager', 'dbal', $dbal);
+    $this->set('FileManager', 'cachedDrafts', []);
+    $this->set('FileManager', 'cachedDraftsByName', []);
     $this->set('Utility', 'dbal', $dbal);
     $this->setUpCaches();
     $this->origGet = $_GET;
