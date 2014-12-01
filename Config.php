@@ -643,6 +643,11 @@ class Config
     'concertDraft',
     'draftAction',
     'srcFilePath',
+    // Revisions
+    'oldestRevisionNumber',
+    'revisionNumber',
+    'restore',
+    'revisionsAction',
   ];
 
   /**
