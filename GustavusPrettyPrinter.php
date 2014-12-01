@@ -5,10 +5,15 @@
  */
 
 namespace Gustavus\Concert;
-use PHPParser_PrettyPrinter_Default,
-  PHPParser_Node_Expr_Array,
+
+require_once '/cis/lib/Gustavus/Concert/Assets/Composer/vendor/autoload.php';
+
+use PhpParser\PrettyPrinter\Standard as StandardPrinter,
+  PhpParser\Node\Expr\Array_ as ParserArray,
   //PHPParser_Node_Stmt_Function,
-  PHPParser_Node_Stmt_Break;
+  //PHPParser_Node_Stmt_Break,
+  PhpParser\Comment\Doc,
+  PhpParser\Node\Expr;
 
 /**
  * Adds our coding standard formating to the default PrettyPrinter
@@ -18,14 +23,14 @@ use PHPParser_PrettyPrinter_Default,
  * @package  Concert
  * @author  Billy Visto
  */
-class GustavusPrettyPrinter extends PHPParser_PrettyPrinter_Default
+class GustavusPrettyPrinter extends StandardPrinter
 {
   /**
    * {@inheritdoc}
    */
-  public function pExpr_Array(PHPParser_Node_Expr_Array $node)
+  public function pExpr_Array(ParserArray $node)
   {
-    return "[\n" . str_replace(';', ',', $this->pStmts($node->items)) . "\n]";
+    return '[' . str_replace(';', ',', $this->pStmts($node->items)) . "\n]";
   }
 
   /**
@@ -36,7 +41,7 @@ class GustavusPrettyPrinter extends PHPParser_PrettyPrinter_Default
     $result = '';
 
     foreach ($comments as $comment) {
-      if ($comment instanceof \PHPParser_Comment_Doc) {
+      if ($comment instanceof Doc) {
         // doc block comment
         // add a new line before it.
         $result .= "\n" . $comment->getReformattedText() . "\n";
@@ -47,29 +52,5 @@ class GustavusPrettyPrinter extends PHPParser_PrettyPrinter_Default
     }
 
     return $result;
-  }
-
-  protected function pStmts(array $nodes, $indent = true)
-  {
-    $pNodes = array();
-    foreach ($nodes as $node) {
-        // var_dump(get_class($node));
-        // var_dump($node->subNodes);
-        // var_dump($node->attributes);
-        // var_dump($node->getAttribute('comments'));
-        $pNodes[] = $this->pComments($node->getAttribute('comments', array()))
-                  . $this->p($node)
-                  . ($node instanceof PHPParser_Node_Expr ? ';' : '');
-    }
-
-    if ($indent) {
-        return '    ' . preg_replace(
-            '~\n(?!$|' . $this->noIndentToken . ')~',
-            "\n" . '    ',
-            implode("\n", $pNodes)
-        );
-    } else {
-        return implode("\n", $pNodes);
-    }
   }
 }
