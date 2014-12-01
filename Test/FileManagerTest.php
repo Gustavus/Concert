@@ -15,7 +15,8 @@ use Gustavus\Concert\FileManager,
   Gustavus\Doctrine\DBAL,
   Gustavus\Extensibility\Filters,
   Gustavus\Concourse\RoutingUtil,
-  Gustavus\Revisions\API as RevisionsAPI;
+  Gustavus\Revisions\API as RevisionsAPI,
+  Gustavus\Utility\File;
 
 /**
  * Class to test FileManager class
@@ -471,6 +472,85 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     // $this->fileManager->saveDraft(Config::PRIVATE_DRAFT);
 
     $expected = file_get_contents('/cis/lib/Gustavus/Concert/Test/Scripts/pages/expectedEditablePHPInsideOfDiv.php');
+
+    $draftFile = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertSame($expected, $draftFile);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function makeEditableDraftWithClassesAndFunctions()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $content = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContentarstarst();
+
+function executeSomeContentarstarst()
+{
+  return "This is some executed content.";
+}
+
+class testing
+{
+  public function test() {
+    echo \'arst\';
+  }
+}
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+
+    file_put_contents(self::$testFileDir . 'index.php', $content);
+    // load the file.
+    $file = (new File(self::$testFileDir . 'index.php'))->loadAndEvaluate();
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+
+    $filename = $this->fileManager->makeEditableDraft();
+    $this->assertContains(self::$testFileDir, $filename);
+
+    $expected = sprintf('<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  \'title\' => \'Some Title\',
+  \'subTitle\' => \'Some Sub Title\',
+  \'content\' => \'This is some content.\',
+];
+$config[\'content\'] .= executeSomeContentarstarst();
+ob_start();
+?>
+
+<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $draftFile = file_get_contents($filename);
     unlink($filename);

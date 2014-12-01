@@ -13,7 +13,6 @@ use Gustavus\Utility\Set,
   PhpParser\Node\Expr\Array_ as PHPParserArray,
   PhpParser\Parser,
   PhpParser\NodeTraverser,
-  PhpParser\PrettyPrinter\Standard as PrettyPrinter,
   PhpParser\Lexer;
 
 /**
@@ -127,12 +126,33 @@ class FileConfigurationPart
   public function getContent($wrapEditableContent = false)
   {
     if ($this->isPHPContent()) {
-      if (Config::ALLOW_PHP_EDITS && in_array($this->getContentType(), Config::$editableContentTypes) && ($wrapEditableContent || $this->edited)) {
-        // @todo convert GustavusPrettyPrinter to the new version once we start allowing php edits.
-        //$prettyPrinter = new GustavusPrettyPrinter;
-        $prettyPrinter = new PrettyPrinter;
-        $this->buildEditablePHPNodes($wrapEditableContent);
-        return str_replace('    ', '  ', $prettyPrinter->prettyPrint($this->phpNodes));
+      if ($wrapEditableContent || (Config::ALLOW_PHP_EDITS && $this->edited)) {
+        // @todo convert GustavusPrettyPrinter to support whitespace once we start allowing php edits.
+        $prettyPrinter = new GustavusPrettyPrinter;
+        $wrapEditablePHPContent = Config::ALLOW_PHP_EDITS;
+        if ($wrapEditableContent) {
+          // we need to remove nodes that have already been defined
+          $removed = $this->removeAlreadyDefinedPHPNodes();
+        } else {
+          $removed = false;
+        }
+        if (Config::ALLOW_PHP_EDITS) {
+          $this->buildEditablePHPNodes($wrapEditablePHPContent);
+        }
+        if (Config::ALLOW_PHP_EDITS || $removed) {
+          // we have removed contents, or may have wrapped editable contents
+          $newContent = str_replace('    ', '  ', $prettyPrinter->prettyPrint($this->phpNodes));
+          if (preg_match('`^(\v+)`', $this->content, $matches) === 1 && preg_match('`^\v`', $newContent) !== 1) {
+            // the pretty printer removed a vertical whitespace from the beginning of the content.
+            $newContent = (isset($matches[1])) ? $matches[1] . $newContent : "\n{$newContent}";
+          }
+          if (preg_match('`(\v+)$`', $this->content, $matches) === 1 && preg_match('`\v$`', $newContent) !== 1) {
+            // the pretty printer removed a vertical whitespace from the end of the content.
+            $newContent = (isset($matches[1])) ? $newContent . $matches[1]: "{$newContent}\n";
+          }
+          // remove any horizontal whitespace that exists right before any vertical whitespace.
+          return $newContent;
+        }
       }
       return $this->content;
     }
@@ -156,7 +176,13 @@ class FileConfigurationPart
     }
     $parser = new Parser(new Lexer);
 
-    return $parser->parse(sprintf('<?php %s ?>', $this->content));
+    if (strpos($this->content, '=') === 0) {
+      // the contents are using the shorthand echo. We need to change the template we use for building the php piece.
+      $template = '<?%s?>';
+    } else {
+      $template = '<?php %s ?>';
+    }
+    return $parser->parse(sprintf($template, $this->content));
   }
 
   /**
@@ -448,11 +474,8 @@ class FileConfigurationPart
    */
   private function buildEditablePHPNodes($wrapEditable = false)
   {
-    if (!Config::ALLOW_PHP_EDITS) {
-      return;
-    }
     if (!isset($this->phpNodes)) {
-        $this->buildPHPNodes();
+      $this->buildPHPNodes();
     }
     foreach ($this->phpNodes as $key => &$node) {
       if (in_array($node->getType(), Config::$editablePHPNodeTypes)) {
@@ -481,6 +504,46 @@ class FileConfigurationPart
         }
       }
     }
+  }
+
+  /**
+   * Removes nodes that will break things when they get re-defined.
+   *   This includes:
+   *   <ul>
+   *     <li>Classes</li>
+   *     <li>Functions</li>
+   *   </ul>
+   *
+   * @return boolean True if contents have been removed false otherwise.
+   */
+  private function removeAlreadyDefinedPHPNodes()
+  {
+    if (!isset($this->phpNodes)) {
+      $this->buildPHPNodes();
+    }
+    $removed = false;
+    foreach ($this->phpNodes as $key => &$node) {
+      if ($node->getType() === 'Stmt_Class') {
+        // get the name of the class.
+        $className = $node->name;
+
+        if (class_exists($className)) {
+          // class exists. Remove this node.
+          unset($this->phpNodes[$key]);
+          $removed = true;
+        }
+      } else if ($node->getType() === 'Stmt_Function') {
+        // get the name of the function.
+        $funcName = $node->name;
+
+        if (function_exists($funcName)) {
+          // function exists. Remove this node.
+          unset($this->phpNodes[$key]);
+          $removed = true;
+        }
+      }
+    }
+    return $removed;
   }
 
   /**
@@ -554,6 +617,7 @@ class FileConfigurationPart
       return true;
     }
 
+    // Now edit php contents.
     if (!Config::ALLOW_PHP_EDITS || !in_array($this->getContentType(), Config::$editableContentTypes)) {
       return false;
     }
