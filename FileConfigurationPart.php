@@ -186,7 +186,7 @@ class FileConfigurationPart
     if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
       return $this->wrapEditableContent($this->content);
     }
-    return $this->content;
+    return self::indentHTML($this->content);
   }
 
   /**
@@ -259,7 +259,7 @@ class FileConfigurationPart
     if (!self::isPHPContent()) {
       // we need to look for un-matched tags
       $offsetOffset = 0;
-      $offsets = $this->getUnMatchedOffsets($content);
+      $offsets = self::getUnMatchedOffsets($content);
 
       if (!empty($offsets['closing'])) {
         // we have unMatched closing tags
@@ -306,16 +306,15 @@ class FileConfigurationPart
   }
 
   /**
-   * Gets offsets for un-matched opening and closing tags
+   * Gets all tags by type
+   *   Types include opening, closing, and selfClosing.
+   *   Note: Void tags are grouped in with selfClosing.
    *
-   * @param  string $content Content to search for un-matched tags
-   * @return array Array with keys of opening and closing and values are an array of their respective offsets (offset) and string length (length).
-   *   Opening array will be sorted in the order they are found.
-   *   Closing array will be sorted in reverse order they exist in the content.
+   * @param  string $content Content to find tags in
+   * @return array Array with keys of opening, closing, and selfClosing containing sub-arrays with keys of result and flattened. Result represents the regex result, and flattened is just the tag itself
    */
-  private function getUnMatchedOffsets($content)
+  private static function getAllTagsByType($content)
   {
-    // we need to make sure all divs have been closed otherwise our editable div will get ruined.
     // Let's find all types of tags grouping void tags in with self-closing tags.
     $tagRegex = sprintf('`(?P<closing></[^>]+>)|(?P<selfclosing>(?:<[^!>]+/>)|(?:<(?:%s)[^!>]*?>))|(?P<opening><[^!>]+>)`x', implode('|', self::$voidElements));
     preg_match_all($tagRegex, $content, $matches, PREG_OFFSET_CAPTURE);
@@ -325,22 +324,57 @@ class FileConfigurationPart
       return $value[0];
     };
 
+    // the array we are filtering is multi-dimensional, so we want to check if the regex match ($value[0]) is empty
+    $filterer = function($value) {
+      return (is_array($value) ? !empty($value[0]) : !empty($value));
+    };
+
+    $return = [
+      'opening' => [
+        'result'    => [],
+        'flattened' => [],
+      ],
+      'closing' => [
+        'result'    => [],
+        'flattened' => [],
+      ],
+      'selfClosing' => [
+        'result'    => [],
+        'flattened' => [],
+      ],
+    ];
+
     if (isset($matches['opening'])) {
-      $opening          = array_filter($matches['opening']);
-      $flattenedOpening = array_filter(array_map($flattener, $opening));
-    } else {
-      $opening          = [];
-      $flattenedOpening = [];
-    }
-    if (isset($matches['closing'])) {
-      $closing          = array_filter($matches['closing']);
-      $flattenedClosing = array_filter(array_map($flattener, $closing));
-    } else {
-      $closing          = [];
-      $flattenedClosing = [];
+      $return['opening']['result']    = array_filter($matches['opening'], $filterer);
+      $return['opening']['flattened'] = array_filter(array_map($flattener, $return['opening']['result']));
     }
 
-    $unMatchedOpening = $this->findUnMatchedOpeningTags($flattenedOpening, $flattenedClosing);
+    if (isset($matches['closing'])) {
+      $return['closing']['result']    = array_filter($matches['closing'], $filterer);
+      $return['closing']['flattened'] = array_filter(array_map($flattener, $return['closing']['result']));
+    }
+
+    if (isset($matches['selfclosing'])) {
+      $return['selfClosing']['result']    = array_filter($matches['selfclosing'], $filterer);
+      $return['selfClosing']['flattened'] = array_filter(array_map($flattener, $return['selfClosing']['result']));
+    }
+    return $return;
+  }
+
+  /**
+   * Gets offsets for un-matched opening and closing tags
+   *
+   * @param  string $content Content to search for un-matched tags
+   * @return array Array with keys of opening and closing and values are an array of their respective offsets (offset) and string length (length).
+   *   Opening array will be sorted in the order they are found.
+   *   Closing array will be sorted in reverse order they exist in the content.
+   */
+  private static function getUnMatchedOffsets($content)
+  {
+    // we need to make sure all divs have been closed otherwise our editable div will get ruined.
+    $tags = self::getAllTagsByType($content);
+
+    $unMatchedOpening = self::findUnMatchedOpeningTags($tags['opening']['flattened'], $tags['closing']['flattened']);
     $unMatchedOpeningOffsets = [];
     if (!empty($unMatchedOpening)) {
       // make sure we are sorted by keys
@@ -348,13 +382,13 @@ class FileConfigurationPart
       // we have unmatched opening tags
       foreach ($unMatchedOpening as $key => $unMatched) {
         $unMatchedOpeningOffsets[] = [
-          'offset' => $opening[$key][1],
+          'offset' => $tags['opening']['result'][$key][1],
           'length' => strlen($unMatched),
         ];
       }
     }
 
-    $unMatchedClosing = $this->findUnMatchedClosingTags($flattenedOpening, $flattenedClosing);
+    $unMatchedClosing = self::findUnMatchedClosingTags($tags['opening']['flattened'], $tags['closing']['flattened']);
     $unMatchedClosingOffsets = [];
     if (!empty($unMatchedClosing)) {
       // make sure we are sorted by keys in reverse order
@@ -362,7 +396,7 @@ class FileConfigurationPart
       // we have unmatched closing tags
       foreach ($unMatchedClosing as $key => $unMatched) {
         $unMatchedClosingOffsets[] = [
-          'offset' => $closing[$key][1],
+          'offset' => $tags['closing']['result'][$key][1],
           'length' => strlen($unMatched),
         ];
       }
@@ -374,7 +408,6 @@ class FileConfigurationPart
     ];
   }
 
-
   /**
    * Finds any keys that are less than the specified key
    *
@@ -382,7 +415,7 @@ class FileConfigurationPart
    * @param  integer $key   Key we want our found keys to be less than.
    * @return array
    */
-  private function findKeysLessThanKey(Array $array, $key)
+  private static function findKeysLessThanKey(Array $array, $key)
   {
     $newArray = [];
     foreach ($array as $arrKey => $arrValue) {
@@ -402,7 +435,7 @@ class FileConfigurationPart
    * @param  integer $key   Key we want our found keys to be greater than.
    * @return array
    */
-  private function findKeysGreaterThanKey(Array $array, $key)
+  private static function findKeysGreaterThanKey(Array $array, $key)
   {
     $newArray = [];
     foreach ($array as $arrKey => $arrValue) {
@@ -420,7 +453,7 @@ class FileConfigurationPart
    * @param  array  $closing Array of closing tags
    * @return array  Array of opening tags that aren't matched
    */
-  private function findUnMatchedOpeningTags(Array $opening, Array $closing)
+  private static function findUnMatchedOpeningTags(Array $opening, Array $closing)
   {
     // let's try looking at our first closing tag and finding anything that matches
     foreach ($closing as $key => $closingTag) {
@@ -430,7 +463,7 @@ class FileConfigurationPart
         continue;
       }
       $tagMatch = $tagMatch[1];
-      $openingPriorToCurr = $this->findKeysLessThanKey($opening, $key);
+      $openingPriorToCurr = self::findKeysLessThanKey($opening, $key);
       krsort($openingPriorToCurr);
       foreach ($openingPriorToCurr as $openingKey => $openingTag) {
         if (preg_match(sprintf('`<%s`', $tagMatch), $openingTag)) {
@@ -451,7 +484,7 @@ class FileConfigurationPart
    * @param  array  $closing Array of closing tags
    * @return array  Array of closing tags that aren't matched
    */
-  private function findUnMatchedClosingTags(Array $opening, Array $closing)
+  private static function findUnMatchedClosingTags(Array $opening, Array $closing)
   {
     // let's try looking at our first closing tag and finding anything that matches
     foreach ($opening as $key => $openingTag) {
@@ -461,7 +494,7 @@ class FileConfigurationPart
         continue;
       }
       $tagMatch = $tagMatch[1];
-      $closingAfterCurr = $this->findKeysGreaterThanKey($closing, $key);
+      $closingAfterCurr = self::findKeysGreaterThanKey($closing, $key);
       foreach ($closingAfterCurr as $closingKey => $closingTag) {
         if (preg_match(sprintf('`</%s`', $tagMatch), $closingTag)) {
           // we have a matching tag.
@@ -472,6 +505,110 @@ class FileConfigurationPart
       }
     }
     return $closing;
+  }
+
+  /**
+   * Indents HTML
+   *
+   * @param  string $content Content to indent
+   * @return string
+   */
+  private static function indentHTML($content)
+  {
+    $tags = self::getAllTagsByType($content);
+
+    $tagKeys = array_merge(array_keys($tags['opening']['flattened']), array_keys($tags['closing']['flattened']), array_keys($tags['selfClosing']['flattened']));
+    if (empty($tagKeys)) {
+      $numberOfTags = 0;
+    } else {
+      $numberOfTags = max($tagKeys) +1;
+    }
+
+    $offset = 0;
+    $numberOfIndents = 0;
+    $indentation = '  ';
+    for ($i = 0; $i < $numberOfTags; ++$i) {
+      if (isset($tags['opening']['result'][$i])) {
+        // we have an opening tag.
+
+        $indent = str_repeat($indentation, $numberOfIndents);
+
+        if ($i !== 0 && preg_match('`\v(\h+)?$`', substr($content, 0, $tags['opening']['result'][$i][1] + $offset), $matches) === 1) {
+          // this one comes after a new line. We want to indent.
+          if (isset($matches[1])) {
+            // we already have some indentation.
+            $offsetWithoutIndentation = $offset - strlen($matches[1]);
+            $adjustedOffsetForRemovingIndentation = strlen($matches[1]);
+          } else {
+            $offsetWithoutIndentation = $offset;
+            $adjustedOffsetForRemovingIndentation = 0;
+          }
+          // add our indentation to the content
+          $content = sprintf(
+              '%s%s%s',
+              substr($content, 0, $tags['opening']['result'][$i][1] + $offsetWithoutIndentation),
+              $indent,
+              substr($content, $tags['opening']['result'][$i][1] + $offset)
+          );
+          // we need to adjust the offset if we have removed any indentation.
+          $offset += strlen($indent) - $adjustedOffsetForRemovingIndentation;
+        }
+        // increment our number of indents here since we want everything after it to be indented.
+        ++$numberOfIndents;
+      } else if (isset($tags['closing']['result'][$i])) {
+        // we have a closing tag.
+
+        // we want to un-indent
+        $numberOfIndents = max(0, --$numberOfIndents);
+
+        if ($i !== 0 && preg_match('`\v(\h+)?$`', substr($content, 0, $tags['closing']['result'][$i][1] + $offset), $matches) === 1) {
+          // this one comes after a new line. We want to un-indent.
+          if (isset($matches[1])) {
+            // we already have some indentation.
+            $offsetWithoutIndentation = $offset - strlen($matches[1]);
+            $adjustedOffsetForRemovingIndentation = strlen($matches[1]);
+          } else {
+            $offsetWithoutIndentation = $offset;
+            $adjustedOffsetForRemovingIndentation = 0;
+          }
+          $indent = str_repeat($indentation, $numberOfIndents);
+          // add our indentation to the content
+          $content = sprintf(
+              '%s%s%s',
+              substr($content, 0, $tags['closing']['result'][$i][1] + $offsetWithoutIndentation),
+              $indent,
+              substr($content, $tags['closing']['result'][$i][1] + $offset)
+          );
+          // we need to adjust the offset if we have removed any indentation.
+          $offset += strlen($indent) - $adjustedOffsetForRemovingIndentation;
+        }
+      } else if (isset($tags['selfClosing']['result'][$i])) {
+        // we have a self-closing tag.
+
+        if ($i !== 0 && preg_match('`\v(\h+)?$`', substr($content, 0, $tags['selfClosing']['result'][$i][1] + $offset), $matches) === 1) {
+          // this one comes after a new line. We want to indent.
+          if (isset($matches[1])) {
+            // we already have some indentation.
+            $offsetWithoutIndentation = $offset - strlen($matches[1]);
+            $adjustedOffsetForRemovingIndentation = strlen($matches[1]);
+          } else {
+            $offsetWithoutIndentation = $offset;
+            $adjustedOffsetForRemovingIndentation = 0;
+          }
+          $indent = str_repeat($indentation, $numberOfIndents);
+          // add our indentation to the content
+          $content = sprintf(
+              '%s%s%s',
+              substr($content, 0, $tags['selfClosing']['result'][$i][1] + $offsetWithoutIndentation),
+              $indent,
+              substr($content, $tags['selfClosing']['result'][$i][1] + $offset)
+          );
+          // we need to adjust the offset if we have removed any indentation.
+          $offset += strlen($indent) - $adjustedOffsetForRemovingIndentation;
+        }
+      }
+    }
+    return $content;
   }
 
   /**
@@ -614,7 +751,7 @@ class FileConfigurationPart
       $startReplacementOffset = 0;
       $endReplacementOffset   = strlen($this->content);
 
-      $offsets = $this->getUnMatchedOffsets($this->content);
+      $offsets = self::getUnMatchedOffsets($this->content);
 
       if (!empty($offsets['closing'])) {
         // we have unMatched closing tags
