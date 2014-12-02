@@ -1,0 +1,16 @@
+#!/bin/bash
+
+
+if [ -z "$1" ]; then
+  #prompt for path
+  pwd=`pwd`
+  echo -n "Directories to convert pages for (space separated): [$pwd ...] "
+  read paths
+else
+  paths=$1
+fi
+
+for currDir in $paths
+do
+  /cis/lib/Gustavus/Concert/Scripts/templateConverter $currDir
+done
