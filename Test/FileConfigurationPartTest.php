@@ -677,7 +677,7 @@ class FileConfigurationPartTest extends TestBase
 </ul>
 </div>
 
-</div>%s<div class="grid_36 alpha omega">',Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+</div>%s<div class="grid_36 alpha omega">', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $this->buildFileConfigurationPart();
     $result = $this->part->wrapEditableContent($content);
@@ -1008,5 +1008,49 @@ class FileConfigurationPartTest extends TestBase
     $this->buildFileConfigurationPart();
     $result = $this->part->findUnMatchedClosingTags($opening, $closing);
     $this->assertSame([46 => $closing[46]], $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getUnmatchedOffsets()
+  {
+    $content = '<div class="grid_36 alpha omega">
+<ul class="icon-list block-4">
+<li><a href="#classes"><i class="alumni-icon-classes"></i><br>Classes</a></li>
+<li><a href="#gribly"><i class="alumni-icon-gribly"></i><br>Alumni Gribly</a></li>
+<li><a href="#publications"><i class="alumni-icon-publications"></i><br>Publications</a></li>
+<li><a href="#social-stream"><i class="alumni-icon-social-stream"></i><br>Social Stream</a></li>
+</ul>
+</div>
+<div id="classes" class="grid_36 alpha omega">
+<div class="grid_17 suffix_1 alpha left"><a href="/alumni/connect/classes"><img class="fancy" src="/slir/w330-c16x10/alumni/images/connect/classes.jpg" alt="Classes"></a></div>
+<div class="grid_18 omega right">
+<h2>Classes</h2>
+<p>Your class, your news. Get news and information specific to your graduating class from the class web page. From class letters to reunion details, class pages are the “go to” source for all things related to your year.</p>
+<p><a href="/alumni/connect/classes">Find Your Class</a></p>
+</div>
+<hr class="grid_36 alpha omega"></div>
+<div id="gribly" class="grid_36 alpha omega">
+<div class="grid_17 prefix_1 omega right"><a href="/search"><img class="fancy" src="/slir/w330-c16x10/alumni/images/connect/gribly.jpg" alt="Alumni Gribly"></a></div>
+<div class="grid_18 alpha left">';
+
+    $expected = [
+      'opening' => [
+        [
+          'offset' => 1042,
+          'length' => 45,
+        ],
+        [
+          'offset' => 1255,
+          'length' => 32,
+        ]
+      ],
+      'closing' => [],
+    ];
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->getUnmatchedOffsets($content);
+    $this->assertSame($expected, $result);
   }
 }

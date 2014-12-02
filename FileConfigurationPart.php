@@ -70,6 +70,31 @@ class FileConfigurationPart
   private $edited = false;
 
   /**
+   * Elements that can't have any contents in them, and don't self close in HTML5. (XHTML's space-slash.)
+   *   ie. Breaks are <br /> in XHTML, but <br> in HTML
+   *
+   * @var array
+   */
+  private static $voidElements = [
+    'br',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'source',
+    'area',
+    'base',
+    'col',
+    'embed',
+    'keygen',
+    'menuitem',
+    'param',
+    'track',
+    'wbr',
+  ];
+
+  /**
    * Sets up the object
    *
    * @param array $params Params to populate the object with
@@ -291,7 +316,9 @@ class FileConfigurationPart
   private function getUnMatchedOffsets($content)
   {
     // we need to make sure all divs have been closed otherwise our editable div will get ruined.
-    preg_match_all('`(?P<closing></[^>]+>)|(?P<selfclosing><[^!>]+/>)|(?P<opening><[^!>]+>)`x', $content, $matches, PREG_OFFSET_CAPTURE);
+    // Let's find all types of tags grouping void tags in with self-closing tags.
+    $tagRegex = sprintf('`(?P<closing></[^>]+>)|(?P<selfclosing>(?:<[^!>]+/>)|(?:<(?:%s)[^!>]*?>))|(?P<opening><[^!>]+>)`x', implode('|', self::$voidElements));
+    preg_match_all($tagRegex, $content, $matches, PREG_OFFSET_CAPTURE);
 
     // flattener that changes the values of the array to the first index. (The second index will be the offset from the PREG_OFFSET_CAPTURE option)
     $flattener = function($value) {
