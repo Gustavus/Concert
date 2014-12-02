@@ -412,6 +412,7 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   saveEdits: function(action, allowRedirects, redirectAfterTimeout) {
+    $('body').addClass('loading');
     if (allowRedirects == undefined) {
       allowRedirects = true;
     }
@@ -424,7 +425,6 @@ Gustavus.Concert = {
     if (this.isCreation && this.fromFilePath) {
       edits.fromFilePath = this.fromFilePath;
     }
-    $('body').css('cursor', 'progress');
     $.ajax({
       type: 'POST',
       url : this.baseUrl,
@@ -432,7 +432,7 @@ Gustavus.Concert = {
       dataType: 'json',
       success: function(data) {
         if (data && data.error) {
-          $('body').css('cursor');
+          $('body').removeClass('loading');
           alert(data.reason);
         } else if (allowRedirects) {
           if (data && data.redirectUrl) {
@@ -449,18 +449,17 @@ Gustavus.Concert = {
           } else {
             window.location = redirectUrl;
           }
+        } else {
+          $('body').removeClass('loading');
         }
-        $('body').css('cursor');
       },
       error: function() {
-        $('body').css('cursor');
+        $('body').removeClass('loading');
         // @todo add a failed message.
         // Is this resolved? Should this be a jquery dialog? Or a colorbox window?
         alert('Something unexpected happened. Please try again. If your problem persists, please email <a href="mailto:web@gustavus.edu">web@gustavus.edu</a> with details on what is going on.');
       }
     });
-    // reset it just in case we get hit here.
-    $('body').css('cursor');
   },
 
   /**

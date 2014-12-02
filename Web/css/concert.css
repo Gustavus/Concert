@@ -27,6 +27,10 @@
 @import "messages.css";
 @import "buttons.css";
 
+body.loading, body.loading * {
+  cursor: progress !important;
+}
+
 div.editable {
   cursor: text !important;
   min-height: 20px;
