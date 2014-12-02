@@ -531,8 +531,6 @@ class FileConfigurationPart
       if (isset($tags['opening']['result'][$i])) {
         // we have an opening tag.
 
-        $indent = str_repeat($indentation, $numberOfIndents);
-
         if ($i !== 0 && preg_match('`\v(\h+)?$`', substr($content, 0, $tags['opening']['result'][$i][1] + $offset), $matches) === 1) {
           // this one comes after a new line. We want to indent.
           if (isset($matches[1])) {
@@ -543,6 +541,8 @@ class FileConfigurationPart
             $offsetWithoutIndentation = $offset;
             $adjustedOffsetForRemovingIndentation = 0;
           }
+
+          $indent = str_repeat($indentation, $numberOfIndents);
           // add our indentation to the content
           $content = sprintf(
               '%s%s%s',
@@ -571,6 +571,7 @@ class FileConfigurationPart
             $offsetWithoutIndentation = $offset;
             $adjustedOffsetForRemovingIndentation = 0;
           }
+
           $indent = str_repeat($indentation, $numberOfIndents);
           // add our indentation to the content
           $content = sprintf(
@@ -595,6 +596,7 @@ class FileConfigurationPart
             $offsetWithoutIndentation = $offset;
             $adjustedOffsetForRemovingIndentation = 0;
           }
+
           $indent = str_repeat($indentation, $numberOfIndents);
           // add our indentation to the content
           $content = sprintf(
