@@ -180,7 +180,7 @@ class TemplateConverter
       $newUseStatement = $this->convertUseStatement($useStatement);
       $firstPHPBlock = str_replace($useStatement, $newUseStatement, $firstPHPBlock);
     } else {
-      $replacement = "\nuse Gustavus\\TemplateBuilder\\Builder;\n\nBuilder::init();\n?>";
+      $replacement = "\nuse Gustavus\\TemplateBuilder\\Builder;\n?>";
       $firstPHPBlock = str_replace('?>', $replacement, $firstPHPBlock);
     }
 
@@ -188,7 +188,13 @@ class TemplateConverter
       // we need to try a different variable name
       $this->propertiesVariableName .= 'Array';
     }
-    $replacement = sprintf("\n\$%s = [];\nob_start();\n?>", $this->propertiesVariableName);
+    if (strpos($this->pageContent, sprintf('%s::init()', $this->builderAlias)) === false) {
+      // a call to init doesn't exist. We need to include it.
+      $initStatement = sprintf("\n%s::init();\n", $this->builderAlias);
+    } else {
+      $initStatment = '';
+    }
+    $replacement = sprintf("%s\n\$%s = [];\nob_start();\n?>", $initStatement, $this->propertiesVariableName);
     $firstPHPBlock = str_replace('?>', $replacement, $firstPHPBlock);
 
     return $firstPHPBlock;
@@ -209,10 +215,6 @@ class TemplateConverter
         // template builder is included as an alias
         $this->builderAlias = $matches[1];
       }
-      if (strpos($this->pageContent, sprintf('%s::init()', $this->builderAlias)) === false) {
-        // a call to init doesn't exist. We need to include it.
-        $useStatement = sprintf("%s\n%s::init();\n", $useStatement, $this->builderAlias);
-      }
       // all we need to do.
       return $useStatement;
     }
@@ -226,8 +228,10 @@ class TemplateConverter
       // default to two spaces.
       $indentation = '  ';
     }
+    // we will need this later.
+    $this->builderAlias = 'Builder';
 
-    $replacement = sprintf(",\n%sGustavus\\TemplateBuilder\\Builder;\n\nBuilder::init();", $indentation);
+    $replacement = sprintf(",\n%sGustavus\\TemplateBuilder\\Builder;", $indentation);
     return str_replace(';', $replacement, $useStatement);
 
   }
