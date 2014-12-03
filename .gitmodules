@@ -1,3 +1,3 @@
 [submodule "Assets/ResponsiveFilemanager"]
 	path = Assets/ResponsiveFilemanager
-	url = https://github.com/trippo/ResponsiveFilemanager.git
+	url = bart:/cis/git/ConcertResponsiveFilemanager.git
