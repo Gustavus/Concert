@@ -1,0 +1,43 @@
+Explanation of scripts.
+
+TemplateConverter.php
+  Used to convert a single page run 'php /cis/lib/Gustavus/Concert/Scripts/TemplateConverter.php --help' for more info.
+
+templateConverter
+  Used to convert a whole directory. Run with '/cis/lib/Gustavus/Concert/Scripts/templateConverter /abs/path/to/dir'.
+
+  Will store a single tar.gz backup along with a conversion log in the parent directory. Output will specify all of this information as well.
+
+  View log with less -R to get colored output
+
+convertMultipleFolders
+  Used to convert multiple directories. Directories must be space separated and enclosed in quotes. Run with "/cis/lib/Gustavus/Concert/Scripts/convertMultipleFolders '/abs/path/to/dir /abs/path/to/dir2'"
+
+  Will store a single tar.gz backup along with a conversion log in the parent directory of every directory to convert. Output will specify all of this information as well.
+
+  View logs with 'cat /cis/www/camps/*.log | grep less -R'
+
+
+
+**All other scripts are for automation.
+
+checkForOldStagedFiles
+  Checks to see if there are any files missed by the watcher and attempts to publish them.
+
+checkNewFileWatcher
+  Verifies that the newFileWatcher is running and starts it if it isn't.
+
+manageNewFile
+  Initiates publishing a file
+
+manageNewFile.php
+  Calls FileManager->publish for any new files.
+
+newFileWatcher
+  Script that runs in the background watching the staging directory for any new files and calls manageNewFile on any found files
+
+rotateWatcher.conf
+  Watcher log rotation config file
+
+rotateWatcherLogs
+  Rotates watcher logs using rotateWatcher.conf
