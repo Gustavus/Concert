@@ -1,0 +1,9 @@
+{% spaceless %}
+  {{ scripts|raw }}
+  Are you sure you want to delete the site: <strong>{{ site }}</strong>?
+  <form action="{{ actionUrl }}" method="post" id="concertDelete">
+    <input type="hidden" name="siteId" value="{{ siteId }}" />
+    <button type="submit" name="deleteAction" value="confirmDelete" class="deleteAction buttonReset concert-button danger">Delete</button>&nbsp;
+    <button type="submit" name="deleteAction" value="cancelDelete" class="deleteAction buttonReset concert-button secondary">Cancel</button>
+  </form>
+{% endspaceless %}

@@ -1,0 +1,32 @@
+RewriteEngine On
+RewriteBase /concert/
+
+# force fileManager's php files through our router
+RewriteRule filemanager/(.{32})/(.+\.php) index.php?request=filemanager/$2&accessKey=$1 [QSA,L]
+#RewriteRule filemanager/.+ - [L]
+# allow any non-php filemanager files pass through
+RewriteRule filemanager/(?:.{32})/(.*) filemanager/$1 [L,R=303]
+RewriteRule filemanager/.+ - [L]
+
+RewriteRule js/.+\.js$ - [L]
+RewriteRule js/.+\.css$ - [L]
+RewriteRule js/.+\.gif$ - [L]
+
+RewriteRule icons/.+$ - [L]
+
+# allow tinymce fonts
+RewriteRule js/tinymce.+$ - [L]
+RewriteRule css/.+\.css$ - [L]
+RewriteRule images/.+\.jpg - [L]
+RewriteRule images/.+\.png - [L]
+RewriteRule .+\.html - [L]
+
+# allow
+RewriteRule thumbs/.+ - [L]
+RewriteRule files/.+ - [L]
+
+RewriteRule ^edit/(.*)$ index.php?request=edit&page=$1 [QSA,L]
+RewriteRule ^index.php/?(.*)$ index.php?request=$1 [QSA,L]
+RewriteRule ^.*\.php.*$ - [L]
+
+RewriteRule ^(.*)$ index.php?request=$1 [QSA]

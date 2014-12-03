@@ -1,0 +1,96 @@
+{% spaceless %}
+<link rel="stylesheet" type="text/css" href="{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css'}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}" />
+<script type="text/javascript">
+  Modernizr.load({
+    load: [
+      Gustavus.baseSrc,
+      "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
+      "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
+      "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}"
+    ],
+    complete: function() {
+
+      $(function() {
+        var newFile = '';
+        var fromFile = '';
+
+        $('#toFileTreeSelector').fileTree({
+          root: '{{ site }}',
+          script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'toFile'}) }}'
+        }, function (file) {
+          newFile = file;
+        });
+
+        $('#fromFileTreeSelector').fileTree({
+          root: '{{ site }}',
+          script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'fromFile'}) }}'
+        }, function (file) {
+          fromFile = file;
+        });
+
+        $('#createNewPage').on('click', function(e) {
+          e.preventDefault();
+          if (!fromFile) {
+            var $selectedFromFile = $('#fromFileTreeSelector .selected');
+            if ($selectedFromFile.length > 0) {
+              fromFile = $selectedFromFile.attr('rel');
+            }
+          }
+
+          if (!newFile) {
+            var $selectedNewFile = $('#toFileTreeSelector .selected');
+            if ($selectedNewFile.length > 0) {
+              newFile = $selectedNewFile.attr('rel');
+            }
+          }
+          if (newFile) {
+            window.location = Gustavus.Utility.URL.urlify(newFile, {'concert': 'edit', 'srcFilePath': encodeURIComponent(fromFile)});
+          } else {
+            $('#noFileSelectedDialog').dialog({
+              title: 'No location selected',
+              width: 300,
+              draggable: false,
+              modal: true,
+              buttons: {
+                Ok: function() {
+                  $(this).dialog('close');
+                }
+              }
+            });
+          }
+        });
+      });
+    }
+  });
+</script>
+
+
+<div class="grid_19 alpha omega">
+  <div class="grid_18 alpha omega">
+    <h3>Create a New Page</h3>
+    <p><em>Please select where you would like your new page to exist.</em></p>
+    <div id="toFileTreeSelector" class="fileTreeSelector"></div>
+  </div>
+
+  <div class="grid_18 alpha omega">
+    <label for="copyAFile"><input id="copyAFile" type="checkbox" class="doToggle" rel="#fromFileContainer"> I would like to copy an existing file.</label>
+    <div id="fromFileContainer" class="nodisplay">
+      <p><em>Please select the file you would like to copy.</em></p>
+      <div id="fromFileTreeSelector" class="fileTreeSelector"></div>
+    </div>
+  </div>
+  <p class="grid_18 alpha omega">
+    <a href="#" id="createNewPage" class="concert-button success">Create new page</a>
+  </p>
+</div>
+
+<div id="newFileNameDialog" class="nodisplay">
+  <form>
+    <input id="theFile" type="text" name="theFile" style="width: 100%;" autofocus />
+    <button id="newFileNameSubmit" type="submit" class="nodisplay">Create a new file</button>
+  </form>
+</div>
+<div id="noFileSelectedDialog" class="nodisplay">
+  <p class="concert-message concert-alert">Please select where you would like your new page to exist.</p>
+</div>
+{% endspaceless %}

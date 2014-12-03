@@ -1,0 +1,27 @@
+{% spaceless %}
+{%- if sites|length > 0 %}
+
+  <table class="fancy sortable">
+    <thead>
+      <tr>
+        <th>Site Root</th>
+        <th>Excluded Files</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for site in sites %}
+        {% if not isSuperUser and site['siteRoot'] != '/' or isSuperUser %}
+          <tr>
+            <td>{{ site['siteRoot'] }}</td>
+            <td>{{ site['excludedFiles'] }}</td>
+            <td><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+{%- endif -%}
+
+{% endspaceless %}

@@ -1,0 +1,127 @@
+{% import _self as self %}
+{% spaceless %}
+{% set reviewButton %}<a id="concertPublish" class="concert concert-button blue">{% if userCanPublishFile %}Publish{% else %}Submit for Review{% endif %}</a>{% endset %}
+
+{% set reviewButtonText %}
+  {%- if userCanPublishFile %}Publish{% else %}Submit for Review{% endif -%}
+{% endset %}
+{% set reviewButton = {
+  'id': 'concertPublish',
+  'classes': 'primary',
+  'text': reviewButtonText,
+} %}
+
+{% set buttonConfigurations = {
+  'publish': reviewButton,
+  'savePrivateDraft': {
+    'id': 'concertSavePrivateDraft',
+    'text': 'Save Private Draft',
+    'classes': 'secondary',
+  },
+  'savePublicDraft': {
+    'id': 'concertSavePublicDraft',
+    'text': 'Save Draft',
+    'classes': 'secondary',
+  },
+  'discardDraft': {
+    'id': 'concertDiscardDraft',
+    'text': 'Discard Draft',
+    'classes': 'danger',
+  },
+  'saveDraft': {
+    'id': 'concertSavePublicDraft',
+    'text': 'Save Draft',
+    'classes': 'primary',
+  },
+  'stopEditing': {
+    'id': 'concertStopEditing',
+    'text': 'Stop Editing',
+    'classes': 'danger',
+  },
+  'showEditableAreas': {
+    'id': 'toggleShowingEditableContent',
+    'text': 'Show editable areas',
+    'extraHTML': 'data-show="false"',
+  },
+} %}
+
+{% set buttonsToRender = [] %}
+{% if visibleButtons|length > 0 %}
+  {% set buttonsToRender = visibleButtons %}
+{% endif %}
+{% if additionalButtons|length > 0 %}
+  {% set buttonsToRender = buttonsToRender|merge(additionalButtons) %}
+{% endif %}
+
+{% if buttonsToRender|length > 0 %}
+  <script>
+   Modernizr.load({
+    load: Gustavus.baseSrc,
+    complete: function() {
+      $(function() {
+        var $actionButtons = $('#primaryActions');
+        $('{{ self.renderButtons(buttonsToRender, buttonConfigurations)|e('js') }}')
+          .appendTo($actionButtons)
+          .filter('.menu-item')
+          .hide()
+          .fadeIn(function () {
+            $(this).css('display', '');
+          });
+      });
+    }
+  });
+  </script>
+{% endif %}
+{% endspaceless %}
+
+{#
+  Renders a single button from the button config array
+
+  param: button Array with keys of url, id, classes, text, and extraHTML
+#}
+{% macro renderButton(button) -%}
+  <li class="menu-item">
+    <a {% if button.url %}href="{{ button.url }}"{% endif %} id="{{ button.id }}" class="concert-button{% if button.classes %} {{ button.classes }}{% endif %}"{% if button.extraHTML %}{{ button.extraHTML|raw }}{% endif %}>{{ button.text }}</a>
+  </li>
+{%- endmacro renderButton %}
+
+{#
+  Renders buttons
+
+  param: buttons Array Array of buttons to show. Either a key that exists in buttonConfigs, or a config array with keys of url, id, classes, text, and extraHTML
+
+  param: buttonConfigs Array of button config arrays with keys of url, id, classes, text, and extraHTML
+#}
+{% macro renderButtons(buttons, buttonConfigs) %}
+  {% import _self as self %}
+  {% set privateDraftDialogHTML = false %}
+  {% set discardDraftDialogHTML = false %}
+  {%- for button in buttons -%}
+    {%- if button is iterable -%}
+      {# Our button is an array itself, it must be a configuration #}
+      {{ self.renderButton(button)|raw }}
+    {%- elseif buttonConfigs[button] -%}
+      {%- if button == 'savePrivateDraft' -%}
+        {%- set privateDraftDialogHTML = true -%}
+      {%- elseif button == 'discardDraft' -%}
+        {%- set discardDraftDialogHTML = true -%}
+      {%- endif -%}
+      {# Our button configuration is in our buttonConfigs array #}
+      {{ self.renderButton(buttonConfigs[button])|raw }}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if privateDraftDialogHTML -%}
+    {# We need to insert html for the confirmation dialog for converting a shared draft to private #}
+    <div id="confirmPrivateDraft" title="Save Private Draft" class="nodisplay">
+      <p class="concert-message concert-alert">This draft is shared. Converting it to a private draft will remove any sharing functionality.</p>
+    </div>
+  {%- endif -%}
+
+  {%- if discardDraftDialogHTML -%}
+    {# We need to insert html for the confirmation dialog for converting a shared draft to private #}
+    <div id="confirmDiscardDraft" title="Discard Draft" class="nodisplay">
+      <p class="concert-message concert-alert">This draft is shared. Discarding it may also discard any changes made by collaborators.</p>
+    </div>
+  {%- endif -%}
+{% endmacro renderButtons %}

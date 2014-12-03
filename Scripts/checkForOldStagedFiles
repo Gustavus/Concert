@@ -1,0 +1,3 @@
+#!/bin/bash
+# Looks through the staging directory to try finding any files older than a minute that the watcher didn't find.
+find /cis/www-etc/lib/Gustavus/Concert/staging/ -type f -mmin +1 -exec /cis/lib/Gustavus/Concert/Scripts/manageNewFile {} 'Old file' \;

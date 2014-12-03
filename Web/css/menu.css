@@ -1,0 +1,204 @@
+@in .concert-menu {
+
+  & {
+    background-color: $(concert-white);
+    height: $(menu-height);
+    color: $(concert-gray);
+    transition: height 0.25s ease-in-out, margin 0.25s ease-in-out;
+    position: relative;
+    z-index: 145;
+    text-align: left;
+    margin-bottom: 0;
+  }
+
+  &:after {
+    display: table;
+    content: '';
+    clear: both;
+  }
+
+  & a:not(.concert-button), & a:not(.concert-button):hover {
+    color: $(concert-gray);
+  }
+
+  & .menu-content {
+    float: left;
+    height: $(menu-height);
+    opacity: 1;
+    transition: height 0.25s ease-in-out, opacity 0.25s ease-in-out;
+  }
+
+  & .menu-content.right {
+    float: right;
+  }
+
+  & .menu-bar {
+    margin: 0;
+  }
+
+  & .menu-item {
+    display: inline-block;
+    position: relative;
+    outline: none;
+  }
+
+  & .menu-item a.menu-item-label, & .menu-activate-button {
+      line-height: $(menu-height);
+      padding: 0 10px;
+      display: inline-block;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+      outline: none;
+  }
+
+  & .message-count {
+    background-color: $(concert-gray);
+    color: $(concert-white);
+    border-radius: 1em;
+    padding: 0 0.5em;
+  }
+
+  & .menu-activate-button {
+    transition: color 0.25s ease-in-out;
+  }
+
+  & .menu-activate-button:before {
+    display: inline-block;
+    content: '';
+    width: 25px;
+    height: $(menu-height);
+    vertical-align: bottom;
+    background-image: url(/gimli/w100/concert/icons/concert-logo-dark.png);
+    background-size: 20px;
+    background-position: 5px 12px;
+    background-repeat: no-repeat;
+  }
+
+  & .menu-item:any(:hover, .open) a.menu-item-label{
+    background-color: $(concert-gray);
+    color: $(concert-white);
+    text-decoration: none;
+  }
+
+  & .menu-item:any(:hover, .open) .message-count {
+    color: $(concert-gray);
+    background-color: $(concert-white);
+  }
+
+  & .menu-dropdown {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: $(menu-height);
+    margin: 0;
+    list-style: none;
+    background: $(concert-gray);
+    border: 1px $(concert-gray) solid;
+    border-top: none;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+    min-width: 150px;
+    z-index: 150;
+  }
+
+  & .menu-item.open :any(.menu-dropdown, .messages-dropdown) {
+    display: block;
+  }
+
+  & .menu-dropdown-item a {
+    line-height: 2em;
+    padding: 0 1em;
+    display: block;
+    outline: none;
+    color: $(concert-white);
+  }
+
+  & .menu-dropdown-item a:any(:hover, :focus) {
+    background-color: $(concert-white);
+    color: $(concert-gray);
+    text-decoration: none;
+  }
+
+  & .messages-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: $(menu-height);
+    min-width: 350px;
+    background: $(concert-gray);
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+    z-index: 150;
+    overflow: hidden;
+  }
+
+  & .concert-message {
+    border-radius: 0;
+    border-bottom: 1px solid #666;
+  }
+
+  & .concert-message:last-child {
+    border-bottom: none;
+  }
+
+  & .concert-message:before {
+    border-radius: 0;
+  }
+
+  &.hidden {
+    height: 0;
+  }
+
+  &.hidden .menu-content:not(.permanent) {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  &.hidden .menu-activate-button, &.hidden .menu-activate-button:hover {
+    color: white;
+  }
+
+  &.hidden .menu-activate-button:before {
+    background-image: url(/gimli/w100/concert/icons/concert-logo-light.png);
+  }
+
+  @media screen and (max-width: 1175px) {
+    &.hidden {
+      margin-bottom: $(menu-height);
+    }
+  }
+
+  @media screen and (max-width: 700px) {
+    & {
+      height: auto;
+      transition: none;
+    }
+
+    & .menu-content, & .menu-content.right {
+      float: none;
+      height: auto;
+    }
+    & .menu-item {
+      display: block;
+    }
+    & .menu-item-label {
+      width: 100%;
+    }
+
+    & .menu-item-label, & .menu-item .menu-button {
+      display: block;
+      box-sizing: border-box;
+      margin-bottom: 0.5em;
+    }
+
+    & .menu-dropdown, & .messages-dropdown {
+      width: 100%;
+      font-size: 1.2em;
+    }
+  }
+
+}

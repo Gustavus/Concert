@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Watch for new files and run manageNewFile on any new one we see.
+/usr/bin/inotifywait -m -e create --format %f /cis/www-etc/lib/Gustavus/Concert/staging 2>&- |
+  while read file
+    do
+      /cis/lib/Gustavus/Concert/Scripts/manageNewFile $file
+    done

@@ -1,0 +1,39 @@
+.concert-message {
+  background: $(concert-gray);
+  padding: 1em;
+  padding-left: 4em;
+  color: $(concert-white);
+  position: relative;
+  border-radius: 3px;
+}
+
+.concert-message:before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: $(message-color);
+  background-image: url(/concert/icons/info-icon.png);
+  background-position: center center;
+  background-repeat: no-repeat;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  width: 3em;
+}
+
+.concert-message a:not(.concert-button), .concert-message a:not(.concert-button):hover {
+  color: $(concert-white);
+  text-decoration: underline;
+}
+
+.concert-message.concert-alert:before {
+  background-image: url(/concert/icons/alert-icon.png);
+  background-color: $(message-alert-color);
+}
+
+.concert-message.concert-error:before {
+  background-image: url(/concert/icons/error-icon.png);
+  background-color: $(message-error-color);
+}

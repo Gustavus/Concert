@@ -1,0 +1,28 @@
+{% import _self as self %}
+{% spaceless %}
+<script>
+ Modernizr.load({
+  load: Gustavus.baseSrc,
+  complete: function() {
+    $(function() {
+      var $messages         = $('#concertMessages');
+
+      {% if messages|length > 0 %}
+        $messages.find('[ data-message-count]').text('{{messages|length}}');
+        $messages.find('[ data-message-area]').append('{{ self.build(messages)|e('js') }}');
+        Extend.apply('page', $('#concertMessages'));
+      {% else %}
+        $messages.fadeOut(function () { $messages.remove() });
+      {% endif %}
+
+    });
+  }
+});
+</script>
+{% endspaceless %}
+
+{% macro build(messages) %}
+  {% for message in messages %}
+    <div class="concert-message{%if message.type != 'message' %} concert-{{ message.type }}{% endif %}">{{ message.message|raw }}</div>
+  {% endfor %}
+{% endmacro %}

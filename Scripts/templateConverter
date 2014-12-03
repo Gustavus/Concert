@@ -1,0 +1,80 @@
+#!/bin/bash
+
+if [ `whoami` != 'root' ]; then
+  echo "This script should be run as root."
+  exit
+fi
+
+if [ -z "$1" ]; then
+  #prompt for path
+  pwd=`pwd`
+  echo -n "Directory to convert pages: [$pwd] "
+  read path
+else
+  path=$1
+fi
+
+# No path was specified, so we fall back to the current directory
+if [ -z "$path" ]; then
+  path=$pwd
+fi
+
+
+dirName=`basename $path`
+parentDir=`dirname $path`
+archive="${parentDir}/${dirName}Bkup.tar.gz"
+
+if [ -a "$archive" ]; then
+  echo "It looks like this directory has already been converted"
+  exit
+fi
+
+logFile="${parentDir}/${dirName}Conversion.log"
+echo "Converting directory: ${path}"
+echo "The log file will live at ${logFile}"
+echo -e "Backing up the directory" > $logFile
+pushd $path > /dev/null
+# only output errors to log file. Everything else will go to /dev/null
+tar -zcvf $archive . 1> /dev/null 2>> $logFile
+popd > /dev/null
+
+
+echo Directory contents backed up to $archive >> $logFile
+
+blackWithRedBackground='\e[0;30;41m'
+blackWithGreenBackground='\e[0;30;42m'
+whiteWithBlueBackground='\e[0;37;44m'
+orange='\e[0;33m'
+nc='\e[0m'
+
+echo -e "\n${whiteWithBlueBackground}Converting pages${nc}\n" >> $logFile
+
+find $path -type f -name \*.php | grep -v 'bkup' 2>&- |
+  while read file
+    do
+      echo -n "."
+      conversion=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/runTemplateConverter.php $file false`
+
+      if [ "$conversion" == 'true' ]; then
+        echo -e "${blackWithGreenBackground}Converted:${nc} ${file}" >> $logFile
+      elif [ "$conversion" == 'false' ]; then
+        echo -e "${orange}Didn't Convert:${nc} ${file}" >> $logFile
+      else
+        # conversion output has our message built for us already.
+        echo -e "${blackWithRedBackground}Error:${nc} $conversion" >> $logFile
+      fi
+    done
+
+echo -e "\nDone!" >> $logFile
+echo -e "\nDone!"
+
+convertedFiles=`grep Converted $logFile | wc -l`
+skippedFiles=`grep "Didn't Convert" $logFile | wc -l`
+errorCount=`grep Error $logFile | wc -l`
+echo -e "\n${convertedFiles} files converted" >> $logFile
+echo "${skippedFiles} files skipped" >> $logFile
+echo "${errorCount} errors" >> $logFile
+
+echo -e "\n${convertedFiles} files converted"
+echo "${skippedFiles} files skipped"
+echo "${errorCount} errors"
