@@ -1,11 +1,12 @@
 <?php
 use Gustavus\TemplateBuilder\Builder;
-Builder::init();
 $templatePreferences  = array(
   'localNavigation'   => true,
   'auxBox'            => true,
   'templateRevision'  => 2,
 );
+
+Builder::init();
 
 $properties = [];
 ob_start();

@@ -156,8 +156,6 @@ use Gustavus\SocialMedia\SocialMedia,
     Gustavus\TwigFactory\TwigFactory,
     Gustavus\Utility\String as GACString,
     Gustavus\TemplateBuilder\Builder;
-
-Builder::init();
 ';
 
     $actual = $this->templateConverter->convertUseStatement($useStatement);
@@ -186,8 +184,6 @@ use Gustavus\SocialMedia\SocialMedia,
     Gustavus\TwigFactory\TwigFactory,
     Gustavus\Utility\String as GACString,
     Gustavus\TemplateBuilder\Builder as GACBuilder;
-
-GACBuilder::init();
 ';
 
     $actual = $this->templateConverter->convertUseStatement($useStatement);
@@ -214,8 +210,6 @@ use Gustavus\SocialMedia\SocialMedia,
     Gustavus\TwigFactory\TwigFactory,
     Gustavus\Utility\String as GACString,
     Gustavus\TemplateBuilder\Builder;
-
-Builder::init();
 ';
 
     $actual = $this->templateConverter->convertUseStatement($useStatement);
@@ -322,6 +316,17 @@ ob_start();
     $actual = $this->templateConverter->convert();
 
     $this->assertSame(file_get_contents(self::TEMPLATE_FILE_DIR . 'expectedIndexWithLocalNav.php'), $actual);
+  }
+
+  /**
+   * @test
+   */
+  public function convertWithUseStatementAbovePrefs()
+  {
+    $this->setUpConverter('templateWithUseStatementAbovePrefs.php');
+    $actual = $this->templateConverter->convert();
+
+    $this->assertSame(file_get_contents(self::TEMPLATE_FILE_DIR . 'expectedTemplateWithUseStatementAbovePrefs.php'), $actual);
   }
 
   /**
