@@ -1319,13 +1319,16 @@ class PermissionsManager
       }
       $dbal = self::getDBAL();
       // we need to create this site.
+      $dbal->beginTransaction();
       $insertResult = $dbal->insert('sites', ['siteRoot' => $siteRoot, 'excludedFiles' => $excludedFiles]);
+      $lastInsertId = $dbal->lastInsertId();
+      $dbal->commit();
       // clear global admins cached permissions
       self::clearAdminsFromCache();
       // clear our sitesFromBase results
       self::clearSitesFromBaseCache();
-      if ($insertResult) {
-        return $dbal->lastInsertId();
+      if ($insertResult > 0) {
+        return $lastInsertId;
       } else {
         throw new RuntimeException('Inserting a new site didn\'t update any rows.');
       }
