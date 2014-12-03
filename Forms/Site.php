@@ -8,6 +8,7 @@
 namespace Gustavus\Concert\Forms;
 
 use Gustavus\Concert\Config,
+  Gustavus\Concert\PermissionsManager,
   Gustavus\Concourse\RoutingUtil,
   Gustavus\FormBuilderMk2\DataValidators\PresenceValidator,
   Gustavus\FormBuilderMk2\DataValidators\ConditionalValidator,
@@ -23,13 +24,24 @@ use Gustavus\Concert\Config,
 class Site
 {
   /**
+   * Username of the currently logged in user
+   *
+   * @var string
+   */
+  private static $username;
+
+  /**
    * Builds the configuration for creating a site
    *
    * @param  array $site Site we are wanting to edit if we are editing
+   * @param  string $username Username of the currently logged in person
    * @return array
    */
-  public static function getConfig($site = null)
+  public static function getConfig($site = null, $username = null)
   {
+    // set our username
+    self::$username = $username;
+
     $addButton = [
       'type'            => 'button',
       'action'          => 'Gustavus.FormBuilder.duplicateContainer(this, true);',
@@ -154,6 +166,9 @@ class Site
   {
     $return = [];
     foreach (Config::$availableAccessLevels as $accessLevel => $label) {
+      if ($accessLevel === Config::SUPER_USER && !PermissionsManager::isUserSuperUser(self::$username)) {
+        continue;
+      }
       $return[] = [
         'type'  => 'option',
         'value' => $accessLevel,

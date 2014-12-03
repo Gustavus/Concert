@@ -11,11 +11,13 @@
     </thead>
     <tbody>
       {% for site in sites %}
-        <tr>
-          <td>{{ site['siteRoot'] }}</td>
-          <td>{{ site['excludedFiles'] }}</td>
-          <td><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
-        </tr>
+        {% if not isSuperUser and site['siteRoot'] != '/' or isSuperUser %}
+          <tr>
+            <td>{{ site['siteRoot'] }}</td>
+            <td>{{ site['excludedFiles'] }}</td>
+            <td><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
+          </tr>
+        {% endif %}
       {% endfor %}
     </tbody>
   </table>

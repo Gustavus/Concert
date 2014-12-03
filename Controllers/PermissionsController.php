@@ -39,7 +39,7 @@ class PermissionsController extends SharedController
     }
 
     $this->setSubTitle('Sites');
-    return $this->renderTemplate('permissions/renderSites.html.twig', ['sites' => PermissionsManager::getSitesFromBase('/', true, true)]);
+    return $this->renderTemplate('permissions/renderSites.html.twig', ['sites' => PermissionsManager::getSitesFromBase('/', true, true), 'isSuperUser' => PermissionsManager::isUserSuperUser($this->getLoggedInUsername())]);
   }
 
   /**
@@ -56,7 +56,7 @@ class PermissionsController extends SharedController
     // we don't want this form to be persisted
     $this->flushForm('concertCreateSite');
 
-    $form = $this->buildForm('concertCreateSite', ['\Gustavus\Concert\Forms\Site', 'getConfig'], []);
+    $form = $this->buildForm('concertCreateSite', ['\Gustavus\Concert\Forms\Site', 'getConfig'], [null, $this->getLoggedInUsername()]);
 
     if ($this->getMethod() === 'POST' && $form->validate()) {
       $siteRoot = $form->getChildElement('siteinfo.siteroot')->getValue();
@@ -74,25 +74,34 @@ class PermissionsController extends SharedController
       if (!empty($searchSiteId)) {
         $this->addMessage(sprintf('Oops! The site you wanted to create already exists. Did you mean to <a href="%s">edit that site</a>?', $this->buildUrl('editSite', ['site' => $searchSiteId])));
       } else {
-        $siteId = PermissionsManager::saveNewSiteIfNeeded($siteRoot, $excludedFiles);
+        $siteId = PermissionsManager::saveNewSiteIfNeeded(str_replace('//', '/', $siteRoot), $excludedFiles);
 
         foreach ($form->getChildElement('peoplesection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
           if ($child->getName() === 'personpermissions') {
+            $accessLevel = $child->getChildElement('accesslevel')->getValue();
+            if ($accessLevel === Config::SUPER_USER && !PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
+              // @todo add a message here if it becomes necessary
+              continue;
+            }
+
             $expirationDate = $child->getChildElement('expirationdate')->getValue();
             if (!empty($expirationDate)) {
               $expirationDate = new DateTime($expirationDate);
             } else {
               $expirationDate = null;
             }
-            PermissionsManager::saveUserPermissions(
-                $child->getChildElement('username')->getValue(),
-                $siteId,
-                $child->getChildElement('accesslevel')->getValue(),
-                $child->getChildElement('includedfiles')->getValue(),
-                $child->getChildElement('excludedfiles')->getValue(),
-                $expirationDate,
-                true
-            );
+            $childUsername = $child->getChildElement('username')->getValue();
+            if (!empty($childUsername)) {
+              PermissionsManager::saveUserPermissions(
+                  $childUsername,
+                  $siteId,
+                  $accessLevel,
+                  $child->getChildElement('includedfiles')->getValue(),
+                  $child->getChildElement('excludedfiles')->getValue(),
+                  $expirationDate,
+                  true
+              );
+            }
           }
         }
         $this->flushForm('concertCreateSite');
@@ -136,6 +145,11 @@ class PermissionsController extends SharedController
 
     $site = $dbal->fetchAssoc($qb->getSQL(), [':id' => $siteId]);
 
+    if ($site['siteRoot'] === '/' && !PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
+      return PageUtil::renderAccessDenied();
+    }
+
+
     $qb   = $dbal->createQueryBuilder();
     $qb->select('username')
       ->addSelect('accessLevel')
@@ -160,7 +174,7 @@ class PermissionsController extends SharedController
     $formKey = 'concertEditSite_'. $siteId;
     $this->flushForm($formKey);
 
-    $form = $this->buildForm($formKey, ['\Gustavus\Concert\Forms\Site', 'getConfig'], [$site]);
+    $form = $this->buildForm($formKey, ['\Gustavus\Concert\Forms\Site', 'getConfig'], [$site, $this->getLoggedInUsername()]);
 
     if ($this->getMethod() === 'POST' && $form->validate()) {
       $excludedFiles = [];
@@ -175,6 +189,11 @@ class PermissionsController extends SharedController
 
       foreach ($form->getChildElement('peoplesection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
         if ($child->getName() === 'personpermissions') {
+          $accessLevel = $child->getChildElement('accesslevel')->getValue();
+          if ($accessLevel === Config::SUPER_USER && !PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
+            // @todo add a message here if it becomes necessary
+            continue;
+          }
           $username = $child->getChildElement('username')->getValue();
           if (empty($username)) {
             // no one to add.
@@ -189,7 +208,7 @@ class PermissionsController extends SharedController
           PermissionsManager::saveUserPermissions(
               $username,
               $siteId,
-              $child->getChildElement('accesslevel')->getValue(),
+              $accessLevel,
               $child->getChildElement('includedfiles')->getValue(),
               $child->getChildElement('excludedfiles')->getValue(),
               $expirationDate,
