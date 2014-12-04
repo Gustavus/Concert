@@ -144,6 +144,7 @@ class Utility
         if ($fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '')) {
           $staged = true;
         }
+        $fm->stopEditing();
       }
     }
 
@@ -152,6 +153,7 @@ class Utility
       if ($fm->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, '')) {
         $staged = true;
       }
+      $fm->stopEditing();
     }
 
     if ($staged && PHP_SAPI !== 'cli') {
