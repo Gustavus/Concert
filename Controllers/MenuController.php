@@ -92,6 +92,7 @@ class MenuController extends SharedController
     'file'   => 0,
     'drafts' => 1,
     'menu'   => 2,
+    'help'   => 3,
   ];
 
   /**
@@ -263,6 +264,21 @@ class MenuController extends SharedController
       'thickbox' => true,
     ];
     $this->addMenuItem($item, null, 49);
+
+    $item = [
+      'text'     => 'Concert Basics',
+      'url'      => 'https://gustavus.edu/gts/Concert',
+      'newTab'   => 'true',
+      'thickbox' => false,
+    ];
+    $this->addMenuItem($item, 'help', 1);
+
+    $item = [
+      'text'     => 'Submit an Issue',
+      'url'      => '/feedback',
+      'thickbox' => true,
+    ];
+    $this->addMenuItem($item, 'help', 2);
   }
 
   /**
