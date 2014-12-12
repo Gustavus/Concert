@@ -984,7 +984,7 @@ class PermissionsManager
    */
   private static function getInheritedPermissionsForSite($siteBase)
   {
-    $parentSites = self::findSitesContainingFile(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR), true);
+    $parentSites = self::findSitesContainingFile(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php'), true);
     if (empty($parentSites)) {
       return null;
     }
