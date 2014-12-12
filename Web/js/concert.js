@@ -73,8 +73,7 @@ Gustavus.Concert = {
       {title: 'Highlight', selector: 'p,div', classes: 'highlight'},
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
       {title: 'Fancy', selector: 'table,img', classes: 'fancy'},
-      {title: 'Striped', selector: 'table', classes: 'striped'},
-      {title: 'Sortable', selector: 'table', classes: 'sortable'},
+      //{title: 'Sortable', selector: 'table', classes: 'sortable'},
       {title: 'Left', selector: 'img', classes: 'left'},
       {title: 'Right', selector: 'img', classes: 'right'},
     ]}
@@ -158,6 +157,7 @@ Gustavus.Concert = {
     table_class_list: [
       {title: 'None', value: ''},
       {title: 'Fancy', value: 'fancy'},
+      //{title: 'Sortable', value: 'sortable'},
     ],
     table_advtab: false,
     table_cell_advtab: false,
