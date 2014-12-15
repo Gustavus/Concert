@@ -38,6 +38,27 @@ class PermissionsController extends SharedController
       return PageUtil::renderAccessDenied();
     }
 
+    $this->addJavascripts(
+        sprintf(
+            '<script type="text/javascript">
+            Modernizr.load({
+              load: "%s",
+              complete: function() {
+                $(".filterable")
+                  .liveFilter();
+              }
+            });
+            </script>',
+            Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
+        )
+    );
+
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+    $this->addStylesheets(sprintf(
+        '<link rel="stylesheet" type="text/css" href="%s" />',
+        $cssResource
+    ));
+
     $this->setSubTitle('Sites');
     return $this->renderTemplate('permissions/renderSites.html.twig', ['sites' => PermissionsManager::getSitesFromBase('/', true, true), 'isSuperUser' => PermissionsManager::isUserSuperUser($this->getLoggedInUsername())]);
   }
