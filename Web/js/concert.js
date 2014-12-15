@@ -170,6 +170,7 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
+        // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
         Extend.apply('page', editor.getElement());
         // remove additional HTML calling Extend.apply may have added.
         Gustavus.Concert.destroyTemplatePlugins();
