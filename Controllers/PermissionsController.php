@@ -68,13 +68,13 @@ class PermissionsController extends SharedController
         }
       }
       $excludedFiles = array_filter(array_unique($excludedFiles));
-      $siteRoot = sprintf('/%s', ltrim($siteRoot));
+      $siteRoot = preg_replace('`/+`', '/', sprintf('/%s/', trim($siteRoot)));
 
       $searchSiteId = PermissionsManager::getSiteId($siteRoot);
       if (!empty($searchSiteId)) {
         $this->addMessage(sprintf('Oops! The site you wanted to create already exists. Did you mean to <a href="%s">edit that site</a>?', $this->buildUrl('editSite', ['site' => $searchSiteId])));
       } else {
-        $siteId = PermissionsManager::saveNewSiteIfNeeded(str_replace('//', '/', $siteRoot), $excludedFiles);
+        $siteId = PermissionsManager::saveNewSiteIfNeeded($siteRoot, $excludedFiles);
 
         foreach ($form->getChildElement('peoplesection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
           if ($child->getName() === 'personpermissions') {

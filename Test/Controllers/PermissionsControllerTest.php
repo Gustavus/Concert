@@ -270,7 +270,7 @@ class PermissionsControllerTest extends TestBase
   public function createSitePostSiteExists()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    PermissionsManager::saveUserPermissions('bvisto', '/billy', Config::SUPER_USER);
+    PermissionsManager::saveUserPermissions('bvisto', '/billy/', Config::SUPER_USER);
 
     $this->authenticate('bvisto');
     $_POST = [
@@ -319,7 +319,7 @@ class PermissionsControllerTest extends TestBase
   public function createSitePost()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    PermissionsManager::saveUserPermissions('bvisto', '/billy', Config::SUPER_USER);
+    PermissionsManager::saveUserPermissions('bvisto', '/billy/', Config::SUPER_USER);
 
     $this->authenticate('bvisto');
     $_POST = [
@@ -360,7 +360,7 @@ class PermissionsControllerTest extends TestBase
 
     $perms = PermissionsManager::getAllPermissionsForUser('jerry');
 
-    $this->assertTrue(isset($perms['/arstarst']));
+    $this->assertTrue(isset($perms['/arstarst/']));
     $this->destructDB();
     $this->unauthenticate();
   }
