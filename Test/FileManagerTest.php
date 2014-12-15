@@ -1623,7 +1623,7 @@ more html
    */
   public function destroyLock()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks']);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->assertTrue($this->fileManager->createLock());
@@ -1638,7 +1638,7 @@ more html
    */
   public function stopEditingAndUserHasLock()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks']);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
     $this->buildFileManager('bvisto', '/billy/files/private.php');
     $this->assertTrue($this->fileManager->createLock());
@@ -1728,7 +1728,7 @@ more html
    */
   public function acquireLockExpired()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks']);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/billy', 'test']);
 
@@ -2477,7 +2477,7 @@ echo $config["content"];';
    */
   public function deleteFileMultipleStagedEntries()
   {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles', 'Drafts']);
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 

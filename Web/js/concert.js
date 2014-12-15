@@ -73,7 +73,7 @@ Gustavus.Concert = {
       {title: 'Highlight', selector: 'p,div', classes: 'highlight'},
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
       {title: 'Fancy', selector: 'table,img', classes: 'fancy'},
-      //{title: 'Sortable', selector: 'table', classes: 'sortable'},
+      {title: 'Sortable', selector: 'table', classes: 'sortable'},
       {title: 'Left', selector: 'img', classes: 'left'},
       {title: 'Right', selector: 'img', classes: 'right'},
     ]}
@@ -157,7 +157,7 @@ Gustavus.Concert = {
     table_class_list: [
       {title: 'None', value: ''},
       {title: 'Fancy', value: 'fancy'},
-      //{title: 'Sortable', value: 'sortable'},
+      {title: 'Sortable', value: 'sortable'},
     ],
     table_advtab: false,
     table_cell_advtab: false,
@@ -170,6 +170,11 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
+        // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
+        Extend.apply('page', editor.getElement());
+        // remove additional HTML calling Extend.apply may have added.
+        Gustavus.Concert.destroyTemplatePlugins();
+
         Gustavus.Concert.ignoreDirtyEditors = false;
         // clean up content
         var content = Gustavus.Concert.mceCleanup(editor.getContent());
@@ -317,7 +322,10 @@ Gustavus.Concert = {
     cleaned = cleaned.replace(/ ?mce-item[^>" ]*/g, '');
     // get rid of any empty classes we may have.
     cleaned = cleaned.replace(/class=""/g, '');
+    // remove things that fancy or striped adds to table rows
     cleaned = cleaned.replace(/<tr class="odd">/g, '<tr>');
+    // remove stuff that tablesorter adds to sortable tables.
+    cleaned = cleaned.replace(/<th  style="-webkit-user-select: none;" tabindex="0" scope="col">/g, '<th>');
     return cleaned;
   },
 
@@ -524,6 +532,15 @@ Gustavus.Concert = {
   },
 
   /**
+   * Destroys any plugins the template adds
+   * @return {undefined}
+   */
+  destroyTemplatePlugins: function() {
+    // make sure table sorter is destroyed from tables otherwise they will be submitted with extra classes.
+    $('div.editable table.sortable').trigger('destroy');
+  },
+
+  /**
    * Initializes concert
    * @return {undefined}
    */
@@ -539,6 +556,8 @@ Gustavus.Concert = {
       $('#page-titles div.editable').removeClass('default').addClass('title');
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
+
+      Gustavus.Concert.destroyTemplatePlugins();
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;

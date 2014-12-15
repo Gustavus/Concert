@@ -1283,7 +1283,7 @@ class FileManager
   }
 
   /**
-   * Sets a flag so we know that the user is editing a public draft
+   * Sets a flag so we know that the user is editing a draft that represents this file
    *
    * @return  void
    */
@@ -1308,6 +1308,12 @@ class FileManager
       }
 
       return PermissionsManager::userCanEditDraft($this->username, $draft);
+    } else if ($this->userIsEditingDraft && !$this->userIsEditingDraftForFile) {
+      // user is editing a draft and our current FileManager is the draft and not the file the draft represents
+      $draft = $this->getDraft(basename($this->filePath));
+      if ($draft) {
+        return PermissionsManager::userCanEditDraft($this->username, $draft);
+      }
     }
 
     $filePath = Utility::removeDocRootFromPath($this->filePath);
@@ -1448,7 +1454,19 @@ class FileManager
         }
         $fm->destroyLock();
       }
+    } else {
+      // we want to look to see if the user has a draft for this file and release the lock on the draft.
+      $draft = $this->getDraft();
+      if ($draft) {
+        $fm = new FileManager($this->username, Config::$draftDir . $draft['draftFilename'], null, $this->getDBAL());
+        $fm->setUserIsEditingDraft();
+        if ($this->userIsEditingPublicDraft) {
+          $fm->setUserIsEditingPublicDraft();
+        }
+        $fm->destroyLock();
+      }
     }
+
     $dbal = $this->getDBAL();
 
     if ($dbal->delete('locks', ['username' => $this->username, 'filepathHash' => $this->getFilePathHash()])) {
@@ -1603,9 +1621,18 @@ class FileManager
     }
 
     if ($draft) {
-      $fm = new FileManager($this->username, $draft['destFilepath'], null, $this->getDBAL());
+      if ($this->filePath === $draft['destFilepath']) {
+        // Our current FileManager doesn't represent a draft.
+        // We need to build a FileManager representing the draft so we can get a lock.
+        $fm = new FileManager($this->username, Config::$draftDir . $draft['draftFilename'], null, $this->getDBAL());
+      } else {
+        // Our current FileManager represents a draft
+        // We want to build a new FileManager for the file the draft represents so we can lock that file.
+        $fm = new FileManager($this->username, $draft['destFilepath'], null, $this->getDBAL());
+        $fm->setUserIsEditingDraftForFile();
+      }
+
       $fm->setUserIsEditingDraft();
-      $fm->setUserIsEditingDraftForFile();
       if ($this->userIsEditingPublicDraft) {
         $fm->setUserIsEditingPublicDraft();
       }
