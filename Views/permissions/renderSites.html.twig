@@ -1,7 +1,12 @@
 {% spaceless %}
 {%- if sites|length > 0 %}
 
-  <table class="fancy sortable">
+  <div class="36 alpha omega">
+    <div class="push_18 grid_18 omega">
+      <input type="text" name="filter" class="filter" id="filterSites" placeholder="Type to filter" />
+    </div>
+  </div>
+  <table class="fancy sortable filterable fullWidth">
     <thead>
       <tr>
         <th>Site Root</th>

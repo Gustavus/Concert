@@ -38,6 +38,27 @@ class PermissionsController extends SharedController
       return PageUtil::renderAccessDenied();
     }
 
+    $this->addJavascripts(
+        sprintf(
+            '<script type="text/javascript">
+            Modernizr.load({
+              load: "%s",
+              complete: function() {
+                $(".filterable")
+                  .liveFilter();
+              }
+            });
+            </script>',
+            Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
+        )
+    );
+
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+    $this->addStylesheets(sprintf(
+        '<link rel="stylesheet" type="text/css" href="%s" />',
+        $cssResource
+    ));
+
     $this->setSubTitle('Sites');
     return $this->renderTemplate('permissions/renderSites.html.twig', ['sites' => PermissionsManager::getSitesFromBase('/', true, true), 'isSuperUser' => PermissionsManager::isUserSuperUser($this->getLoggedInUsername())]);
   }
@@ -68,13 +89,13 @@ class PermissionsController extends SharedController
         }
       }
       $excludedFiles = array_filter(array_unique($excludedFiles));
-      $siteRoot = sprintf('/%s', ltrim($siteRoot));
+      $siteRoot = preg_replace('`/+`', '/', sprintf('/%s/', trim($siteRoot)));
 
       $searchSiteId = PermissionsManager::getSiteId($siteRoot);
       if (!empty($searchSiteId)) {
         $this->addMessage(sprintf('Oops! The site you wanted to create already exists. Did you mean to <a href="%s">edit that site</a>?', $this->buildUrl('editSite', ['site' => $searchSiteId])));
       } else {
-        $siteId = PermissionsManager::saveNewSiteIfNeeded(str_replace('//', '/', $siteRoot), $excludedFiles);
+        $siteId = PermissionsManager::saveNewSiteIfNeeded($siteRoot, $excludedFiles);
 
         foreach ($form->getChildElement('peoplesection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
           if ($child->getName() === 'personpermissions') {
