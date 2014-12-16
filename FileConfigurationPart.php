@@ -256,28 +256,34 @@ class FileConfigurationPart
 
     $closingDiv = sprintf('</div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $openingDiv = sprintf('<div class="editable" data-index="%s">', $index);
-    if (!self::isPHPContent()) {
-      // we need to look for un-matched tags
-      $offsetOffset = 0;
-      $offsets = self::getUnMatchedOffsets($content);
 
+    if (self::isPHPContent()) {
+      // we don't have to do anything with php content
+      return sprintf('%s%s%s', $openingDiv, trim($content), $closingDiv);
+    }
+
+    // not php content
+
+    $preEditableContents  = '';
+    $postEditableContents = '';
+    $editableContents     = $content;
+
+    // Find where we need to start and end our editable div.
+    // We want to keep going until our editableContents don't contain unmatched tags.
+    while (($offsets = array_filter(self::getUnMatchedOffsets($editableContents))) && !empty($offsets)) {
+      // variable for storing the un-matched closing div's offset.
+      $unMatchedClosingOffset = 0;
       if (!empty($offsets['closing'])) {
         // we have unMatched closing tags
         // we need to insert our editable div after the last one.
-        // closing divs are sorted in reverse order they are found, so we don't need to do any sorting here.
+        // closing divs are sorted in the reverse order they are found, so we don't need to do any sorting here.
         foreach ($offsets['closing'] as $closingOffset) {
-          // set this before using it since we want to insert things after it.
-          $offsetOffset += $closingOffset['length'];
-          $content = sprintf(
-              '%s%s%s',
-              substr($content, 0, $offsetOffset + $closingOffset['offset']),
-              $openingDiv,
-              substr($content, $offsetOffset + $closingOffset['offset'])
-          );
-          // add the openingDiv into our offset and remove the current offset length since it is already included in the string.
-          $offsetOffset += strlen($openingDiv) - $closingOffset['length'];
-          // set our opening div to an empty string so we don't insert it again
-          $openingDiv = '';
+          // we want our preEditableContents to include the unmatched closing div so we can open our editable div afterwards
+          // add any new preEditableContents onto the end of our current preEditableContents
+          $preEditableContents .= substr($editableContents, 0, $closingOffset['length'] + $closingOffset['offset']);
+
+          // we need this later to verify that our closing div will get thrown after our opening div.
+          $unMatchedClosingOffset = $closingOffset['offset'];
           break;
         }
       }
@@ -287,22 +293,28 @@ class FileConfigurationPart
         // we need to insert our ending editable div before the first one.
         // closing divs are sorted in the order they are found, so we don't need to do any sorting here.
         foreach ($offsets['opening'] as $openingOffset) {
-          $content = sprintf(
-              '%s%s%s',
-              substr($content, 0, $offsetOffset + $openingOffset['offset']),
-              $closingDiv,
-              substr($content, $offsetOffset + $openingOffset['offset'])
-          );
-          // set this after we use it since we want to insert things before it.
-          $offsetOffset += $openingOffset['length'] + strlen($closingDiv);
-          // set our closing div to an empty string so we don't insert it again
-          $closingDiv = '';
+          if ($openingOffset['offset'] < $unMatchedClosingOffset) {
+            // we can't close the div if we haven't opened it yet.
+            continue;
+          }
+
+          // we want our postEditableContents to contain the unmatched opening tag so we can insert our closing div before it.
+          // Add any new postEditableContents onto the beginning of our current postEditableContents
+          $postEditableContents = substr($editableContents, $openingOffset['offset']) . $postEditableContents;
+
           break;
         }
       }
+      $postEditableContentsLen = strlen($postEditableContents);
+      if ($postEditableContentsLen === 0) {
+        // if we call substr with -0 as the length it will get confused and break
+        $editableContents = substr($content, strlen($preEditableContents));
+      } else {
+        $editableContents = substr($content, strlen($preEditableContents), -$postEditableContentsLen);
+      }
     }
 
-    return sprintf('%s%s%s', $openingDiv, trim($content), $closingDiv);
+    return sprintf('%s%s%s%s%s', $preEditableContents, $openingDiv, $editableContents, $closingDiv, $postEditableContents);
   }
 
   /**
@@ -316,7 +328,8 @@ class FileConfigurationPart
   private static function getAllTagsByType($content)
   {
     // Let's find all types of tags grouping void tags in with self-closing tags.
-    $tagRegex = sprintf('`(?P<closing></[^>]+>)|(?P<selfclosing>(?:<[^!>]+/>)|(?:<(?:%s)[^!>]*?>))|(?P<opening><[^!>]+>)`x', implode('|', self::$voidElements));
+    $tagRegex = sprintf('`(?P<closing></[^>]+>)|(?P<comments><!--.+?-->)|(?P<selfclosing>(?:<[^>]+/>)|(?:<(?:%s)[^>]*?>))|(?P<opening><[^>]+>)`x', implode('|', self::$voidElements));
+
     preg_match_all($tagRegex, $content, $matches, PREG_OFFSET_CAPTURE);
 
     // flattener that changes the values of the array to the first index. (The second index will be the offset from the PREG_OFFSET_CAPTURE option)
