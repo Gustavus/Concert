@@ -263,7 +263,20 @@ class FileConfigurationPart
     }
 
     // not php content
+    $splitContents = self::separateEditableContents($content);
 
+    return sprintf('%s%s%s%s%s', $splitContents['preEditableContents'], $openingDiv, $splitContents['editableContents'], $closingDiv, $splitContents['postEditableContents']);
+  }
+
+  /**
+   * Separates editable contents out from the specified contents
+   *   Editable contents will not have any unmatched tags inside of it.
+   *
+   * @param  string $content
+   * @return array  Array with keys of preEditableContents, editableContents, and postEditableContents.
+   */
+  private static function separateEditableContents($content)
+  {
     $preEditableContents  = '';
     $postEditableContents = '';
     $editableContents     = $content;
@@ -314,7 +327,11 @@ class FileConfigurationPart
       }
     }
 
-    return sprintf('%s%s%s%s%s', $preEditableContents, $openingDiv, $editableContents, $closingDiv, $postEditableContents);
+    return [
+      'preEditableContents'  => $preEditableContents,
+      'editableContents'     => $editableContents,
+      'postEditableContents' => $postEditableContents,
+    ];
   }
 
   /**
@@ -762,35 +779,16 @@ class FileConfigurationPart
       // save our original value before editing
       $this->valuesBeforeEdit = $this->content;
 
-      //Now we need to see if we have un-matched tags. We don't want to destroy these since these aren't sent when editing a page.
-      $startReplacementOffset = 0;
-      $endReplacementOffset   = strlen($this->content);
+      // Now we need to separate our editable contents out to make sure we are changing the same value as the user was trying to edit.
+      // Editable content won't have any un-matched tags, so we only want to change that same content.
+      $splitContents = self::separateEditableContents($this->content);
 
-      $offsets = self::getUnMatchedOffsets($this->content);
-
-      if (!empty($offsets['closing'])) {
-        // we have unMatched closing tags
-        // closing divs are sorted in reverse order they are found, so we don't need to do any sorting here.
-        foreach ($offsets['closing'] as $closingOffset) {
-          // we want to start our replacement after the un-matched closing tag
-          $startReplacementOffset = $closingOffset['offset'] + $closingOffset['length'];
-        }
-      }
-
-      if (!empty($offsets['opening'])) {
-        // we have unMatched opening tags
-        // closing divs are sorted in the order they are found, so we don't need to do any sorting here.
-        foreach ($offsets['opening'] as $openingOffset) {
-          // we want to end our replacement before the un-matched opening tag.
-          $endReplacementOffset = $openingOffset['offset'];
-        }
-      }
-
+      // just add the new content between the preEditable and postEditable contents.
       $this->content = sprintf(
           '%s%s%s',
-          substr($this->content, 0, $startReplacementOffset),
+          $splitContents['preEditableContents'],
           $newContent,
-          substr($this->content, $endReplacementOffset)
+          $splitContents['postEditableContents']
       );
       $this->edited = true;
       return true;

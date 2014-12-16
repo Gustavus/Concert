@@ -265,7 +265,11 @@ function executeSomeContent()
 ob_start();
 ?>
 
-<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+<div class="editable" data-index="1">
+
+<p>This is some html content</p>
+
+</div>%s
 
 <?php
 
@@ -311,7 +315,11 @@ function executeSomeContent()
 ob_start();
 ?>
 
-<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+<div class="editable" data-index="1">
+
+<p>This is some html content</p>
+
+</div>%s
 
 <?php
 
@@ -366,7 +374,11 @@ function executeSomeContent()
 ob_start();
 ?>
 
-<div class="editable" data-index="1"><p>This is some edited html content</p></div>%s
+<div class="editable" data-index="1">
+
+<p>This is some edited html content</p>
+
+</div>%s
 
 <?php
 
@@ -436,7 +448,11 @@ function executeSomeContent()
 ob_start();
 ?>
 
-<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+<div class="editable" data-index="1">
+
+<p>This is some html content</p>
+
+</div>%s
 
 <?php
 
@@ -544,7 +560,11 @@ $config[\'content\'] .= executeSomeContentarstarst();
 ob_start();
 ?>
 
-<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+<div class="editable" data-index="1">
+
+<p>This is some html content</p>
+
+</div>%s
 
 <?php
 
@@ -1150,6 +1170,7 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $filename = $this->fileManager->makeEditableDraft();
 
     $fileContents = file_get_contents($filename);
+    //echo $fileContents;
     unlink($filename);
 
     $this->assertContains($this->wrappedEditableIdentifier, $fileContents);
@@ -1176,7 +1197,11 @@ function executeSomeContent()
 ob_start();
 ?>
 
+
+
 <p>This is some html content</p>
+
+
 
 <?php
 
@@ -1225,11 +1250,18 @@ echo $config["content"];';
     $nonEditableContent = $this->fileManager->removeEditablePieces($fileContents);
     $this->assertNotContains($this->wrappedEditableIdentifier, $nonEditableContent);
 
-    $expectedFile = '<p>This is some html content</p>
+    $expectedFile = '
+<p>This is some html content</p>
+
+
 
 <?php=$test;?>
 
+
+
 more html
+
+
 
 <?php //arst';
 
