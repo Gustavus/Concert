@@ -17,35 +17,47 @@ $templateBuilderProperties = [];
 ob_start();
 ?>
 
-<div class="editable" data-index="1"></div><!--endeditablediv-->
+<div class="editable" data-index="1">
+
+</div><!--endeditablediv-->
 
 <?php
 $templateBuilderProperties['head'] = ob_get_contents();
 ob_clean();
 ?>
 
-<div class="editable" data-index="3"></div><!--endeditablediv-->
+<div class="editable" data-index="3">
+
+</div><!--endeditablediv-->
 
 <?php
 $templateBuilderProperties['javascripts'] = ob_get_contents();
 ob_clean();
 ?>
 
-<div class="editable" data-index="5">Events</div><!--endeditablediv-->
+<div class="editable" data-index="5">
+
+Events
+
+</div><!--endeditablediv-->
 
 <?php
 $templateBuilderProperties['title'] = ob_get_contents();
 ob_clean();
 ?>
 
-<div class="editable" data-index="7"></div><!--endeditablediv-->
+<div class="editable" data-index="7">
+
+</div><!--endeditablediv-->
 
 <?php
 $templateBuilderProperties['subtitle'] = ob_get_contents();
 ob_clean();
 ?>
 
-<div class="editable" data-index="9"><div class="grid_36 alpha omega">
+<div class="editable" data-index="9">
+
+<div class="grid_36 alpha omega">
 
   <p><a href="/alumni/gather/reunions/spring.php">Spring Reunions</a> | <a href="
   /alumni/gather/networking.php">Networking</a> | <a href="/alumni/gather/chapters/events.php">Chapter Events</a> | <a href="/alumni/gather/homecoming.php">Homecoming</a> | <a href="/alumni/gather/reunions/fall.php">Fall Reunions</a></p>
@@ -73,14 +85,18 @@ ob_clean();
   $cp->display();
   ?>
 
-</div><div class="editable" data-index="11"></div><!--endeditablediv-->
+</div><div class="editable" data-index="11">
+
+</div><!--endeditablediv-->
 
 <?php
 $templateBuilderProperties['content'] = ob_get_contents();
 ob_clean();
 ?>
 
-<div class="editable" data-index="13"></div><!--endeditablediv-->
+<div class="editable" data-index="13">
+
+</div><!--endeditablediv-->
 
 <?php
 $templateBuilderProperties['focusBox'] = ob_get_contents();

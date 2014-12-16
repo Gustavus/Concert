@@ -142,7 +142,11 @@ function executeSomeContent()
 ob_start();
 ?>
 
-<div class="editable" data-index="1"><p>This is some html content</p></div>%s
+<div class="editable" data-index="1">
+
+<p>This is some html content</p>
+
+</div>%s
 
 <?php
 
