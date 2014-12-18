@@ -1901,6 +1901,125 @@ more html
   /**
    * @test
    */
+  public function acquireLockForPublicDraft()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = str_replace('//', '/', $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
+
+    $this->assertTrue($draftFilePath !== false);
+    $this->fileManager->stopEditing();
+
+    $this->buildFileManager('jerry', $draftFilePath);
+    $this->fileManager->setUserIsEditingPublicDraft();
+    $this->assertTrue($this->fileManager->userIsEditingPublicDraft);
+
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $dbal = $this->fileManager->getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('username')
+      ->addSelect('filepath')
+      ->from('locks', 'l');
+
+    $expectedLocks = [
+      [
+        'username' => 'jerry',
+        'filepath' => $draftFilePath,
+      ],
+      [
+        'username' => 'jerry',
+        'filepath' => self::$testFileDir . 'index.php',
+      ],
+    ];
+    $this->assertSame($expectedLocks, $dbal->fetchAll($qb->getSQL()));
+
+    $this->fileManager->stopEditing();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('username')
+      ->addSelect('filepath')
+      ->from('locks', 'l');
+
+    $this->assertEmpty($dbal->fetchAll($qb->getSQL()));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function acquireLockBasedOnDraft()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFilePath = str_replace('//', '/', $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
+
+    $this->assertTrue($draftFilePath !== false);
+    $this->fileManager->stopEditing();
+
+    $dbal = $this->fileManager->getDBAL();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('username')
+      ->addSelect('filepath')
+      ->from('locks', 'l');
+
+    // make sure all locks are empty.
+    $this->assertEmpty($dbal->fetchAll($qb->getSQL()));
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php', $draftFilePath);
+    $this->fileManager->setUserIsEditingDraft();
+
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('username')
+      ->addSelect('filepath')
+      ->from('locks', 'l');
+
+    $expectedLocks = [
+      [
+        'username' => 'testUser',
+        'filepath' => self::$testFileDir . 'index.php',
+      ],
+      [
+        'username' => 'testUser',
+        'filepath' => $draftFilePath,
+      ],
+    ];
+    $this->assertSame($expectedLocks, $dbal->fetchAll($qb->getSQL()));
+
+    $this->fileManager->stopEditing();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('username')
+      ->addSelect('filepath')
+      ->from('locks', 'l');
+
+    $this->assertEmpty($dbal->fetchAll($qb->getSQL()));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function getLockDuration()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks']);
