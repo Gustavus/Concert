@@ -508,6 +508,11 @@ class FileManager
     $dbal = $this->getDBAL();
 
     $dbal->delete('drafts', ['draftFilename' => $draftFilename]);
+
+    // destroy lock for draft.
+    $fm = new FileManager($this->username, Config::$draftDir . $draftFilename, null, $this->getDBAL());
+    $fm->destroyLock();
+
     // clear our draft caches
     unset(self::$cachedDrafts[$draftFilename]);
     self::$cachedDraftsByName = [];
@@ -1283,7 +1288,7 @@ class FileManager
   }
 
   /**
-   * Sets a flag so we know that the user is editing a draft that represents this file
+   * Sets a flag so we know that the user is editing a draft that represents this file.
    *
    * @return  void
    */
@@ -1438,33 +1443,29 @@ class FileManager
    * Destroys the lock
    *   <strong>Note:</strong> This doesn't check to see if you have permission to create a lock or not.
    *
+   * @param  boolean $isInternalCall  Flag to specify destroyLock is called within destroyLock
    * @return boolean Always returns true. If no rows were modified, there was no lock to delete, so we still return true as it has been "destroyed".
    */
-  private function destroyLock()
+  private function destroyLock($isInternalCall = false)
   {
-    if ($this->userIsEditingDraft) {
+    if (!$isInternalCall && $this->userIsEditingDraft && ($draft = $this->getDraft(basename($this->filePath)))) {
       // we need to make sure to destroy the lock for the file this draft represents
-      $draft = $this->getDraft(basename($this->filePath));
-      if ($draft) {
-        $fm = new FileManager($this->username, $draft['destFilepath'], null, $this->getDBAL());
-        $fm->setUserIsEditingDraft();
-        $fm->setUserIsEditingDraftForFile();
-        if ($this->userIsEditingPublicDraft) {
-          $fm->setUserIsEditingPublicDraft();
-        }
-        $fm->destroyLock();
+      $fm = new FileManager($this->username, $draft['destFilepath'], null, $this->getDBAL());
+      $fm->setUserIsEditingDraft();
+      $fm->setUserIsEditingDraftForFile();
+      if ($this->userIsEditingPublicDraft) {
+        $fm->setUserIsEditingPublicDraft();
       }
-    } else {
+      $fm->destroyLock(true);
+    } else if (!$isInternalCall && ($draft = $this->getDraft())) {
       // we want to look to see if the user has a draft for this file and release the lock on the draft.
-      $draft = $this->getDraft();
-      if ($draft) {
-        $fm = new FileManager($this->username, Config::$draftDir . $draft['draftFilename'], null, $this->getDBAL());
-        $fm->setUserIsEditingDraft();
-        if ($this->userIsEditingPublicDraft) {
-          $fm->setUserIsEditingPublicDraft();
-        }
-        $fm->destroyLock();
+
+      $fm = new FileManager($this->username, Config::$draftDir . $draft['draftFilename'], null, $this->getDBAL());
+      $fm->setUserIsEditingDraft();
+      if ($this->userIsEditingPublicDraft) {
+        $fm->setUserIsEditingPublicDraft();
       }
+      $fm->destroyLock(true);
     }
 
     $dbal = $this->getDBAL();
