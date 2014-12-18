@@ -246,10 +246,10 @@ class SiteNavControllerTest extends TestBase
    */
   public function createOrEditNoNavsUpToGlobal()
   {
-    $filePath = '/cis/www/billy/arstarst/arstarst/index.php';
+    $filePath = '/cis/www/arst/arstarst/arstarst/index.php';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/billy/arstarst/arstarst/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/arst/arstarst/arstarst/', 'test']);
 
     $this->authenticate('testUser');
     $this->setUpController();
