@@ -1,11 +1,11 @@
 <?php
 /**
  * @package  Concert
- * @subpackage Scripts
+ * @subpackage Scripts\Converter
  * @author  Billy Visto
  */
 
-namespace Gustavus\Concert\Scripts;
+namespace Gustavus\Concert\Scripts\Converter;
 
 use Gustavus\Concert\Utility,
   RuntimeException,
@@ -22,7 +22,7 @@ $helpText = '  Usage: runTemplateConverter.php filePath saveBackup
   Arguments:
     filePath: Path to the file to convert.
     saveBackup [true]: Whether to make a backup of the file or not. Saves the file as file-bkup-m-d-Y.php.
-  Example usage: php runTemplateConverter.php /cis/lib/Concert/Scripts/testing/index.php true
+  Example usage: php runTemplateConverter.php /cis/lib/Concert/Scripts/Converter/testing/index.php true
 ';
 
 if (!isset($argv[1])) {

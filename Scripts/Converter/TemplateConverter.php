@@ -1,11 +1,11 @@
 <?php
 /**
  * @package  Concert
- * @subpackage Scripts
+ * @subpackage Scripts\Converter
  * @author  Billy Visto
  */
 
-namespace Gustavus\Concert\Scripts;
+namespace Gustavus\Concert\Scripts\Converter;
 
 use Gustavus\Concert\Utility,
   RuntimeException;
@@ -14,7 +14,7 @@ use Gustavus\Concert\Utility,
  * Class to handle converting a specific page
  *
  * @package  Concert
- * @subpackage Scripts
+ * @subpackage Scripts\Converter
  * @author  Billy Visto
  */
 class TemplateConverter
