@@ -11,6 +11,10 @@ $templatePreferences  = array(
 require_once 'template/request.class.php';
 require_once 'rssgrabber/rssgrabber.class.php';
 require_once '/cis/www/calendar/classes/puller.class.php';
+$user = \Gustavus\Gatekeeper\Gatekeeper::getUser();
+if (!$user->isCampusMemberOrTrustee()) {
+  return false;
+}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><!-- InstanceBegin template="/Templates/Gustavus.2.dwt" codeOutsideHTMLIsLocked="true" -->
