@@ -16,6 +16,15 @@ if (PHP_SAPI !== 'cli') {
   exit;
 }
 
+$pwu_data = posix_getpwuid(posix_geteuid());
+$username = $pwu_data['name'];
+
+if ($username !== 'root') {
+  // this should only be run as root. Other users won't have permissions to save the file properly.
+  echo 'This should only be run as root.';
+  exit;
+}
+
 $helpText = '  Usage: runTemplateConverter.php filePath saveBackup
   Options:
     h|-h|--h|help|-help|help: displays this help text.
@@ -39,15 +48,6 @@ if (isset($argv[2])) {
   $backup = ($argv[2] === 'false') ? false : true;
 } else {
   $backup = true;
-}
-
-$pwu_data = posix_getpwuid(posix_geteuid());
-$username = $pwu_data['name'];
-
-if ($username !== 'root') {
-  // this should only be run as root. Other users won't have permissions to save the file properly.
-  echo 'This should only be run as root.';
-  exit;
 }
 
 /**
