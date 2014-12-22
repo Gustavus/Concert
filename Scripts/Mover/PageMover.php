@@ -194,7 +194,6 @@ class PageMover
       if ($result) {
         // actually move the draft.
         if (!rename(Config::$draftDir . $originalDraftFilename, Config::$draftDir . $newDraftFilename)) {
-          $dbal->rollback();
           $this->errors[] = sprintf('The draft: %s couldn\'t be renamed to: %s', $originalDraftFilename, $newDraftFilename);
         }
         ++$successes;
@@ -301,7 +300,6 @@ class PageMover
         }
         // actually move the stagedFile.
         if (!rename(Config::$stagingDir . $stagedFile['srcFilename'], Config::$stagingDir . $newData['srcFilename'])) {
-          $dbal->rollback();
           $this->errors[] = sprintf('The staged file: %s couldn\'t be renamed to: %s', Config::$stagingDir . $stagedFile['srcFilename'], Config::$stagingDir . $newData['srcFilename']);
         }
       }
