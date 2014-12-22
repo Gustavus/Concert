@@ -5,9 +5,10 @@
  * @author  Billy Visto
  */
 
-namespace Gustavus\Concert\Test;
+namespace Gustavus\Concert\Test\Converter;
 
 use Gustavus\Concert\Scripts\Converter\TemplateConverter,
+  Gustavus\Concert\Test\TestBase,
   Gustavus\Test\TestObject;
 
 /**
@@ -56,6 +57,7 @@ class TemplateConverterTest extends TestBase
    * Sets up the converter for testing
    *
    * @param string $filePath Path to the file to test
+   * @return void
    */
   private function setUpConverter($filePath)
   {

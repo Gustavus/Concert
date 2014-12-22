@@ -16,8 +16,8 @@ if (PHP_SAPI !== 'cli') {
   exit;
 }
 
-$pwu_data = posix_getpwuid(posix_geteuid());
-$username = $pwu_data['name'];
+$pwuData = posix_getpwuid(posix_geteuid());
+$username = $pwuData['name'];
 
 if ($username !== 'root') {
   // this should only be run as root. Other users won't have permissions to save the file properly.
