@@ -497,7 +497,7 @@ class MainController extends SharedController
       ->setMaxResults($limit);
 
     if ($username) {
-      $qb->where('username = :username');
+      $qb->andWhere('username = :username');
       $params[':username'] = $username;
     } else {
       $qb->addSelect('username');
@@ -512,12 +512,12 @@ class MainController extends SharedController
       ->addSelect('date')
       ->addSelect('publishedDate')
       ->from('stagedFiles', 'sf')
-      ->andWhere('action NOT IN (:httpdDir, :httpdHtAccess)')
+      ->where('action NOT IN (:httpdDir, :httpdHtAccess)')
       ->orderBy('publishedDate', 'DESC')
       ->setMaxResults($limit);
 
     if ($username) {
-      $qb->where('username = :username');
+      $qb->andWhere('username = :username');
     } else {
       $qb->addSelect('username');
     }
@@ -562,12 +562,18 @@ class MainController extends SharedController
     $qb->addSelect('DISTINCT username')
       ->addSelect('COUNT(destFilepath) as publishCount')
       ->from('stagedFiles', 's')
-      ->where($qb->expr()->notLike('action', '"createHTTPD%"'))
+      ->where('action NOT IN (:httpdDir, :httpdHtAccess)')
       ->groupBy('username')
       ->orderBy('publishCount', 'DESC')
       ->setMaxResults(10);
 
-    $topUsers = $dbal->fetchAll($qb->getSQL());
+    $topUsers = $dbal->fetchAll(
+        $qb->getSQL(),
+        [
+          ':httpdDir'      => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+          ':httpdHtAccess' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE
+        ]
+    );
 
     return [
       'distinctFileActions' => $distinctFileActions,
