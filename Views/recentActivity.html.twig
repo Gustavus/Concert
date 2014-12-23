@@ -19,6 +19,7 @@
   {%- endif -%}
 
     {%- if globalActivity and published|length > 0 -%}
+      {# We want published pages to show up first if we are looking at global activity #}
       {{ self.renderPublishedPages(published, globalActivity) }}
     {%- elseif drafts|length > 0 -%}
       {{ self.renderDrafts(drafts, globalActivity) }}
@@ -33,6 +34,7 @@
     {%- endif -%}
 
     {%- if globalActivity and drafts|length > 0 -%}
+      {# We want drafts to show up second if we are looking at global activity #}
       {{ self.renderDrafts(drafts, globalActivity) }}
     {%- elseif published|length > 0 -%}
       {{ self.renderPublishedPages(published, globalActivity) }}
