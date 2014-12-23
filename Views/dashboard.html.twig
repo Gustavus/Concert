@@ -1,7 +1,28 @@
+{% import _self as self %}
 {% spaceless %}
+{%- if stats -%}
+  {# render stats #}
+  <div class="grid_36 alpha omega">
+    <div class="grid_8 alpha">
+      {{ self.renderUserStats(stats['topUsers']) }}
+    </div>
+    <div class="grid_14">
+      {{ self.renderDistinctFileStats(stats['distinctFileActions']) }}
+    </div>
+    <div class="grid_14 omega">
+      {{ self.renderAllFileStats(stats['allFileActions']) }}
+    </div>
+  </div>
+{%- endif -%}
+
+{# render sites #}
 <div class="grid_36 alpha omega">
   <div class="grid_18 alpha">
-    <h2>Your Sites</h2>
+    {%- if isGlobal -%}
+      <h2>Sites</h2>
+    {%- else -%}
+      <h2>Your Sites</h2>
+    {% endif -%}
   </div>
 {%- if sites|length > 0 -%}
   <div class="grid_18 omega">
@@ -26,7 +47,84 @@
 {%- endif -%}
 </div>
 
-<h2>Your Recent Activity</h2>
+{# render recent activity #}
+{%- if isGlobal -%}
+  <h2>Recent Activity</h2>
+{%- else -%}
+  <h2>Your Recent Activity</h2>
+{% endif -%}
 {{ recentActivity|raw }}
 
 {% endspaceless %}
+
+{#
+  Renders stats for unique files
+
+  param: stats Array of stats
+#}
+{% macro renderDistinctFileStats(stats) %}
+  <table class="fancy fullWidth">
+    <legend>Unique File Actions</legend>
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Unique File Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stat in stats %}
+        <tr>
+          <td>{{ stat['action'] }}</td>
+          <td>{{ stat['counts'] }}</td>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}
+
+{#
+  Renders stats for all file modifications
+
+  param: stats Array of stats
+#}
+{% macro renderAllFileStats(stats) %}
+  <table class="fancy fullWidth">
+    <legend>All File Actions</legend>
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Total Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stat in stats %}
+        <tr>
+          <td>{{ stat['action'] }}</td>
+          <td>{{ stat['counts'] }}</td>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}
+
+{#
+  Renders top users with their count of published actions
+
+  param: stats Array of stats
+#}
+{% macro renderUserStats(stats) %}
+  <table class="fancy fullWidth">
+    <legend>Top Users</legend>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Total Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stat in stats %}
+        <tr>
+          <td>{{ stat['username'] }}</td>
+          <td>{{ stat['publishCount'] }}</td>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}

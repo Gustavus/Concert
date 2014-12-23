@@ -74,11 +74,44 @@ class SharedController extends ConcourseController
       return $this->localNavigation;
     }
 
-    $localNavigation = [
+    if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername())) {
+      $isGlobalAdmin = true;
+      $globalDashboard = [
+        'url'  => $this->buildUrl('globalDashboard', ['dashboardType' => 'global']),
+        'text' => 'Global Dashboard',
+      ];
+
+      $permissions = [
+        'heading'        => true,
+        'text'           => 'Permissions',
+        'toggleChildren' => true,
+        'items'          => [
+          [
+            'url'  => $this->buildUrl('sites'),
+            'text' => 'View Sites',
+          ],
+          [
+            'url'  => $this->buildUrl('createSite'),
+            'text' => 'Create Site',
+          ],
+          [
+            'url'  => $this->buildUrl('userSearch'),
+            'text' => 'User Search',
+          ],
+        ],
+      ];
+    } else {
+      $isGlobalAdmin   = false;
+      $globalDashboard = [];
+      $permissions     = [];
+    }
+
+    $localNavigation = array_filter([
       [
         'url'  => $this->buildUrl('dashboard'),
         'text' => 'Dashboard',
       ],
+      $globalDashboard,
       [
         'url'  => $this->buildUrl('recentActivity'),
         'text' => 'Recent Activity',
@@ -109,35 +142,18 @@ class SharedController extends ConcourseController
           ]
         ],
       ],
-    ];
+      $permissions,
+    ]);
 
-    if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername())) {
-      // user can manage permissions
-      $localNavigation = array_merge(
-          $localNavigation,
-          [
-            [
-              'heading'        => true,
-              'text'           => 'Permissions',
-              'toggleChildren' => true,
-              'items'          => [
-                [
-                  'url'  => $this->buildUrl('sites'),
-                  'text' => 'View Sites',
-                ],
-                [
-                  'url'  => $this->buildUrl('createSite'),
-                  'text' => 'Create Site',
-                ],
-                [
-                  'url'  => $this->buildUrl('userSearch'),
-                  'text' => 'User Search',
-                ],
-              ],
-            ]
-          ]
-      );
-    }
+    // if ($isGlobalAdmin) {
+    //   // user can manage permissions
+    //   $localNavigation = array_merge(
+    //       $localNavigation,
+    //       [
+
+    //       ]
+    //   );
+    // }
     return $localNavigation;
   }
 

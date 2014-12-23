@@ -471,14 +471,19 @@ class MainController extends SharedController
   /**
    * Gets all recent activity for the logged in user
    *
+   * @param  string $username Username to get recent activity for. All recent activity will be used if username is false.
+   * @param  integer $limit Limit of number of recent activity actions to pull
    * @return array Array with keys of drafts and published
    */
-  private function getRecentActivity()
+  private function getRecentActivity($username = null, $limit = 10)
   {
     $dbal = $this->getDB();
-    $username = $this->getLoggedInUsername();
+    if ($username === null) {
+      $username = $this->getLoggedInUsername();
+    }
 
     $return = [];
+    $params = [];
 
     // drafts
     $qb = $dbal->createQueryBuilder();
@@ -488,11 +493,17 @@ class MainController extends SharedController
       ->addSelect('additionalUsers')
       ->addSelect('date')
       ->from('drafts', 'd')
-      ->where('username = :username')
       ->orderBy('date', 'DESC')
-      ->setMaxResults('10');
+      ->setMaxResults($limit);
 
-    $return['drafts'] =  $dbal->fetchAll($qb->getSQL(), [':username' => $username]);
+    if ($username) {
+      $qb->where('username = :username');
+      $params[':username'] = $username;
+    } else {
+      $qb->addSelect('username');
+    }
+
+    $return['drafts'] =  $dbal->fetchAll($qb->getSQL(), $params);
 
     // staged files
     $qb = $dbal->createQueryBuilder();
@@ -501,36 +512,111 @@ class MainController extends SharedController
       ->addSelect('date')
       ->addSelect('publishedDate')
       ->from('stagedFiles', 'sf')
-      ->where('username = :username')
       ->andWhere('action NOT IN (:httpdDir, :httpdHtAccess)')
       ->orderBy('publishedDate', 'DESC')
-      ->setMaxResults('10');
+      ->setMaxResults($limit);
 
-    $return['published'] = $dbal->fetchAll($qb->getSQL(), [
-        ':username' => $username,
-        ':httpdDir' => Config::CREATE_HTTPD_DIRECTORY_STAGE,
-        ':httpdHtAccess' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE
-    ]);
+    if ($username) {
+      $qb->where('username = :username');
+    } else {
+      $qb->addSelect('username');
+    }
+
+    $params[':httpdDir']      = Config::CREATE_HTTPD_DIRECTORY_STAGE;
+    $params[':httpdHtAccess'] = Config::CREATE_HTTPD_DIR_HTACCESS_STAGE;
+
+    $return['published'] = $dbal->fetchAll($qb->getSQL(), $params);
 
     return $return;
   }
 
   /**
+   * Gets global stats for Concert
+   *   Returns an array of distinctFileActions, allFileActions, and topUsers
+   *
+   * @return array Array with keys of distinctFileActions, allFileActions, and topUsers.
+   */
+  private function getStats()
+  {
+    $dbal = $this->getDB();
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('COUNT(DISTINCT srcFilename) as counts')
+      ->addSelect('action')
+      ->from('stagedFiles', 'sf')
+      ->groupBy('action')
+      ->orderBy('counts', 'DESC');
+
+    $distinctFileActions = $dbal->fetchAll($qb->getSQL());
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('COUNT(srcFilename) as counts')
+      ->addSelect('action')
+      ->from('stagedFiles', 'sf')
+      ->groupBy('action')
+      ->orderBy('counts', 'DESC');
+
+    $allFileActions = $dbal->fetchAll($qb->getSQL());
+
+    $qb = $dbal->createQueryBuilder();
+    $qb->addSelect('DISTINCT username')
+      ->addSelect('COUNT(destFilepath) as publishCount')
+      ->from('stagedFiles', 's')
+      ->where($qb->expr()->notLike('action', '"createHTTPD%"'))
+      ->groupBy('username')
+      ->orderBy('publishCount', 'DESC')
+      ->setMaxResults(10);
+
+    $topUsers = $dbal->fetchAll($qb->getSQL());
+
+    return [
+      'distinctFileActions' => $distinctFileActions,
+      'allFileActions'      => $allFileActions,
+      'topUsers'            => $topUsers,
+    ];
+  }
+
+  /**
    * Renders the dashboard for the current user
    *
+   * @param  array $params Params from Router
    * @return string
    */
-  public function dashboard()
+  public function dashboard(Array $params = [])
   {
-    $recentActivity = $this->getRecentActivity();
-
-    $recentActivity = $this->renderView('recentActivity.html.twig', ['drafts' => $recentActivity['drafts'], 'published' => $recentActivity['published'], 'isBarebones' => false]);
-
     if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername())) {
       $sites = PermissionsManager::getSitesFromBase('/');
+      $admin = true;
     } else {
       $sites = PermissionsManager::getSitesForUser($this->getLoggedInUsername());
+      $admin = false;
     }
+
+    if ($admin && isset($params['dashboardType']) && $params['dashboardType'] === 'global') {
+      // user wants to see recent activity for all users.
+      $recentActivityUsername = false;
+      $globalActivity         = true;
+
+      $recentActivity = $this->getRecentActivity($recentActivityUsername, 20);
+      $stats          = $this->getStats();
+    } else {
+      $recentActivityUsername = $this->getLoggedInUsername();
+      $globalActivity         = false;
+
+      $recentActivity = $this->getRecentActivity($recentActivityUsername);
+      $stats          = null;
+    }
+
+    // build our recent activity
+    $recentActivity = $this->renderView(
+        'recentActivity.html.twig',
+        [
+          'drafts'         => $recentActivity['drafts'],
+          'published'      => $recentActivity['published'],
+          'isBarebones'    => false,
+          'globalActivity' => $globalActivity,
+        ]
+    );
 
     if (($foundIndex = array_search('/', $sites)) !== false) {
       // the base site is in our sites. Remove it.
@@ -559,7 +645,7 @@ class MainController extends SharedController
     ));
 
     $this->setSubTitle('Dashboard');
-    return $this->renderTemplate('dashboard.html.twig', ['recentActivity' => $recentActivity, 'sites' => $sites]);
+    return $this->renderTemplate('dashboard.html.twig', ['recentActivity' => $recentActivity, 'sites' => $sites, 'isGlobal' => $globalActivity, 'stats' => $stats]);
   }
 
   /**

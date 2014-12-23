@@ -13,6 +13,11 @@ return [
     'handler' => 'Gustavus\Concert\Controllers\MainController:dashboard',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
+  'globalDashboard' => [
+    'route'   => '/{dashboardType=global}',
+    'handler' => 'Gustavus\Concert\Controllers\MainController:dashboard',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
   'moshRequest' => [
     'route'   => '/mosh',
     'handler' => 'Gustavus\Concert\Controllers\MainController:handleMoshRequest',
