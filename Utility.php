@@ -87,6 +87,18 @@ class Utility
   }
 
   /**
+   * Builds the hash of the current file's path for revisions
+   *
+   * @param  string $filePath File path to build a hash for
+   * @return string
+   */
+  public static function buildRevisionsFileHash($filePath)
+  {
+    // note: changing this will ruin past revisions. (Unless you update them in the table)
+    return md5($filePath);
+  }
+
+  /**
    * Gets the revisionsAPI for us to work with revisions
    *
    * @param  string $filePath Full path to the file
@@ -97,7 +109,7 @@ class Utility
   public static function getRevisionsAPI($filePath, $dbal, $canManageRevisions = false)
   {
     // note: changing this will ruin past revisions. (Unless you update them in the table)
-    $filePathHash = md5($filePath);
+    $filePathHash = self::buildRevisionsFileHash($filePath);
 
     $params = array(
       'dbName'            => 'concert',

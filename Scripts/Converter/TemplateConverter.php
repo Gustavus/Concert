@@ -1,11 +1,11 @@
 <?php
 /**
  * @package  Concert
- * @subpackage Scripts
+ * @subpackage Scripts\Converter
  * @author  Billy Visto
  */
 
-namespace Gustavus\Concert\Scripts;
+namespace Gustavus\Concert\Scripts\Converter;
 
 use Gustavus\Concert\Utility,
   RuntimeException;
@@ -14,7 +14,7 @@ use Gustavus\Concert\Utility,
  * Class to handle converting a specific page
  *
  * @package  Concert
- * @subpackage Scripts
+ * @subpackage Scripts\Converter
  * @author  Billy Visto
  */
 class TemplateConverter
@@ -173,7 +173,7 @@ class TemplateConverter
     // remove template/request.class.php.
     $firstPHPBlock = preg_replace('`require_once\h*?\(?\h*?[\'"].*?template/request.class.php\h*?[\'"]\h*?\)?\h*?;\h*?\v`', '', $firstPHPBlock);
 
-    preg_match('`(use [^;]+;)`sx', $firstPHPBlock, $matches);
+    preg_match('`(^\h*?use\h+[^;]+;)`smx', $firstPHPBlock, $matches);
 
     if (isset($matches[1])) {
       $useStatement = $matches[1];

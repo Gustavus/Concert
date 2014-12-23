@@ -12,5 +12,5 @@ fi
 
 for currDir in $paths
 do
-  /cis/lib/Gustavus/Concert/Scripts/templateConverter $currDir
+  /cis/lib/Gustavus/Concert/Scripts/Converter/templateConverter $currDir
 done

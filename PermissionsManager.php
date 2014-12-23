@@ -1377,6 +1377,24 @@ class PermissionsManager
   }
 
   /**
+   * Moves a site to a new siteRoot
+   *
+   * @param  integer $siteId     ID of the site to move
+   * @param  string $newSiteRoot New site root
+   * @return integer             Number or rows affected
+   */
+  public static function moveSite($siteId, $newSiteRoot)
+  {
+    $dbal = self::getDBAL();
+
+    self::clearAdminsFromCache();
+    self::clearSitesFromBaseCache();
+    self::clearCacheForSite($siteId);
+
+    return $dbal->update('sites', ['siteRoot' => $newSiteRoot], ['id' => $siteId]);
+  }
+
+  /**
    * Gets all admints and super users
    *
    * @return array Array of usernames of admins and super users

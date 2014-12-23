@@ -1,20 +1,21 @@
 <?php
 /**
  * @package  Concert
- * @subpackage Test\Scripts
+ * @subpackage Test\Scripts\Converter
  * @author  Billy Visto
  */
 
-namespace Gustavus\Concert\Test;
+namespace Gustavus\Concert\Test\Converter;
 
-use Gustavus\Concert\Scripts\TemplateConverter,
+use Gustavus\Concert\Scripts\Converter\TemplateConverter,
+  Gustavus\Concert\Test\TestBase,
   Gustavus\Test\TestObject;
 
 /**
  * Class to test TemplateConverter script
  *
  * @package  Concert
- * @subpackage Test\Scripts
+ * @subpackage Test\Scripts\Converter
  * @author  Billy Visto
  */
 class TemplateConverterTest extends TestBase
@@ -56,6 +57,7 @@ class TemplateConverterTest extends TestBase
    * Sets up the converter for testing
    *
    * @param string $filePath Path to the file to test
+   * @return void
    */
   private function setUpConverter($filePath)
   {
@@ -273,6 +275,10 @@ $templatePreferences  = array(
 
 require_once \'rssgrabber/rssgrabber.class.php\';
 require_once \'/cis/www/calendar/classes/puller.class.php\';
+$user = \Gustavus\Gatekeeper\Gatekeeper::getUser();
+if (!$user->isCampusMemberOrTrustee()) {
+  return false;
+}
 
 use Gustavus\TemplateBuilder\Builder;
 

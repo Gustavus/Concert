@@ -1,21 +1,32 @@
 Explanation of scripts.
 
-TemplateConverter.php
-  Used to convert a single page run 'php /cis/lib/Gustavus/Concert/Scripts/TemplateConverter.php --help' for more info.
+Converter/TemplateConverter.php
+  Class for converting a single page. This should only be used from runTemplateConverter.php
 
-templateConverter
-  Used to convert a whole directory. Run with '/cis/lib/Gustavus/Concert/Scripts/templateConverter /abs/path/to/dir'.
+Converter/runTemplateConverter.php
+  Used to convert a single page run 'php /cis/lib/Gustavus/Concert/Scripts/Converter/runTemplateConverter.php --help' for more info.
+
+
+Converter/templateConverter
+  Used to convert a whole directory. Run with '/cis/lib/Gustavus/Concert/Scripts/Converter/templateConverter /abs/path/to/dir'.
 
   Will store a single tar.gz backup along with a conversion log in the parent directory. Output will specify all of this information as well.
 
   View log with less -R to get colored output
 
-convertMultipleFolders
-  Used to convert multiple directories. Directories must be space separated and enclosed in quotes. Run with "/cis/lib/Gustavus/Concert/Scripts/convertMultipleFolders '/abs/path/to/dir /abs/path/to/dir2'"
+Converter/convertMultipleFolders
+  Used to convert multiple directories. Directories must be space separated and enclosed in quotes. Run with "/cis/lib/Gustavus/Concert/Scripts/Converter/convertMultipleFolders '/abs/path/to/dir /abs/path/to/dir2'"
 
   Will store a single tar.gz backup along with a conversion log in the parent directory of every directory to convert. Output will specify all of this information as well.
 
   View logs with 'cat /cis/www/camps/*.log | grep less -R'
+
+
+Mover/PageMover.php
+  Class for moving pages. This will physically move the files if specified, but more importantly, updates all the configurations pointing to the old file location.
+
+Mover/runPageMover.php
+  Script to call for moving pages. Uses PageMover. Run 'php /cis/lib/Gustavus/Concert/Mover/runPageMover.php --help' for more info.
 
 
 

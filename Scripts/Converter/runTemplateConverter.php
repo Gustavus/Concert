@@ -1,11 +1,11 @@
 <?php
 /**
  * @package  Concert
- * @subpackage Scripts
+ * @subpackage Scripts\Converter
  * @author  Billy Visto
  */
 
-namespace Gustavus\Concert\Scripts;
+namespace Gustavus\Concert\Scripts\Converter;
 
 use Gustavus\Concert\Utility,
   RuntimeException,
@@ -16,13 +16,22 @@ if (PHP_SAPI !== 'cli') {
   exit;
 }
 
+$pwuData = posix_getpwuid(posix_geteuid());
+$username = $pwuData['name'];
+
+if ($username !== 'root') {
+  // this should only be run as root. Other users won't have permissions to save the file properly.
+  echo 'This should only be run as root.';
+  exit;
+}
+
 $helpText = '  Usage: runTemplateConverter.php filePath saveBackup
   Options:
     h|-h|--h|help|-help|help: displays this help text.
   Arguments:
     filePath: Path to the file to convert.
     saveBackup [true]: Whether to make a backup of the file or not. Saves the file as file-bkup-m-d-Y.php.
-  Example usage: php runTemplateConverter.php /cis/lib/Concert/Scripts/testing/index.php true
+  Example usage: php runTemplateConverter.php /cis/lib/Concert/Scripts/Converter/testing/index.php true
 ';
 
 if (!isset($argv[1])) {
@@ -39,15 +48,6 @@ if (isset($argv[2])) {
   $backup = ($argv[2] === 'false') ? false : true;
 } else {
   $backup = true;
-}
-
-$pwu_data = posix_getpwuid(posix_geteuid());
-$username = $pwu_data['name'];
-
-if ($username !== 'root') {
-  // this should only be run as root. Other users won't have permissions to save the file properly.
-  echo 'This should only be run as root.';
-  exit;
 }
 
 /**

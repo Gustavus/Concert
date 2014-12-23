@@ -1377,7 +1377,7 @@ class FileManager
    * @param  string $filePath File path to hash instead of the default
    * @return string
    */
-  private function getFilePathHash($filePath = null)
+  public function getFilePathHash($filePath = null)
   {
     return (!empty($filePath)) ? md5($filePath) : md5($this->filePath);
   }

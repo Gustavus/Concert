@@ -53,7 +53,7 @@ find $path -type f -name \*.php | grep -v 'bkup' 2>&- |
   while read file
     do
       echo -n "."
-      conversion=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/runTemplateConverter.php $file false`
+      conversion=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/Converter/runTemplateConverter.php $file false`
 
       if [ "$conversion" == 'true' ]; then
         echo -e "${blackWithGreenBackground}Converted:${nc} ${file}" >> $logFile
