@@ -145,15 +145,6 @@ class SharedController extends ConcourseController
       $permissions,
     ]);
 
-    // if ($isGlobalAdmin) {
-    //   // user can manage permissions
-    //   $localNavigation = array_merge(
-    //       $localNavigation,
-    //       [
-
-    //       ]
-    //   );
-    // }
     return $localNavigation;
   }
 
