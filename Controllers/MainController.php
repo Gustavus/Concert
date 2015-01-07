@@ -83,10 +83,10 @@ class MainController extends SharedController
     }
 
     // set up our default language if it isn't already
-    if (!isset($_SESSION['RF'][['language']])) {
+    if (!isset($_SESSION['RF']['language'])) {
       $_SESSION['RF']['language'] = 'en_EN';
     }
-    if (!isset($_SESSION['RF'][['language_file']])) {
+    if (!isset($_SESSION['RF']['language_file'])) {
       $_SESSION['RF']['language_file'] = Config::FILE_MANAGER_LOCATION . '/lang/' . $_SESSION['RF']['language'] . '.php';
     }
 
