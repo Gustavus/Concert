@@ -82,6 +82,14 @@ class MainController extends SharedController
       $_GET['file'] = Utility::addDocRootToPath($_GET['file']);
     }
 
+    // set up our default language if it isn't already
+    if (!isset($_SESSION['RF'][['language']])) {
+      $_SESSION['RF']['language'] = 'en_EN';
+    }
+    if (!isset($_SESSION['RF'][['language_file']])) {
+      $_SESSION['RF']['language_file'] = Config::FILE_MANAGER_LOCATION . '/lang/' . $_SESSION['RF']['language'] . '.php';
+    }
+
     $file = (new File(Utility::addDocRootToPath($this->buildUrl('fileManager', ['request' => '']) . $params['request'])));
     if (strpos($params['request'], '.php') !== false) {
       $output = $file->loadAndEvaluate();
