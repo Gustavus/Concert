@@ -117,6 +117,21 @@ class SharedController extends ConcourseController
         'text' => 'Recent Activity',
       ],
       [
+        'url'       => $this->buildUrl('listAllSites'),
+        'text'      => 'View all Concert Sites',
+        'visibleTo' => [
+          'Concert' => [
+            'all',
+            'callbacks' => [
+              [
+                'callback'   => 'hasDepartment',
+                'parameters' => 'Gustavus Technology Services'
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
         'heading'        => true,
         'text'           => 'Help',
         'toggleChildren' => true,
@@ -139,7 +154,7 @@ class SharedController extends ConcourseController
                 ]
               ]
             ]
-          ]
+          ],
         ],
       ],
       $permissions,

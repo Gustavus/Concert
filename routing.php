@@ -14,8 +14,13 @@ return [
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
   'globalDashboard' => [
-    'route'   => '/{dashboardType=global}',
-    'handler' => 'Gustavus\Concert\Controllers\MainController:dashboard',
+    'route'     => '/{dashboardType=global}',
+    'handler'   => 'Gustavus\Concert\Controllers\MainController:dashboard',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'listAllSites' => [
+    'route'     => '/sites',
+    'handler'   => 'Gustavus\Concert\Controllers\MainController:listAllSites',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
   'moshRequest' => [
