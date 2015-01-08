@@ -1354,6 +1354,7 @@ class PermissionsManager
     self::clearCacheForSite($siteId);
     // clear global admins cached permissions
     self::clearAdminsFromCache();
+    self::clearSitesFromBaseCache();
 
     return $dbal->update('sites', ['excludedFiles' => $excludedFiles], ['id' => $siteId]);
   }
