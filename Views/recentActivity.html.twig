@@ -72,7 +72,7 @@
         <tr>
           <td><a href="{{ removeDocRootFromPath(draft['destFilepath']) }}">{{ removeDocRootFromPath(draft['destFilepath']) }}</a></td>
           {%- if globalActivity -%}<td>{{ draft['username'] }}</td>{%- endif -%}
-          <td>{{ draft['date']|date('M j, Y g:i') }}</td>
+          <td>{{ draft['date']|date('M j, Y g:i a') }}</td>
           <td>{{ self.renderDraftType(draft['type']) }}</td>
           <td>{% if draft['additionalUsers'] %}&#x2713;{% endif %}</td>
           <td><a href="{{ buildUrl('drafts', {'draft': draft['draftFilename']} ) }}" class="button small">View Draft</a></td>
@@ -106,8 +106,8 @@
         <tr>
           <td><a href="{{ removeDocRootFromPath(page['destFilepath']) }}">{{ removeDocRootFromPath(page['destFilepath']) }}</a></td>
           {%- if globalActivity -%}<td>{{ page['username'] }}</td>{%- endif -%}
-          <td>{{ page['date']|date('M j, Y g:i') }}</td>
-          <td>{{ page['publishedDate']|date('M j, Y g:i') }}</td>
+          <td>{{ page['date']|date('M j, Y g:i a') }}</td>
+          <td>{{ page['publishedDate']|date('M j, Y g:i a') }}</td>
           <td>{{ self.renderAction(page['action']) }}</td>
         </tr>
       {%- endfor -%}
