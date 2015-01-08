@@ -1,11 +1,7 @@
-
+{% spaceless %}
 <div class="grid_36 alpha omega">
   <div class="grid_18 alpha">
-    {%- if isGlobal -%}
-      <h2>Sites</h2>
-    {%- else -%}
-      <h2>Your Sites</h2>
-    {% endif -%}
+    <h2>Sites</h2>
   </div>
 {%- if sites|length > 0 -%}
   <div class="grid_18 omega">
@@ -26,6 +22,7 @@
     </tbody>
   </table>
 {%- else -%}
-  <p class="message">It looks like you don't have access to any sites.</p>
+  <p class="message">It looks like there aren't any sites that exist.</p>
 {%- endif -%}
 </div>
+{% endspaceless %}
