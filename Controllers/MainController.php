@@ -663,6 +663,60 @@ class MainController extends SharedController
   }
 
   /**
+   * Renders a list of sites that exist in Concert
+   *
+   * @return string
+   */
+  public function listAllSites()
+  {
+    if (PermissionsManager::isUserSuperUser($this->getLoggedInUsername()) || PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || $this->checkPermissions(
+        'Concert',
+        [
+          'all',
+          'callbacks' => [
+            [
+              'callback'   => 'hasDepartment',
+              'parameters' => 'Gustavus Technology Services'
+            ],
+          ]
+        ]
+    )) {
+      $sites = PermissionsManager::getSitesFromBase('/');
+    } else {
+      return PageUtil::renderAccessDenied();
+    }
+
+    if (($foundIndex = array_search('/', $sites)) !== false) {
+      // the base site is in our sites. Remove it.
+      unset($sites[$foundIndex]);
+    }
+
+    $this->addJavascripts(
+        sprintf(
+            '<script type="text/javascript">
+            Modernizr.load({
+              load: "%s",
+              complete: function() {
+                $(".filterable")
+                  .liveFilter();
+              }
+            });
+            </script>',
+            Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
+        )
+    );
+
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+    $this->addStylesheets(sprintf(
+        '<link rel="stylesheet" type="text/css" href="%s" />',
+        $cssResource
+    ));
+
+    $this->setSubTitle('Concert Sites');
+    return $this->renderTemplate('sites.html.twig', ['sites' => $sites]);
+  }
+
+  /**
    * Checks for any requests for users already working in Concert and also checks to see if it can add anything into the Template such as edit options or other actions.
    * Returns an array of actions to take.
    * Return Values:
