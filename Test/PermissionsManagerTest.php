@@ -2088,7 +2088,7 @@ class PermissionsManagerTest extends TestBase
 
     $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
 
-    $this->assertSame(['/billy/concert/', '/billy/'], $result);
+    $this->assertSame(['/billy/', '/billy/concert/'], $result);
     $this->destructDB();
   }
 
