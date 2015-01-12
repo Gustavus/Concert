@@ -910,7 +910,8 @@ class PermissionsManager
     $qb = $dbal->createQueryBuilder();
     $qb->select('s.siteRoot')
       ->from('sites', 's')
-      ->where('s.siteRoot LIKE :siteBase');
+      ->where('s.siteRoot LIKE :siteBase')
+      ->orderBy('s.siteRoot');
 
     if ($includeSitePerms) {
       $qb->addSelect('s.excludedFiles');

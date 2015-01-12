@@ -613,12 +613,14 @@ class MainController extends SharedController
 
       $recentActivity = $this->getRecentActivity($recentActivityUsername, 20);
       $stats          = $this->getStats();
+      $this->setSubTitle('Global Dashboard');
     } else {
       $recentActivityUsername = $this->getLoggedInUsername();
       $globalActivity         = false;
 
       $recentActivity = $this->getRecentActivity($recentActivityUsername);
       $stats          = null;
+      $this->setSubTitle('Dashboard');
     }
 
     // build our recent activity
@@ -658,7 +660,6 @@ class MainController extends SharedController
         $cssResource
     ));
 
-    $this->setSubTitle('Dashboard');
     return $this->renderTemplate('dashboard.html.twig', ['recentActivity' => $recentActivity, 'sites' => $sites, 'isGlobal' => $globalActivity, 'stats' => $stats]);
   }
 
