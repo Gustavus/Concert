@@ -823,6 +823,9 @@ class FileManager
    */
   private function saveRevision($message = '')
   {
+    // make sure our memory limit is high enough for saving revisions
+    ini_set('memory_limit', '512M');
+
     $revisionsAPI = $this->getRevisionsAPI();
 
     if (file_exists($this->filePath)) {
