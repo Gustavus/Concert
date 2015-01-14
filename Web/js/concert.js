@@ -417,9 +417,10 @@ Gustavus.Concert = {
    * @param {String} action Action we are saving for
    * @param {Boolean} [allowRedirects=true] Whether or not to redirect on save
    * @param {Boolean} [redirectAfterTimeout=false] Whether to redirect after a timeout or just redirect
+   * @param {jQuery} $element Element that triggered saving so we can re-enable it if needed
    * @return {undefined}
    */
-  saveEdits: function(action, allowRedirects, redirectAfterTimeout) {
+  saveEdits: function(action, allowRedirects, redirectAfterTimeout, $element) {
     $('body').addClass('loading');
     if (allowRedirects == undefined) {
       allowRedirects = true;
@@ -459,10 +460,16 @@ Gustavus.Concert = {
           }
         } else {
           $('body').removeClass('loading');
+          if ($element) {
+            $element.attr('disabled', '');
+          }
         }
       },
       error: function() {
         $('body').removeClass('loading');
+        if ($element) {
+          $element.attr('disabled', '');
+        }
         // @todo add a failed message.
         // Is this resolved? Should this be a jquery dialog? Or a colorbox window?
         alert('Something unexpected happened. Please try again. If your problem persists, please email <a href="mailto:web@gustavus.edu">web@gustavus.edu</a> with details on what is going on.');
@@ -568,7 +575,11 @@ Gustavus.Concert = {
 $(document)
   .on('click', '#concertPublish', function(e) {
     e.preventDefault();
-    Gustavus.Concert.saveEdits('publish', true, true);
+    var $this = $(this);
+    if ($this.attr('disabled') !== 'disabled') {
+      $this.attr('disabled', 'disabled');
+      Gustavus.Concert.saveEdits('publish', true, true, $this);
+    }
   })
 
   .on('click', '#concertSavePrivateDraft', function(e) {
