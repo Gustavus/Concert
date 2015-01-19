@@ -387,7 +387,7 @@ class Config
   ];
 
   /**
-   * Global permissions for super users
+   * Global permissions for admins
    *
    * @var array
    */
@@ -473,6 +473,7 @@ class Config
   public static $manageRevisionsAccessLevels = [
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
+    self::SITE_ADMIN_ACCESS_LEVEL,
     self::SUPER_USER,
   ];
 
