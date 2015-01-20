@@ -471,10 +471,10 @@ class Config
    * @var array
    */
   public static $manageRevisionsAccessLevels = [
+    self::SUPER_USER,
+    self::ADMIN_ACCESS_LEVEL,
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
-    self::SITE_ADMIN_ACCESS_LEVEL,
-    self::SUPER_USER,
   ];
 
   /**
