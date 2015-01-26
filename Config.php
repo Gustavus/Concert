@@ -445,7 +445,7 @@ class Config
   ];
 
   /**
-   * AccessLevels that can't edit the site nav
+   * AccessLevels that can edit source code
    *
    * @var array
    */
