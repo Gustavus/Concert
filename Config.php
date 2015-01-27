@@ -387,7 +387,7 @@ class Config
   ];
 
   /**
-   * Global permissions for super users
+   * Global permissions for admins
    *
    * @var array
    */
@@ -445,7 +445,7 @@ class Config
   ];
 
   /**
-   * AccessLevels that can't edit the site nav
+   * AccessLevels that can edit source code
    *
    * @var array
    */
@@ -471,9 +471,10 @@ class Config
    * @var array
    */
   public static $manageRevisionsAccessLevels = [
+    self::SUPER_USER,
+    self::ADMIN_ACCESS_LEVEL,
     self::SITE_ADMIN_ACCESS_LEVEL,
     self::SITE_PUBLISHER_ACCESS_LEVEL,
-    self::SUPER_USER,
   ];
 
   /**
