@@ -181,7 +181,7 @@ Gustavus.Concert = {
         // convert images into GIMLI URLs.
         content = Gustavus.Concert.convertImageURLsToGIMLI(content);
 
-        editor.setContent(content, {format: 'raw'});
+        editor.setContent(content);
       });
     },
     // menu : { // this is the complete default configuration
