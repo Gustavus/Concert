@@ -406,7 +406,7 @@ Gustavus.Concert = {
     for (i in tinymce.editors) {
       if (tinymce.editors[i].isDirty()) {
         var $element = $(tinymce.editors[i].getElement());
-        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent($element.html());
+        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(tinymce.editors[i].getContent());
       }
     }
     return edits;
