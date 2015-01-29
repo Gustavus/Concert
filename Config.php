@@ -356,6 +356,10 @@ class Config
    * Access level that can modify banners
    */
   const BANNER_ACCESS_LEVEL = 'banner';
+  /**
+   * Access level that can edit focus boxes
+   */
+  const FOCUS_BOX_ACCESS_LEVEL = 'focusBox';
 
   /**
    * All available access levels with brief description
@@ -371,6 +375,7 @@ class Config
     self::NON_DELETION_ACCESS_LEVEL   => 'Non Deletion',
     self::NO_UPLOAD_ACCESS_LEVEL      => 'No Upload',
     self::BANNER_ACCESS_LEVEL         => 'Banner',
+    self::FOCUS_BOX_ACCESS_LEVEL      => 'Focus Box',
     self::ADMIN_ACCESS_LEVEL          => 'Global Admin',
     self::SUPER_USER                  => 'Global Super User',
   ];
@@ -577,6 +582,7 @@ class Config
     'body',
     'content',
     'localnavigation',
+    'focusbox',
   ];
 
   /**
@@ -591,7 +597,18 @@ class Config
    * @var array
    */
   public static $nonEditablePartsByAccessLevel = [
-    // self::PUBLIC_ACCESS_LEVEL => ['focusbox'],
+    self::PUBLIC_ACCESS_LEVEL         => ['focusbox'],
+    self::SITE_ADMIN_ACCESS_LEVEL     => ['focusbox'],
+    self::SITE_EDITOR_ACCESS_LEVEL    => ['focusbox'],
+    self::SITE_PUBLISHER_ACCESS_LEVEL => ['focusbox'],
+    self::AUTHOR_ACCESS_LEVEL         => ['focusbox'],
+    self::NON_CREATION_ACCESS_LEVEL   => ['focusbox'],
+    self::NON_DELETION_ACCESS_LEVEL   => ['focusbox'],
+    self::NO_UPLOAD_ACCESS_LEVEL      => ['focusbox'],
+    self::BANNER_ACCESS_LEVEL         => ['focusbox'],
+    self::FOCUS_BOX_ACCESS_LEVEL      => [],
+    self::ADMIN_ACCESS_LEVEL          => [],
+    self::SUPER_USER                  => [],
   ];
 
   /**
