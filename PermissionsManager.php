@@ -847,7 +847,8 @@ class PermissionsManager
     $nonEditableParts = [];
     $hasNonRestrictiveLevel = false;
     foreach ((array) $accessLevels as $accessLevel) {
-      if (isset(Config::$nonEditablePartsByAccessLevel[$accessLevel])) {
+      // @todo. This will need to be re-thought when we add access levels with access to individual pieces that aren't non-restrictive
+      if (isset(Config::$nonEditablePartsByAccessLevel[$accessLevel]) && !empty(Config::$nonEditablePartsByAccessLevel[$accessLevel])) {
         foreach (Config::$nonEditablePartsByAccessLevel[$accessLevel] as $part) {
           $nonEditableParts[] = $part;
         }
