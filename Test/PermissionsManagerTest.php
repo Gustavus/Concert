@@ -1971,6 +1971,21 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function accessLevlCanEditPartMultipleLevels()
+  {
+    $origNonEditablePartsByAccessLevel = Config::$nonEditablePartsByAccessLevel;
+    Config::$nonEditablePartsByAccessLevel = ['test' => ['focusbox'], 'focusBox' => []];
+
+    $this->assertFalse(PermissionsManager::accessLevelCanEditPart('test', 'focusbox'));
+    $this->assertTrue(PermissionsManager::accessLevelCanEditPart('focusBox', 'focusbox'));
+    $this->assertTrue(PermissionsManager::accessLevelCanEditPart(['test', 'focusBox'], 'title'));
+
+    Config::$nonEditablePartsByAccessLevel = $origNonEditablePartsByAccessLevel;
+  }
+
+  /**
+   * @test
+   */
   public function getAccessLevelsFromPermissions()
   {
     $perms = [
