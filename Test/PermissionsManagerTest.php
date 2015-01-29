@@ -1235,7 +1235,7 @@ class PermissionsManagerTest extends TestBase
     $origNonDeletionAccessLevels = Config::$nonDeletionAccessLevels;
     Config::$nonDeletionAccessLevels = ['test'];
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test,focusBox', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertFalse(PermissionsManager::userCanDeletePage('bvisto', '/arst/protected/arst.php'));
 
@@ -1755,7 +1755,7 @@ class PermissionsManagerTest extends TestBase
     $origNonRevisionsAccessLevels = Config::$nonRevisionsAccessLevels;
     Config::$nonRevisionsAccessLevels = ['test'];
     $this->constructDB(['Sites', 'Permissions']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test,focusBox', 'files/*,private/files', 'private/*,secure']);
 
     $this->assertFalse(PermissionsManager::userCanViewRevisions('bvisto', '/arst/protected/arst.php'));
 
