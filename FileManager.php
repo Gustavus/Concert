@@ -270,7 +270,7 @@ class FileManager
    * @param  boolean $forEditing Whether we want to assemble the file for editing or for saving.
    * @return string
    */
-  public function assembleFile($forEditing = false)
+  private function assembleFile($forEditing = false)
   {
     $file = $this->getFileConfiguration()->buildFile($forEditing);
 
@@ -377,10 +377,29 @@ class FileManager
       $fileContents = $this->assembleFile(true);
     }
 
+    // Replace magic constants with their interpreted value.
+    // If we don't do this, the magic constants will point to our editable draft folder, and paths using these will be broken.
+    $this->replaceMagicConstants($fileContents);
+
     if ($this->saveFile($fileName, $fileContents)) {
       return $fileName;
     }
     return false;
+  }
+
+  /**
+   * Removes magic php constants from assembled file and replaces them with their interpreted value.
+   *   This is necessary if the file we are editing uses __DIR__ to specify file paths.
+   *
+   * @param  string &$fileContents Contents to remove magic constants from
+   * @return void
+   */
+  private function replaceMagicConstants(&$fileContents)
+  {
+    $newDir = dirname($this->filePath);
+
+    $fileContents = str_replace('__DIR__', sprintf('\'%s\'', $newDir), $fileContents);
+    $fileContents = str_replace('__FILE__', sprintf('\'%s\'', $this->filePath), $fileContents);
   }
 
   /**

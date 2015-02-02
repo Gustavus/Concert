@@ -579,6 +579,91 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $this->destructDB();
   }
 
+  /**
+   * @test
+   */
+  public function makeEditableDraftWithMagicDirConstant()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $content = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+require_once(\'/cis/www/calendar/classes/puller.class.php\');
+$cp = new CalendarPuller(array(
+  \'maxPastEvents\'     => 5,
+  \'maxUpcomingEvents\'       => 10,
+  \'sponsors\'        => array(\'GWIL\', \'Gustavus Women in Leadership\'),
+  \'eventView\' => __DIR__ . \'/views/event.html\',
+));
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+
+    file_put_contents(self::$testFileDir . 'index.php', $content);
+    // load the file.
+    $file = (new File(self::$testFileDir . 'index.php'))->loadAndEvaluate();
+
+    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+
+    $filename = $this->fileManager->makeEditableDraft();
+    $this->assertContains(self::$testFileDir, $filename);
+
+    $expected = sprintf('<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+require_once(\'/cis/www/calendar/classes/puller.class.php\');
+$cp = new CalendarPuller(array(
+  \'maxPastEvents\'     => 5,
+  \'maxUpcomingEvents\'       => 10,
+  \'sponsors\'        => array(\'GWIL\', \'Gustavus Women in Leadership\'),
+  \'eventView\' => \'%s\' . \'/views/event.html\',
+));
+
+ob_start();
+?>
+
+<div class="editable" data-index="1">
+
+<p>This is some html content</p>
+
+</div>%s
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];', rtrim(self::$testFileDir, '/'), Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $draftFile = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertSame($expected, $draftFile);
+    $this->destructDB();
+  }
+
 
   /**
    * @test
