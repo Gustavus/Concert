@@ -617,8 +617,6 @@ $config["content"] .= ob_get_contents();
 echo $config["content"];';
 
     file_put_contents(self::$testFileDir . 'index.php', $content);
-    // load the file.
-    $file = (new File(self::$testFileDir . 'index.php'))->loadAndEvaluate();
 
     $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
 
