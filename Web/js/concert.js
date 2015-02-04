@@ -186,6 +186,8 @@ Gustavus.Concert = {
       });
 
       editor.on('keyup', function(e) {
+        // 8 = backspace
+        // 46 = delete
         if (e.keyCode === 8 || e.keyCode === 46) {
           // override tinyMCE from adding a <br> if the content gets fully removed
           editor.insertContent('');
