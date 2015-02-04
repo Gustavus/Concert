@@ -134,7 +134,8 @@ Gustavus.Concert = {
     element_format: 'xhtml',
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
-    extended_valid_elements: 'i[class]',
+    // allow i, and remove empty li's and ul's
+    extended_valid_elements: 'i[class],-li[*],-ul[*]',
     // we don't want to keep our styles when we hit return/enter.
     keep_styles: false,
 
@@ -182,6 +183,40 @@ Gustavus.Concert = {
         content = Gustavus.Concert.convertImageURLsToGIMLI(content);
 
         editor.setContent(content);
+      });
+
+      editor.on('keyup', function(e) {
+        // 8 = backspace
+        // 46 = delete
+        if (e.keyCode === 8 || e.keyCode === 46) {
+          // override tinyMCE from adding a <br> if the content gets fully removed
+          editor.insertContent('');
+          if (editor.selection.getNode().innerHTML !== '') {
+            // current node isn't empty, we don't need to change our selected node.
+            return;
+          }
+          if (e.keyCode === 8) {
+            // backspace
+            // find our closest visible sibling up the tree
+            var $prevNode = $(editor.selection.getNode()).prev(':visible');
+            if ($prevNode.length > 0) {
+              // remove our empty node
+              editor.selection.getNode().remove();
+              // now move our cursor to the first visible node up the tree
+              editor.selection.setCursorLocation($prevNode[0], $prevNode.children().has(':visible').length);
+            }
+          } else if (e.keyCode === 46) {
+            // delete key
+            // find our closest visible sibling down the tree
+            var $nextNode = $(editor.selection.getNode()).next(':visible');
+            if ($nextNode.length > 0) {
+              // remove our empty node
+              editor.selection.getNode().remove();
+              // now move our cursor to the next node
+              editor.selection.setCursorLocation($nextNode[0]);
+            }
+          }
+        }
       });
     },
     // menu : { // this is the complete default configuration
@@ -314,9 +349,10 @@ Gustavus.Concert = {
   /**
    * Cleanup function for editable content to strip editing leftovers
    * @param  {String} content Content to clean up
+   * @param  {Boolean} isSiteNav Whether we are cleaning content for a site nav or not
    * @return {String} Cleaned content
    */
-  cleanUpContent: function(content) {
+  cleanUpContent: function(content, isSiteNav) {
     var cleaned = content.replace(/<br.data-mce[^>]*>/g, '');
     // get rid of mce-item* stuff that tinymce doesn't always clean up.
     cleaned = cleaned.replace(/ ?mce-item[^>" ]*/g, '');
@@ -326,6 +362,25 @@ Gustavus.Concert = {
     cleaned = cleaned.replace(/<tr class="odd">/g, '<tr>');
     // remove stuff that tablesorter adds to sortable tables.
     cleaned = cleaned.replace(/<th  style="-webkit-user-select: none;" tabindex="0" scope="col">/g, '<th>');
+
+    if (isSiteNav) {
+      // clean up site nav stuff.
+      $content = $('<div>' + content + '</div>');
+      // the template adds spans with classes of text, description, etc.
+      // The original link text will live in span.text, so just look for that and reset the link's html.
+      $textSpans = $content.find('a span.text');
+
+      $textSpans.each(function() {
+        var $span = $(this);
+        if ($span.find('span.text').length > 0) {
+          // we want to find the inner most span.text
+          return;
+        }
+        $span.parents('a').html($span.html());
+      })
+      cleaned = $content.html();
+    }
+
     return cleaned;
   },
 
@@ -406,7 +461,8 @@ Gustavus.Concert = {
     for (i in tinymce.editors) {
       if (tinymce.editors[i].isDirty()) {
         var $element = $(tinymce.editors[i].getElement());
-        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(tinymce.editors[i].getContent());
+        var isSiteNav = (tinymce.editors[i].settings.selector === 'div.editable.siteNav');
+        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(tinymce.editors[i].getContent(), isSiteNav);
       }
     }
     return edits;
@@ -545,6 +601,18 @@ Gustavus.Concert = {
   destroyTemplatePlugins: function() {
     // make sure table sorter is destroyed from tables otherwise they will be submitted with extra classes.
     $('div.editable table.sortable').trigger('destroy');
+
+    // now remove html that gets added in when toggling links
+    var $toggleLinks = $('div.editable a.toggleLink')
+    $toggleLinks.each(function() {
+      $toggleLink = $(this);
+      $toggleLink.removeClass('toggledOpen');
+      var $toggleLinkRel = $($toggleLink.attr('rel'));
+      $toggleLinkRel.hide();
+      if ($toggleLinkRel.attr('style')) {
+        $toggleLinkRel.attr('style', $toggleLinkRel.attr('style').replace('display: none;', ''));
+      }
+    });
   },
 
   /**
