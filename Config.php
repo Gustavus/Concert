@@ -52,7 +52,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 6;
+  const JS_VERSION = 7;
 
   /**
    * Autocomplete JS version
@@ -62,7 +62,7 @@ class Config
   /**
    * tinyMCE version
    */
-  const TINY_MCE_VERSION = '4.0.20';
+  const TINY_MCE_VERSION = '4.1.7';
 
   /**
    * CSS version
