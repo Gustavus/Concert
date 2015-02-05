@@ -84,26 +84,35 @@
 {#--#}         });
 {#--#}       }
 {#--#}
+{#--#}      var $concertMenu = $('#concertMenu'),
+{#--#}          startScroll = $concertMenu.offset().top;
+{#--#}
+{#--#}       if (startScroll < 0) {
+{#--#}         startScroll = 0;
+{#--#}       }
+{#--#}
 {#--#}       $(window).scroll(function() {
-{#--#}         var $concertMenu = $('#concertMenu');
 {#--#}         if ($concertMenu.hasClass('hidden')) {
-{#--#}           if ($(window).scrollTop() > 0) {
+{#--#}           if ($(window).scrollTop() > startScroll) {
 {#--#}             $concertMenu.css('position', '');
 {#--#}             $concertMenu.css('width', '');
 {#--#}             $concertMenu.css('opacity', '');
+{#--#}             $concertMenu.css('top', '');
 {#--#}           }
 {#--#}           /* we don't want to scroll a hidden element */
 {#--#}           return;
 {#--#}         }
 {#--#}         /* make sure the window isn't too narrow, otherwise we could be covering everything they can see. */
-{#--#}         if ($(window).width() > 700 && $(window).scrollTop() > 0) {
+{#--#}         if ($(window).width() > 700 && $(window).scrollTop() > startScroll) {
 {#--#}           $concertMenu.css('position', 'fixed');
 {#--#}           $concertMenu.css('width', '100%');
 {#--#}           $concertMenu.css('opacity', '0.9');
+{#--#}           $concertMenu.css('top', 0);
 {#--#}         } else {
 {#--#}           $concertMenu.css('position', '');
 {#--#}           $concertMenu.css('width', '');
 {#--#}           $concertMenu.css('opacity', '');
+{#--#}           $concertMenu.css('top', '');
 {#--#}         }
 {#--#}       });
 {#--#}
