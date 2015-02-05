@@ -275,8 +275,8 @@ class MenuController extends SharedController
 
     $item = [
       'text'     => 'Submit an Issue',
-      'url'      => '/feedback',
-      'thickbox' => true,
+      'url'      => 'mailto:web+concertFeedback@gustavus.edu?subject=Concert%20Feedback',
+      'thickbox' => false,
     ];
     $this->addMenuItem($item, 'help', 2);
   }
