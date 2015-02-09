@@ -987,20 +987,44 @@ class PermissionsManager
   private static function getInheritedPermissionsForSite($siteBase)
   {
     $parentSites = self::findSitesContainingFile(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php'), true);
-    if (empty($parentSites)) {
-      return null;
-    }
+
+    $childSites = self::getSitesFromBase(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR), true);
 
     $perms = [];
-    foreach ($parentSites as $parentSite) {
-      if (!empty($parentSite['excludedFiles'])) {
-        if (!isset($perms['excludedFiles'])) {
-          $perms['excludedFiles'] = explode(',', $parentSite['excludedFiles']);
-        } else {
-          $perms['excludedFiles'] = array_unique(array_merge($perms['excludedFiles'], explode(',', $parentSite['excludedFiles'])));
+
+    if (!empty($parentSites)) {
+      // add parent's excluded files
+      foreach ($parentSites as $parentSite) {
+        if (!empty($parentSite['excludedFiles'])) {
+          if (!isset($perms['excludedFiles'])) {
+            $perms['excludedFiles'] = explode(',', $parentSite['excludedFiles']);
+          } else {
+            $perms['excludedFiles'] = array_unique(array_merge($perms['excludedFiles'], explode(',', $parentSite['excludedFiles'])));
+          }
         }
       }
     }
+
+    if (!empty($childSites)) {
+      // add children site's excluded files
+      foreach ($childSites as $childSite) {
+        if (!empty($childSite['excludedFiles'])) {
+          $childExcludedFiles = explode(',', $childSite['excludedFiles']);
+          // file path from the parent site's base.
+          $childExcludedBase = str_replace($siteBase, '', $childSite['siteRoot']);
+          foreach ($childExcludedFiles as &$childExcludedFile) {
+            // convert the paths to be from the current $siteBase and not from the child site.
+            $childExcludedFile = str_replace('//', '/', $childExcludedBase . DIRECTORY_SEPARATOR . $childExcludedFile);
+          }
+          if (!isset($perms['excludedFiles'])) {
+            $perms['excludedFiles'] = $childExcludedFiles;
+          } else {
+            $perms['excludedFiles'] = array_unique(array_merge($perms['excludedFiles'], $childExcludedFiles));
+          }
+        }
+      }
+    }
+
     return empty($perms) ? null : $perms;
   }
 

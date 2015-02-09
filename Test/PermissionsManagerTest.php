@@ -380,6 +380,31 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function getAllPermissionsForUserInheritingSubSitesPerms()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy', 'testing']);
+
+    PermissionsManager::saveNewSiteIfNeeded('/billy/arst/', 'index.php');
+
+    $actual = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
+
+    $expected = [
+      '/billy' => [
+        'includedFiles'  => null,
+        'excludedFiles'  => ['/arst/index.php'],
+        'expirationDate' => null,
+        'accessLevel'    => ['testing'],
+      ],
+    ];
+
+    $this->assertSame($expected, $actual);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function removeExpiredPermissions()
   {
     $expirationDate = new DateTime('+1 day');
