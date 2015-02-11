@@ -760,11 +760,14 @@ class FileManager
    * @param string $action  Action we want the staged file to represent
    * @param string $fileContents  Contents of the file to stage. <strong>Note:</strong> This should only be used for revisions.
    * @param string $stagedFileName Name to stage the file as. <strong>Note:</strong> This should only be used internally.
+   * @param boolean $overrideLocking Whether to override acquiring a lock or not.
+   *   This only allows this for creating httpd directories
    * @return boolean True on success, false on failure.
    */
-  public function stageFile($action = null, $fileContents = null, $stagedFileName = null)
+  public function stageFile($action = null, $fileContents = null, $stagedFileName = null, $overrideLocking = false)
   {
-    if (!$this->acquireLock()) {
+    // allow creating httpd dirs to override acquiring a lock if necessary.
+    if (!($overrideLocking && in_array($action, [Config::CREATE_HTTPD_DIRECTORY_STAGE, Config::CREATE_HTTPD_DIR_HTACCESS_STAGE])) && !$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
       return false;
     }

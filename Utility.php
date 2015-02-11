@@ -153,7 +153,7 @@ class Utility
     foreach (['thumbs/', 'media/'] as $folder) {
       if (!is_dir($uploadLocation . $folder)) {
         $fm = new FileManager(Gatekeeper::getUsername(), $uploadLocation . $folder, null, self::getDBAL());
-        if ($fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '')) {
+        if ($fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '', null, true)) {
           $staged = true;
         }
         $fm->stopEditing();
@@ -162,7 +162,7 @@ class Utility
 
     if (!file_exists($uploadLocation . '.htaccess')) {
       $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($uploadLocation) . '.htaccess', null, self::getDBAL());
-      if ($fm->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, '')) {
+      if ($fm->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, '', null, true)) {
         $staged = true;
       }
       $fm->stopEditing();
