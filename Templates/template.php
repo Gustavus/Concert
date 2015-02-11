@@ -11,6 +11,14 @@ Builder::init();
 $properties = [];
 ob_start();
 ?>
+<?php
+$properties['head'] = ob_get_contents();
+ob_clean();
+?>
+<?php
+$properties['javascripts'] = ob_get_contents();
+ob_clean();
+?>
 Title
 <?php
 $properties['title'] = ob_get_contents();
