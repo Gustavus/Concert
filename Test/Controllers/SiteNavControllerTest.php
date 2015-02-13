@@ -447,6 +447,13 @@ class SiteNavControllerTest extends TestBase
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 
     $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
+    $this->assertNotContains("test contents\n\rmore", $actual['value']['content']);
+
+    $_GET['revisionNumber'] = 2;
+
+    $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
     $this->assertContains("test contents\n\rmore", $actual['value']['content']);
     $this->destructDB();
   }
