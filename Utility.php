@@ -108,6 +108,8 @@ class Utility
    */
   public static function getRevisionsAPI($filePath, $dbal, $canManageRevisions = false)
   {
+    // raise our memory limit in case we need to generate a large diff.
+    ini_set('memory_limit', '256M');
     // note: changing this will ruin past revisions. (Unless you update them in the table)
     $filePathHash = self::buildRevisionsFileHash($filePath);
 
@@ -120,6 +122,8 @@ class Utility
       'splitStrategy'     => 'sentenceOrTag',
       'dbal'              => $dbal,
       'allowRestore'      => $canManageRevisions,
+      // we don't want to show insertions and deletions because it can create invalid html and hide buttons for restoring revisions.
+      'showInsertionsAndDeletions' => false,
     );
 
     return new RevisionsAPI($params);

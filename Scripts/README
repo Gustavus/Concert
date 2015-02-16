@@ -21,12 +21,14 @@ Converter/convertMultipleFolders
 
   View logs with 'cat /cis/www/camps/*.log | grep less -R'
 
-
-Mover/PageMover.php
-  Class for moving pages. This will physically move the files if specified, but more importantly, updates all the configurations pointing to the old file location.
-
 Mover/runPageMover.php
-  Script to call for moving pages. Uses PageMover. Run 'php /cis/lib/Gustavus/Concert/Mover/runPageMover.php --help' for more info.
+  Script to call for moving pages. Uses PageMover. Run 'php /cis/lib/Gustavus/Concert/Scripts/Mover/runPageMover.php --help' for more info.
+
+  To move /humanresources/campusservices to /humanresources/extras run: "sudo php /cis/lib/Gustavus/Concert/Scripts/Mover/runPageMover.php /cis/www/humanresources/campusservices/ /cis/www/humanresources/extras/"
+
+
+Mover/PageMover.php (Internal use only)
+  Class for moving pages. This will physically move the files if specified, but more importantly, updates all the configurations pointing to the old file location.
 
 
 
