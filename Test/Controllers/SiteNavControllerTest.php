@@ -199,6 +199,33 @@ class SiteNavControllerTest extends TestBase
   /**
    * @test
    */
+  public function editOnlySiteNavPerms()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'test contents');
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, [Config::NO_EDIT_ACCESS_LEVEL, Config::SITE_NAV_ACCESS_LEVEL]]);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $_GET['concert'] = 'edit';
+    $_GET['concertAction'] = 'siteNav';
+
+    $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $this->assertSame(['action', 'value'], array_keys($result));
+    $this->assertContains('siteNav test contents', $result['value']['localNavigation']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function editParentNav()
   {
     $filePath = self::$testFileDir . 'concert/index.php';
@@ -360,6 +387,37 @@ class SiteNavControllerTest extends TestBase
     $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
     $this->assertSame(['action' => 'none'], $result);
     $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessages());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function createOrEditCreateOnlySiteNavPerms()
+  {
+    $filePath = self::$testFileDir . '/concert/index.php';
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, [Config::NO_EDIT_ACCESS_LEVEL, Config::SITE_NAV_ACCESS_LEVEL]]);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $_GET['concert'] = 'createSiteNav';
+    $_GET['concertAction'] = 'siteNav';
+
+    $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $scripts = '';
+    $scripts = Filters::apply('scripts', $scripts);
+
+    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertSame(['action', 'value'], array_keys($result));
+    // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
+    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
 
     $this->unauthenticate();
     $this->destructDB();

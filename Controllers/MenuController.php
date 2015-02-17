@@ -597,7 +597,7 @@ class MenuController extends SharedController
       //   $this->addMenuItem($item, 'menu', 20);
     }
 
-    if (!self::isGlobalNav($siteNav) && !((self::isSiteNavRequest() && self::userIsEditing()) || self::userIsCreatingSiteNav())) {
+    if (!self::isGlobalNav($siteNav) && PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), $siteNavFromDocRoot) && !((self::isSiteNavRequest() && self::userIsEditing()) || self::userIsCreatingSiteNav())) {
       // the site nav exists in the current site.
       //
       // give them the option to edit the current site nav or the inherited nav.
@@ -647,7 +647,7 @@ class MenuController extends SharedController
       $this->addMenuItem($item, 'menu', 20);
     }
 
-    if (!self::isGlobalNav($siteNav) && (!self::isRevisionRequest() || !self::isSiteNavRequest())) {
+    if (!self::isGlobalNav($siteNav) && PermissionsManager::userCanViewRevisions($this->getLoggedInUsername(), $siteNavFromDocRoot) &&(!self::isRevisionRequest() || !self::isSiteNavRequest())) {
       $query = $this->queryParams;
       self::removeConcertQueryParams($query);
       $query['concert']         = 'revisions';

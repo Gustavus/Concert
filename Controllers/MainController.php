@@ -114,6 +114,11 @@ class MainController extends SharedController
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
+    if (self::isForwardedFromSiteNav()) {
+      // user is trying to edit a site nav.
+      $fm->setUserIsEditingSiteNav();
+    }
+
     if (!$fm->userCanEditFile()) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, 'error');
       return false;
@@ -226,7 +231,10 @@ class MainController extends SharedController
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
 
-    if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
+    if (self::isForwardedFromSiteNav() && PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
+      // user is trying to create a site nav.
+      $fm->setUserIsEditingSiteNav();
+    } else if (!PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, 'error');
       return false;
     }
@@ -802,7 +810,7 @@ class MainController extends SharedController
 
       $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
       // check to see if the user has access to edit this page
-      if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot)) {
+      if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot) || (self::isForwardedFromSiteNav() && PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), $filePathFromDocRoot))) {
 
         $this->addMoshMenu();
         if (!self::isInternalForward()) {
