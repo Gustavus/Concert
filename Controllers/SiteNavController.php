@@ -35,7 +35,7 @@ class SiteNavController extends SharedController
    */
   private function edit($siteNav)
   {
-    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::addDocRootToPath($siteNav))) {
+    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::removeDocRootFromPath($siteNav))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, 'error');
       // user can't edit site nav
       return false;
@@ -132,7 +132,7 @@ class SiteNavController extends SharedController
    */
   private function create($navToCreate, $navToCreateFrom = null)
   {
-    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::addDocRootToPath($navToCreate))) {
+    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::removeDocRootFromPath($navToCreate))) {
       $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, 'error');
       // user can't create site nav
       return false;
