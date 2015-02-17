@@ -19,7 +19,7 @@
 <div class="grid_36 alpha omega">
   <div class="grid_18 alpha">
     {%- if isGlobal -%}
-      <h2>Sites</h2>
+      <h2>Sites{%- if sites|length > 0 %} ({{ sites|length }}){% endif -%}</h2>
     {%- else -%}
       <h2>Your Sites</h2>
     {% endif -%}
