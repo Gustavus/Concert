@@ -107,6 +107,15 @@ use Gustavus\SocialMedia\SocialMedia,
   /**
    * @test
    */
+  public function isPageTemplatedWithBOM()
+  {
+    $this->setUpConverter('templateWithBOM.php');
+    $this->assertTrue($this->templateConverter->isPageTemplated());
+  }
+
+  /**
+   * @test
+   */
   public function isPageTemplatedFalse()
   {
     $this->setUpConverter('expectedTemplate.php');
