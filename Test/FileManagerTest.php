@@ -2495,6 +2495,40 @@ echo $config["content"];';
   /**
    * @test
    */
+  public function publishFileOnlySiteNavPerms()
+  {
+    $this->buildDB();
+
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav here');
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, [Config::NO_EDIT_ACCESS_LEVEL, Config::SITE_NAV_ACCESS_LEVEL]]);
+
+    $this->buildFileManager('bvisto', self::$testFileDir . 'site_nav.php');
+
+    $this->fileManager->setUserIsEditingSiteNav();
+
+    $this->assertTrue($this->fileManager->acquireLock());
+    $this->assertTrue($this->fileManager->stageFile());
+    $filePath = Config::$stagingDir . $this->fileManager->getFilePathHash();
+
+    $this->assertContains(self::$testFileDir, $filePath);
+
+    // file is staged, now we can publish it.
+    // re-create our fileManager with the staged file
+    $this->buildFileManager('root', $filePath);
+
+    $this->assertTrue(file_exists($filePath));
+
+    $this->assertTrue($this->fileManager->publishFile());
+
+    $this->assertFalse(file_exists($filePath));
+    $this->assertTrue(file_exists(self::$testFileDir . 'site_nav.php'));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function publishFileMultipleStagedEntries()
   {
     $this->buildDB();

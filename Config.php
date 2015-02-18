@@ -360,6 +360,14 @@ class Config
    * Access level that can edit focus boxes
    */
   const FOCUS_BOX_ACCESS_LEVEL = 'focusBox';
+  /**
+   * Access level that can't edit anything
+   */
+  const NO_EDIT_ACCESS_LEVEL = 'noEdit';
+  /**
+   * Access level that can edit siteNavs
+   */
+  const SITE_NAV_ACCESS_LEVEL = 'siteNav';
 
   /**
    * All available access levels with brief description
@@ -376,6 +384,8 @@ class Config
     self::NO_UPLOAD_ACCESS_LEVEL      => 'No Upload',
     self::BANNER_ACCESS_LEVEL         => 'Banner',
     self::FOCUS_BOX_ACCESS_LEVEL      => 'Focus Box',
+    self::NO_EDIT_ACCESS_LEVEL        => 'No Edit',
+    self::SITE_NAV_ACCESS_LEVEL       => 'Site Nav',
     self::ADMIN_ACCESS_LEVEL          => 'Global Admin',
     self::SUPER_USER                  => 'Global Super User',
   ];
@@ -408,6 +418,7 @@ class Config
    * @var array
    */
   public static $nonEditableAccessLevels = [
+    self::NO_EDIT_ACCESS_LEVEL,
   ];
 
   /**
@@ -426,6 +437,7 @@ class Config
    */
   public static $nonCreationAccessLevels = [
     self::NON_CREATION_ACCESS_LEVEL,
+    self::NO_EDIT_ACCESS_LEVEL,
   ];
 
   /**
@@ -436,6 +448,7 @@ class Config
   public static $nonDeletionAccessLevels = [
     self::NON_DELETION_ACCESS_LEVEL,
     self::AUTHOR_ACCESS_LEVEL,
+    self::NO_EDIT_ACCESS_LEVEL,
   ];
 
   /**
@@ -447,6 +460,7 @@ class Config
     self::SUPER_USER,
     self::ADMIN_ACCESS_LEVEL,
     self::SITE_ADMIN_ACCESS_LEVEL,
+    self::SITE_NAV_ACCESS_LEVEL,
   ];
 
   /**
@@ -487,7 +501,9 @@ class Config
    *
    * @var array
    */
-  public static $nonRevisionsAccessLevels = [];
+  public static $nonRevisionsAccessLevels = [
+    self::NO_EDIT_ACCESS_LEVEL,
+  ];
 
   /**
    * Access levels that can't upload files
@@ -496,6 +512,7 @@ class Config
    */
   public static $nonUploadingAccessLevels = [
     self::NO_UPLOAD_ACCESS_LEVEL,
+    self::NO_EDIT_ACCESS_LEVEL,
   ];
 
   /**
@@ -507,6 +524,48 @@ class Config
     self::SUPER_USER,
     self::ADMIN_ACCESS_LEVEL,
     self::BANNER_ACCESS_LEVEL,
+  ];
+
+  /**
+   * Template parts that are editable
+   *   Note: These should all be lowercase
+   *
+   * @var array
+   */
+  public static $editableParts = [
+    'title',
+    'subtitle',
+    'body',
+    'content',
+    'localnavigation',
+    'focusbox',
+  ];
+
+  /**
+   * Array of parts that aren't editable for each access level
+   *   For example:
+   *   <code>
+   *   ['admin' => ['focusbox']] // This means that admins can't edit the focusbox
+   *   </code>
+   *
+   *   Note: The parts should all be lowercase.
+   *   This won't be of use until we start getting access levels that can edit different pieces.
+   * @var array
+   */
+  public static $nonEditablePartsByAccessLevel = [
+    self::PUBLIC_ACCESS_LEVEL         => ['focusbox'],
+    self::SITE_ADMIN_ACCESS_LEVEL     => ['focusbox'],
+    self::SITE_EDITOR_ACCESS_LEVEL    => ['focusbox'],
+    self::SITE_PUBLISHER_ACCESS_LEVEL => ['focusbox'],
+    self::AUTHOR_ACCESS_LEVEL         => ['focusbox'],
+    self::NON_CREATION_ACCESS_LEVEL   => ['focusbox'],
+    self::NON_DELETION_ACCESS_LEVEL   => ['focusbox'],
+    self::NO_UPLOAD_ACCESS_LEVEL      => ['focusbox'],
+    self::BANNER_ACCESS_LEVEL         => ['focusbox'],
+    self::SITE_NAV_ACCESS_LEVEL       => ['focusbox'],
+    self::FOCUS_BOX_ACCESS_LEVEL      => [],
+    self::ADMIN_ACCESS_LEVEL          => [],
+    self::SUPER_USER                  => [],
   ];
 
   /**
@@ -568,47 +627,6 @@ class Config
    */
   public static $editablePHPExprTypes = [
     'Scalar_String',
-  ];
-
-  /**
-   * Template parts that are editable
-   *   Note: These should all be lowercase
-   *
-   * @var array
-   */
-  public static $editableParts = [
-    'title',
-    'subtitle',
-    'body',
-    'content',
-    'localnavigation',
-    'focusbox',
-  ];
-
-  /**
-   * Array of parts that aren't editable for each access level
-   *   For example:
-   *   <code>
-   *   ['admin' => ['focusbox']] // This means that admins can't edit the focusbox
-   *   </code>
-   *
-   *   Note: The parts should all be lowercase.
-   *   This won't be of use until we start getting access levels that can edit different pieces.
-   * @var array
-   */
-  public static $nonEditablePartsByAccessLevel = [
-    self::PUBLIC_ACCESS_LEVEL         => ['focusbox'],
-    self::SITE_ADMIN_ACCESS_LEVEL     => ['focusbox'],
-    self::SITE_EDITOR_ACCESS_LEVEL    => ['focusbox'],
-    self::SITE_PUBLISHER_ACCESS_LEVEL => ['focusbox'],
-    self::AUTHOR_ACCESS_LEVEL         => ['focusbox'],
-    self::NON_CREATION_ACCESS_LEVEL   => ['focusbox'],
-    self::NON_DELETION_ACCESS_LEVEL   => ['focusbox'],
-    self::NO_UPLOAD_ACCESS_LEVEL      => ['focusbox'],
-    self::BANNER_ACCESS_LEVEL         => ['focusbox'],
-    self::FOCUS_BOX_ACCESS_LEVEL      => [],
-    self::ADMIN_ACCESS_LEVEL          => [],
-    self::SUPER_USER                  => [],
   ];
 
   /**

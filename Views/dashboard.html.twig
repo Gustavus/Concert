@@ -19,7 +19,7 @@
 <div class="grid_36 alpha omega">
   <div class="grid_18 alpha">
     {%- if isGlobal -%}
-      <h2>Sites</h2>
+      <h2>Sites{%- if sites|length > 0 %} ({{ sites|length }}){% endif -%}</h2>
     {%- else -%}
       <h2>Your Sites</h2>
     {% endif -%}
@@ -63,6 +63,8 @@
   param: stats Array of stats
 #}
 {% macro renderDistinctFileStats(stats) %}
+  {% set totalCount = 0 %}
+  {% set counts = '' %}
   <table class="fancy fullWidth">
     <legend>Unique File Actions</legend>
     <thead>
@@ -73,10 +75,20 @@
     </thead>
     <tbody>
       {% for stat in stats %}
-        <tr>
-          <td>{{ stat['action'] }}</td>
-          <td>{{ stat['counts'] }}</td>
+        {% set totalCount = totalCount + stat['counts'] %}
+        {% set counts %}
+          {{ counts }}
+          <tr>
+            <td>{{ stat['action'] }}</td>
+            <td>{{ stat['counts'] }}</td>
+          </tr>
+        {% endset %}
       {% endfor %}
+      <tr>
+        <td>All</td>
+        <td>{{ totalCount }}</td>
+      </tr>
+      {{ counts }}
     </tbody>
   </table>
 {% endmacro %}
@@ -87,6 +99,8 @@
   param: stats Array of stats
 #}
 {% macro renderAllFileStats(stats) %}
+  {% set totalCount = 0 %}
+  {% set counts = '' %}
   <table class="fancy fullWidth">
     <legend>All File Actions</legend>
     <thead>
@@ -97,10 +111,20 @@
     </thead>
     <tbody>
       {% for stat in stats %}
-        <tr>
-          <td>{{ stat['action'] }}</td>
-          <td>{{ stat['counts'] }}</td>
+        {% set totalCount = totalCount + stat['counts'] %}
+        {% set counts %}
+          {{ counts }}
+          <tr>
+            <td>{{ stat['action'] }}</td>
+            <td>{{ stat['counts'] }}</td>
+          </tr>
+        {% endset %}
       {% endfor %}
+      <tr>
+        <td>All</td>
+        <td>{{ totalCount }}</td>
+      </tr>
+      {{ counts }}
     </tbody>
   </table>
 {% endmacro %}

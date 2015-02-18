@@ -35,6 +35,11 @@ class SiteNavController extends SharedController
    */
   private function edit($siteNav)
   {
+    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::removeDocRootFromPath($siteNav))) {
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, 'error');
+      // user can't edit site nav
+      return false;
+    }
     $this->setTitle('Edit Menu');
 
     $origGet = $_GET;
@@ -127,6 +132,11 @@ class SiteNavController extends SharedController
    */
   private function create($navToCreate, $navToCreateFrom = null)
   {
+    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::removeDocRootFromPath($navToCreate))) {
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, 'error');
+      // user can't create site nav
+      return false;
+    }
     if ($navToCreateFrom === null) {
       $navToCreateFrom = self::getSiteNavToCreateFrom();
     }
@@ -328,6 +338,13 @@ class SiteNavController extends SharedController
   private function handleRevisions($filePath)
   {
     $siteNav = self::getSiteNavForFile($filePath);
+
+    if (!PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), Utility::removeDocRootFromPath($siteNav))) {
+      // user can't edit site nav, so they shouldn't be able to see revisions either
+      $this->addConcertMessage(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, 'error');
+      return false;
+    }
+
     $origGet = $_GET;
     $_GET['forwardedFrom'] = 'siteNav';
     $_GET['concertMoshed'] = 'false';
@@ -346,7 +363,12 @@ class SiteNavController extends SharedController
   {
     switch (true) {
       case (self::userIsEditing() || self::userIsCreatingSiteNav() || self::userIsSaving()):
-          return ['action' => 'return', 'value' => $this->createOrEditSiteNav($params['filePath'])];
+        $result = $this->createOrEditSiteNav($params['filePath']);
+        if ($result) {
+          return ['action' => 'return', 'value' => $result];
+        } else {
+          return ['action' => 'none'];
+        }
 
       // Disabled. We aren't allowing drafts of site_navs
       // case self::isDraftRequest():

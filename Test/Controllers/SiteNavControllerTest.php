@@ -145,6 +145,37 @@ class SiteNavControllerTest extends TestBase
     file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, Config::SITE_NAV_ACCESS_LEVEL]);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $_GET['concert'] = 'edit';
+    $_GET['concertAction'] = 'siteNav';
+
+    $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $scripts = '';
+    $scripts = Filters::apply('scripts', $scripts);
+
+    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertSame(['action', 'value'], array_keys($result));
+    $this->assertContains('siteNav test contents', $result['value']['localNavigation']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function editNoPerms()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'test contents');
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
 
     $this->authenticate('testUser');
@@ -158,6 +189,32 @@ class SiteNavControllerTest extends TestBase
     $scripts = Filters::apply('scripts', $scripts);
 
     $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertSame(['action' => 'none'], $result);
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, $this->controller->getConcertMessages());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function editOnlySiteNavPerms()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, 'test contents');
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, [Config::NO_EDIT_ACCESS_LEVEL, Config::SITE_NAV_ACCESS_LEVEL]]);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $_GET['concert'] = 'edit';
+    $_GET['concertAction'] = 'siteNav';
+
+    $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
     $this->assertSame(['action', 'value'], array_keys($result));
     $this->assertContains('siteNav test contents', $result['value']['localNavigation']);
     $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
@@ -219,7 +276,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir . 'concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir . 'concert/', Config::SITE_NAV_ACCESS_LEVEL]);
 
     $this->authenticate('testUser');
     $this->setUpController();
@@ -249,7 +306,7 @@ class SiteNavControllerTest extends TestBase
     $filePath = '/cis/www/arst/arstarst/arstarst/index.php';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/arst/arstarst/arstarst/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/arst/arstarst/arstarst/', Config::SITE_NAV_ACCESS_LEVEL]);
 
     $this->authenticate('testUser');
     $this->setUpController();
@@ -284,7 +341,67 @@ class SiteNavControllerTest extends TestBase
     file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, Config::SITE_NAV_ACCESS_LEVEL]);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $_GET['concert'] = 'createSiteNav';
+    $_GET['concertAction'] = 'siteNav';
+
+    $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $scripts = '';
+    $scripts = Filters::apply('scripts', $scripts);
+
+    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertSame(['action', 'value'], array_keys($result));
+    // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
+    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function createOrEditCreateNoPerms()
+  {
+    $filePath = self::$testFileDir . '/concert/index.php';
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $this->authenticate('testUser');
+    $this->setUpController();
+    $_GET['concert'] = 'createSiteNav';
+    $_GET['concertAction'] = 'siteNav';
+
+    $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
+
+    $scripts = '';
+    $scripts = Filters::apply('scripts', $scripts);
+
+    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertSame(['action' => 'none'], $result);
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessages());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function createOrEditCreateOnlySiteNavPerms()
+  {
+    $filePath = self::$testFileDir . '/concert/index.php';
+    file_put_contents(self::$testFileDir . 'site_nav.php', 'siteNav test contents');
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, [Config::NO_EDIT_ACCESS_LEVEL, Config::SITE_NAV_ACCESS_LEVEL]]);
 
     $this->authenticate('testUser');
     $this->setUpController();
@@ -366,7 +483,7 @@ class SiteNavControllerTest extends TestBase
     $siteNav = self::$testFileDir . 'site_nav.php';
     file_put_contents($siteNav, 'siteNav contents');
     $this->buildDB();
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, Config::SITE_NAV_ACCESS_LEVEL]);
 
     $this->authenticate('bvisto');
 
@@ -392,7 +509,7 @@ class SiteNavControllerTest extends TestBase
     file_put_contents($siteNav, 'siteNav contents');
 
     $this->buildDB();
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, Config::SITE_NAV_ACCESS_LEVEL]);
 
     $fileContents = '<?php ?>test contents<?php arst;?>more';
     file_put_contents($siteNav, $fileContents);
@@ -420,7 +537,7 @@ class SiteNavControllerTest extends TestBase
   /**
    * @test
    */
-  public function handleRevisionsViewSpecific()
+  public function handleRevisionsNoPermissions()
   {
     $filePath = self::$testFileDir . 'index.php';
     $siteNav = self::$testFileDir . 'site_nav.php';
@@ -428,6 +545,40 @@ class SiteNavControllerTest extends TestBase
 
     $this->buildDB();
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    $fileContents = '<?php ?>test contents<?php arst;?>more';
+    file_put_contents($siteNav, $fileContents);
+    $this->buildFileManager('bvisto', $siteNav);
+    $this->assertTrue($this->fileManager->saveRevision());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
+    $this->assertSame(1, $revisionsAPI->getRevisionCount());
+
+    $_GET['concert'] = 'revisions';
+
+    $this->assertFalse($this->controller->handleSiteNavActions(['filePath' => $filePath]));
+
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessages());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handleRevisionsViewSpecific()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    $siteNav = self::$testFileDir . 'site_nav.php';
+    file_put_contents($siteNav, 'siteNav contents');
+
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, Config::SITE_NAV_ACCESS_LEVEL]);
 
     $fileContents = '<?php ?>test contents<?php arst;?>more';
     file_put_contents($siteNav, $fileContents);
@@ -470,7 +621,7 @@ class SiteNavControllerTest extends TestBase
     file_put_contents($siteNav, 'siteNav contents');
 
     $this->buildDB();
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, [Config::SITE_NAV_ACCESS_LEVEL, 'test']]);
 
     $fileContents = '<?php ?>test contents<?php arst;?>';
     file_put_contents($siteNav, $fileContents);
@@ -526,7 +677,7 @@ class SiteNavControllerTest extends TestBase
     file_put_contents($siteNav, 'siteNav contents');
 
     $this->buildDB();
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, [Config::SITE_NAV_ACCESS_LEVEL, 'test']]);
 
     $fileContents = '<?php ?>test contents<?php arst;?>';
     file_put_contents($siteNav, $fileContents);

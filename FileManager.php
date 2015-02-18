@@ -95,6 +95,13 @@ class FileManager
   private $userIsEditingDraftForFile = false;
 
   /**
+   * Flag that lets us know if the user is editing a siteNav
+   *
+   * @var boolean
+   */
+  private $userIsEditingSiteNav = false;
+
+  /**
    * Storage for cached drafts so we don't need to keep making requests to get them
    *   Keyed by draftFilename
    *
@@ -962,6 +969,11 @@ class FileManager
 
     $this->filePath = $destination;
 
+    if (substr($this->filePath, -12) === 'site_nav.php') {
+      // trying to publish a site nav.
+      $this->setUserIsEditingSiteNav();
+    }
+
     if (!$this->acquireLock()) {
       // current user doesn't have a lock on this file. They shouldn't be able to do anything.
       return false;
@@ -1323,6 +1335,16 @@ class FileManager
   }
 
   /**
+   * Sets a flag so we know that the user is editing a siteNav
+   *
+   * @return  void
+   */
+  public function setUserIsEditingSiteNav()
+  {
+    $this->userIsEditingSiteNav = true;
+  }
+
+  /**
    * Checks to see if the user has permission to edit this file
    * @return boolean
    */
@@ -1344,6 +1366,8 @@ class FileManager
       if ($draft) {
         return PermissionsManager::userCanEditDraft($this->username, $draft);
       }
+    } else if ($this->userIsEditingSiteNav) {
+      return PermissionsManager::userCanEditSiteNav($this->username, Utility::removeDocRootFromPath($this->filePath));
     }
 
     $filePath = Utility::removeDocRootFromPath($this->filePath);
