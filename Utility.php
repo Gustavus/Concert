@@ -109,6 +109,7 @@ class Utility
   public static function getRevisionsAPI($filePath, $dbal, $canManageRevisions = false)
   {
     // raise our memory limit in case we need to generate a large diff.
+    // Note: if this needs to be any higher, we need to look at making revisions more efficient.
     ini_set('memory_limit', '768M');
     // note: changing this will ruin past revisions. (Unless you update them in the table)
     $filePathHash = self::buildRevisionsFileHash($filePath);
