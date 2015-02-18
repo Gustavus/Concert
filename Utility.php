@@ -236,9 +236,10 @@ class Utility
   {
     $firstPHPRegex = '`(?:
       # Make sure we are at the beginning of the file
-      ^
-      # look for newlines or spaces
-      (?:\A[\h*\v*])?
+      # \A is start of subject independent of multiline mode
+      \A
+      # look for newlines, spaces, or BOMs
+      [\h|\v|\xEF\xBB\xBF]*
 
       # look for an opening php tag
       (
