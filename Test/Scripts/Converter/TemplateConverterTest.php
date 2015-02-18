@@ -109,7 +109,7 @@ use Gustavus\SocialMedia\SocialMedia,
    */
   public function isPageTemplatedWithBOM()
   {
-    $this->setUpConverter('curriculumgrant.php');
+    $this->setUpConverter('templateWithBOM.php');
     $this->assertTrue($this->templateConverter->isPageTemplated());
   }
 
