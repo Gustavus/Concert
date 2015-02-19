@@ -140,7 +140,7 @@ class Utility
     if (isset($_SESSION['concertCMS']['currentSiteBase'])) {
       // set the location of the current site's media directory so we can see if one exists
       $currentSiteMediaDir = str_replace('//', '/', $_SESSION['concertCMS']['currentSiteBase'] . '/concertFiles/');
-      if (file_exists($currentSiteMediaDir)) {
+      if (is_dir($currentSiteMediaDir)) {
         // a media directory exists in the current site's base. Lets use this one.
         // first make sure that the thumbs and media directories exist.
         self::ensureUploadDirectoriesExist($currentSiteMediaDir);
