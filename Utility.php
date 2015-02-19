@@ -140,14 +140,15 @@ class Utility
     if (isset($_SESSION['concertCMS']['currentSiteBase'])) {
       // set the location of the current site's media directory so we can see if one exists
       $currentSiteMediaDir = str_replace('//', '/', $_SESSION['concertCMS']['currentSiteBase'] . '/concertFiles/');
+      if (file_exists($currentSiteMediaDir)) {
+        // a media directory exists in the current site's base. Lets use this one.
+        // first make sure that the thumbs and media directories exist.
+        self::ensureUploadDirectoriesExist($currentSiteMediaDir);
+        return $currentSiteMediaDir;
+      }
     }
 
-    if (isset($currentSiteMediaDir) && file_exists($currentSiteMediaDir)) {
-      // a media directory exists in the current site's base. Lets use this one.
-      // first make sure that there is a thumbs and media directory as well.
-      self::ensureUploadDirectoriesExist($currentSiteMediaDir);
-      return $currentSiteMediaDir;
-    } else if (isset($_SESSION['concertCMS']['currentParentSiteBase'])) {
+    if (isset($_SESSION['concertCMS']['currentParentSiteBase'])) {
       $uploadLocation = str_replace('//', '/', $_SESSION['concertCMS']['currentParentSiteBase'] . '/concertFiles/');
       self::ensureUploadDirectoriesExist($uploadLocation);
       return $uploadLocation;
