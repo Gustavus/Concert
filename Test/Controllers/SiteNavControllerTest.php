@@ -592,7 +592,7 @@ class SiteNavControllerTest extends TestBase
     $revisionsAPI = Utility::getRevisionsAPI($siteNav, $this->controller->getDB());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
-    $_GET['revisionNumber'] = 1;
+    $_GET['revisionNumber'] = 0;
     $_GET['concert'] = 'revisions';
 
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
@@ -600,7 +600,7 @@ class SiteNavControllerTest extends TestBase
     $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
     $this->assertNotContains("test contents\n\rmore", $actual['value']['content']);
 
-    $_GET['revisionNumber'] = 2;
+    $_GET['revisionNumber'] = 1;
 
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 

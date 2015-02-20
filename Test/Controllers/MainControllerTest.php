@@ -1543,14 +1543,14 @@ class MainControllerTest extends TestBase
     $revisionsAPI = Utility::getRevisionsAPI($filePath, $this->controller->getDB());
     $this->assertSame(1, $revisionsAPI->getRevisionCount());
 
-    $_GET['revisionNumber'] = 1;
+    $_GET['revisionNumber'] = 0;
 
     $actual = $this->controller->handleRevisions($filePath);
 
     $this->assertNotContains('There doesn\'t seem to be any data associated with the information provided.', $actual['value']['content']);
     $this->assertNotContains("test contents\n\rmore", $actual['value']['content']);
 
-    $_GET['revisionNumber'] = 2;
+    $_GET['revisionNumber'] = 1;
 
     $actual = $this->controller->handleRevisions($filePath);
 
