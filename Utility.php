@@ -137,7 +137,7 @@ class Utility
    */
   public static function getUploadLocation()
   {
-    if (isset($_SESSION['concertCMS']['currentSiteBase'])) {
+    if (!empty($_SESSION['concertCMS']['currentSiteBase'])) {
       // set the location of the current site's media directory so we can see if one exists
       $currentSiteMediaDir = str_replace('//', '/', $_SESSION['concertCMS']['currentSiteBase'] . '/concertFiles/');
       if (is_dir($currentSiteMediaDir)) {
@@ -148,7 +148,7 @@ class Utility
       }
     }
 
-    if (isset($_SESSION['concertCMS']['currentParentSiteBase'])) {
+    if (!empty($_SESSION['concertCMS']['currentParentSiteBase'])) {
       $uploadLocation = str_replace('//', '/', $_SESSION['concertCMS']['currentParentSiteBase'] . '/concertFiles/');
       self::ensureUploadDirectoriesExist($uploadLocation);
       return $uploadLocation;
