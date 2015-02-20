@@ -135,6 +135,10 @@ Gustavus.Concert = {
     invalid_elements: 'script',
     // allow i, and remove empty li's and ul's
     extended_valid_elements: 'i[class],-li[*],-ul[*]',
+    // ensure anchors can contain headings.
+    valid_children: '+a[h2|h3|h4|h5|h6]',
+    // we don't want it to convert rgb to hex.
+    force_hex_style_colors: false,
     // we don't want to keep our styles when we hit return/enter.
     keep_styles: false,
 
@@ -153,6 +157,7 @@ Gustavus.Concert = {
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
     resize: false,
+    visualblocks_default_state: true,
     // table configuration
     table_class_list: [
       {title: 'None', value: ''},
@@ -178,6 +183,7 @@ Gustavus.Concert = {
         Gustavus.Concert.ignoreDirtyEditors = false;
         // clean up content
         var content = Gustavus.Concert.mceCleanup(editor.getContent());
+
         // convert images into GIMLI URLs.
         content = Gustavus.Concert.convertImageURLsToGIMLI(content);
 
@@ -187,6 +193,10 @@ Gustavus.Concert = {
       editor.on('keyup', function(e) {
         // 8 = backspace
         // 46 = delete
+        // @todo when removing all contents from an editor. This breaks something pretty badly.
+        // https://beta.gac.edu/billy/concert/childSite/index.php?concert=edit
+        // other page for testing getting out of a div and changing the forced root block
+        // https://beta.gac.edu/events/commencement/faq.php?concert=edit
         if (e.keyCode === 8 || e.keyCode === 46) {
           // override tinyMCE from adding a <br> if the content gets fully removed
           editor.insertContent('');
@@ -199,20 +209,24 @@ Gustavus.Concert = {
             // find our closest visible sibling up the tree
             var $prevNode = $(editor.selection.getNode()).prev(':visible');
             if ($prevNode.length > 0) {
-              // remove our empty node
-              editor.selection.getNode().remove();
-              // now move our cursor to the first visible node up the tree
-              editor.selection.setCursorLocation($prevNode[0], $prevNode.children().has(':visible').length);
+              if (!$($prevNode.context).is('div.editable')) {
+                // remove our empty node
+                editor.selection.getNode().remove();
+                // now move our cursor to the first visible node up the tree
+                editor.selection.setCursorLocation($prevNode[0], $prevNode.children().has(':visible').length);
+              }
             }
           } else if (e.keyCode === 46) {
             // delete key
             // find our closest visible sibling down the tree
             var $nextNode = $(editor.selection.getNode()).next(':visible');
             if ($nextNode.length > 0) {
-              // remove our empty node
-              editor.selection.getNode().remove();
-              // now move our cursor to the next node
-              editor.selection.setCursorLocation($nextNode[0]);
+              if (!$($nextNode.context).is('div.editable')) {
+                // remove our empty node
+                editor.selection.getNode().remove();
+                // now move our cursor to the next node
+                editor.selection.setCursorLocation($nextNode[0]);
+              }
             }
           }
         }
