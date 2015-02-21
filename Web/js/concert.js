@@ -163,7 +163,7 @@ Gustavus.Concert = {
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
     resize: false,
-    visualblocks_default_state: true,
+    //visualblocks_default_state: true,
     // table configuration
     table_class_list: [
       {title: 'None', value: ''},
