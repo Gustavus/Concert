@@ -36,7 +36,7 @@ Gustavus.Concert = {
    * Selector of elements that get dynamically hidden via template javascript
    * @type {String}
    */
-  hiddenElementSelector: 'div.editable .JSHide, div.editable .doShow, div.editable .doHide, div.editable .doToggle, div.editable .doFadeToggle, div.editable .toggleLink, div.editable .toggleLink, div.editable .toggleLink',
+  hiddenElementSelector: 'div.editable .JSHide, div.editable .doShow, div.editable .doHide, div.editable .doToggle, div.editable .doFadeToggle, div.editable .toggleLink',
 
   /**
    * TinyMCE menu configuration for default content
@@ -163,6 +163,7 @@ Gustavus.Concert = {
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
     resize: false,
+    // @todo. What to do here. Default this to true? I don't think so. it might be something we can add a setting for later.
     //visualblocks_default_state: true,
     // table configuration
     table_class_list: [
@@ -181,10 +182,15 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
+        // add our cleanup to run after the templates extend.apply.
+        Extend.add('page', function() {
+          // remove additional HTML calling Extend.apply may have added.
+          Gustavus.Concert.destroyTemplatePlugins();
+
+          Gustavus.Concert.toggleLinksDisplayed();
+        }, 100);
         // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
         Extend.apply('page', editor.getElement());
-        // remove additional HTML calling Extend.apply may have added.
-        Gustavus.Concert.destroyTemplatePlugins();
 
         Gustavus.Concert.ignoreDirtyEditors = false;
         // clean up content
@@ -489,6 +495,7 @@ Gustavus.Concert = {
    */
   buildEditsObject: function() {
     // remove template stuff
+    Gustavus.Concert.destroyTemplatePlugins();
     $(Gustavus.Concert.hiddenElementSelector).each(function() {
       // remove display style from these elements that we forcefully displayed earlier
       $(this).css('display', '');
@@ -673,6 +680,20 @@ Gustavus.Concert = {
   },
 
   /**
+   * Displays togglable links
+   * @return {undefined}
+   */
+  toggleLinksDisplayed: function() {
+    var $toggleLinks = $('div.editable a.toggleLink')
+    $toggleLinks.each(function() {
+      $toggleLink = $(this);
+      $toggleLink.addClass('toggledOpen');
+      var $toggleLinkRel = $($toggleLink.attr('rel'));
+      $toggleLinkRel.show();
+    });
+  },
+
+  /**
    * Initializes concert
    * @return {undefined}
    */
@@ -693,7 +714,11 @@ Gustavus.Concert = {
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
 
-      Gustavus.Concert.destroyTemplatePlugins();
+      Extend.add('page', function() {
+        // Wait until the template does it's thing, then destroy certain pieces.
+        Gustavus.Concert.destroyTemplatePlugins();
+        Gustavus.Concert.toggleLinksDisplayed();
+      }, 100);
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;
