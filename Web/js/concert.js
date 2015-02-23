@@ -723,7 +723,7 @@ Gustavus.Concert = {
         $concertMessages.find('[ data-message-area]').append('<div class="concert-message">Some hidden elements on this page have been displayed to help with editing.</div>');
         $concertMessages.find('a[data-toggle="dropdown"]').dropdown('show');
         $concertMessages.stop(true, true).fadeIn();
-        Extend.apply('page', $('#concertMessages'));
+        Extend.apply('page', $concertMessages);
       }
 
       Extend.add('page', function() {
