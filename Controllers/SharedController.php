@@ -273,7 +273,7 @@ class SharedController extends ConcourseController
         '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
         '/js/jquery/ui/current/minified/jquery.ui.button.min.js',
         Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => Config::TINY_MCE_VERSION]),
-        Resource::renderResource(['urlutil', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
+        Resource::renderResource(['urlutil', 'dropdown', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
       ],
     ];
 
@@ -329,7 +329,7 @@ class SharedController extends ConcourseController
 
     self::markResourcesAdded($resources['js']);
 
-    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
+    $cssResource = Resource::renderCSS(['dropdown-css', ['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]]);
     if (!self::isResourceAdded($cssResource, 'css')) {
       Filters::add('head', function($content) use ($cssResource) {
           $css = sprintf(

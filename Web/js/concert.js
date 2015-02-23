@@ -714,6 +714,18 @@ Gustavus.Concert = {
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
 
+      if ($(Gustavus.Concert.hiddenElementSelector).length) {
+        // we have hidden elements that have been displayed
+        // throw a message into concert messages
+        var $concertMessages = $('#concertMessages');
+        var messageCount = parseInt($concertMessages.find('[ data-message-count]').text());
+        $concertMessages.find('[ data-message-count]').text(messageCount + 1);
+        $concertMessages.find('[ data-message-area]').append('<div class="concert-message">Some hidden elements on this page have been displayed to help with editing.</div>');
+        $concertMessages.find('a[data-toggle="dropdown"]').dropdown('show');
+        $concertMessages.stop(true, true).fadeIn();
+        Extend.apply('page', $('#concertMessages'));
+      }
+
       Extend.add('page', function() {
         // Wait until the template does it's thing, then destroy certain pieces.
         Gustavus.Concert.destroyTemplatePlugins();
