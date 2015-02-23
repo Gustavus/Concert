@@ -54,6 +54,9 @@ class MainController extends SharedController
       }
       // set our current parent's site base in the session
       $_SESSION['concertCMS']['currentParentSiteBase'] = Utility::addDocRootToPath($parentSiteBase);
+      // set our current site's base in the session
+      $_SESSION['concertCMS']['currentSiteBase'] = Utility::addDocRootToPath($siteBase);
+      // set whether the user can upload in the session
       $_SESSION['concertCMS']['userCanUploadToCurrentSite'] = PermissionsManager::userCanUpload($this->getLoggedInUsername(), Utility::removeDocRootFromPath($siteBase));
     } else {
       // no access key. We won't know what to do.

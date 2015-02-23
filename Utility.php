@@ -109,7 +109,8 @@ class Utility
   public static function getRevisionsAPI($filePath, $dbal, $canManageRevisions = false)
   {
     // raise our memory limit in case we need to generate a large diff.
-    ini_set('memory_limit', '256M');
+    // Note: if this needs to be any higher, we need to look at making revisions more efficient.
+    ini_set('memory_limit', '768M');
     // note: changing this will ruin past revisions. (Unless you update them in the table)
     $filePathHash = self::buildRevisionsFileHash($filePath);
 
@@ -136,7 +137,18 @@ class Utility
    */
   public static function getUploadLocation()
   {
-    if (isset($_SESSION['concertCMS']['currentParentSiteBase'])) {
+    if (!empty($_SESSION['concertCMS']['currentSiteBase'])) {
+      // set the location of the current site's media directory so we can see if one exists
+      $currentSiteMediaDir = str_replace('//', '/', $_SESSION['concertCMS']['currentSiteBase'] . '/concertFiles/');
+      if (is_dir($currentSiteMediaDir)) {
+        // a media directory exists in the current site's base. Lets use this one.
+        // first make sure that the thumbs and media directories exist.
+        self::ensureUploadDirectoriesExist($currentSiteMediaDir);
+        return $currentSiteMediaDir;
+      }
+    }
+
+    if (!empty($_SESSION['concertCMS']['currentParentSiteBase'])) {
       $uploadLocation = str_replace('//', '/', $_SESSION['concertCMS']['currentParentSiteBase'] . '/concertFiles/');
       self::ensureUploadDirectoriesExist($uploadLocation);
       return $uploadLocation;

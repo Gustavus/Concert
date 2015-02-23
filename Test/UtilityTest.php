@@ -228,6 +228,74 @@ class UtilityTest extends TestBase
   /**
    * @test
    */
+  public function getUploadLocationChildSite()
+  {
+    $this->buildDB();
+    $baseSite = self::$testFileDir . 'billy/childSite/';
+    $_SESSION['concertCMS']['currentParentSiteBase'] = $baseSite;
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', $baseSite, 'admin']);
+    $this->authenticate('bvisto');
+
+    $this->assertSame($baseSite . 'concertFiles/', Utility::getUploadLocation());
+
+    // make sure media directory was created
+    $this->buildFileManager('bvisto', $baseSite . 'concertFiles/media/');
+    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
+
+    $expected = [[
+      'destFilepath' => $baseSite . 'concertFiles/media/',
+      'username'     => 'bvisto',
+      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+    ]];
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+
+    // now for thumbs dir
+    $this->buildFileManager('root', $baseSite . 'concertFiles/thumbs/');
+    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
+
+    $expected = [[
+      'destFilepath' => $baseSite . 'concertFiles/thumbs/',
+      'username'     => 'bvisto',
+      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+    ]];
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+    $this->assertTrue($this->fileManager->publishFile());
+    $this->assertTrue(is_dir($baseSite . 'concertFiles/thumbs/'));
+
+    // now make sure .htaccess file was inserted
+    $this->buildFileManager('root', $baseSite . 'concertFiles/.htaccess');
+    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
+
+    $expected = [[
+      'destFilepath' => $baseSite . 'concertFiles/.htaccess',
+      'username'     => 'bvisto',
+      'action'       => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE,
+    ]];
+    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
+    $this->assertTrue($this->fileManager->publishFile());
+    $this->assertTrue(file_exists($baseSite . 'concertFiles/.htaccess'));
+    $this->assertTrue(is_link($baseSite . 'concertFiles/.htaccess'));
+    $this->assertSame(Config::MEDIA_DIR_HTACCESS_TEMPLATE, readlink($baseSite . 'concertFiles/.htaccess'));
+
+    // now create a parent site
+    $_SESSION['concertCMS']['currentSiteBase'] = $baseSite;
+    $childSiteBase = $baseSite;
+    $baseSite = self::$testFileDir . 'billy/';
+    $_SESSION['concertCMS']['currentParentSiteBase'] = $baseSite;
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', $baseSite, 'admin']);
+    $this->authenticate('bvisto');
+
+    $this->assertSame($childSiteBase . 'concertFiles/', Utility::getUploadLocation());
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function sharedDraftHasBeenEditedByCollaborator()
   {
     $this->buildDB();

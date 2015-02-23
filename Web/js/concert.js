@@ -33,6 +33,12 @@ Gustavus.Concert = {
   ignoreDirtyEditors: false,
 
   /**
+   * Selector of elements that get dynamically hidden via template javascript
+   * @type {String}
+   */
+  hiddenElementSelector: 'div.editable .JSHide, div.editable .doShow, div.editable .doHide, div.editable .doToggle, div.editable .doFadeToggle, div.editable .toggleLink',
+
+  /**
    * TinyMCE menu configuration for default content
    * @type {Array}
    */
@@ -135,6 +141,10 @@ Gustavus.Concert = {
     invalid_elements: 'script',
     // allow i, and remove empty li's and ul's
     extended_valid_elements: 'i[class],-li[*],-ul[*]',
+    // ensure anchors can contain headings.
+    valid_children: '+a[h2|h3|h4|h5|h6]',
+    // we don't want it to convert rgb to hex.
+    force_hex_style_colors: false,
     // we don't want to keep our styles when we hit return/enter.
     keep_styles: false,
 
@@ -153,6 +163,8 @@ Gustavus.Concert = {
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
     resize: false,
+    // @todo. What to do here. Default this to true? I don't think so. it might be something we can add a setting for later.
+    //visualblocks_default_state: true,
     // table configuration
     table_class_list: [
       {title: 'None', value: ''},
@@ -170,53 +182,76 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
+        // add our cleanup to run after the templates extend.apply.
+        Extend.add('page', function() {
+          // remove additional HTML calling Extend.apply may have added.
+          Gustavus.Concert.destroyTemplatePlugins();
+
+          Gustavus.Concert.toggleLinksDisplayed();
+        }, 100);
         // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
         Extend.apply('page', editor.getElement());
-        // remove additional HTML calling Extend.apply may have added.
-        Gustavus.Concert.destroyTemplatePlugins();
 
         Gustavus.Concert.ignoreDirtyEditors = false;
         // clean up content
         var content = Gustavus.Concert.mceCleanup(editor.getContent());
+
         // convert images into GIMLI URLs.
         content = Gustavus.Concert.convertImageURLsToGIMLI(content);
 
         editor.setContent(content);
       });
 
-      editor.on('keyup', function(e) {
-        // 8 = backspace
-        // 46 = delete
-        if (e.keyCode === 8 || e.keyCode === 46) {
-          // override tinyMCE from adding a <br> if the content gets fully removed
-          editor.insertContent('');
-          if (editor.selection.getNode().innerHTML !== '') {
-            // current node isn't empty, we don't need to change our selected node.
-            return;
-          }
-          if (e.keyCode === 8) {
-            // backspace
-            // find our closest visible sibling up the tree
-            var $prevNode = $(editor.selection.getNode()).prev(':visible');
-            if ($prevNode.length > 0) {
-              // remove our empty node
-              editor.selection.getNode().remove();
-              // now move our cursor to the first visible node up the tree
-              editor.selection.setCursorLocation($prevNode[0], $prevNode.children().has(':visible').length);
-            }
-          } else if (e.keyCode === 46) {
-            // delete key
-            // find our closest visible sibling down the tree
-            var $nextNode = $(editor.selection.getNode()).next(':visible');
-            if ($nextNode.length > 0) {
-              // remove our empty node
-              editor.selection.getNode().remove();
-              // now move our cursor to the next node
-              editor.selection.setCursorLocation($nextNode[0]);
-            }
-          }
-        }
-      });
+      // @todo remove this when we know we don't need it.
+      // editor.on('keyup', function(e) {
+      //   console.log(e);
+      //   // 8 = backspace
+      //   // 46 = delete
+      //   // @todo when removing all contents from an editor. This breaks something pretty badly.
+      //   // https://beta.gac.edu/billy/concert/childSite/index.php?concert=edit
+      //   // other page for testing getting out of a div and changing the forced root block
+      //   // https://beta.gac.edu/events/commencement/faq.php?concert=edit
+      //   if (e.keyCode === 8 || e.keyCode === 46) {
+      //     e.preventDefault();
+      //     // override tinyMCE from adding a <br> if the content gets fully removed
+      //     editor.insertContent('');
+      //     if (editor.selection.getNode().innerHTML !== '') {
+      //       // current node isn't empty, we don't need to change our selected node.
+      //       return;
+      //     }
+      //     if (e.keyCode === 8) {
+      //       // backspace
+      //       // find our closest visible sibling up the tree
+      //       var $prevNode = $(editor.selection.getNode()).prev(':visible');
+      //       if ($prevNode.length > 0) {
+      //         console.log($prevNode, editor.selection.getNode());
+      //         if ($(editor.selection.getNode()).is(':visible')) {
+      //           // remove our empty node
+      //           editor.selection.getNode().remove();
+      //           // now move our cursor to the first visible node up the tree
+      //           if (!$($prevNode.context).is('div.editable')) {
+      //             editor.selection.setCursorLocation($prevNode[0], $prevNode.children().has(':visible').length);
+      //           }
+      //           //editor.selection.collapse(false);
+      //         }
+      //       }
+      //     } else if (e.keyCode === 46) {
+      //       // delete key
+      //       // find our closest visible sibling down the tree
+      //       var $nextNode = $(editor.selection.getNode()).next(':visible');
+      //       console.log($nextNode);
+
+      //       if ($nextNode.length > 0) {
+      //         if (!$($nextNode.context).is('div.editable') && $(editor.selection.getNode()).is(':visible')) {
+      //           // remove our empty node
+      //           editor.selection.getNode().remove();
+      //           // now move our cursor to the next node
+      //           editor.selection.setCursorLocation($nextNode[0]);
+      //         }
+      //       }
+      //     }
+      //   }
+      // });
     },
     // menu : { // this is the complete default configuration
     //   file   : {title : 'File'  , items : 'newdocument'},
@@ -342,6 +377,8 @@ Gustavus.Concert = {
    */
   mceCleanup: function(content) {
     var cleaned = content.replace(/<p>(?:[\s]|&nbsp;|<br[^>]*>)*<\/p>/g, '<br/>');
+    // remove any br tags that start the content
+    cleaned = cleaned.replace(/^[\h|\v]*?<br\/>/, '');
     return cleaned;
   },
 
@@ -352,7 +389,8 @@ Gustavus.Concert = {
    * @return {String} Cleaned content
    */
   cleanUpContent: function(content, isSiteNav) {
-    var cleaned = content.replace(/<br.data-mce[^>]*>/g, '');
+    var cleaned = Gustavus.Concert.mceCleanup(content);
+    cleaned = cleaned.replace(/<br.data-mce[^>]*>/g, '');
     // get rid of mce-item* stuff that tinymce doesn't always clean up.
     cleaned = cleaned.replace(/ ?mce-item[^>" ]*/g, '');
     // get rid of any empty classes we may have.
@@ -456,6 +494,25 @@ Gustavus.Concert = {
    * @return {Object} Object of edits
    */
   buildEditsObject: function() {
+    // remove template stuff
+    Gustavus.Concert.destroyTemplatePlugins();
+    $(Gustavus.Concert.hiddenElementSelector).each(function() {
+      // remove display style from these elements that we forcefully displayed earlier
+      $(this).css('display', '');
+    });
+
+    $('p.concertInsertion').each(function() {
+      // we need to check if we need to remove our inserted paragraphs
+      var $this = $(this);
+      if ($this.html() === '&nbsp;' || $this.html() === '') {
+        // empty or default. Need to remove it
+        $this.remove();
+      } else {
+        // user has added to this. We just want to remove our concertInsertion class
+        $this.removeClass('concertInsertion');
+      }
+    });
+
     var edits = {};
     for (i in tinymce.editors) {
       if (tinymce.editors[i].isDirty()) {
@@ -612,6 +669,28 @@ Gustavus.Concert = {
         $toggleLinkRel.attr('style', $toggleLinkRel.attr('style').replace('display: none;', ''));
       }
     });
+
+    var $hiddenElements = $(Gustavus.Concert.hiddenElementSelector);
+
+    $hiddenElements.each(function() {
+      // show all of our hidden elements so they don't get deleteted by tinymce if removing the element after it.
+      // Also helps editing. But reduces "preview" effect.
+      $(this).show();
+    });
+  },
+
+  /**
+   * Displays togglable links
+   * @return {undefined}
+   */
+  toggleLinksDisplayed: function() {
+    var $toggleLinks = $('div.editable a.toggleLink')
+    $toggleLinks.each(function() {
+      $toggleLink = $(this);
+      $toggleLink.addClass('toggledOpen');
+      var $toggleLinkRel = $($toggleLink.attr('rel'));
+      $toggleLinkRel.show();
+    });
   },
 
   /**
@@ -626,12 +705,32 @@ Gustavus.Concert = {
     $(function() {
       // add a class to define default tinyMCE settings
       $('div.editable').addClass('default');
+      var $lastChild = $('div.editable.default > div:last-child');
+      if ($lastChild.length) {
+        $lastChild.after('<p class="concertInsertion">&nbsp;</p>');
+      }
       // mark titles and sub titles so they get a different tinyMCE configuration
       $('#page-titles div.editable').removeClass('default').addClass('title');
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
 
-      Gustavus.Concert.destroyTemplatePlugins();
+      if ($(Gustavus.Concert.hiddenElementSelector).length) {
+        // we have hidden elements that have been displayed
+        // throw a message into concert messages
+        var $concertMessages = $('#concertMessages');
+        var messageCount = parseInt($concertMessages.find('[ data-message-count]').text());
+        $concertMessages.find('[ data-message-count]').text(messageCount + 1);
+        $concertMessages.find('[ data-message-area]').append('<div class="concert-message">Some hidden elements on this page have been displayed to help with editing.</div>');
+        $concertMessages.find('a[data-toggle="dropdown"]').dropdown('show');
+        $concertMessages.stop(true, true).fadeIn();
+        Extend.apply('page', $concertMessages);
+      }
+
+      Extend.add('page', function() {
+        // Wait until the template does it's thing, then destroy certain pieces.
+        Gustavus.Concert.destroyTemplatePlugins();
+        Gustavus.Concert.toggleLinksDisplayed();
+      }, 100);
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;

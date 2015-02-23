@@ -12,7 +12,7 @@
         $messages.find('[ data-message-area]').append('{{ self.build(messages)|e('js') }}');
         Extend.apply('page', $('#concertMessages'));
       {% else %}
-        $messages.fadeOut(function () { $messages.remove() });
+        $messages.fadeOut();
       {% endif %}
 
     });
