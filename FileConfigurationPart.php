@@ -345,7 +345,7 @@ class FileConfigurationPart
   private static function getAllTagsByType($content)
   {
     // Let's find all types of tags grouping void tags in with self-closing tags.
-    $tagRegex = sprintf('`(?P<closing></[^>]+>)|(?P<comments><!--.+?-->)|(?P<selfclosing>(?:<[^>]+/>)|(?:<(?:%s)[^>]*?>))|(?P<opening><[^>]+>)`x', implode('|', self::$voidElements));
+    $tagRegex = sprintf('`(?P<closing></[^>]+>)|(?P<comments><!--.+?-->)|(?P<selfclosing>(?:<[^>]+/>)|(?:<(?:%s)(?=\W)[^>]*?>))|(?P<opening><[^>]+>)`x', implode('|', self::$voidElements));
 
     preg_match_all($tagRegex, $content, $matches, PREG_OFFSET_CAPTURE);
 

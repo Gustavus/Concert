@@ -1340,7 +1340,7 @@ class FileConfigurationPartTest extends TestBase
    */
   public function getAllTagsByType()
   {
-    $content = '<p><span style="display: inline !important;"></span>
+    $content = '<p><colgroup>test</colgroup><span style="display: inline !important;"></span>
       </p>';
 
     $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
@@ -1353,29 +1353,39 @@ class FileConfigurationPartTest extends TestBase
             1 => 0,
           ],
           1 => [
-            0 => '<span style="display: inline !important;">',
+            0 => '<colgroup>',
             1 => 3,
+          ],
+          3 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 28,
           ],
         ],
         'flattened' => [
           0 => '<p>',
-          1 => '<span style="display: inline !important;">',
+          1 => '<colgroup>',
+          3 => '<span style="display: inline !important;">',
         ],
       ],
       'closing' => [
         'result' => [
           2 => [
-            0 => '</span>',
-            1 => 45,
+            0 => '</colgroup>',
+            1 => 17,
           ],
-          3 => [
+          4 => [
+            0 => '</span>',
+            1 => 70,
+          ],
+          5 => [
             0 => '</p>',
-            1 => 59,
+            1 => 84,
           ],
         ],
         'flattened' => [
-          2 => '</span>',
-          3 => '</p>',
+          2 => '</colgroup>',
+          4 => '</span>',
+          5 => '</p>',
         ],
       ],
       'selfClosing' => [
