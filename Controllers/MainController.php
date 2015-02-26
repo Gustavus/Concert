@@ -755,8 +755,8 @@ class MainController extends SharedController
    */
   public function mosh($params)
   {
-    if (GACConfig::isProductionBackup()) {
-      // we don't want people to edit or do anything if we are working on our backup server
+    if (GACConfig::isProductionBackup() || rtrim(Config::getRequiredDocRoot(), '/') !== rtrim($_SERVER['DOCUMENT_ROOT'], '/')) {
+      // we don't want people to edit or do anything if we are working on our backup server or if from a different doc root
       return [
         'action' => 'none',
       ];

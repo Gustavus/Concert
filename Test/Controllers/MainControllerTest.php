@@ -1241,6 +1241,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
 
@@ -1260,6 +1261,7 @@ class MainControllerTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
@@ -1269,6 +1271,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     if (file_exists($filePath)) {
       unlink($filePath);
@@ -1290,6 +1293,7 @@ class MainControllerTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
@@ -1299,6 +1303,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
 
@@ -1320,6 +1325,7 @@ class MainControllerTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
@@ -1329,6 +1335,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
 
@@ -1352,6 +1359,7 @@ class MainControllerTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
@@ -1361,6 +1369,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
 
@@ -1381,6 +1390,7 @@ class MainControllerTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
@@ -1390,6 +1400,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
 
@@ -1411,6 +1422,7 @@ class MainControllerTest extends TestBase
 
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
@@ -1810,6 +1822,7 @@ class MainControllerTest extends TestBase
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
 
@@ -1835,6 +1848,7 @@ class MainControllerTest extends TestBase
     $this->unauthenticate();
     $this->destructDB();
     $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
   }
 
   /**
