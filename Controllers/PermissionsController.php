@@ -382,6 +382,7 @@ class PermissionsController extends SharedController
                 .removeClass("select2-offscreen")
                 .removeAttr("tabindex")
                 .select2(selectArgs);
+              $this.find(".longSelect.select2-container").show();
             })
             $(function() {
               // set up select2 elements
