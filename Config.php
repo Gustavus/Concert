@@ -716,4 +716,23 @@ class Config
   public static $fileTreeExcludedFolders = [
     'concertFiles',
   ];
+
+  /**
+   * Doc root we want to require for accessing concert.
+   *   This prevents subdomains with a different doc root from being able to access concert since it wasn't designed to be used that way.
+   *   Note: This is a private variable instead of a constant so we can change the doc root in tests.
+   *
+   * @var string
+   */
+  private static $requiredDocRoot = '/cis/www';
+
+  /**
+   * Gets the required doc root
+   *
+   * @return string
+   */
+  public static function getRequiredDocRoot()
+  {
+    return self::$requiredDocRoot;
+  }
 }
