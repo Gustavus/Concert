@@ -258,7 +258,7 @@ class PermissionsController extends SharedController
     $renderer = new TwigElementRenderer();
     $this->addFormResources($renderer, null, $additionalScripts);
 
-    $this->setSubTitle('Edit Site');
+    $this->setSubTitle(sprintf('Edit Site "%s"', $site['siteRoot']));
     $this->setContent($renderer->render($form));
     return $this->renderPage();
   }
