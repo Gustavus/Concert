@@ -536,6 +536,7 @@ ob_start();
 <?php
 
 $config["content"] .= ob_get_contents();
+ob_end_clean();
 
 echo $config["content"];';
 
@@ -569,6 +570,7 @@ ob_start();
 <?php
 
 $config["content"] .= ob_get_contents();
+ob_end_clean();
 
 echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
