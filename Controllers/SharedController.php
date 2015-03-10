@@ -1016,6 +1016,7 @@ class SharedController extends ConcourseController
         $requestURI = $parts['path'];
       }
     }
+    $requestURI = rawurldecode($requestURI);
 
     $editDraftUrl = $this->buildUrl('editDraft', ['draftName' => basename($requestURI)]);
 
@@ -1151,7 +1152,7 @@ class SharedController extends ConcourseController
     }
 
     if (!$draft && isset($_SERVER['REQUEST_URI'])) {
-      $parts = parse_url($_SERVER['REQUEST_URI']);
+      $parts = parse_url(rawurldecode($_SERVER['REQUEST_URI']));
       $draft = basename($parts['path']);
     }
     return $draft;

@@ -17,7 +17,7 @@
               <a id="menu-{{groupName}}" class="menu-item-label" href="#" data-toggle="dropdown">{{ groupName|un_camel_case|title }} ▾</a>
               <ul class="menu-dropdown" role="menu" aria-labelledby="menu-{{groupName}}">
                 {%- for item in group.items -%}
-                  <li class="menu-dropdown-item"><a href="{{ item.url }}" class="{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}"{% if item.id is defined %} id="{{ item.id }}"{% endif %}{% if item.newTab %} target="_blank"{% endif %}{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
+                  <li class="menu-dropdown-item"><a href="{{ item.url|replace({' ': '%20'}) }}" class="{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}"{% if item.id is defined %} id="{{ item.id }}"{% endif %}{% if item.newTab %} target="_blank"{% endif %}{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
                 {%- endfor -%}
               </ul>
             </li>

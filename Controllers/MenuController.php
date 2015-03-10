@@ -845,7 +845,7 @@ class MenuController extends SharedController
       $referer = PageUtil::getReferer();
     } else {
       if (isset($_SERVER['REQUEST_URI'])) {
-        $referer = $_SERVER['REQUEST_URI'];
+        $referer = rawurldecode($_SERVER['REQUEST_URI']);
       } else {
         $referer = null;
       }
