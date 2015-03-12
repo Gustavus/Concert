@@ -62,7 +62,7 @@ class Config
   /**
    * tinyMCE version
    */
-  const TINY_MCE_VERSION = '4.1.8';
+  const TINY_MCE_VERSION = '4.1.9';
 
   /**
    * CSS version
