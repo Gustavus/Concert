@@ -467,7 +467,7 @@ Gustavus.Concert = {
             }
             url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
           }
-          $this.attr('src', Gustavus.Utility.URL.buildURL(url, true));
+          $this.attr('src', Gustavus.Utility.URL.buildURL(url));
           return true;
         }
         // we don't yet have a gimli url. Let's build one.
@@ -482,7 +482,7 @@ Gustavus.Concert = {
         }
         newPathname += url.pathname;
         url.pathname = newPathname;
-        $this.attr('src', Gustavus.Utility.URL.buildURL(url, true));
+        $this.attr('src', Gustavus.Utility.URL.buildURL(url));
       }
     })
 

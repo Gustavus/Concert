@@ -272,7 +272,7 @@ class SharedController extends ConcourseController
       'js' => [
         '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
         '/js/jquery/ui/current/minified/jquery.ui.button.min.js',
-        Resource::renderResource(['path' => Config::WEB_DIR . '/js/tinymce/tinymce.min.js', 'version' => Config::TINY_MCE_VERSION]),
+        Resource::renderResource(['path' => sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION), 'version' => Config::TINY_MCE_VERSION]),
         Resource::renderResource(['urlutil', 'dropdown', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
       ],
     ];
@@ -1016,6 +1016,7 @@ class SharedController extends ConcourseController
         $requestURI = $parts['path'];
       }
     }
+    $requestURI = rawurldecode($requestURI);
 
     $editDraftUrl = $this->buildUrl('editDraft', ['draftName' => basename($requestURI)]);
 
@@ -1151,7 +1152,7 @@ class SharedController extends ConcourseController
     }
 
     if (!$draft && isset($_SERVER['REQUEST_URI'])) {
-      $parts = parse_url($_SERVER['REQUEST_URI']);
+      $parts = parse_url(rawurldecode($_SERVER['REQUEST_URI']));
       $draft = basename($parts['path']);
     }
     return $draft;

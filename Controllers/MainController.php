@@ -767,9 +767,9 @@ class MainController extends SharedController
       }
 
       assert('isset($params["filePath"])');
-      $filePath = $params['filePath'];
+      $filePath = rawurldecode($params['filePath']);
     } else {
-      $filePath = $params;
+      $filePath = rawurldecode($params);
     }
 
     if ($this->isLoggedIn() && !self::alreadyMoshed()) {
