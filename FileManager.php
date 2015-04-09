@@ -222,8 +222,8 @@ class FileManager
     $regex = sprintf('`%s|%s|%s`smx', $phpPiece, $scriptPiece, $contentPiece);
 
     // we need to see if we need to adjust our backtrack limit
-    // multiply by 7 because that seems to be the magic number with a little extra wiggle room for our particular regex
-    $guessedBacktrackLimit = strlen($contents) * 7;
+    // multiply by 10 because that seems to be the magic number with a little extra wiggle room for our particular regex
+    $guessedBacktrackLimit = strlen($contents) * 10;
     $currLimit = (int) ini_get('pcre.backtrack_limit');
     if ($guessedBacktrackLimit > $currLimit) {
       // looks like this file is so big that we need to adjust our limits
