@@ -101,6 +101,24 @@ class FileManagerTest extends TestBase
 
   /**
    * @test
+   */
+  public function buildConfigAndAssembleLargeFile()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::TEMPLATE_FILE_DIR, 'test']);
+    $this->buildFileManager('bvisto', self::TEMPLATE_FILE_DIR . 'largeFile.php');
+
+    $configuration = $this->fileManager->getFileConfigurationArray();
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertNotEmpty($configuration['content'][9]);
+    $this->assertContains('the archivist for more information', $file);
+  }
+
+  /**
+   * @test
    * @expectedException \RuntimeException
    */
   public function buildAndGetFileConfigurationArrayNotFound()

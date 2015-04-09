@@ -212,6 +212,31 @@ class FileManager
     // throw the two pieces together into one regex with s for PCRE_DOTALL, m for PCRE_MULTILINE, and x for PCRE_EXTENDED
     $regex = sprintf('`%s|%s|%s`smx', $phpPiece, $scriptPiece, $contentPiece);
 
+    // we need to see if we need to adjust our backtrack limit
+    // multiply by 7 because that seems to be the magic number with a little extra wiggle room for our particular regex
+    $guessedBacktrackLimit = strlen($contents) * 7;
+    $currLimit = (int) ini_get('pcre.backtrack_limit');
+    if ($guessedBacktrackLimit > $currLimit) {
+      // looks like this file is so big that we need to adjust our limits
+      ini_set('pcre.backtrack_limit', $guessedBacktrackLimit);
+
+      // we also want to increase our memory limit just in case.
+      $memoryLimit = (int) ini_get('memory_limit');
+      if ($memoryLimit > 0) {
+        // guessedBacktrackLimit is in bytes. We want mbs so we divide by 1000000 and multiply by 10 to give some padding. So dividing by 100000 in total.
+        $newMemoryLimit = (int) $memoryLimit + ($guessedBacktrackLimit / 100000);
+        if ($newMemoryLimit > 256) {
+          // we don't want our memory limit to go above 256
+          $newMemoryLimit = 256;
+        }
+        ini_set('memory_limit', $newMemoryLimit . 'M');
+      }
+
+      // increase our execution time since these large files can take awhile to process
+      // @todo Do we want this to be dynamic? It seems that 750k is the limit for 60 second execution time.
+      // @todo Do we need something letting the user know that since this file is so big, it will take awhile to edit?
+      ini_set('max_execution_time', 60);
+    }
     preg_match_all($regex, $contents, $matches);
 
     // $matches has a lot of extra information that we don't need, so lets get rid of it.
@@ -311,6 +336,7 @@ class FileManager
         unset($edits[$key]);
       }
     }
+
     $this->getFileConfiguration()->editFile($edits);
     // editFile only tells us that the file was edited. We might be dealing with publishing a draft that isn't being edited
     return true;
