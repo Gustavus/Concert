@@ -239,6 +239,10 @@ class DraftController extends SharedController
 
     $draftFilePath = Config::$draftDir . $draftName;
 
+    if (file_exists($draftFilePath) && filesize($draftFilePath) > Config::MAX_EDITABLE_FILE_SIZE) {
+      return $this->renderErrorPage(Config::FILE_TOO_BIG_FOR_EDIT_MESSAGE);
+    }
+
     // now we need to make a fileManager to edit the current draft
     $draftFM = new FileManager($this->getLoggedInUsername(), $draftFilePath, null, $this->getDB());
     $draftFM->setUserIsEditingPublicDraft();

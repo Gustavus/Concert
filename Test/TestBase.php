@@ -27,6 +27,11 @@ use Gustavus\Test\TestEM,
 class TestBase extends TestEM
 {
   /**
+   * Path to an old template file
+   */
+  const TEMPLATE_FILE_DIR = '/cis/lib/Gustavus/Concert/Test/Scripts/pages/';
+
+  /**
    * Doctrine DBAL test instance to use in forwarded classes
    * @var Doctrine\DBAL\Connection
    */
@@ -70,6 +75,13 @@ class TestBase extends TestEM
   protected $peoplePuller;
 
   /**
+   * Token for overrides
+   *
+   * @var array
+   */
+  private static $overrideToken;
+
+  /**
    * Mapping of Generated Entities to their namespace for testing
    * @var array
    */
@@ -88,6 +100,17 @@ class TestBase extends TestEM
    */
   public static function setUpBeforeClass()
   {
+    self::$overrideToken = [];
+    $iniSetToken = override_function('ini_set',
+        function($varname, $newvalue) use (&$iniSetToken) {
+          if ($varname === 'memory_limit') {
+            return;
+          }
+          call_overridden_func($iniSetToken, null, $varname, $newvalue);
+        }
+    );
+    self::$overrideToken['ini_set'] = $iniSetToken;
+
     self::$testFileDir = sprintf('%s/files/', __DIR__);
   }
 
@@ -144,6 +167,7 @@ class TestBase extends TestEM
   public static function tearDownAfterClass()
   {
     self::removeFiles(self::$testFileDir);
+    self::$overrideToken = null;
     parent::tearDownAfterClass();
   }
 

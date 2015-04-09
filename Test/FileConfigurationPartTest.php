@@ -889,14 +889,14 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedOpeningTagsSimple()
   {
     $opening = [
-      0 => '<div class="grid_36 alpha omega">',
-      1 => '<div>',
-      2 => '<p>',
+      0 => 'div',
+      1 => 'div',
+      2 => 'p',
     ];
 
     $closing = [
-      3 => '</p>',
-      4 => '</div>',
+      3 => 'p',
+      4 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -910,16 +910,16 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedOpeningTagsSimpleEnd()
   {
     $opening = [
-      0 => '<div class="grid_36 alpha omega">',
-      1 => '<div>',
-      2 => '<p>',
-      6 => '<div>',
+      0 => 'div',
+      1 => 'div',
+      2 => 'p',
+      6 => 'div',
     ];
 
     $closing = [
-      3 => '</p>',
-      4 => '</div>',
-      5 => '</div>',
+      3 => 'p',
+      4 => 'div',
+      5 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -933,17 +933,17 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedOpeningTagsSimpleMiddleAndEnd()
   {
     $opening = [
-      0 => '<div class="grid_36 alpha omega">',
-      1 => '<div>',
-      2 => '<span>',
-      3 => '<p>',
-      7 => '<div>',
+      0 => 'div',
+      1 => 'div',
+      2 => 'span',
+      3 => 'p',
+      7 => 'div',
     ];
 
     $closing = [
-      4 => '</p>',
-      5 => '</div>',
-      6 => '</div>',
+      4 => 'p',
+      5 => 'div',
+      6 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -957,56 +957,56 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedOpeningTags()
   {
     $opening = [
-      0 => '<div class="grid_36 alpha omega">',
-      2 => '<p>',
-      3 => '<a href="/alumni/gather/reunions/spring.php">',
-      5 => '<a href="\n  /alumni/gather/networking.php">',
-      7 => '<a href="/alumni/gather/chapters/events.php">',
-      9 => '<a href="/alumni/gather/homecoming.php">',
-      11 => '<a href="/alumni/gather/reunions/fall.php">',
-      14 => '<p>',
-      16 => '<ul>',
-      17 => '<li>',
-      18 => '<strong>',
-      20 => '<a href="/alumni/events/gustiebreakfast/index.php">',
-      23 => '<li>',
-      24 => '<strong>',
-      26 => '<a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">',
-      29 => '<li>',
-      30 => '<strong>',
-      32 => '<a href="/calendar/gustavus-networking-event-3/40314">',
-      35 => '<li>',
-      36 => '<strong>',
-      39 => '<li>',
-      40 => '<strong>',
-      42 => '<a href="/athletics/halloffame/">',
-      47 => '<div class="grid_36 alpha omega">',
+      0 => 'div',
+      2 => 'p',
+      3 => 'a',
+      5 => 'a',
+      7 => 'a',
+      9 => 'a',
+      11 => 'a',
+      14 => 'p',
+      16 => 'ul',
+      17 => 'li',
+      18 => 'strong',
+      20 => 'a',
+      23 => 'li',
+      24 => 'strong',
+      26 => 'a',
+      29 => 'li',
+      30 => 'strong',
+      32 => 'a',
+      35 => 'li',
+      36 => 'strong',
+      39 => 'li',
+      40 => 'strong',
+      42 => 'a',
+      47 => 'div',
     ];
 
     $closing = [
-      4 => '</a>',
-      6 => '</a>',
-      8 => '</a>',
-      10 => '</a>',
-      12 => '</a>',
-      13 => '</p>',
-      15 => '</p>',
-      19 => '</strong>',
-      21 => '</a>',
-      22 => '</li>',
-      25 => '</strong>',
-      27 => '</a>',
-      28 => '</li>',
-      31 => '</strong>',
-      33 => '</a>',
-      34 => '</li>',
-      37 => '</strong>',
-      38 => '</li>',
-      41 => '</strong>',
-      43 => '</a>',
-      44 => '</li>',
-      45 => '</ul>',
-      46 => '</div>',
+      4 => 'a',
+      6 => 'a',
+      8 => 'a',
+      10 => 'a',
+      12 => 'a',
+      13 => 'p',
+      15 => 'p',
+      19 => 'strong',
+      21 => 'a',
+      22 => 'li',
+      25 => 'strong',
+      27 => 'a',
+      28 => 'li',
+      31 => 'strong',
+      33 => 'a',
+      34 => 'li',
+      37 => 'strong',
+      38 => 'li',
+      41 => 'strong',
+      43 => 'a',
+      44 => 'li',
+      45 => 'ul',
+      46 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -1020,16 +1020,16 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedClosingTagsSimple()
   {
     $opening = [
-      0 => '<div class="grid_36 alpha omega">',
-      1 => '<div>',
-      2 => '<p>',
+      0 => 'div',
+      1 => 'div',
+      2 => 'p',
     ];
 
     $closing = [
-      3 => '</p>',
-      4 => '</div>',
-      5 => '</div>',
-      6 => '</div>',
+      3 => 'p',
+      4 => 'div',
+      5 => 'div',
+      6 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -1043,16 +1043,16 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedClosingTagsSimpleStart()
   {
     $opening = [
-      1 => '<div class="grid_36 alpha omega">',
-      2 => '<div>',
-      3 => '<p>',
+      1 => 'div',
+      2 => 'div',
+      3 => 'p',
     ];
 
     $closing = [
-      0 => '</div>',
-      4 => '</p>',
-      5 => '</div>',
-      6 => '</div>',
+      0 => 'div',
+      4 => 'p',
+      5 => 'div',
+      6 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -1066,56 +1066,56 @@ class FileConfigurationPartTest extends TestBase
   public function findUnMatchedClosingTags()
   {
     $opening = [
-      0 => '<div class="grid_36 alpha omega">',
-      1 => '<p>',
-      2 => '<a href="/alumni/gather/reunions/spring.php">',
-      4 => '<a href="\n  /alumni/gather/networking.php">',
-      6 => '<a href="/alumni/gather/chapters/events.php">',
-      8 => '<a href="/alumni/gather/homecoming.php">',
-      10 => '<a href="/alumni/gather/reunions/fall.php">',
-      13 => '<p>',
-      15 => '<ul>',
-      16 => '<li>',
-      17 => '<strong>',
-      19 => '<a href="/alumni/events/gustiebreakfast/index.php">',
-      22 => '<li>',
-      23 => '<strong>',
-      25 => '<a href="/calendar/faculty-and-administrator-service-and-retirement-dinner-3/38898">',
-      28 => '<li>',
-      29 => '<strong>',
-      31 => '<a href="/calendar/gustavus-networking-event-3/40314">',
-      34 => '<li>',
-      35 => '<strong>',
-      38 => '<li>',
-      39 => '<strong>',
-      41 => '<a href="/athletics/halloffame/">',
+      0 => 'div',
+      1 => 'p',
+      2 => 'a',
+      4 => 'a',
+      6 => 'a',
+      8 => 'a',
+      10 => 'a',
+      13 => 'p',
+      15 => 'ul',
+      16 => 'li',
+      17 => 'strong',
+      19 => 'a',
+      22 => 'li',
+      23 => 'strong',
+      25 => 'a',
+      28 => 'li',
+      29 => 'strong',
+      31 => 'a',
+      34 => 'li',
+      35 => 'strong',
+      38 => 'li',
+      39 => 'strong',
+      41 => 'a',
     ];
 
     $closing = [
-      3 =>'</a>',
-      5 =>'</a>',
-      7 =>'</a>',
-      9 =>'</a>',
-      11 =>'</a>',
-      12 =>'</p>',
-      14 =>'</p>',
-      18 =>'</strong>',
-      20 =>'</a>',
-      21 =>'</li>',
-      24 =>'</strong>',
-      26 =>'</a>',
-      27 =>'</li>',
-      30 =>'</strong>',
-      32 =>'</a>',
-      33 =>'</li>',
-      36 =>'</strong>',
-      37 =>'</li>',
-      40 =>'</strong>',
-      42 =>'</a>',
-      43 =>'</li>',
-      44 =>'</ul>',
-      45 =>'</div>',
-      46 =>'</div>',
+      3 => 'a',
+      5 => 'a',
+      7 => 'a',
+      9 => 'a',
+      11 => 'a',
+      12 => 'p',
+      14 => 'p',
+      18 => 'strong',
+      20 => 'a',
+      21 => 'li',
+      24 => 'strong',
+      26 => 'a',
+      27 => 'li',
+      30 => 'strong',
+      32 => 'a',
+      33 => 'li',
+      36 => 'strong',
+      37 => 'li',
+      40 => 'strong',
+      42 => 'a',
+      43 => 'li',
+      44 => 'ul',
+      45 => 'div',
+      46 => 'div',
     ];
 
     $this->buildFileConfigurationPart();
@@ -1362,9 +1362,9 @@ class FileConfigurationPartTest extends TestBase
           ],
         ],
         'flattened' => [
-          0 => '<p>',
-          1 => '<colgroup>',
-          3 => '<span style="display: inline !important;">',
+          0 => 'p',
+          1 => 'colgroup',
+          3 => 'span',
         ],
       ],
       'closing' => [
@@ -1383,9 +1383,9 @@ class FileConfigurationPartTest extends TestBase
           ],
         ],
         'flattened' => [
-          2 => '</colgroup>',
-          4 => '</span>',
-          5 => '</p>',
+          2 => 'colgroup',
+          4 => 'span',
+          5 => 'p',
         ],
       ],
       'selfClosing' => [
@@ -1395,5 +1395,46 @@ class FileConfigurationPartTest extends TestBase
     ];
 
     $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function findKeysLessThanKey()
+  {
+    $array = [
+      1 => 'arst',
+      3 => 'arst3',
+      5 => 'arst5',
+      8 => 'arst8',
+    ];
+
+    $expected = [
+      1 => 'arst',
+      3 => 'arst3',
+      5 => 'arst5',
+    ];
+
+    $this->assertSame($expected, $this->call('FileConfigurationPart', 'findKeysLessThanKey', [$array, 8]));
+  }
+
+  /**
+   * @test
+   */
+  public function findKeysGreaterThanKey()
+  {
+    $array = [
+      1 => 'arst',
+      3 => 'arst3',
+      5 => 'arst5',
+      8 => 'arst8',
+    ];
+
+    $expected = [
+      5 => 'arst5',
+      8 => 'arst8',
+    ];
+
+    $this->assertSame($expected, $this->call('FileConfigurationPart', 'findKeysGreaterThanKey', [$array, 4]));
   }
 }

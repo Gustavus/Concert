@@ -732,8 +732,14 @@ Gustavus.Concert = {
         Gustavus.Concert.toggleLinksDisplayed();
       }, 100);
 
-      Gustavus.Concert.initilizeEditablePartsForEdits();
-      Gustavus.Concert.initilizeEditablePartsForEdits = null;
+      // verify that tinymce is loaded before initializing
+      Modernizr.load({
+        load: Gustavus.Concert.tinyMCEPath,
+        complete: function() {
+          Gustavus.Concert.initilizeEditablePartsForEdits();
+          Gustavus.Concert.initilizeEditablePartsForEdits = null;
+        }
+      })
     });
   }
 };

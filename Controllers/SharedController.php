@@ -268,11 +268,12 @@ class SharedController extends ConcourseController
     }
     $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
+    $tinyMCEPath = Resource::renderResource(['path' => sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION), 'version' => Config::TINY_MCE_VERSION]);
     $resources = [
       'js' => [
         '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
         '/js/jquery/ui/current/minified/jquery.ui.button.min.js',
-        Resource::renderResource(['path' => sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION), 'version' => Config::TINY_MCE_VERSION]),
+        $tinyMCEPath,
         Resource::renderResource(['urlutil', 'dropdown', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
       ],
     ];
@@ -283,7 +284,7 @@ class SharedController extends ConcourseController
       $originalFilePath = $filePath;
     }
 
-    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $resources, $allowCode, $siteAccessKey, $additionalJSOptions) {
+    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $resources, $allowCode, $siteAccessKey, $additionalJSOptions, $tinyMCEPath) {
       if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
         $isAdmin = 'true';
       } else {
@@ -310,7 +311,8 @@ class SharedController extends ConcourseController
                 Gustavus.Concert.isSiteNavRequest = %6$s;
                 Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%7$s";
                 Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%7$s/";
-                %8$s
+                Gustavus.Concert.tinyMCEPath = "%8$s";
+                %9$s
                 Gustavus.Concert.init();
               }
             });
@@ -322,6 +324,7 @@ class SharedController extends ConcourseController
           $isAdmin,
           self::isSiteNavRequest() ? 'true' : 'false',
           $siteAccessKey,
+          $tinyMCEPath,
           $additionalJSOptions
       );
       return $content . $script;

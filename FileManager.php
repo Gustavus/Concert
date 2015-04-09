@@ -102,6 +102,13 @@ class FileManager
   private $userIsEditingSiteNav = false;
 
   /**
+   * Size of the current file we are editing
+   *
+   * @var integer
+   */
+  private $fileSize;
+
+  /**
    * Storage for cached drafts so we don't need to keep making requests to get them
    *   Keyed by draftFilename
    *
@@ -156,8 +163,10 @@ class FileManager
   private function buildFileConfigurationArray()
   {
     if (isset($this->srcFilePath) && file_exists($this->srcFilePath)) {
+      $this->fileSize = filesize($this->srcFilePath);
       $contents = file_get_contents($this->srcFilePath);
     } else if (file_exists($this->filePath)) {
+      $this->fileSize = filesize($this->filePath);
       $contents = file_get_contents($this->filePath);
     } else {
       throw new RuntimeException(sprintf('filePath: %s or srcFilePath: %s do not exist', $this->filePath, $this->srcFilePath));
@@ -212,6 +221,29 @@ class FileManager
     // throw the two pieces together into one regex with s for PCRE_DOTALL, m for PCRE_MULTILINE, and x for PCRE_EXTENDED
     $regex = sprintf('`%s|%s|%s`smx', $phpPiece, $scriptPiece, $contentPiece);
 
+    // we need to see if we need to adjust our backtrack limit
+    // multiply by 7 because that seems to be the magic number with a little extra wiggle room for our particular regex
+    $guessedBacktrackLimit = strlen($contents) * 7;
+    $currLimit = (int) ini_get('pcre.backtrack_limit');
+    if ($guessedBacktrackLimit > $currLimit) {
+      // looks like this file is so big that we need to adjust our limits
+      ini_set('pcre.backtrack_limit', $guessedBacktrackLimit);
+
+      // we also want to increase our memory limit just in case.
+      $memoryLimit = (int) ini_get('memory_limit');
+      if ($memoryLimit > 0) {
+        // guessedBacktrackLimit is in bytes. We want mbs so we divide by 1000000 and multiply by 10 to give some padding. So dividing by 100000 in total.
+        $newMemoryLimit = (int) $memoryLimit + ($guessedBacktrackLimit / 100000);
+        if ($newMemoryLimit > 256) {
+          // we don't want our memory limit to go above 256
+          $newMemoryLimit = 256;
+        }
+        ini_set('memory_limit', $newMemoryLimit . 'M');
+      }
+
+      // increase our execution time since these large files can take awhile to process
+      ini_set('max_execution_time', 60);
+    }
     preg_match_all($regex, $contents, $matches);
 
     // $matches has a lot of extra information that we don't need, so lets get rid of it.
@@ -255,7 +287,7 @@ class FileManager
    */
   private function buildFileConfiguration()
   {
-    return new FileConfiguration($this->getFileConfigurationArray());
+    return new FileConfiguration($this->getFileConfigurationArray(), $this->fileSize);
   }
 
   /**
@@ -311,6 +343,7 @@ class FileManager
         unset($edits[$key]);
       }
     }
+
     $this->getFileConfiguration()->editFile($edits);
     // editFile only tells us that the file was edited. We might be dealing with publishing a draft that isn't being edited
     return true;

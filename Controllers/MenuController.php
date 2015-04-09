@@ -40,6 +40,13 @@ class MenuController extends SharedController
   private $filePath;
 
   /**
+   * Whether we are allowing this file to be edited or not
+   *
+   * @var integer
+   */
+  private $blockEditing = false;
+
+  /**
    * Current menu
    *   Array of groups.
    *     Groups contain keys of weights and the items for each weight
@@ -136,6 +143,19 @@ class MenuController extends SharedController
 
     $this->analyzeReferer($forReferer);
     $this->addRefererParamsToGet();
+
+    if (file_exists($this->filePath)) {
+      $fileSize = filesize($this->filePath);
+
+      if ($fileSize > Config::MAX_EDITABLE_FILE_SIZE) {
+        // file is too big for us to edit
+        $this->blockEditing = true;
+        $this->addConcertMessage(Config::FILE_TOO_BIG_FOR_EDIT_MESSAGE, 'error');
+      } else if ($fileSize > Config::PERFORMANCE_HIT_FILE_SIZE) {
+        // file is so big that the user might experience slowness while editing
+        $this->addConcertMessage(Config::LARGE_FILE_EDIT_MESSAGE, 'alert');
+      }
+    }
 
     $this->addDraftButtons();
     $this->addPublicDraftButtons();
@@ -291,10 +311,10 @@ class MenuController extends SharedController
     if (self::isSiteNavRequest()) {
       return false;
     }
-    if ($this->userIsViewingPublicDraft(Utility::removeDocRootFromPath($this->filePath))) {
+    if (!$this->blockEditing && $this->userIsViewingPublicDraft(Utility::removeDocRootFromPath($this->filePath))) {
       $draftName = self::guessDraftName($this->filePath);
       $draft = $this->getFileManager()->getDraft($draftName);
-      if (PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
+      if (!$this->blockEditing && PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {
 
         if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
@@ -487,6 +507,9 @@ class MenuController extends SharedController
 
       $this->addMenuItem($item);
     } else {
+      if ($this->blockEditing) {
+        return;
+      }
 
       $draft = $this->getFileManager()->getDraftForUser($this->getLoggedInUsername());
 
@@ -864,7 +887,6 @@ class MenuController extends SharedController
     if (strpos($this->filePath, '.php') === false) {
       $this->filePath = str_replace('//', '/', $this->filePath . DIRECTORY_SEPARATOR . 'index.php');
     }
-
 
     $origGET = $_GET;
     $_GET = $this->queryParams;

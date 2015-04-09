@@ -146,9 +146,10 @@ class FileConfigurationPart
    * Gets the content
    *
    * @param boolean $wrapEditableContent Whether we want editable content wrapped in our editable html container
+   * @param boolean $indentHTML Whether to indent HTML or not
    * @return string
    */
-  public function getContent($wrapEditableContent = false)
+  public function getContent($wrapEditableContent = false, $indentHTML = true)
   {
     if ($this->isPHPContent()) {
       if ($wrapEditableContent || (Config::ALLOW_PHP_EDITS && $this->edited)) {
@@ -186,7 +187,10 @@ class FileConfigurationPart
     if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
       return $this->wrapEditableContent($this->content);
     }
-    return self::indentHTML($this->content);
+    if ($indentHTML) {
+      return self::indentHTML($this->content);
+    }
+    return $this->content;
   }
 
   /**
@@ -350,8 +354,23 @@ class FileConfigurationPart
     preg_match_all($tagRegex, $content, $matches, PREG_OFFSET_CAPTURE);
 
     // flattener that changes the values of the array to the first index. (The second index will be the offset from the PREG_OFFSET_CAPTURE option)
-    $flattener = function($value) {
-      return $value[0];
+    $openingFlattener = function($value) {
+      // pull just the tag out
+      preg_match('`<(\w+)`', $value[0], $tagMatch);
+      if (!isset($tagMatch[1])) {
+        // tag not found
+        return $value[0];
+      }
+      return $tagMatch[1];
+    };
+    $closingFlattener = function($value) {
+      // pull just the tag out
+      preg_match('`</(\w+)`', $value[0], $tagMatch);
+      if (!isset($tagMatch[1])) {
+        // tag not found
+        return $value[0];
+      }
+      return $tagMatch[1];
     };
 
     // the array we are filtering is multi-dimensional, so we want to check if the regex match ($value[0]) is empty
@@ -376,17 +395,17 @@ class FileConfigurationPart
 
     if (isset($matches['opening'])) {
       $return['opening']['result']    = array_filter($matches['opening'], $filterer);
-      $return['opening']['flattened'] = array_filter(array_map($flattener, $return['opening']['result']));
+      $return['opening']['flattened'] = array_filter(array_map($openingFlattener, $return['opening']['result']));
     }
 
     if (isset($matches['closing'])) {
       $return['closing']['result']    = array_filter($matches['closing'], $filterer);
-      $return['closing']['flattened'] = array_filter(array_map($flattener, $return['closing']['result']));
+      $return['closing']['flattened'] = array_filter(array_map($closingFlattener, $return['closing']['result']));
     }
 
     if (isset($matches['selfclosing'])) {
       $return['selfClosing']['result']    = array_filter($matches['selfclosing'], $filterer);
-      $return['selfClosing']['flattened'] = array_filter(array_map($flattener, $return['selfClosing']['result']));
+      $return['selfClosing']['flattened'] = array_filter(array_map($openingFlattener, $return['selfClosing']['result']));
     }
     return $return;
   }
@@ -404,6 +423,10 @@ class FileConfigurationPart
     // we need to make sure all divs have been closed otherwise our editable div will get ruined.
     $tags = self::getAllTagsByType($content);
 
+    // make sure our flattened arrays are sorted by keys
+    ksort($tags['opening']['flattened']);
+    ksort($tags['closing']['flattened']);
+
     $unMatchedOpening = self::findUnMatchedOpeningTags($tags['opening']['flattened'], $tags['closing']['flattened']);
     $unMatchedOpeningOffsets = [];
     if (!empty($unMatchedOpening)) {
@@ -413,7 +436,7 @@ class FileConfigurationPart
       foreach ($unMatchedOpening as $key => $unMatched) {
         $unMatchedOpeningOffsets[] = [
           'offset' => $tags['opening']['result'][$key][1],
-          'length' => strlen($unMatched),
+          'length' => strlen($tags['opening']['result'][$key][0]),
         ];
       }
     }
@@ -427,7 +450,7 @@ class FileConfigurationPart
       foreach ($unMatchedClosing as $key => $unMatched) {
         $unMatchedClosingOffsets[] = [
           'offset' => $tags['closing']['result'][$key][1],
-          'length' => strlen($unMatched),
+          'length' => strlen($tags['closing']['result'][$key][0]),
         ];
       }
     }
@@ -440,6 +463,7 @@ class FileConfigurationPart
 
   /**
    * Finds any keys that are less than the specified key
+   *   Note: $array must be sorted by keys
    *
    * @param  array $array Array to filter
    * @param  integer $key   Key we want our found keys to be less than.
@@ -447,19 +471,20 @@ class FileConfigurationPart
    */
   private static function findKeysLessThanKey(Array $array, $key)
   {
-    $newArray = [];
+    $i = 0;
     foreach ($array as $arrKey => $arrValue) {
       if ($arrKey < $key) {
-        $newArray[$arrKey] = $arrValue;
+        ++$i;
       } else {
         break;
       }
     }
-    return $newArray;
+    return array_slice($array, 0, $i, true);
   }
 
   /**
    * Finds any keys that are greater than the specified key
+   *   Note: $array must be sorted by keys
    *
    * @param  array $array Array to filter
    * @param  integer $key   Key we want our found keys to be greater than.
@@ -467,17 +492,19 @@ class FileConfigurationPart
    */
   private static function findKeysGreaterThanKey(Array $array, $key)
   {
-    $newArray = [];
     foreach ($array as $arrKey => $arrValue) {
       if ($arrKey > $key) {
-        $newArray[$arrKey] = $arrValue;
+        break;
+      } else {
+        unset($array[$arrKey]);
       }
     }
-    return $newArray;
+    return $array;
   }
 
   /**
    * Finds any opening tags that don't have a closing tag to go along with them
+   *   Note: $opening and $closing must be sorted by keys
    *
    * @param  array  $opening Array of opening tags
    * @param  array  $closing Array of closing tags
@@ -485,23 +512,15 @@ class FileConfigurationPart
    */
   private static function findUnMatchedOpeningTags(Array $opening, Array $closing)
   {
-    // let's try looking at our first closing tag and finding anything that matches
+    // let's try looking at our first closing tag and see if it has an opening tag
+    // we will be finding all opening tags that have a matching closing tag and un-setting them leaving us with anything that doesn't have a matching closing tag
     foreach ($closing as $key => $closingTag) {
-      preg_match('`</(\w+)`', $closingTag, $tagMatch);
-      if (!isset($tagMatch[1])) {
-        // tag not found
-        continue;
-      }
-      $tagMatch = $tagMatch[1];
+
       $openingPriorToCurr = self::findKeysLessThanKey($opening, $key);
       krsort($openingPriorToCurr);
-      foreach ($openingPriorToCurr as $openingKey => $openingTag) {
-        if (preg_match(sprintf('`<%s`', $tagMatch), $openingTag)) {
-          // we have a matching tag.
-          // now let's unset this key from our original opening tags.
-          unset($opening[$openingKey]);
-          break;
-        }
+
+      if (($openingKey = array_search($closingTag, $openingPriorToCurr)) !== false) {
+        unset($opening[$openingKey]);
       }
     }
     return $opening;
@@ -509,6 +528,7 @@ class FileConfigurationPart
 
   /**
    * Finds any closing tags that don't have an opening tag to go along with them
+   *   Note: $opening and $closing must be sorted by keys
    *
    * @param  array  $opening Array of opening tags
    * @param  array  $closing Array of closing tags
@@ -516,22 +536,16 @@ class FileConfigurationPart
    */
   private static function findUnMatchedClosingTags(Array $opening, Array $closing)
   {
-    // let's try looking at our first closing tag and finding anything that matches
+    // let's try looking at our first opening tag and see if it has a closing tag
+    // we will be finding all closing tags that have a matching opening tag and un-setting them leaving us with anything that doesn't have a matching opening tag
     foreach ($opening as $key => $openingTag) {
-      preg_match('`<(\w+)`', $openingTag, $tagMatch);
-      if (!isset($tagMatch[1])) {
-        // tag not found
-        continue;
+      if (!isset($closingAfterCurr)) {
+        $closingAfterCurr = $closing;
       }
-      $tagMatch = $tagMatch[1];
-      $closingAfterCurr = self::findKeysGreaterThanKey($closing, $key);
-      foreach ($closingAfterCurr as $closingKey => $closingTag) {
-        if (preg_match(sprintf('`</%s`', $tagMatch), $closingTag)) {
-          // we have a matching tag.
-          // now let's unset this key from our original closing tags.
-          unset($closing[$closingKey]);
-          break;
-        }
+      $closingAfterCurr = self::findKeysGreaterThanKey($closingAfterCurr, $key);
+
+      if (($closingKey = array_search($openingTag, $closingAfterCurr)) !== false){
+        unset($closing[$closingKey], $closingAfterCurr[$closingKey]);
       }
     }
     return $closing;
