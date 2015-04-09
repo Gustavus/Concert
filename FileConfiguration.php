@@ -31,6 +31,12 @@ class FileConfiguration
   private $fileConfigurationArray;
 
   /**
+   * File size of the current file
+   * @var integer
+   */
+  private $fileSize;
+
+  /**
    * Array of keys of edited FileConfigurationParts
    * @var array
    */
@@ -40,10 +46,12 @@ class FileConfiguration
    * Object constructor
    *
    * @param array $fileConfigurationArray fileConfigurationArray to build off of
+   * @param integer $fileSize Size of the file
    */
-  public function __construct($fileConfigurationArray)
+  public function __construct($fileConfigurationArray, $fileSize = null)
   {
     $this->fileConfigurationArray = $fileConfigurationArray;
+    $this->fileSize = $fileSize;
     $this->buildFileConfigurationParts();
   }
 
@@ -92,6 +100,8 @@ class FileConfiguration
   public function buildFile($wrapEditableContent = false)
   {
     $file = '';
+    $indentHTML = $this->fileSize < Config::PERFORMANCE_HIT_FILE_SIZE;
+
     $partsCount = count($this->fileConfigurationParts);
     for ($i = 0; $i < $partsCount;) {
       $configurationPart = $this->fileConfigurationParts[$i];
@@ -109,12 +119,12 @@ class FileConfiguration
         } else {
           $template = "%s<?php%s?>\n";
         }
-        $file .= sprintf($template, $newLine, $configurationPart->getContent($wrapEditableContent));
+        $file .= sprintf($template, $newLine, $configurationPart->getContent($wrapEditableContent, $indentHTML));
 
       } else {
         $file .= sprintf('%s%s%s',
             ($i === 1 ? '' : "\n"),
-            $configurationPart->getContent($wrapEditableContent),
+            $configurationPart->getContent($wrapEditableContent, $indentHTML),
             ($i === $partsCount ? '' : "\n")
         );
       }

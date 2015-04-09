@@ -102,6 +102,13 @@ class FileManager
   private $userIsEditingSiteNav = false;
 
   /**
+   * Size of the current file we are editing
+   *
+   * @var integer
+   */
+  private $fileSize;
+
+  /**
    * Storage for cached drafts so we don't need to keep making requests to get them
    *   Keyed by draftFilename
    *
@@ -156,8 +163,10 @@ class FileManager
   private function buildFileConfigurationArray()
   {
     if (isset($this->srcFilePath) && file_exists($this->srcFilePath)) {
+      $this->fileSize = filesize($this->srcFilePath);
       $contents = file_get_contents($this->srcFilePath);
     } else if (file_exists($this->filePath)) {
+      $this->fileSize = filesize($this->filePath);
       $contents = file_get_contents($this->filePath);
     } else {
       throw new RuntimeException(sprintf('filePath: %s or srcFilePath: %s do not exist', $this->filePath, $this->srcFilePath));
@@ -233,8 +242,6 @@ class FileManager
       }
 
       // increase our execution time since these large files can take awhile to process
-      // @todo Do we want this to be dynamic? It seems that 750k is the limit for 60 second execution time.
-      // @todo Do we need something letting the user know that since this file is so big, it will take awhile to edit?
       ini_set('max_execution_time', 60);
     }
     preg_match_all($regex, $contents, $matches);
@@ -280,7 +287,7 @@ class FileManager
    */
   private function buildFileConfiguration()
   {
-    return new FileConfiguration($this->getFileConfigurationArray());
+    return new FileConfiguration($this->getFileConfigurationArray(), $this->fileSize);
   }
 
   /**

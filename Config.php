@@ -37,12 +37,13 @@ class Config
   /**
    * Max file size we can edit. (in kb)
    */
-  const MAX_EDITABLE_FILE_SIZE = 700000;
+  const MAX_EDITABLE_FILE_SIZE = 750000;
 
   /**
    * File size that starts getting slow when trying to edit. (in kb)
+   *   Used for displaying a message and to determine if we should indent the html or not.
    */
-  const PERFORMANCE_HIT_FILE_SIZE = 150000;
+  const PERFORMANCE_HIT_FILE_SIZE = 200000;
 
   /**
    * routing file's location
@@ -62,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 10;
+  const JS_VERSION = 11;
 
   /**
    * Autocomplete JS version

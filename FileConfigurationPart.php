@@ -146,9 +146,10 @@ class FileConfigurationPart
    * Gets the content
    *
    * @param boolean $wrapEditableContent Whether we want editable content wrapped in our editable html container
+   * @param boolean $indentHTML Whether to indent HTML or not
    * @return string
    */
-  public function getContent($wrapEditableContent = false)
+  public function getContent($wrapEditableContent = false, $indentHTML = true)
   {
     if ($this->isPHPContent()) {
       if ($wrapEditableContent || (Config::ALLOW_PHP_EDITS && $this->edited)) {
@@ -186,7 +187,10 @@ class FileConfigurationPart
     if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
       return $this->wrapEditableContent($this->content);
     }
-    return self::indentHTML($this->content);
+    if ($indentHTML) {
+      return self::indentHTML($this->content);
+    }
+    return $this->content;
   }
 
   /**
