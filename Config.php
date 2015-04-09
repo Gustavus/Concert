@@ -37,7 +37,7 @@ class Config
   /**
    * Max file size we can edit. (in kb)
    */
-  const MAX_EDITABLE_FILE_SIZE = 750000;
+  const MAX_EDITABLE_FILE_SIZE = 700000;
 
   /**
    * File size that starts getting slow when trying to edit. (in kb)
