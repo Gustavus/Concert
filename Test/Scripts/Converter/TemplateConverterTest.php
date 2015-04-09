@@ -21,11 +21,6 @@ use Gustavus\Concert\Scripts\Converter\TemplateConverter,
 class TemplateConverterTest extends TestBase
 {
   /**
-   * Path to an old template file
-   */
-  const TEMPLATE_FILE_DIR = '/cis/lib/Gustavus/Concert/Test/Scripts/pages/';
-
-  /**
    * TemplateConverter object to test on
    *
    * @var TemplateConverter

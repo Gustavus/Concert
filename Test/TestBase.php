@@ -27,6 +27,11 @@ use Gustavus\Test\TestEM,
 class TestBase extends TestEM
 {
   /**
+   * Path to an old template file
+   */
+  const TEMPLATE_FILE_DIR = '/cis/lib/Gustavus/Concert/Test/Scripts/pages/';
+
+  /**
    * Doctrine DBAL test instance to use in forwarded classes
    * @var Doctrine\DBAL\Connection
    */
