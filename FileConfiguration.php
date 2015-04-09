@@ -100,7 +100,12 @@ class FileConfiguration
   public function buildFile($wrapEditableContent = false)
   {
     $file = '';
-    $indentHTML = $this->fileSize < Config::PERFORMANCE_HIT_FILE_SIZE;
+    if (empty($this->fileSize)) {
+      // no fileSize was specified. Default indenting html to true.
+      $indentHTML = true;
+    } else {
+      $indentHTML = $this->fileSize < Config::PERFORMANCE_HIT_FILE_SIZE;
+    }
 
     $partsCount = count($this->fileConfigurationParts);
     for ($i = 0; $i < $partsCount;) {
