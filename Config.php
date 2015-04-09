@@ -35,6 +35,16 @@ class Config
   const SCRIPT_CONTENT_TYPE = 'scriptcontent';
 
   /**
+   * Max file size we can edit. (in kb)
+   */
+  const MAX_EDITABLE_FILE_SIZE = 700000;
+
+  /**
+   * File size that starts getting slow when trying to edit. (in kb)
+   */
+  const PERFORMANCE_HIT_FILE_SIZE = 150000;
+
+  /**
    * routing file's location
    */
   const ROUTING_LOCATION = '/cis/lib/Gustavus/Concert/routing.php';
@@ -272,6 +282,16 @@ class Config
    * Additional message to display to the owner of the draft telling them that they may need to discard it.
    */
   const DRAFT_EDITED_BY_COLLABORATOR_MESSAGE = 'A collaborator has edited your draft since your last save.';
+
+  /**
+   * Message to display if the file is too large for editing
+   */
+  const FILE_TOO_BIG_FOR_EDIT_MESSAGE = 'This file is too large to edit. Contact <a href="mailto:web@gustavus.edu">Web Services</a> for more information.';
+
+  /**
+   * Message to display if the file is so large that may cause editing to be slow
+   */
+  const LARGE_FILE_EDIT_MESSAGE = 'This file is very large and performance issues may be noticeable.';
 
 
   // Staged file stages

@@ -115,6 +115,10 @@ class MainController extends SharedController
       return false;
     }
 
+    if (file_exists($filePath) && filesize($filePath) > Config::MAX_EDITABLE_FILE_SIZE) {
+      return false;
+    }
+
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
 
     if (self::isForwardedFromSiteNav()) {
@@ -815,11 +819,12 @@ class MainController extends SharedController
       // check to see if the user has access to edit this page
       if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot) || (self::isForwardedFromSiteNav() && PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), $filePathFromDocRoot))) {
 
-        $this->addMoshMenu();
         if (!self::isInternalForward()) {
           // we don't want to clear any messages if we have forwarded back to here
           $this->setConcertMessage(null);
         }
+        // mosh menu has to be added after the messages get reset because it might add messages
+        $this->addMoshMenu();
 
         if (!file_exists($filePath)) {
           // we need to check to see if the user is trying to create a new page
