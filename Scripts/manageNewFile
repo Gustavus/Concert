@@ -12,12 +12,13 @@ else
   fileType=$2
 fi
 
+# Capture our date here in case publishing the file takes some time
+date=`date --rfc-3339=seconds`
 # Run manageNewFile.php on our specified staged file
 cmd="/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/manageNewFile.php /cis/www-etc/lib/Gustavus/Concert/staging/$file $serverName"
 # Capture both stdin and stderr to our result variable along with time and memory usage info
 result=`/usr/bin/time -f '" Time spent: %E Memory used: %MK' $cmd 2>&1`
 
-date=`date --rfc-3339=seconds`
 message="$fileType: $file was found on $date. File handling result: \"$result"
 # Write this message to our log
 echo $message >> /cis/lib/Gustavus/Concert/Scripts/Logs/watcher_log
