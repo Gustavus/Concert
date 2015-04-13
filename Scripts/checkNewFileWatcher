@@ -6,5 +6,5 @@
 # Takes the absolute directory of the newFileWatcher script's location as the only argument
 if [ `ps aux | grep newFileWatcher | wc -l` -lt '2' ]
   then
-    /cis/lib/Gustavus/Concert/Scripts/newFileWatcher
+    /cis/lib/Gustavus/Concert/Scripts/newFileWatcher &
 fi
