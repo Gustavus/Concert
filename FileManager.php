@@ -983,8 +983,11 @@ class FileManager
         }
       }
       // make sure our htaccess file exists
-      if (!symlink(Config::MEDIA_DIR_HTACCESS_TEMPLATE, $result['destFilepath'] . '/.htaccess')) {
-        $failure = true;
+      if (!file_exists($result['destFilepath'] . '/.htaccess')) {
+        // file doesn't exist. create it.
+        if (!symlink(Config::MEDIA_DIR_HTACCESS_TEMPLATE, $result['destFilepath'] . '/.htaccess')) {
+          $failure = true;
+        }
       }
 
       if (!$failure) {
