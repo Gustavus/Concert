@@ -165,20 +165,23 @@ class Utility
    */
   private static function ensureUploadDirectoriesExist($uploadLocation)
   {
+    // flag to determine if we have staged anything or not
     $staged = false;
-    foreach (['thumbs/', 'media/'] as $folder) {
+    // flag to determine if we need to stage anything or not
+    $needsCreation = false;
+    foreach (Config::$mediaSubFolders as $folder) {
       if (!is_dir($uploadLocation . $folder) || !is_writable($uploadLocation . $folder)) {
-        $fm = new FileManager(Gatekeeper::getUsername(), $uploadLocation . $folder, null, self::getDBAL());
-        if ($fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '', null, true)) {
-          $staged = true;
-        }
-        $fm->stopEditing();
+        $needsCreation = true;
       }
     }
 
     if (!file_exists($uploadLocation . '.htaccess')) {
-      $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($uploadLocation) . '.htaccess', null, self::getDBAL());
-      if ($fm->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, '', null, true)) {
+      $needsCreation = true;
+    }
+
+    if ($needsCreation) {
+      $fm = new FileManager(Gatekeeper::getUsername(), self::addDocRootToPath($uploadLocation), null, self::getDBAL());
+      if ($fm->stageFile(Config::CREATE_MEDIA_DIRECTORY_STAGE, '', null, true)) {
         $staged = true;
       }
       $fm->stopEditing();

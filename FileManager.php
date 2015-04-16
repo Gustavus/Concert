@@ -806,8 +806,8 @@ class FileManager
    */
   public function stageFile($action = null, $fileContents = null, $stagedFileName = null, $overrideLocking = false)
   {
-    // allow creating httpd dirs to override acquiring a lock if necessary.
-    if (!($overrideLocking && in_array($action, [Config::CREATE_HTTPD_DIRECTORY_STAGE, Config::CREATE_HTTPD_DIR_HTACCESS_STAGE])) && !$this->acquireLock()) {
+    // allow creating media dirs to override acquiring a lock if necessary.
+    if (!($overrideLocking && $action === Config::CREATE_MEDIA_DIRECTORY_STAGE) && !$this->acquireLock()) {
       // user doesn't have a lock on this file. They shouldn't be able to do anything.
       return false;
     }
@@ -967,28 +967,35 @@ class FileManager
     if ($result['action'] === Config::DELETE_STAGE) {
       // we are trying to delete this file
       return $this->deleteFile();
-    } else if ($result['action'] === Config::CREATE_HTTPD_DIRECTORY_STAGE) {
-      // we are wanting to create a directory writable by the httpd user.
-      if ($this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP, true)) {
+    } else if ($result['action'] === Config::CREATE_MEDIA_DIRECTORY_STAGE) {
+      // we need to make sure all of the media directories/files exist
+      // first make sure the media directory itself exists
+      if (!$this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP)) {
+        // we couldn't create the base dir. everything else will fail.
+        return false;
+      }
+      $failure = false;
+      // make sure all the sub folders exist
+      foreach (Config::$mediaSubFolders as $folder) {
+        if (!$this->ensureDirectoryExists($result['destFilepath'] . $folder, Config::HTTPD_USER, Config::HTTPD_GROUP, true)) {
+          // only set this if we haven't had a failure already
+          $failure = true;
+        }
+      }
+      // make sure our htaccess file exists
+      if (!symlink(Config::MEDIA_DIR_HTACCESS_TEMPLATE, $result['destFilepath'] . '/.htaccess')) {
+        $failure = true;
+      }
+
+      if (!$failure) {
         unlink($this->filePath);
         $this->username = $result['username'];
         if (!$this->markStagedFileAsPublished($this->filePath)) {
-          trigger_error(sprintf('The directory: "%s" was created for the staged file "%s", but could not be marked as published in the DB', $result['destFilepath'], $this->filePath));
+          trigger_error(sprintf('The media directory: "%s" was created for the staged file "%s", but could not be marked as published in the DB', $result['destFilepath'], $this->filePath));
         }
         return true;
       }
       return false;
-    } else if ($result['action'] === Config::CREATE_HTTPD_DIR_HTACCESS_STAGE) {
-      // make sure the directory exists.
-      $this->ensureDirectoryExists(dirname($result['destFilepath']), Config::HTTPD_USER, Config::HTTPD_GROUP);
-      if (symlink(Config::MEDIA_DIR_HTACCESS_TEMPLATE, $result['destFilepath'])) {
-        unlink($this->filePath);
-        $this->username = $result['username'];
-        if (!$this->markStagedFileAsPublished($this->filePath)) {
-          trigger_error(sprintf('The directory: "%s" was created for the staged file "%s", but could not be marked as published in the DB', $result['destFilepath'], $this->filePath));
-        }
-        return true;
-      }
     }
 
     // now we set our current username to be the username that staged the file, so we can check permissions and publish it for them
@@ -1289,7 +1296,7 @@ class FileManager
     $currentUser = $pwuData['name'];
 
     if (!is_dir($directory)) {
-      if (mkdir($directory, 0777, true)) {
+      if (mkdir($directory, 0775, true)) {
         chgrp($directory, $group);
 
         if ($currentUser === 'root') {
@@ -1299,9 +1306,8 @@ class FileManager
       } else {
         return false;
       }
-    }
-    if ($forcePermissions) {
-      // Directory should exist if we've gotten here. Ensure our specified permissions are forced.
+    } else if ($forcePermissions) {
+      // Directory exists. Ensure our specified permissions are forced.
       if ($currentUser === 'root') {
         chgrp($directory, $group);
         chown($directory, $owner);

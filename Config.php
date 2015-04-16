@@ -319,13 +319,9 @@ class Config
    */
   const UNDO_RESTORE_STAGE = 'undoRestore';
   /**
-   * Stage for specifing an undo restore stage
+   * Stage for specifing a media directory creation
    */
-  const CREATE_HTTPD_DIRECTORY_STAGE = 'createHTTPDDir';
-  /**
-   * Stage for specifing an undo restore stage
-   */
-  const CREATE_HTTPD_DIR_HTACCESS_STAGE = 'createHTTPDHtaccess';
+  const CREATE_MEDIA_DIRECTORY_STAGE = 'createMediaDir';
 
 
   // Access Levels
@@ -746,6 +742,16 @@ class Config
    * @var string
    */
   private static $requiredDocRoot = '/cis/www';
+
+  /**
+   * Sub folders that should exist in our upload directory
+   *
+   * @var array
+   */
+  public static $mediaSubFolders = [
+    '/thumbs/',
+    '/media/',
+  ];
 
   /**
    * Gets the required doc root
