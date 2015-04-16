@@ -2354,7 +2354,7 @@ echo $config["content"];';
   /**
    * @test
    */
-  public function stageAndPublishFileHTTPDDir()
+  public function stageAndPublishFileMediaDir()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -2364,20 +2364,25 @@ echo $config["content"];';
 
     $this->buildFileManager('bvisto', self::$testFileDir . '/httpdDir');
 
-    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, ''));
+    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_MEDIA_DIRECTORY_STAGE, ''));
 
     $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
 
     $stagedEntry = $this->fileManager->getStagedFileEntry();
 
-    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_HTTPD_DIRECTORY_STAGE]], $stagedEntry);
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_MEDIA_DIRECTORY_STAGE]], $stagedEntry);
 
     $this->fileManager->publishFile();
 
     $stagedEntry = $this->fileManager->getStagedFileEntry();
+
     $this->assertEmpty($stagedEntry);
 
     $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
+    foreach (Config::$mediaSubFolders as $folder) {
+      $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir/' . $folder));
+    }
+    $this->assertTrue(file_exists(self::$testFileDir . '/httpdDir/.htaccess'));
 
     $this->destructDB();
   }
@@ -2385,7 +2390,86 @@ echo $config["content"];';
   /**
    * @test
    */
-  public function stageAndPublishFileHTTPDDirFromChildSite()
+  public function stageAndPublishFileMediaDirOnlyThumbsAndHtaccess()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    mkdir(self::$testFileDir . '/httpdDir/media', 0775, true);
+    $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
+    $this->assertFalse(is_dir(self::$testFileDir . '/httpdDir/thumbs'));
+    $this->assertFalse(file_exists(self::$testFileDir . '/httpdDir/.htaccess'));
+
+
+    $this->buildFileManager('bvisto', self::$testFileDir . '/httpdDir');
+
+    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_MEDIA_DIRECTORY_STAGE, ''));
+
+    $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_MEDIA_DIRECTORY_STAGE]], $stagedEntry);
+
+    $this->fileManager->publishFile();
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertEmpty($stagedEntry);
+
+    $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
+    foreach (Config::$mediaSubFolders as $folder) {
+      $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir/' . $folder));
+    }
+    $this->assertTrue(file_exists(self::$testFileDir . '/httpdDir/.htaccess'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function stageAndPublishFileMediaDirOnlyHtaccess()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
+
+    mkdir(self::$testFileDir . '/httpdDir/media', 0775, true);
+    mkdir(self::$testFileDir . '/httpdDir/thumbs', 0775, true);
+    $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
+    $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir/thumbs'));
+    $this->assertFalse(file_exists(self::$testFileDir . '/httpdDir/.htaccess'));
+
+
+    $this->buildFileManager('bvisto', self::$testFileDir . '/httpdDir');
+
+    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_MEDIA_DIRECTORY_STAGE, ''));
+
+    $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'bvisto', 'action' => Config::CREATE_MEDIA_DIRECTORY_STAGE]], $stagedEntry);
+
+    $this->fileManager->publishFile();
+
+    $stagedEntry = $this->fileManager->getStagedFileEntry();
+
+    $this->assertEmpty($stagedEntry);
+
+    $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
+    foreach (Config::$mediaSubFolders as $folder) {
+      $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir/' . $folder));
+    }
+    $this->assertTrue(file_exists(self::$testFileDir . '/httpdDir/.htaccess'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function stageAndPublishFileMediaDirFromChildSite()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
@@ -2397,17 +2481,17 @@ echo $config["content"];';
 
     $this->buildFileManager('jerry', self::$testFileDir . '/httpdDir');
 
-    $this->assertFalse($this->fileManager->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, ''));
+    $this->assertFalse($this->fileManager->stageFile(Config::CREATE_MEDIA_DIRECTORY_STAGE, ''));
 
     $this->buildFileManager('jerry', self::$testFileDir . '/httpdDir');
 
-    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '', null, true));
+    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_MEDIA_DIRECTORY_STAGE, '', null, true));
 
     $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
 
     $stagedEntry = $this->fileManager->getStagedFileEntry();
 
-    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'jerry', 'action' => Config::CREATE_HTTPD_DIRECTORY_STAGE]], $stagedEntry);
+    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir', 'username' => 'jerry', 'action' => Config::CREATE_MEDIA_DIRECTORY_STAGE]], $stagedEntry);
 
     $this->fileManager->publishFile();
 
@@ -2415,34 +2499,6 @@ echo $config["content"];';
     $this->assertEmpty($stagedEntry);
 
     $this->assertTrue(is_dir(self::$testFileDir . '/httpdDir'));
-
-    $this->destructDB();
-  }
-
-  /**
-   * @test
-   */
-  public function stageAndPublishFileHTTPDDirHtaccess()
-  {
-    $this->constructDB(['Sites', 'Permissions', 'Locks', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
-
-    $this->assertFalse(is_dir(self::$testFileDir . '/httpdDir/'));
-    $this->assertFalse(is_link(self::$testFileDir . '/httpdDir/.htaccess'));
-
-    $this->buildFileManager('bvisto', self::$testFileDir . '/httpdDir/.htaccess');
-
-    $this->assertTrue($this->fileManager->stageFile(Config::CREATE_HTTPD_DIR_HTACCESS_STAGE, ''));
-
-    $this->buildFileManager('root', Config::$stagingDir . $this->fileManager->getFilePathHash());
-
-    $stagedEntry = $this->fileManager->getStagedFileEntry();
-
-    $this->assertSame([['destFilepath' => self::$testFileDir . 'httpdDir/.htaccess', 'username' => 'bvisto', 'action' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE]], $stagedEntry);
-
-    $this->fileManager->publishFile();
-
-    $this->assertTrue(is_link(self::$testFileDir . '/httpdDir/.htaccess'));
 
     $this->destructDB();
   }

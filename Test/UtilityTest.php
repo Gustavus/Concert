@@ -183,40 +183,24 @@ class UtilityTest extends TestBase
     $this->assertSame($baseSite . 'concertFiles/', Utility::getUploadLocation());
 
     // make sure media directory was created
-    $this->buildFileManager('bvisto', $baseSite . 'concertFiles/media/');
+    $this->buildFileManager('bvisto', $baseSite . 'concertFiles/');
     $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
 
     $expected = [[
-      'destFilepath' => $baseSite . 'concertFiles/media/',
+      'destFilepath' => $baseSite . 'concertFiles/',
       'username'     => 'bvisto',
-      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+      'action'       => Config::CREATE_MEDIA_DIRECTORY_STAGE,
     ]];
     $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
 
-    // now for thumbs dir
-    $this->buildFileManager('root', $baseSite . 'concertFiles/thumbs/');
+    $this->buildFileManager('root', $baseSite . 'concertFiles/');
     $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
-
-    $expected = [[
-      'destFilepath' => $baseSite . 'concertFiles/thumbs/',
-      'username'     => 'bvisto',
-      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
-    ]];
-    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
     $this->assertTrue($this->fileManager->publishFile());
+    $this->assertEmpty($this->fileManager->getStagedFileEntry());
+
+    $this->assertTrue(is_dir($baseSite . 'concertFiles/media/'));
     $this->assertTrue(is_dir($baseSite . 'concertFiles/thumbs/'));
 
-    // now make sure .htaccess file was inserted
-    $this->buildFileManager('root', $baseSite . 'concertFiles/.htaccess');
-    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
-
-    $expected = [[
-      'destFilepath' => $baseSite . 'concertFiles/.htaccess',
-      'username'     => 'bvisto',
-      'action'       => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE,
-    ]];
-    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
-    $this->assertTrue($this->fileManager->publishFile());
     $this->assertTrue(file_exists($baseSite . 'concertFiles/.htaccess'));
     $this->assertTrue(is_link($baseSite . 'concertFiles/.htaccess'));
     $this->assertSame(Config::MEDIA_DIR_HTACCESS_TEMPLATE, readlink($baseSite . 'concertFiles/.htaccess'));
@@ -240,40 +224,21 @@ class UtilityTest extends TestBase
     $this->assertSame($baseSite . 'concertFiles/', Utility::getUploadLocation());
 
     // make sure media directory was created
-    $this->buildFileManager('bvisto', $baseSite . 'concertFiles/media/');
+    $this->buildFileManager('bvisto', $baseSite . 'concertFiles/');
     $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
 
     $expected = [[
-      'destFilepath' => $baseSite . 'concertFiles/media/',
+      'destFilepath' => $baseSite . 'concertFiles/',
       'username'     => 'bvisto',
-      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
+      'action'       => Config::CREATE_MEDIA_DIRECTORY_STAGE,
     ]];
     $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
 
-    // now for thumbs dir
-    $this->buildFileManager('root', $baseSite . 'concertFiles/thumbs/');
+    $this->buildFileManager('root', $baseSite . 'concertFiles/');
     $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
-
-    $expected = [[
-      'destFilepath' => $baseSite . 'concertFiles/thumbs/',
-      'username'     => 'bvisto',
-      'action'       => Config::CREATE_HTTPD_DIRECTORY_STAGE,
-    ]];
-    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
     $this->assertTrue($this->fileManager->publishFile());
+    $this->assertTrue(is_dir($baseSite . 'concertFiles/media/'));
     $this->assertTrue(is_dir($baseSite . 'concertFiles/thumbs/'));
-
-    // now make sure .htaccess file was inserted
-    $this->buildFileManager('root', $baseSite . 'concertFiles/.htaccess');
-    $this->fileManager->filePath = Config::$stagingDir . $this->fileManager->getFilepathHash();
-
-    $expected = [[
-      'destFilepath' => $baseSite . 'concertFiles/.htaccess',
-      'username'     => 'bvisto',
-      'action'       => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE,
-    ]];
-    $this->assertSame($expected, $this->fileManager->getStagedFileEntry());
-    $this->assertTrue($this->fileManager->publishFile());
     $this->assertTrue(file_exists($baseSite . 'concertFiles/.htaccess'));
     $this->assertTrue(is_link($baseSite . 'concertFiles/.htaccess'));
     $this->assertSame(Config::MEDIA_DIR_HTACCESS_TEMPLATE, readlink($baseSite . 'concertFiles/.htaccess'));

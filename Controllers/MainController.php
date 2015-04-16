@@ -535,7 +535,7 @@ class MainController extends SharedController
       ->addSelect('date')
       ->addSelect('publishedDate')
       ->from('stagedFiles', 'sf')
-      ->where('action NOT IN (:httpdDir, :httpdHtAccess)')
+      ->where('action != :mediaDir')
       ->orderBy('publishedDate', 'DESC')
       ->setMaxResults($limit);
 
@@ -545,8 +545,7 @@ class MainController extends SharedController
       $qb->addSelect('username');
     }
 
-    $params[':httpdDir']      = Config::CREATE_HTTPD_DIRECTORY_STAGE;
-    $params[':httpdHtAccess'] = Config::CREATE_HTTPD_DIR_HTACCESS_STAGE;
+    $params[':mediaDir']      = Config::CREATE_MEDIA_DIRECTORY_STAGE;
 
     $return['published'] = $dbal->fetchAll($qb->getSQL(), $params);
 
@@ -585,7 +584,7 @@ class MainController extends SharedController
     $qb->addSelect('DISTINCT username')
       ->addSelect('COUNT(destFilepath) as publishCount')
       ->from('stagedFiles', 's')
-      ->where('action NOT IN (:httpdDir, :httpdHtAccess)')
+      ->where('action != :mediaDir')
       ->groupBy('username')
       ->orderBy('publishCount', 'DESC')
       ->setMaxResults(10);
@@ -593,8 +592,7 @@ class MainController extends SharedController
     $topUsers = $dbal->fetchAll(
         $qb->getSQL(),
         [
-          ':httpdDir'      => Config::CREATE_HTTPD_DIRECTORY_STAGE,
-          ':httpdHtAccess' => Config::CREATE_HTTPD_DIR_HTACCESS_STAGE
+          ':mediaDir'      => Config::CREATE_MEDIA_DIRECTORY_STAGE,
         ]
     );
 
