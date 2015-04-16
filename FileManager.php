@@ -969,7 +969,7 @@ class FileManager
       return $this->deleteFile();
     } else if ($result['action'] === Config::CREATE_HTTPD_DIRECTORY_STAGE) {
       // we are wanting to create a directory writable by the httpd user.
-      if ($this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP)) {
+      if ($this->ensureDirectoryExists($result['destFilepath'], Config::HTTPD_USER, Config::HTTPD_GROUP, true)) {
         unlink($this->filePath);
         $this->username = $result['username'];
         if (!$this->markStagedFileAsPublished($this->filePath)) {
@@ -1279,17 +1279,18 @@ class FileManager
    * @param  string $directory Directory to make sure is in existence
    * @param  string $owner     Owner to set for the directory if we are creating a new one (if the current user is root)
    * @param  string $group     Group the directory should have if we are creating a new one
+   * @param  boolean $forcePermissions Whether to force permissions if the directory already exists
    *
    * @return boolean
    */
-  private function ensureDirectoryExists($directory, $owner, $group)
+  private function ensureDirectoryExists($directory, $owner, $group, $forcePermissions = false)
   {
+    $pwuData = posix_getpwuid(posix_geteuid());
+    $currentUser = $pwuData['name'];
+
     if (!is_dir($directory)) {
       if (mkdir($directory, 0777, true)) {
         chgrp($directory, $group);
-
-        $pwuData = posix_getpwuid(posix_geteuid());
-        $currentUser = $pwuData['name'];
 
         if ($currentUser === 'root') {
           chown($directory, $owner);
@@ -1297,6 +1298,13 @@ class FileManager
         return true;
       } else {
         return false;
+      }
+    }
+    if ($forcePermissions) {
+      // Directory should exist if we've gotten here. Ensure our specified permissions are forced.
+      if ($currentUser === 'root') {
+        chgrp($directory, $group);
+        chown($directory, $owner);
       }
     }
     return true;

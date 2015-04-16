@@ -167,7 +167,7 @@ class Utility
   {
     $staged = false;
     foreach (['thumbs/', 'media/'] as $folder) {
-      if (!is_dir($uploadLocation . $folder)) {
+      if (!is_dir($uploadLocation . $folder) || !is_writable($uploadLocation . $folder)) {
         $fm = new FileManager(Gatekeeper::getUsername(), $uploadLocation . $folder, null, self::getDBAL());
         if ($fm->stageFile(Config::CREATE_HTTPD_DIRECTORY_STAGE, '', null, true)) {
           $staged = true;
