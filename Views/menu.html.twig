@@ -98,6 +98,8 @@
 {#--#}             $concertMenu.css('width', '');
 {#--#}             $concertMenu.css('opacity', '');
 {#--#}             $concertMenu.css('top', '');
+{#--#}             $concertMenu.removeClass('floating');
+{#--#}             $concertMenu.find('.menu-content').removeClass('floating');
 {#--#}           }
 {#--#}           /* we don't want to scroll a hidden element */
 {#--#}           return;
@@ -108,11 +110,15 @@
 {#--#}           $concertMenu.css('width', '100%');
 {#--#}           $concertMenu.css('opacity', '0.9');
 {#--#}           $concertMenu.css('top', 0);
+{#--#}           $concertMenu.addClass('floating');
+{#--#}           $concertMenu.find('.menu-content').addClass('floating');
 {#--#}         } else {
 {#--#}           $concertMenu.css('position', '');
 {#--#}           $concertMenu.css('width', '');
 {#--#}           $concertMenu.css('opacity', '');
 {#--#}           $concertMenu.css('top', '');
+{#--#}           $concertMenu.removeClass('floating');
+{#--#}           $concertMenu.find('.menu-content').removeClass('floating');
 {#--#}         }
 {#--#}       });
 {#--#}

@@ -4,11 +4,13 @@
     background-color: $(concert-white);
     height: $(menu-height);
     color: $(concert-gray);
-    transition: height 0.25s ease-in-out, margin 0.25s ease-in-out;
     position: relative;
     z-index: 145;
     text-align: left;
     margin-bottom: 0;
+  }
+  &:not(.floating) {
+    transition: height 0.25s ease-in-out, margin 0.25s ease-in-out;
   }
 
   &:after {
@@ -25,6 +27,8 @@
     float: left;
     height: $(menu-height);
     opacity: 1;
+  }
+  & .menu-content:not(.floating) {
     transition: height 0.25s ease-in-out, opacity 0.25s ease-in-out;
   }
 
