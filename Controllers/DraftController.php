@@ -272,7 +272,7 @@ class DraftController extends SharedController
       $redirectLocation = (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
 
       self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft, false), null, $redirectLocation);
-      return json_encode(['redirectUrl' => $buttonUrl]);
+      return ['redirectUrl' => $buttonUrl];
     }
 
     $additionalButtons = [
@@ -323,7 +323,7 @@ class DraftController extends SharedController
     }
 
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-      return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
+      return ['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE];
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
@@ -348,7 +348,7 @@ class DraftController extends SharedController
           $draft = $fm->getDraft();
         }
         self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, PageUtil::getReferer());
-        return json_encode(['redirectUrl' => PageUtil::getReferer()]);
+        return ['redirectUrl' => PageUtil::getReferer()];
       }
     }
   }
@@ -363,7 +363,7 @@ class DraftController extends SharedController
   private function saveDraftForNewFile($filePath, $fromFilePath)
   {
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-      return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
+      return ['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE];
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, $fromFilePath, $this->getDB());
@@ -378,7 +378,7 @@ class DraftController extends SharedController
 
     if (!$fm->acquireLock()) {
       // lock couldn't be acquired
-      return json_encode(['error' => true, 'reason' => $this->renderLockNotAcquiredMessage($fm)]);
+      return ['error' => true, 'reason' => $this->renderLockNotAcquiredMessage($fm)];
     }
 
     if ($fm->editFile($_POST)) {
@@ -390,7 +390,7 @@ class DraftController extends SharedController
         }
         $redirectUrl = (new String(PageUtil::getReferer()))->removeQueryStringParams(['srcFilePath'])->getValue();
         self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, $redirectUrl);
-        return json_encode(['redirectUrl' => $redirectUrl]);
+        return ['redirectUrl' => $redirectUrl];
       }
     }
   }
@@ -404,7 +404,7 @@ class DraftController extends SharedController
   private function deleteDraft($filePath)
   {
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
-      return json_encode(['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE]);
+      return ['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE];
     }
 
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
@@ -553,11 +553,7 @@ class DraftController extends SharedController
 
       case $this->userIsEditingPublicDraft($_SERVER['REQUEST_URI']):
         $params['draftName'] = self::guessDraftName($params['filePath']);
-        $result = $this->editPublicDraft($params);
-        if (is_array($result)) {
-          return $result;
-        }
-          return ['action' => 'return', 'value' => $result];
+          return ['action' => 'return', 'value' => $this->editPublicDraft($params)];
 
       case self::userIsSavingDraft():
           return ['action' => 'return', 'value' => $this->saveDraft($params['filePath'])];

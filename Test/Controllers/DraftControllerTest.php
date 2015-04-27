@@ -622,7 +622,7 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->editPublicDraft(['draftName' => basename($draftName)]);
 
     $this->assertContains($_POST['1'], file_get_contents($draftName));
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -685,7 +685,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains($_POST['1'], file_get_contents($draftName));
     $this->assertSame('return', $actual['action']);
-    $this->assertContains('redirectUrl', $actual['value']);
+    $this->assertNotEmpty($actual['value']['redirectUrl']);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -706,7 +706,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $actual = json_decode($this->controller->saveDraft($filePath), true);
+    $actual = $this->controller->saveDraft($filePath);
 
     $this->assertSame(['error', 'reason'], array_keys($actual));
 
@@ -767,7 +767,7 @@ class DraftControllerTest extends TestBase
 
     $actual = $this->controller->saveDraft($filePath);
 
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -789,7 +789,7 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = json_decode($this->controller->saveDraft($filePath), true);
+    $actual = $this->controller->saveDraft($filePath);
 
     $this->assertSame(['error', 'reason'], array_keys($actual));
 
@@ -819,7 +819,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertSame(['action', 'value'], array_keys($actual));
     $this->assertSame('return', $actual['action']);
-    $this->assertContains('redirectUrl', $actual['value']);
+    $this->assertNotEmpty($actual['value']['redirectUrl']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -848,7 +848,7 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = json_decode($this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE), true);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
 
     $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $actual['reason']);
 
@@ -873,7 +873,7 @@ class DraftControllerTest extends TestBase
 
     $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
 
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -896,13 +896,13 @@ class DraftControllerTest extends TestBase
 
     $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
 
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
 
     $_POST = ['1' => '<p>This is some more edited html content</p>'];
 
     $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
     $this->buildFileManager('testUser', $filePath);
     $draft = $this->fileManager->getDraftForUser('testUser');
@@ -930,7 +930,7 @@ class DraftControllerTest extends TestBase
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
     $actual = $this->controller->saveDraft($filePath);
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
     $this->assertTrue($this->controller->deleteDraft($filePath));
 
@@ -972,7 +972,7 @@ class DraftControllerTest extends TestBase
 
     $this->setUpController();
 
-    $actual = json_decode($this->controller->deleteDraft($filePath), true);
+    $actual = $this->controller->deleteDraft($filePath);
 
     $this->assertSame(['error', 'reason'], array_keys($actual));
     $this->assertSame(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, $actual['reason']);
@@ -998,7 +998,7 @@ class DraftControllerTest extends TestBase
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
     $actual = $this->controller->saveDraft($filePath);
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
     $_POST['saveAction'] = 'discardDraft';
 
@@ -1025,7 +1025,7 @@ class DraftControllerTest extends TestBase
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
     $actual = $this->controller->saveDraft($filePath);
-    $this->assertContains('redirectUrl', $actual);
+    $this->assertNotEmpty($actual['redirectUrl']);
 
     $this->assertTrue($this->controller->stopEditingPublicDraft(['filePath' => $filePath])['value']);
 
