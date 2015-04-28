@@ -140,6 +140,11 @@ class MenuController extends SharedController
     } else {
       $forReferer = true;
     }
+    if (isset($params['showMenu'])) {
+      $showMenu = $params['showMenu'];
+    } else {
+      $showMenu = isset($_GET['concert']);
+    }
 
     $this->analyzeReferer($forReferer);
     $this->addRefererParamsToGet();
@@ -174,7 +179,7 @@ class MenuController extends SharedController
       return $this->renderView('menu.html.twig',
           [
             'menu'     => $this->menu,
-            'showMenu' => isset($_GET['concert']),
+            'showMenu' => $showMenu,
             'quitURL'  => $quitURL,
           ]
       );

@@ -420,9 +420,10 @@ class SharedController extends ConcourseController
   /**
    * Adds the menu to interact with Concert
    *
+   * @param   $menuParams Params to pass to the menus forward index
    * @return  void
    */
-  protected function addMoshMenu()
+  protected function addMoshMenu(array $menuParams = [])
   {
     if (!self::$moshMenuAdded) {
       // add messages to the menu
@@ -430,7 +431,8 @@ class SharedController extends ConcourseController
         return $content . $this->renderView('messages.js.twig', ['messages' => $this->getConcertMessages()]);
       });
 
-      $result = $this->forward('menus', ['forReferer' => false]);
+      $menuParams['forReferer'] = false;
+      $result = $this->forward('menus', $menuParams);
       if (!empty($result)) {
         $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
         if (!self::isResourceAdded($cssResource, 'css')) {

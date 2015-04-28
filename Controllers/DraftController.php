@@ -225,7 +225,9 @@ class DraftController extends SharedController
    */
   public function editPublicDraft(array $params)
   {
-    $this->addMoshMenu();
+    $this->addMoshMenu(['showMenu' => true]);
+    // let ourselves know that we have already moshed this request.
+    self::markMoshed();
     $draftName = $params['draftName'];
 
     $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('editDraft', ['draftName' => '']), null, $this->getDB());
