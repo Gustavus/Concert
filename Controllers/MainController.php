@@ -12,6 +12,7 @@ use Gustavus\Concert\Config,
   Gustavus\Utility\File,
   Gustavus\Utility\String,
   Gustavus\Utility\PageUtil,
+  Gustavus\Utility\Jsonizer,
   Gustavus\Concert\PermissionsManager,
   Campus\Utility\Autocomplete,
   Gustavus\Extensibility\Actions,
@@ -963,7 +964,7 @@ class MainController extends SharedController
    * Handles web requests to mosh
    *
    * @throws InvalidArgumentException If a filePath doesn't exist in $_POST
-   * @return string
+   * @return string Json encoded string
    */
   public function handleMoshRequest()
   {
@@ -974,8 +975,9 @@ class MainController extends SharedController
 
     $moshActions = $this->mosh($filePath);
     if (isset($moshActions['action'], $moshActions['value']) && $moshActions['action'] === 'return') {
-      return $moshActions['value'];
+      return Jsonizer::toJSON($moshActions['value']);
     }
+    return Jsonizer::toJSON(null);
   }
 
   /**

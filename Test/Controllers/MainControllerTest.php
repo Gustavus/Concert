@@ -1439,7 +1439,7 @@ class MainControllerTest extends TestBase
     $_POST['filePath']      = $filePath;
     $this->setUpController();
 
-    $this->assertFalse($this->controller->handleMoshRequest());
+    $this->assertSame('false', $this->controller->handleMoshRequest());
     $this->unauthenticate();
     $this->destructDB();
   }

@@ -92,10 +92,10 @@
 
   param: buttonConfigs Array of button config arrays with keys of url, id, classes, text, and extraHTML
 #}
-{% macro renderButtons(buttons, buttonConfigs) %}
-  {% import _self as self %}
-  {% set privateDraftDialogHTML = false %}
-  {% set discardDraftDialogHTML = false %}
+{% macro renderButtons(buttons, buttonConfigs) -%}
+  {%- import _self as self -%}
+  {%- set privateDraftDialogHTML = false -%}
+  {%- set discardDraftDialogHTML = false -%}
   {%- for button in buttons -%}
     {%- if button is iterable -%}
       {# Our button is an array itself, it must be a configuration #}
@@ -107,7 +107,7 @@
         {%- set discardDraftDialogHTML = true -%}
       {%- endif -%}
       {# Our button configuration is in our buttonConfigs array #}
-      {{ self.renderButton(buttonConfigs[button])|raw }}
+      {{- self.renderButton(buttonConfigs[button])|raw -}}
     {%- endif -%}
   {%- endfor -%}
 
@@ -124,4 +124,4 @@
       <p class="concert-message concert-alert">This draft is shared. Discarding it may also discard any changes made by collaborators.</p>
     </div>
   {%- endif -%}
-{% endmacro renderButtons %}
+{%- endmacro renderButtons %}
