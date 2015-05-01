@@ -1205,6 +1205,61 @@ class DraftControllerTest extends TestBase
   /**
    * @test
    */
+  public function addUsersToDraftSubmissionEmailsInsteadOfUsernames()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', $filePath);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'addusers' => [
+        'adduserssection' => [
+          'person' => [
+            ['username' => 'bvisto@gustavus.edu'],
+            ['username' => 'jerry@gustavus.edu'],
+          ],
+        ],
+      ],
+    ];
+
+    $actual = $this->controller->addUsersToDraft(['draftName' => basename($draftFileName)]);
+
+    $this->assertSame(['redirect'], array_keys($actual));
+
+    $draft = $this->fileManager->getDraft(basename($draftFileName));
+
+    $this->assertSame(['bvisto', 'jerry'], $draft['additionalUsers']);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+    $expectedBcc['bvisto@gustavus.edu'] = null;
+    $expectedBcc['jerry@gustavus.edu'] = null;
+
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testUser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
+
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function addUsersToDraftSubmissionAlreadyShared()
   {
     $filePath = self::$testFileDir . 'index.php';

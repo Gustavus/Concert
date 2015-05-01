@@ -451,7 +451,12 @@ class DraftController extends SharedController
       $additionalUsers = [];
       foreach ($form->getChildElement('adduserssection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
         if ($child->getName() === 'person') {
-          $additionalUsers[] = $child->getChildElement('username')->getValue();
+          $username = $child->getChildElement('username')->getValue();
+          // make sure we have the username in case someone entered an email address
+          if (preg_match('`(.+)@(?:gustavus|gac)\.edu`', $username, $matches) === 1 && isset($matches[1])) {
+            $username = $matches[1];
+          }
+          $additionalUsers[] = $username;
         }
       }
       $additionalUsers = array_filter(array_unique($additionalUsers));
