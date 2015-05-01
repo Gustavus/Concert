@@ -235,6 +235,7 @@ class SharedController extends ConcourseController
 
     $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
 
+    $destFilepath = $filePath;
     if (self::userIsEditingPublicDraft($filePath)) {
       // we need to find the site base a different way
       $draftName = self::guessDraftName();
@@ -242,9 +243,8 @@ class SharedController extends ConcourseController
         $fm = new FileManager($this->getLoggedInUsername(), Config::$draftDir . $draftName, null, $this->getDB());
         $draft = $fm->getDraft($draftName);
         if (!empty($draft)) {
+          // our destFilepath is actually the destFilepath of the draft
           $destFilepath = $draft['destFilepath'];
-        } else {
-          $destFilepath = $filePath;
         }
       }
       $siteBase = PermissionsManager::findClosestSiteForFile(Utility::removeDocRootFromPath($destFilepath));
@@ -345,7 +345,7 @@ class SharedController extends ConcourseController
       self::markResourcesAdded([$cssResource], 'css');
     }
 
-    $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), $filePathFromDocRoot);
+    $userCanPublishFile = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($destFilepath));
 
     if (!empty(self::$visibleEditingButtons)) {
       $visibleButtons = self::$visibleEditingButtons;
@@ -357,7 +357,7 @@ class SharedController extends ConcourseController
       $visibleButtons = Config::$defaultEditingButtons;
     }
 
-    if (($pos = array_search('discardDraft', $visibleButtons)) !== false && !(new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB()))->userHasOpenDraft()) {
+    if (($pos = array_search('discardDraft', $visibleButtons)) !== false && !(new FileManager($this->getLoggedInUsername(), $destFilepath, null, $this->getDB()))->userHasOpenDraft()) {
       unset($visibleButtons[$pos]);
     }
 
@@ -1115,13 +1115,23 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Checks to see if the request was forwarded from the draft controller.
+   *
+   * @return boolean
+   */
+  protected static function isForwardedFromDraft()
+  {
+    return (isset($_GET['forwardedFrom']) && $_GET['forwardedFrom'] === 'draft');
+  }
+
+  /**
    * Checks to see if we are forwarding internally
    *
    * @return boolean
    */
   protected static function isInternalForward()
   {
-    return (self::isForwardedFromSiteNav());
+    return (self::isForwardedFromSiteNav() || self::isForwardedFromDraft());
   }
 
 

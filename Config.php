@@ -260,6 +260,11 @@ class Config
   const DRAFT_NOT_EDITABLE_MESSAGE = 'Oops! It looks like you don\'t have access to edit this draft.';
 
   /**
+   * Message to display if a non-owner of a draft tries to publish it
+   */
+  const NOT_ALLOWED_TO_PUBLISH_DRAFT_MESSAGE = 'Oops! It looks like you can\'t publish this draft because you aren\'t the owner.';
+
+  /**
    * Message to use when the draft is older than the page the draft represents
    */
   const OUTDATED_DRAFT_MESSAGE = 'This draft was created from an older version of the page and may be out of date.';
