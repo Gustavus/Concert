@@ -285,10 +285,10 @@ class DraftController extends SharedController
       ]
     ];
 
-    $buttons = ['saveDraft'];
-
     if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
-      $buttons[] = 'discardDraft';
+      $buttons = ['publish', 'savePublicDraft', 'discardDraft'];
+    } else {
+      $buttons = ['saveDraft'];
     }
 
     $this->insertEditingResources($this->buildUrl('editDraft', ['draftName' => $draftName]), null, $buttons, $additionalButtons);
@@ -405,6 +405,21 @@ class DraftController extends SharedController
    */
   private function deleteDraft($filePath)
   {
+    if (self::userIsEditingPublicDraft($filePath)) {
+      $draftName = self::guessDraftName($filePath);
+      $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('editDraft', ['draftName' => '']), null, $this->getDB());
+
+      // we've got our draft.
+      $draft = $fm->getDraft($draftName);
+      if (empty($draft)) {
+        // draft doesn't exist
+        return true;
+      }
+      $filePath = $draft['destFilepath'];
+      $return = ['redirectUrl' => Utility::removeDocRootFromPath($filePath)];
+    } else {
+      $return = true;
+    }
     if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
       return ['error' => true, 'reason' => Config::NOT_ALLOWED_TO_EDIT_MESSAGE];
     }
@@ -412,10 +427,10 @@ class DraftController extends SharedController
     $fm = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
     if (!$fm->userHasOpenDraft()) {
       // user doesn't have a draft they can delete. Nothing needs to happen.
-      return true;
+      return $return;
     } else {
       $fm->destroyDraft();
-      return true;
+      return $return;
     }
   }
 
@@ -451,7 +466,12 @@ class DraftController extends SharedController
       $additionalUsers = [];
       foreach ($form->getChildElement('adduserssection')->setIteratorSource(FormElement::ISOURCE_CHILDREN) as $child) {
         if ($child->getName() === 'person') {
-          $additionalUsers[] = $child->getChildElement('username')->getValue();
+          $username = $child->getChildElement('username')->getValue();
+          // make sure we have the username in case someone entered an email address
+          if (preg_match('`(.+)@(?:gustavus|gac)\.edu`', $username, $matches) === 1 && isset($matches[1])) {
+            $username = $matches[1];
+          }
+          $additionalUsers[] = $username;
         }
       }
       $additionalUsers = array_filter(array_unique($additionalUsers));
@@ -532,6 +552,44 @@ class DraftController extends SharedController
   }
 
   /**
+   * Handles publishing a draft for draft owners
+   *
+   * @param  array  $params Params ajax request
+   * @return array|boolean
+   */
+  private function publishDraft(array $params)
+  {
+    $draftName = self::guessDraftName($params['filePath']);
+
+    $fm = new FileManager($this->getLoggedInUsername(), $this->buildUrl('editDraft', ['draftName' => '']), null, $this->getDB());
+
+    // we've got our draft.
+    $draft = $fm->getDraft($draftName);
+
+    if (empty($draft)) {
+      return $this->renderErrorPage(Config::DRAFT_NON_EXISTENT);
+    }
+
+    if (!PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
+      return $this->renderErrorPage(Config::NOT_ALLOWED_TO_PUBLISH_DRAFT_MESSAGE);
+    }
+
+    $origGet = $_GET;
+
+    // set temporary variables for forwarding
+    $_GET['concert']       = 'edit';
+    $_GET['forwardedFrom'] = 'draft';
+    $_GET['concertMoshed'] = 'false';
+
+    $moshResult = $this->forward('mosh', ['filePath' => $draft['destFilepath'], 'dbal' => $this->getDB()]);
+
+    if (isset($moshResult['action']) && $moshResult['action'] === 'return' && $moshResult['value'] === true) {
+      return ['action' => 'return', 'value' => ['redirectUrl' => Utility::removeDocRootFromPath($draft['destFilepath'])]];
+    }
+    return $moshResult;
+  }
+
+  /**
    * Handles draft requests
    *
    * @param  array  $params Params to pass onto the correct handler
@@ -566,6 +624,9 @@ class DraftController extends SharedController
       case self::userIsAddingUsersToDraft():
         $params['draftName'] = self::guessDraftName($params['filePath']);
           return ['action' => 'return', 'value' => $this->addUsersToDraft($params)];
+
+      case self::userIsSaving():
+          return $this->publishDraft($params);
     }
   }
 

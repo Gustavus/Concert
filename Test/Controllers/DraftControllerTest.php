@@ -630,6 +630,127 @@ class DraftControllerTest extends TestBase
   /**
    * @test
    */
+  public function publishDraftSubmissionNonExistent()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
+    $this->fileManager->destroyDraft();
+
+    $this->setUpController();
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+
+    $_POST = ['1' => '<p>This is some edited html content</p>'];
+
+    $actual = $this->controller->publishDraft(['filePath' => $draftName]);
+
+    $this->assertContains(Config::DRAFT_NON_EXISTENT, $actual['content']);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function publishDraftSubmissionNotOwner()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+
+    $_POST = ['1' => '<p>This is some edited html content</p>'];
+
+    $actual = $this->controller->publishDraft(['filePath' => $draftName]);
+
+    $this->assertContains(Config::NOT_ALLOWED_TO_PUBLISH_DRAFT_MESSAGE, $actual['content']);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function publishDraftSubmissionNoLock()
+  {
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('bvisto', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
+    $this->fileManager->stopEditing();
+    $this->buildFileManager('jerry', '/cis/www/billy/concert/index.php');
+    $this->assertTrue($this->fileManager->acquireLock());
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+
+    $_POST = ['1' => '<p>This is some edited html content</p>'];
+
+    $actual = $this->controller->publishDraft(['filePath' => $draftName]);
+
+    $this->assertSame(['action' => 'none'], $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function publishDraftSubmission()
+  {
+    $this->buildDB();
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('bvisto', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+
+    $_POST = ['1' => '<p>This is some edited html content</p>'];
+
+    $actual = $this->controller->publishDraft(['filePath' => $draftName]);
+
+    $this->assertSame(['action' => 'return', 'value' => ['redirectUrl' => '/billy/concert/index.php']], $actual);
+    $this->assertContains($_POST['1'], file_get_contents(Config::$stagingDir . $this->fileManager->getFilePathHash('/cis/www/billy/concert/index.php')));
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function handleDraftActionsEditPublicDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
@@ -1175,6 +1296,61 @@ class DraftControllerTest extends TestBase
           'person' => [
             ['username' => 'bvisto'],
             ['username' => 'jerry'],
+          ],
+        ],
+      ],
+    ];
+
+    $actual = $this->controller->addUsersToDraft(['draftName' => basename($draftFileName)]);
+
+    $this->assertSame(['redirect'], array_keys($actual));
+
+    $draft = $this->fileManager->getDraft(basename($draftFileName));
+
+    $this->assertSame(['bvisto', 'jerry'], $draft['additionalUsers']);
+
+    $expectedBcc = [];
+    foreach (Config::$devEmails as $devEmail) {
+      $expectedBcc[$devEmail] = null;
+    }
+    $expectedBcc['bvisto@gustavus.edu'] = null;
+    $expectedBcc['jerry@gustavus.edu'] = null;
+
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testUser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
+
+
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function addUsersToDraftSubmissionEmailsInsteadOfUsernames()
+  {
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+
+    $configuration = new FileConfiguration(self::$indexConfigArray);
+
+    $this->buildFileManager('testUser', $filePath);
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->authenticate('testUser');
+
+    $this->setUpController();
+
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = [
+      'addusers' => [
+        'adduserssection' => [
+          'person' => [
+            ['username' => 'bvisto@gustavus.edu'],
+            ['username' => 'jerry@gustavus.edu'],
           ],
         ],
       ],

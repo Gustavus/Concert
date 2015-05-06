@@ -806,9 +806,8 @@ class MainController extends SharedController
         return $this->handleRevisions($filePath, $redirectUrl);
       }
 
-      $isEditingPublicDraft = false;
       // check if it is a draft request
-      if (self::isDraftRequest() || ($isEditingPublicDraft = $this->userIsEditingPublicDraft($filePath))) {
+      if (self::isDraftRequest() || $this->userIsEditingPublicDraft($filePath)) {
         $this->addMoshMenu();
         // pass onto draft controller to process this request
         return $this->forward('handleDraftActions', ['filePath' => $filePath]);
