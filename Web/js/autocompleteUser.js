@@ -10,7 +10,7 @@ Extend.add('autocompleteUser', function() {
         var role = $(children).find('select').val();
         var url = $this.data('autocompletepath');
 
-        url = url.replace(encodeURIComponent('{value}'), encodeURIComponent(req.term));
+        url = url.replace('{value}', encodeURIComponent(req.term));
 
         $.getJSON(
           url,

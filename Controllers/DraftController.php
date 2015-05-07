@@ -517,13 +517,10 @@ class DraftController extends SharedController
       // now we need to add formBuilder, autocomplete, and colorbox submission javascripts
       $r .= sprintf(
           '<script type="text/javascript">
-            Modernizr.load({
-              load: "%s",
-              complete: function() {
-                $(function() {
-                  Extend.apply(\'autocompleteUser\');
-                });
-              }
+            require(["%1$s"], function() {
+              $(function() {
+                Extend.apply(\'autocompleteUser\');
+              });
             });
             $(\'.concertSubmitAddUsers\').click(function(e) {
               e.preventDefault();

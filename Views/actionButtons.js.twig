@@ -55,9 +55,7 @@
 
 {% if buttonsToRender|length > 0 %}
   <script>
-   Modernizr.load({
-    load: Gustavus.baseSrc,
-    complete: function() {
+    require(['baseJS'], function() {
       $(function() {
         var $actionButtons = $('#primaryActions');
         $('{{ self.renderButtons(buttonsToRender, buttonConfigurations)|e('js') }}')
@@ -68,8 +66,7 @@
             $(this).css('display', '');
           });
       });
-    }
-  });
+    });
   </script>
 {% endif %}
 {% endspaceless %}

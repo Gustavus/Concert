@@ -1,66 +1,67 @@
 {% spaceless %}
-<link rel="stylesheet" type="text/css" href="{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css'}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}" />
 <script type="text/javascript">
-  Modernizr.load({
-    load: [
-      Gustavus.baseSrc,
-      "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
-      "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
-      "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}"
-    ],
-    complete: function() {
+  require(['baseJS'], function() {
+    require(
+      [
+        "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
+        "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
+        "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}",
+        "css!{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css'}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}"
+      ],
+      function() {
 
-      $(function() {
-        var newFile = '';
-        var fromFile = '';
+        $(function() {
+          var newFile = '';
+          var fromFile = '';
 
-        $('#toFileTreeSelector').fileTree({
-          root: '{{ site }}',
-          script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'toFile'}) }}'
-        }, function (file) {
-          newFile = file;
-        });
+          $('#toFileTreeSelector').fileTree({
+            root: '{{ site }}',
+            script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'toFile'}) }}'
+          }, function (file) {
+            newFile = file;
+          });
 
-        $('#fromFileTreeSelector').fileTree({
-          root: '{{ site }}',
-          script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'fromFile'}) }}'
-        }, function (file) {
-          fromFile = file;
-        });
+          $('#fromFileTreeSelector').fileTree({
+            root: '{{ site }}',
+            script: '{{ buildUrl('newPageMenuFiles', {'fileTree': 'fromFile'}) }}'
+          }, function (file) {
+            fromFile = file;
+          });
 
-        $('#createNewPage').on('click', function(e) {
-          e.preventDefault();
-          if (!fromFile) {
-            var $selectedFromFile = $('#fromFileTreeSelector .selected');
-            if ($selectedFromFile.length > 0) {
-              fromFile = $selectedFromFile.attr('rel');
-            }
-          }
-
-          if (!newFile) {
-            var $selectedNewFile = $('#toFileTreeSelector .selected');
-            if ($selectedNewFile.length > 0) {
-              newFile = $selectedNewFile.attr('rel');
-            }
-          }
-          if (newFile) {
-            window.location = Gustavus.Utility.URL.urlify(newFile, {'concert': 'edit', 'srcFilePath': encodeURIComponent(fromFile)});
-          } else {
-            $('#noFileSelectedDialog').dialog({
-              title: 'No location selected',
-              width: 300,
-              draggable: false,
-              modal: true,
-              buttons: {
-                Ok: function() {
-                  $(this).dialog('close');
-                }
+          $('#createNewPage').on('click', function(e) {
+            e.preventDefault();
+            if (!fromFile) {
+              var $selectedFromFile = $('#fromFileTreeSelector .selected');
+              if ($selectedFromFile.length > 0) {
+                fromFile = $selectedFromFile.attr('rel');
               }
-            });
-          }
+            }
+
+            if (!newFile) {
+              var $selectedNewFile = $('#toFileTreeSelector .selected');
+              if ($selectedNewFile.length > 0) {
+                newFile = $selectedNewFile.attr('rel');
+              }
+            }
+            if (newFile) {
+              window.location = Gustavus.Utility.URL.urlify(newFile, {'concert': 'edit', 'srcFilePath': encodeURIComponent(fromFile)});
+            } else {
+              $('#noFileSelectedDialog').dialog({
+                title: 'No location selected',
+                width: 300,
+                draggable: false,
+                modal: true,
+                buttons: {
+                  Ok: function() {
+                    $(this).dialog('close');
+                  }
+                }
+              });
+            }
+          });
         });
-      });
-    }
+      }
+    )
   });
 </script>
 

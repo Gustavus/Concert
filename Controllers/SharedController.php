@@ -299,24 +299,25 @@ class SharedController extends ConcourseController
 
       $script = sprintf(
           '<script type="text/javascript">
-            Modernizr.load({
-              load: [
-                "%1$s"
-              ],
-              complete: function() {
-                Gustavus.Concert.filePath = "%2$s";
-                Gustavus.Concert.redirectPath = "%3$s";
-                Gustavus.Concert.allowCode = %4$s;
-                Gustavus.Concert.isAdmin = %5$s;
-                Gustavus.Concert.isSiteNavRequest = %6$s;
-                Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%7$s";
-                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%7$s/";
-                Gustavus.Concert.tinyMCEPath = "%8$s";
-                %9$s
-                Gustavus.Concert.init();
+            require.config({
+              shim: {
+                "%1$s": ["baseJS"]
               }
             });
+            require(["%2$s"], function() {
+              Gustavus.Concert.filePath = "%3$s";
+              Gustavus.Concert.redirectPath = "%4$s";
+              Gustavus.Concert.allowCode = %5$s;
+              Gustavus.Concert.isAdmin = %6$s;
+              Gustavus.Concert.isSiteNavRequest = %7$s;
+              Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%8$s";
+              Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%8$s/";
+              Gustavus.Concert.tinyMCEPath = "%9$s";
+              %10$s
+              Gustavus.Concert.init();
+            });
           </script>',
+          implode('": ["baseJS"],"', $resources['js']),
           implode('","', $resources['js']),
           $originalFilePath,
           $redirectPath,
