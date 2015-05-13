@@ -215,6 +215,58 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function partContentEmbededPHPOpeningTag()
+  {
+    $content = 'if (true) {';
+    $params = [
+      'contentType' => Config::PHP_CONTENT_TYPE,
+      'content' => $content,
+      'key'   => 0,
+    ];
+    $part = new TestObject(new FileConfigurationPart($params));
+
+    $result = $part->parseContent();
+    $this->assertTrue(is_array($result));
+  }
+
+  /**
+   * @test
+   */
+  public function partContentEmbededPHPClosingTag()
+  {
+    $content = '}';
+    $params = [
+      'contentType' => Config::PHP_CONTENT_TYPE,
+      'content' => $content,
+      'key'   => 0,
+    ];
+    $part = new TestObject(new FileConfigurationPart($params));
+
+    $result = $part->parseContent();
+    $this->assertTrue(is_array($result));
+  }
+
+  /**
+   * @test
+   * @expectedException \PhpParser\Error
+   */
+  public function partContentEmbededPHPError()
+  {
+    $content = 'arst arst';
+    $params = [
+      'contentType' => Config::PHP_CONTENT_TYPE,
+      'content' => $content,
+      'key'   => 0,
+    ];
+    $part = new TestObject(new FileConfigurationPart($params));
+
+    $result = $part->parseContent();
+    $this->assertTrue(false, 'error should have been thrown');
+  }
+
+  /**
+   * @test
+   */
   public function buildPHPNodesNotPHP()
   {
     $this->buildFileConfigurationPart();
