@@ -222,6 +222,7 @@ class FileConfigurationPart
       }
       // something happened while trying to parse this content. It is probably some embedded php that closes a tag in a later-on php block.
       // i.e. <p><\?php if (true) { \?\>here<\?php } else { \?\>arst<\?php } \?\>
+      // let's just parse the content, and not throw it in php tags so the parser will see it as a string.
       $phpNodes = $parser->parse($this->content);
     }
     return $phpNodes;
