@@ -268,7 +268,7 @@ class SharedController extends ConcourseController
     }
     $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
-    $tinyMCEPath = Resource::renderResource(['path' => sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION), 'version' => Config::TINY_MCE_VERSION]);
+    $tinyMCEPath = sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION);
     $resources = [
       'js' => [
         '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
@@ -310,9 +310,9 @@ class SharedController extends ConcourseController
                 Gustavus.Concert.isAdmin = %5$s;
                 Gustavus.Concert.isSiteNavRequest = %6$s;
                 Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%7$s";
-                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%7$s/";
-                Gustavus.Concert.tinyMCEPath = "%8$s";
-                %9$s
+                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "%8$s/filemanager_%9$s/%7$s/";
+                Gustavus.Concert.tinyMCEPath = "%10$s";
+                %11$s
                 Gustavus.Concert.init();
               }
             });
@@ -324,6 +324,8 @@ class SharedController extends ConcourseController
           $isAdmin,
           self::isSiteNavRequest() ? 'true' : 'false',
           $siteAccessKey,
+          Config::WEB_DIR,
+          Config::RESPONSIVE_FILEMANAGER_VERSION,
           $tinyMCEPath,
           $additionalJSOptions
       );

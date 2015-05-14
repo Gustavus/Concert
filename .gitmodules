@@ -1,3 +1,6 @@
 [submodule "Assets/ResponsiveFilemanager"]
 	path = Assets/ResponsiveFilemanager
 	url = bart:/cis/git/ConcertResponsiveFilemanager.git
+[submodule "Assets/tinymce"]
+	path = Assets/tinymce
+	url = bart:/cis/git/ConcertTinyMCE.git
