@@ -483,7 +483,7 @@ class MenuController extends SharedController
         'text'          => 'Create New Page',
         'url'           => $this->buildUrl('newPageMenu'),
         'thickbox'      => true,
-        'thickboxData' => ['height' => '400px'],
+        'thickboxData' => ['height' => '400px', 'trapfocus' => 'false'],
       ];
 
       $this->addMenuItem($item, null, 20);
