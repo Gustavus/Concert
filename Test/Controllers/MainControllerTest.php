@@ -1267,6 +1267,41 @@ class MainControllerTest extends TestBase
   /**
    * @test
    */
+  public function moshEditFileNoIndex()
+  {
+    $docRoot = $_SERVER['DOCUMENT_ROOT'];
+    $_SERVER['DOCUMENT_ROOT'] = '/cis/lib/';
+    $this->set('Config', 'requiredDocRoot', '/cis/lib');
+    $filePath = self::$testFileDir . 'index.php';
+    file_put_contents($filePath, self::$indexContents);
+
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', str_replace('/cis/lib/', '', self::$testFileDir), 'test']);
+
+    $this->authenticate('bvisto');
+    $_GET['concert'] = 'edit';
+    $this->setUpController();
+
+    $actual = $this->controller->mosh(self::$testFileDir);
+    $this->assertSame(['action', 'value'], array_keys($actual));
+    $messages = $this->controller->getConcertMessages();
+    $this->assertEmpty($messages);
+    $scripts = '';
+    $scripts = Filters::apply('scripts', $scripts);
+    // make sure our full file path including index.php is used
+    $this->assertContains($filePath, $scripts);
+    $this->assertContains($this->wrappedEditableIdentifier, $actual['value']);
+
+    $this->unauthenticate();
+    $this->destructDB();
+    $_SERVER['DOCUMENT_ROOT'] = $docRoot;
+    $this->set('Config', 'requiredDocRoot', $docRoot);
+  }
+
+  /**
+   * @test
+   */
   public function moshEditFileNonExistentNoCreation()
   {
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
