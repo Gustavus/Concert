@@ -13,7 +13,8 @@ use Gustavus\Utility\Set,
   PhpParser\Node\Expr\Array_ as PHPParserArray,
   PhpParser\Parser,
   PhpParser\NodeTraverser,
-  PhpParser\Lexer;
+  PhpParser\Lexer,
+  PhpParser\Error as ParserError;
 
 /**
  * Object representing an individual piece of the file configuration
@@ -211,7 +212,20 @@ class FileConfigurationPart
     } else {
       $template = '<?php %s ?>';
     }
-    return $parser->parse(sprintf($template, $this->content));
+
+    try {
+      $phpNodes = $parser->parse(sprintf($template, $this->content));
+    } catch (ParserError $e) {
+      $message = $e->getRawMessage();
+      if (strpos($message, 'unexpected EOF') === false && strpos($message, 'expecting EOF') === false) {
+        throw $e;
+      }
+      // something happened while trying to parse this content. It is probably some embedded php that closes a tag in a later-on php block.
+      // i.e. <p><\?php if (true) { \?\>here<\?php } else { \?\>arst<\?php } \?\>
+      // let's just parse the content, and not throw it in php tags so the parser will see it as a string.
+      $phpNodes = $parser->parse($this->content);
+    }
+    return $phpNodes;
   }
 
   /**

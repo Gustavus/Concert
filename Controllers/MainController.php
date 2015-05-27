@@ -778,6 +778,9 @@ class MainController extends SharedController
     } else {
       $filePath = rawurldecode($params);
     }
+    if (substr($filePath, -4) !== '.php') {
+      $filePath = str_replace('//', '/', $filePath . '/index.php');
+    }
 
     if ($this->isLoggedIn() && !self::alreadyMoshed()) {
       // let ourselves know that we have already moshed this request.

@@ -268,7 +268,7 @@ class SharedController extends ConcourseController
     }
     $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
-    $tinyMCEPath = Resource::renderResource(['path' => sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION), 'version' => Config::TINY_MCE_VERSION]);
+    $tinyMCEPath = sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION);
     $resources = [
       'js' => [
         '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
@@ -325,6 +325,8 @@ class SharedController extends ConcourseController
           $isAdmin,
           self::isSiteNavRequest() ? 'true' : 'false',
           $siteAccessKey,
+          Config::WEB_DIR,
+          Config::RESPONSIVE_FILEMANAGER_VERSION,
           $tinyMCEPath,
           $additionalJSOptions
       );

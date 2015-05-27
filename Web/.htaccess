@@ -1,11 +1,15 @@
 RewriteEngine On
 RewriteBase /concert/
 
+# rewrite for versioned filemanager and tinymce
+RewriteRule filemanager_.+?/(.*) filemanager/$1 [L]
+RewriteRule js/tinymce_.+?/(.*) js/tinymce/$1 [L]
+
 # force fileManager's php files through our router
 RewriteRule filemanager/(.{32})/(.+\.php) index.php?request=filemanager/$2&accessKey=$1 [QSA,L]
 #RewriteRule filemanager/.+ - [L]
 # allow any non-php filemanager files pass through
-RewriteRule filemanager/(?:.{32})/(.*) filemanager/$1 [L,R=303]
+RewriteRule filemanager/(?:.{32})/(.*) filemanager/$1 [L]
 RewriteRule filemanager/.+ - [L]
 
 RewriteRule js/.+\.js$ - [L]
