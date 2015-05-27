@@ -271,8 +271,6 @@ class SharedController extends ConcourseController
     $tinyMCEPath = sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION);
     $resources = [
       'js' => [
-        '/js/jquery/ui/current/minified/jquery.ui.dialog.min.js',
-        '/js/jquery/ui/current/minified/jquery.ui.button.min.js',
         $tinyMCEPath,
         Resource::renderResource(['urlutil', 'dropdown', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
       ],
@@ -301,7 +299,7 @@ class SharedController extends ConcourseController
           '<script type="text/javascript">
             require.config({
               shim: {
-                "%1$s": ["baseJS"]
+                "%1$s": ["baseJS", "ui/dialog", "ui/button"]
               }
             });
             require(["%2$s"], function() {
@@ -311,13 +309,13 @@ class SharedController extends ConcourseController
               Gustavus.Concert.isAdmin = %6$s;
               Gustavus.Concert.isSiteNavRequest = %7$s;
               Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%8$s";
-              Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "/concert/filemanager/%8$s/";
-              Gustavus.Concert.tinyMCEPath = "%9$s";
-              %10$s
+              Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "%9$s/filemanager_%10$s/%8$s/";
+              Gustavus.Concert.tinyMCEPath = "%11$s";
+              %12$s
               Gustavus.Concert.init();
             });
           </script>',
-          implode('": ["baseJS"],"', $resources['js']),
+          implode('": ["baseJS", "ui/dialog", "ui/button"],"', $resources['js']),
           implode('","', $resources['js']),
           $originalFilePath,
           $redirectPath,
