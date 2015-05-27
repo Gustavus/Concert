@@ -3,8 +3,8 @@
   require(['baseJS'], function() {
     require(
       [
-        "/js/jquery/ui/current/minified/jquery.ui.dialog.min.js",
-        "/js/jquery/ui/current/minified/jquery.ui.button.min.js",
+        "ui/dialog",
+        "ui/button",
         "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}",
         "css!{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css'}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}"
       ],
