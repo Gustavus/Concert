@@ -252,6 +252,21 @@ Gustavus.Concert = {
       //     }
       //   }
       // });
+
+      // add a shortcut to indent list elements
+      editor.addShortcut('alt+i', 'indent', function() {
+        var nodeName = this.selection.getNode().nodeName;
+        if (nodeName === 'LI' || nodeName === 'UL' || nodeName === 'OL') {
+          this.execCommand('Indent');
+        }
+      }, this);
+      // add a shortcut to outdent list elements
+      editor.addShortcut('alt+o', 'outdent', function() {
+        var nodeName = this.selection.getNode().nodeName;
+        if (nodeName === 'LI' || nodeName === 'UL' || nodeName === 'OL') {
+          this.execCommand('Outdent');
+        }
+      }, this);
     },
     // menu : { // this is the complete default configuration
     //   file   : {title : 'File'  , items : 'newdocument'},
@@ -732,14 +747,8 @@ Gustavus.Concert = {
         Gustavus.Concert.toggleLinksDisplayed();
       }, 100);
 
-      // verify that tinymce is loaded before initializing
-      Modernizr.load({
-        load: Gustavus.Concert.tinyMCEPath,
-        complete: function() {
-          Gustavus.Concert.initilizeEditablePartsForEdits();
-          Gustavus.Concert.initilizeEditablePartsForEdits = null;
-        }
-      })
+      Gustavus.Concert.initilizeEditablePartsForEdits();
+      Gustavus.Concert.initilizeEditablePartsForEdits = null;
     });
   }
 };
