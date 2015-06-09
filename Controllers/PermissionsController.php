@@ -41,13 +41,15 @@ class PermissionsController extends SharedController
     $this->addJavascripts(
         sprintf(
             '<script type="text/javascript">
-            Modernizr.load({
-              load: "%s",
-              complete: function() {
+              require.config({
+                shim: {
+                  "%1$s": ["baseJS"]
+                }
+              });
+              require(["%1$s"], function() {
                 $(".filterable")
                   .liveFilter();
-              }
-            });
+              });
             </script>',
             Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
         )
@@ -367,28 +369,30 @@ class PermissionsController extends SharedController
     $this->addStylesheets(sprintf('<link rel="stylesheet" href="%s" type="text/css" />',
         Resource::renderResource('select2-css')));
     $this->addJavascripts(sprintf('<script type="text/javascript">
-        Modernizr.load({
-          load: "%s",
-          callback: function() {
-            var selectArgs = {placeholder: "Select an option", allowClear: true};
-            Extend.add("selectDuplicated", function() {
-              // set up action for when select2 elements are duplicated
-              var $this = $(this);
-              // at this point, select2 elements were cloned to the new element.
-              // we need to remove them so we can initialize select2
-              $this.find(".select2-container").remove();
-
-              $this.find(".longSelect")
-                .removeClass("select2-offscreen")
-                .removeAttr("tabindex")
-                .select2(selectArgs);
-              $this.find(".longSelect.select2-container").show();
-            })
-            $(function() {
-              // set up select2 elements
-              $(".longSelect").select2(selectArgs);
-            });
+        require.config({
+          shim: {
+            "%1$s": ["baseJS"]
           }
+        });
+        require(["%1$s"], function() {
+          var selectArgs = {placeholder: "Select an option", allowClear: true};
+          Extend.add("selectDuplicated", function() {
+            // set up action for when select2 elements are duplicated
+            var $this = $(this);
+            // at this point, select2 elements were cloned to the new element.
+            // we need to remove them so we can initialize select2
+            $this.find(".select2-container").remove();
+
+            $this.find(".longSelect")
+              .removeClass("select2-offscreen")
+              .removeAttr("tabindex")
+              .select2(selectArgs);
+            $this.find(".longSelect.select2-container").show();
+          })
+          $(function() {
+            // set up select2 elements
+            $(".longSelect").select2(selectArgs);
+          });
         });
         </script>', Resource::renderResource('select2')
     ));

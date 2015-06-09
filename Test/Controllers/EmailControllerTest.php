@@ -231,6 +231,9 @@ class EmailControllerTest extends TestBase
     $peoplePuller = new CampusPeople((new TestObject(new SharedController))->getApiKey());
     $peoplePuller->setGender('f');
 
+    while (empty($peoplePuller->current()->getUsername())) {
+      $peoplePuller->next();
+    }
     $username = $peoplePuller->current()->getUsername();
     $this->authenticate($username);
     $result = $this->controller->notifyOwnerOfDraftEdit(['draft' => $draft]);

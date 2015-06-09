@@ -656,13 +656,15 @@ class MainController extends SharedController
     $this->addJavascripts(
         sprintf(
             '<script type="text/javascript">
-            Modernizr.load({
-              load: "%s",
-              complete: function() {
+              require.config({
+                shim: {
+                  "%1$s": ["baseJS"]
+                }
+              });
+              require(["%1$s"], function() {
                 $(".filterable")
                   .liveFilter();
-              }
-            });
+              });
             </script>',
             Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
         )
@@ -709,13 +711,15 @@ class MainController extends SharedController
     $this->addJavascripts(
         sprintf(
             '<script type="text/javascript">
-            Modernizr.load({
-              load: "%s",
-              complete: function() {
+              require.config({
+                shim: {
+                  "%1$s": ["baseJS"]
+                }
+              });
+              require(["%1$s"], function() {
                 $(".filterable")
                   .liveFilter();
-              }
-            });
+              });
             </script>',
             Resource::renderResource(['path' => '/js/jquery/jquery.liveFilter.js', 'version' => '1'])
         )
