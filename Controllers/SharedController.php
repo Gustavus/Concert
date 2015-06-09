@@ -268,13 +268,7 @@ class SharedController extends ConcourseController
     }
     $redirectPath = Utility::removeDocRootFromPath($redirectPath);
 
-    $tinyMCEPath = sprintf('%s/js/tinymce_%s/tinymce.min.js', Config::WEB_DIR, Config::TINY_MCE_VERSION);
-    $resources = [
-      'js' => [
-        $tinyMCEPath,
-        Resource::renderResource(['urlutil', 'dropdown', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]),
-      ],
-    ];
+    $concertJS = Resource::renderResource(['urlutil', 'dropdown', ['path' => Config::WEB_DIR . '/js/concert.js', 'version' => Config::JS_VERSION]]);
 
     $allowCode = PermissionsManager::userCanEditRawHTML($this->getLoggedInUsername(), $filePathFromDocRoot);
 
@@ -282,7 +276,7 @@ class SharedController extends ConcourseController
       $originalFilePath = $filePath;
     }
 
-    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $resources, $allowCode, $siteAccessKey, $additionalJSOptions, $tinyMCEPath) {
+    Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $concertJS, $allowCode, $siteAccessKey, $additionalJSOptions) {
       if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
         $isAdmin = 'true';
       } else {
@@ -295,14 +289,21 @@ class SharedController extends ConcourseController
         $additionalJSOptions = '';
       }
 
+      $tinyMCEPath = str_replace('//', '/', sprintf('%s/js/tinymce_%s/tinymce.min', Config::WEB_DIR, Config::TINY_MCE_VERSION));
+
       $script = sprintf(
           '<script type="text/javascript">
             require.config({
+              paths: {
+                "concertJS": "%1$s",
+                "concertTinyMCE": "%2$s"
+              },
               shim: {
-                "%1$s": ["baseJS", "ui/dialog", "ui/button"]
+                "concertTinyMCE": ["baseJS"],
+                "concertJS": ["concertTinyMCE", "baseJS", "ui/dialog", "ui/button"]
               }
             });
-            require(["%2$s"], function() {
+            require(["concertJS"], function() {
               Gustavus.Concert.filePath = "%3$s";
               Gustavus.Concert.redirectPath = "%4$s";
               Gustavus.Concert.allowCode = %5$s;
@@ -310,13 +311,13 @@ class SharedController extends ConcourseController
               Gustavus.Concert.isSiteNavRequest = %7$s;
               Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%8$s";
               Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "%9$s/filemanager_%10$s/%8$s/";
-              Gustavus.Concert.tinyMCEPath = "%11$s";
-              %12$s
+              Gustavus.Concert.tinyMCEPath = "%2$s.js";
+              %11$s
               Gustavus.Concert.init();
             });
           </script>',
-          implode('": ["baseJS", "ui/dialog", "ui/button"],"', $resources['js']),
-          implode('","', $resources['js']),
+          $concertJS,
+          $tinyMCEPath,
           $originalFilePath,
           $redirectPath,
           $allowCode ? 'true' : 'false',
@@ -325,13 +326,10 @@ class SharedController extends ConcourseController
           $siteAccessKey,
           Config::WEB_DIR,
           Config::RESPONSIVE_FILEMANAGER_VERSION,
-          $tinyMCEPath,
           $additionalJSOptions
       );
       return $content . $script;
     }, 11);
-
-    self::markResourcesAdded($resources['js']);
 
     $cssResource = Resource::renderCSS(['dropdown-css', ['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]]);
     if (!self::isResourceAdded($cssResource, 'css')) {
