@@ -587,6 +587,7 @@ Gustavus.Concert = {
           }
         } else {
           $('body').removeClass('loading');
+          Gustavus.Concert.ignoreDirtyEditors = false;
           if ($element) {
             $element.attr('disabled', '');
           }
@@ -594,6 +595,7 @@ Gustavus.Concert = {
       },
       error: function() {
         $('body').removeClass('loading');
+        Gustavus.Concert.ignoreDirtyEditors = false;
         if ($element) {
           $element.attr('disabled', '');
         }
