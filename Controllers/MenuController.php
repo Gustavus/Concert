@@ -310,7 +310,7 @@ class MenuController extends SharedController
       if (isset($query['showUnMatchedTags'])) {
         unset($query['showUnMatchedTags']);
         $item = [
-          'text'     => 'Hide un-matched tags',
+          'text'     => 'Hide unmatched tags',
           'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
           'thickbox' => false,
         ];
