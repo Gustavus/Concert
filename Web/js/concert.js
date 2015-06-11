@@ -147,11 +147,34 @@ Gustavus.Concert = {
     force_hex_style_colors: false,
     // we don't want to keep our styles when we hit return/enter.
     keep_styles: false,
+    // disable indenting/outdenting things with padding. (Only allows nesting lists, and other elements.)
+    indentation: false,
 
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
     menubar: 'edit insert view format table tools',
     toolbar: "insertfile undo redo | styleselect | bold italic | bullist numlist | link anchor image responsivefilemanager | spellchecker",
+    // right click menu
+    contextmenu: "link image inserttable | cell row column deletetable | list spellchecker",
+    // set our customized menu.
+    menu : {
+      file   : {title : 'File'  , items : 'newdocument'},
+      edit   : {title : 'Edit'  , items : 'undo redo | cut copy paste pastetext | selectall'},
+      insert : {title : 'Insert', items : 'link media | template hr'},
+      view   : {title : 'View'  , items : 'visualaid'},
+      format : {title : 'Styles', items : 'bold italic underline strikethrough superscript subscript | list formats | clearformat'},
+      table  : {title : 'Table' , items : 'inserttable tableprops deletetable | cell row column'},
+      tools  : {title : 'Tools' , items : 'spellchecker code'}
+    },
+    // menu : { // this is the complete default configuration
+    //   file   : {title : 'File'  , items : 'newdocument'},
+    //   edit   : {title : 'Edit'  , items : 'undo redo | cut copy paste pastetext | selectall'},
+    //   insert : {title : 'Insert', items : 'link media | template hr'},
+    //   view   : {title : 'View'  , items : 'visualaid'},
+    //   format : {title : 'Format', items : 'bold italic underline strikethrough superscript subscript | formats | removefo
+    //   table  : {title : 'Table' , items : 'inserttable tableprops deletetable | cell row column'},
+    //   tools  : {title : 'Tools' , items : 'spellchecker code'}
+    // }
 
     // media
     image_advtab: false,
@@ -202,81 +225,63 @@ Gustavus.Concert = {
         editor.setContent(content);
       });
 
-      // @todo remove this when we know we don't need it.
-      // editor.on('keyup', function(e) {
-      //   console.log(e);
-      //   // 8 = backspace
-      //   // 46 = delete
-      //   // @todo when removing all contents from an editor. This breaks something pretty badly.
-      //   // https://beta.gac.edu/billy/concert/childSite/index.php?concert=edit
-      //   // other page for testing getting out of a div and changing the forced root block
-      //   // https://beta.gac.edu/events/commencement/faq.php?concert=edit
-      //   if (e.keyCode === 8 || e.keyCode === 46) {
-      //     e.preventDefault();
-      //     // override tinyMCE from adding a <br> if the content gets fully removed
-      //     editor.insertContent('');
-      //     if (editor.selection.getNode().innerHTML !== '') {
-      //       // current node isn't empty, we don't need to change our selected node.
-      //       return;
-      //     }
-      //     if (e.keyCode === 8) {
-      //       // backspace
-      //       // find our closest visible sibling up the tree
-      //       var $prevNode = $(editor.selection.getNode()).prev(':visible');
-      //       if ($prevNode.length > 0) {
-      //         console.log($prevNode, editor.selection.getNode());
-      //         if ($(editor.selection.getNode()).is(':visible')) {
-      //           // remove our empty node
-      //           editor.selection.getNode().remove();
-      //           // now move our cursor to the first visible node up the tree
-      //           if (!$($prevNode.context).is('div.editable')) {
-      //             editor.selection.setCursorLocation($prevNode[0], $prevNode.children().has(':visible').length);
-      //           }
-      //           //editor.selection.collapse(false);
-      //         }
-      //       }
-      //     } else if (e.keyCode === 46) {
-      //       // delete key
-      //       // find our closest visible sibling down the tree
-      //       var $nextNode = $(editor.selection.getNode()).next(':visible');
-      //       console.log($nextNode);
-
-      //       if ($nextNode.length > 0) {
-      //         if (!$($nextNode.context).is('div.editable') && $(editor.selection.getNode()).is(':visible')) {
-      //           // remove our empty node
-      //           editor.selection.getNode().remove();
-      //           // now move our cursor to the next node
-      //           editor.selection.setCursorLocation($nextNode[0]);
-      //         }
-      //       }
-      //     }
-      //   }
-      // });
-
       // add a shortcut to indent list elements
-      editor.addShortcut('alt+i', 'indent', function() {
-        var nodeName = this.selection.getNode().nodeName;
-        if (nodeName === 'LI' || nodeName === 'UL' || nodeName === 'OL') {
-          this.execCommand('Indent');
-        }
-      }, this);
+      // supports alt+= and alt+shift+=, but we broadcast it as alt++
+      // 187 = "=/+" key
+      // 107 = "+" numpad key
+      editor.addShortcut('alt+187,alt+shift+187,alt+107', 'indent', 'Indent', this);
       // add a shortcut to outdent list elements
-      editor.addShortcut('alt+o', 'outdent', function() {
-        var nodeName = this.selection.getNode().nodeName;
-        if (nodeName === 'LI' || nodeName === 'UL' || nodeName === 'OL') {
-          this.execCommand('Outdent');
-        }
-      }, this);
+      // 189 = "-/_" key
+      // 109 = "-" numpad key
+      editor.addShortcut('alt+189,alt+109', 'outdent', 'Outdent', this);
+      // replace Clear formatting button with Clear styles
+      editor.addMenuItem('clearformat', {
+        text: 'Clear styles',
+        icon: 'removeformat',
+        cmd: 'RemoveFormat'
+      });
+
+      // build our custom menu for lists
+      editor.addMenuItem('list', {
+        text: 'List',
+        icon: false,
+        menu: [
+          {
+            text: 'Bullet list',
+            icon: 'bullist',
+            onclick: function() {
+              editor.execCommand('InsertUnorderedList');
+            }
+          },
+          {
+            text: 'Numbered list',
+            icon: 'numlist',
+            onclick: function() {
+              editor.execCommand('InsertOrderedList');
+            }
+          },
+          {
+            text: '|'
+          },
+          {
+            text: 'Increase indent',
+            icon: 'indent',
+            shortcut: 'Tab | Alt++',
+            onclick: function() {
+              editor.execCommand('Indent');
+            }
+          },
+          {
+            text: 'Decrease indent',
+            icon: 'outdent',
+            shortcut: 'Shift+Tab | Alt+-',
+            onclick: function() {
+              editor.execCommand('Outdent');
+            }
+          },
+        ]
+      });
     },
-    // menu : { // this is the complete default configuration
-    //   file   : {title : 'File'  , items : 'newdocument'},
-    //   edit   : {title : 'Edit'  , items : 'undo redo | cut copy paste pastetext | selectall'},
-    //   insert : {title : 'Insert', items : 'link media | template hr'},
-    //   view   : {title : 'View'  , items : 'visualaid'},
-    //   format : {title : 'Format', items : 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
-    //   table  : {title : 'Table' , items : 'inserttable tableprops deletetable | cell row column'},
-    //   tools  : {title : 'Tools' , items : 'spellchecker code'}
-    // }
 
     // spellchecker
     spellchecker_language: 'en',
@@ -587,6 +592,7 @@ Gustavus.Concert = {
           }
         } else {
           $('body').removeClass('loading');
+          Gustavus.Concert.ignoreDirtyEditors = false;
           if ($element) {
             $element.attr('disabled', '');
           }
@@ -594,6 +600,7 @@ Gustavus.Concert = {
       },
       error: function() {
         $('body').removeClass('loading');
+        Gustavus.Concert.ignoreDirtyEditors = false;
         if ($element) {
           $element.attr('disabled', '');
         }

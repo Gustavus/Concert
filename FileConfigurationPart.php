@@ -9,6 +9,8 @@ namespace Gustavus\Concert;
 require_once '/cis/lib/Gustavus/Concert/Assets/Composer/vendor/autoload.php';
 
 use Gustavus\Utility\Set,
+  Gustavus\Gatekeeper\Gatekeeper,
+  Gustavus\Utility\Debug,
   InvalidArgumentException,
   PhpParser\Node\Expr\Array_ as PHPParserArray,
   PhpParser\Parser,
@@ -434,6 +436,12 @@ class FileConfigurationPart
    */
   private static function getUnMatchedOffsets($content)
   {
+    if (isset($_GET['showUnMatchedTags']) && (PermissionsManager::isUserAdmin(Gatekeeper::getUsername()) || PermissionsManager::isUserSuperUser(Gatekeeper::getUsername()))) {
+      $userIsDebugging = true;
+      $offsetDebug = ['opening' => [], 'closing' => []];
+    } else {
+      $userIsDebugging = false;
+    }
     // we need to make sure all divs have been closed otherwise our editable div will get ruined.
     $tags = self::getAllTagsByType($content);
 
@@ -448,6 +456,13 @@ class FileConfigurationPart
       ksort($unMatchedOpening);
       // we have unmatched opening tags
       foreach ($unMatchedOpening as $key => $unMatched) {
+        if ($userIsDebugging) {
+          $offsetDebug['opening'][] = [
+            'tag'     => htmlspecialchars($tags['opening']['result'][$key][0]),
+            // include 40 characters for our context.
+            'context' => htmlspecialchars(substr($content, $tags['opening']['result'][$key][1], strlen($tags['opening']['result'][$key][0]) + 40)),
+          ];
+        }
         $unMatchedOpeningOffsets[] = [
           'offset' => $tags['opening']['result'][$key][1],
           'length' => strlen($tags['opening']['result'][$key][0]),
@@ -462,6 +477,13 @@ class FileConfigurationPart
       krsort($unMatchedClosing);
       // we have unmatched closing tags
       foreach ($unMatchedClosing as $key => $unMatched) {
+        if ($userIsDebugging) {
+          $offsetDebug['closing'][] = [
+            'tag'     => htmlspecialchars($tags['closing']['result'][$key][0]),
+            // include 40 characters for our context.
+            'context' => htmlspecialchars(substr($content, $tags['closing']['result'][$key][1], strlen($tags['closing']['result'][$key][0]) + 40)),
+          ];
+        }
         $unMatchedClosingOffsets[] = [
           'offset' => $tags['closing']['result'][$key][1],
           'length' => strlen($tags['closing']['result'][$key][0]),
@@ -469,6 +491,9 @@ class FileConfigurationPart
       }
     }
 
+    if ($userIsDebugging && (!empty($offsetDebug['opening']) || !empty($offsetDebug['closing']))) {
+      echo sprintf('<pre>%s</pre>', Debug::dump($offsetDebug, true));
+    }
     return [
       'opening' => $unMatchedOpeningOffsets,
       'closing' => $unMatchedClosingOffsets,

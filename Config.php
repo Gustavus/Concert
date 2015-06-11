@@ -63,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 12;
+  const JS_VERSION = 13;
 
   /**
    * Autocomplete JS version
@@ -706,6 +706,7 @@ class Config
     'concertDraft',
     'draftAction',
     'srcFilePath',
+    'showUnMatchedTags',
     // Revisions
     'oldestRevisionNumber',
     'revisionNumber',

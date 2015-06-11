@@ -755,7 +755,7 @@ class PermissionsManager
   }
 
   /**
-   * Checks to see if the user is a super user.
+   * Checks to see if the user is an admin.
    *
    * @param  string   $username Username to check
    * @return boolean

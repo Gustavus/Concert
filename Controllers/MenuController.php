@@ -304,6 +304,28 @@ class MenuController extends SharedController
       'thickbox' => false,
     ];
     $this->addMenuItem($item, 'help', 2);
+
+    if (self::userIsEditing() && (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername()))) {
+      $query = $this->queryParams;
+      if (isset($query['showUnMatchedTags'])) {
+        unset($query['showUnMatchedTags']);
+        $item = [
+          'text'     => 'Hide unmatched tags',
+          'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+          'thickbox' => false,
+        ];
+        $this->addMenuItem($item, 'help', 5);
+      } else {
+        // add a button to show un matched tags
+        $query['showUnMatchedTags'] = 'true';
+        $item = [
+          'text'     => 'Show unmatched tags',
+          'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+          'thickbox' => false,
+        ];
+        $this->addMenuItem($item, 'help', 5);
+      }
+    }
   }
 
   /**
