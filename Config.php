@@ -706,6 +706,7 @@ class Config
     'concertDraft',
     'draftAction',
     'srcFilePath',
+    'showUnMatchedTags',
     // Revisions
     'oldestRevisionNumber',
     'revisionNumber',
