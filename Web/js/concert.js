@@ -228,10 +228,12 @@ Gustavus.Concert = {
       // add a shortcut to indent list elements
       // supports alt+= and alt+shift+=, but we broadcast it as alt++
       // 187 = "=/+" key
-      editor.addShortcut('alt+187,alt+shift+187', 'indent', 'Indent', this);
+      // 107 = "+" numpad key
+      editor.addShortcut('alt+187,alt+shift+187,alt+107', 'indent', 'Indent', this);
       // add a shortcut to outdent list elements
       // 189 = "-/_" key
-      editor.addShortcut('alt+189', 'outdent', 'Outdent', this);
+      // 109 = "-" numpad key
+      editor.addShortcut('alt+189,alt+109', 'outdent', 'Outdent', this);
       // replace Clear formatting button with Clear styles
       editor.addMenuItem('clearformat', {
         text: 'Clear styles',
