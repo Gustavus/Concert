@@ -679,6 +679,11 @@ Gustavus.Concert = {
   destroyTemplatePlugins: function() {
     // make sure table sorter is destroyed from tables otherwise they will be submitted with extra classes.
     $('div.editable table.sortable').trigger('destroy');
+    // remove any tablesorter-header-inner nodes that tablesorter.destroy doesn't remove within tinyMCE for some reason.
+    $('div.editable table.sortable .tablesorter-header-inner').each(function() {
+        // replace this node with the text within.
+        this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, this.innerHTML);
+    })
 
     // now remove html that gets added in when toggling links
     var $toggleLinks = $('div.editable a.toggleLink')
