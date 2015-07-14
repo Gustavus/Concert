@@ -125,16 +125,16 @@ class DraftControllerTest extends TestBase
   public function showDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -149,12 +149,12 @@ class DraftControllerTest extends TestBase
   public function showDraftMultipleOptions()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
@@ -165,14 +165,14 @@ class DraftControllerTest extends TestBase
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
     $actual = $this->controller->showDraft(['filePath' => '/billy/concert/index.php']);
 
     $this->assertContains('Please select a draft', $actual['content']);
-    $this->assertContains('testUser', $actual['content']);
+    $this->assertContains('testuser', $actual['content']);
     $this->assertContains('Jerry', $actual['content']);
     $this->unauthenticate();
     $this->destructDB();
@@ -184,11 +184,11 @@ class DraftControllerTest extends TestBase
   public function showDraftNotAllowed()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
@@ -210,9 +210,9 @@ class DraftControllerTest extends TestBase
   public function showDraftNoDrafts()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -227,16 +227,16 @@ class DraftControllerTest extends TestBase
   public function showDraftSpecific()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -251,16 +251,16 @@ class DraftControllerTest extends TestBase
   public function showDraftFromConcertRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     // make it look like the request is coming from the concert root
     $_SERVER['REQUEST_URI'] = Config::WEB_DIR . 'index.php';
@@ -279,16 +279,16 @@ class DraftControllerTest extends TestBase
   public function handleDraftActionsShowSpecificDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -306,16 +306,16 @@ class DraftControllerTest extends TestBase
   public function handleDraftActionsNotSpecified()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -332,18 +332,18 @@ class DraftControllerTest extends TestBase
   public function showDraftSpecificNotFound()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
     self::removeFiles(Config::$draftDir);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -359,14 +359,14 @@ class DraftControllerTest extends TestBase
   public function renderPublicDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
-    $this->authenticate('testUser2');
+    $this->authenticate('testuser2');
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
     $this->setUpController();
@@ -384,16 +384,16 @@ class DraftControllerTest extends TestBase
   public function renderPublicDraftOwnedByCurrentUser()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
     $filePath = str_replace('//', '/', $_SERVER['DOCUMENT_ROOT'] . '/billy/concert/index.php');
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
     $this->setUpController();
@@ -413,16 +413,16 @@ class DraftControllerTest extends TestBase
   public function renderPublicDraftEditable()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
-    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['testUser2']);
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['testuser2']);
 
-    $this->authenticate('testUser2');
+    $this->authenticate('testuser2');
 
     $this->setUpController();
 
@@ -440,16 +440,16 @@ class DraftControllerTest extends TestBase
   public function renderPublicDraftEditableFromConcertRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
-    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['testUser2']);
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['testuser2']);
 
-    $this->authenticate('testUser2');
+    $this->authenticate('testuser2');
 
     $this->setUpController();
     // make it look like it is coming from the concert root
@@ -458,7 +458,7 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName)]);
 
     // we are forcing people to view public drafts from the location that they will live at
-    $this->assertSame(['redirect' => 'https://beta.gac.edu/billy/concert/index.php?concert=viewDraft&concertDraft=edba98d222792b8363ebcdc9c56c67b8'], $actual);
+    $this->assertSame(['redirect' => 'https://beta.gac.edu/billy/concert/index.php?concert=viewDraft&concertDraft=c2fe3586613f0908154384b354acf5fb'], $actual);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -470,16 +470,16 @@ class DraftControllerTest extends TestBase
   public function renderPublicDraftNotPublic()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PRIVATE_DRAFT);
 
-    $this->authenticate('testUser2');
+    $this->authenticate('testuser2');
 
     $this->setUpController();
 
@@ -497,11 +497,11 @@ class DraftControllerTest extends TestBase
   public function editPublicDraftPrivate()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PRIVATE_DRAFT);
@@ -523,11 +523,11 @@ class DraftControllerTest extends TestBase
   public function editPublicDraftNotAllowed()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -549,11 +549,11 @@ class DraftControllerTest extends TestBase
   public function editPublicDraftCantLock()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -575,11 +575,11 @@ class DraftControllerTest extends TestBase
   public function editPublicDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -602,11 +602,11 @@ class DraftControllerTest extends TestBase
   public function editPublicDraftSubmission()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -633,11 +633,11 @@ class DraftControllerTest extends TestBase
   public function publishDraftSubmissionNonExistent()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -660,11 +660,11 @@ class DraftControllerTest extends TestBase
   public function publishDraftSubmissionNotOwner()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -754,11 +754,11 @@ class DraftControllerTest extends TestBase
   public function handleDraftActionsEditPublicDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -783,11 +783,11 @@ class DraftControllerTest extends TestBase
   public function handleDraftActionsEditPublicDraftSubmission()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
@@ -819,7 +819,7 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
@@ -844,12 +844,12 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->acquireLock();
@@ -876,11 +876,11 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -902,7 +902,7 @@ class DraftControllerTest extends TestBase
     $this->removeFiles(self::$testFileDir);
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $this->authenticate('jerry');
 
@@ -926,9 +926,9 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -953,12 +953,12 @@ class DraftControllerTest extends TestBase
   {
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['jerry', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->acquireLock();
@@ -984,9 +984,9 @@ class DraftControllerTest extends TestBase
   {
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1007,9 +1007,9 @@ class DraftControllerTest extends TestBase
   {
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1025,8 +1025,8 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->assertNotEmpty($actual['redirectUrl']);
 
-    $this->buildFileManager('testUser', $filePath);
-    $draft = $this->fileManager->getDraftForUser('testUser');
+    $this->buildFileManager('testuser', $filePath);
+    $draft = $this->fileManager->getDraftForUser('testuser');
     $draftContents = file_get_contents(Config::$draftDir . $draft['draftFilename']);
     $this->assertContains($_POST['1'], $draftContents);
 
@@ -1042,9 +1042,9 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1067,9 +1067,9 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1087,7 +1087,7 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $this->authenticate('jerry');
 
@@ -1110,9 +1110,9 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1137,9 +1137,9 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1162,11 +1162,11 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
@@ -1191,7 +1191,7 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
@@ -1215,16 +1215,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1244,16 +1244,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $_GET['barebones'] = true;
 
@@ -1276,16 +1276,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1316,7 +1316,7 @@ class DraftControllerTest extends TestBase
     $expectedBcc['bvisto@gustavus.edu'] = null;
     $expectedBcc['jerry@gustavus.edu'] = null;
 
-    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testUser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testuser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
 
 
     $this->unauthenticate();
@@ -1331,16 +1331,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1371,7 +1371,7 @@ class DraftControllerTest extends TestBase
     $expectedBcc['bvisto@gustavus.edu'] = null;
     $expectedBcc['jerry@gustavus.edu'] = null;
 
-    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testUser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testuser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
 
 
     $this->unauthenticate();
@@ -1386,16 +1386,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1425,7 +1425,7 @@ class DraftControllerTest extends TestBase
     }
     $expectedBcc['jerry@gustavus.edu'] = null;
 
-    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testUser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
+    $this->checkSentEmailContents(['bcc' => $expectedBcc], 'testuser has shared a draft with you', 'The draft can be viewed or edited at: ' . $this->controller->buildUrl('drafts', ['draftName' => $draft['draftFilename']], '', true), true);
 
 
     $this->unauthenticate();
@@ -1440,16 +1440,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto', 'jerry']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1489,16 +1489,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1535,16 +1535,16 @@ class DraftControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     file_put_contents($filePath, self::$indexContents);
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftFileName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1639,18 +1639,18 @@ class DraftControllerTest extends TestBase
   public function handlePendingDraft()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
 
     $draft = $this->fileManager->getDraft(basename($draftName));
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -1670,18 +1670,18 @@ class DraftControllerTest extends TestBase
   public function handlePendingDraftConfirmReject()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
 
     $draft = $this->fileManager->getDraft(basename($draftName));
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
     $_GET['confirmReject'] = 'true';
@@ -1701,18 +1701,18 @@ class DraftControllerTest extends TestBase
   public function handlePendingDraftConfirmPublish()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', '/billy/concert/index.php');
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
 
     $draft = $this->fileManager->getDraft(basename($draftName));
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
     $_GET['confirmPublish'] = 'true';
@@ -1732,12 +1732,12 @@ class DraftControllerTest extends TestBase
   public function handlePendingDraftPublishNoLock()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser2', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser2', '/billy/concert/index.php');
+    $this->buildFileManager('testuser2', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->assertTrue($this->fileManager->acquireLock());
@@ -1745,12 +1745,12 @@ class DraftControllerTest extends TestBase
 
     $draft = $this->fileManager->getDraft(basename($draftName));
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
     $_POST['action'] = 'publish';
 
-    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+    $fm = new FileManager('testuser', '/billy/concert/index.php', null, $this->controller->getDB());
 
     $actual = $this->controller->handlePendingDraft($draft, $fm);
 
@@ -1769,7 +1769,7 @@ class DraftControllerTest extends TestBase
     $this->buildDB();
     $draftOwner = $this->findEmployeeUsername(true);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', [$draftOwner, 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
@@ -1783,13 +1783,13 @@ class DraftControllerTest extends TestBase
     $draft = $this->fileManager->getDraft(basename($draftName));
     $this->fileManager->stopEditing();
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
     $_POST['action']  = 'publish';
     $_POST['message'] = 'Looks good';
 
-    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+    $fm = new FileManager('testuser', '/billy/concert/index.php', null, $this->controller->getDB());
 
     $actual = $this->controller->handlePendingDraft($draft, $fm);
     $this->assertSame(['redirect' => '/billy/concert/index.php'], $actual);
@@ -1815,7 +1815,7 @@ class DraftControllerTest extends TestBase
     $this->buildFileManager('root', $filePath);
     $expected = [[
       'destFilepath' => '/billy/concert/index.php',
-      'username'     => 'testUser',
+      'username'     => 'testuser',
       'action'       => Config::PUBLISH_PENDING_STAGE,
     ]];
 
@@ -1832,13 +1832,13 @@ class DraftControllerTest extends TestBase
   {
     $this->buildDB();
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser2', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
 
-    $this->buildFileManager('testUser2', '/billy/concert/index.php');
+    $this->buildFileManager('testuser2', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
@@ -1846,13 +1846,13 @@ class DraftControllerTest extends TestBase
     $draft = $this->fileManager->getDraft(basename($draftName));
     $this->fileManager->stopEditing();
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
     $_POST['action']  = 'publish';
     $_POST['message'] = 'Looks good';
 
-    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+    $fm = new FileManager('testuser', '/billy/concert/index.php', null, $this->controller->getDB());
 
     $actual = $this->controller->handlePendingDraft($draft, $fm);
 
@@ -1860,7 +1860,7 @@ class DraftControllerTest extends TestBase
     $this->assertSame('/billy/concert/index.php', $actual['redirect']);
     $this->assertContains('couldn\'t be notified', $actual['message']);
 
-    $filePath = Config::$stagingDir . $fm->getDraftFileName('testUser2');
+    $filePath = Config::$stagingDir . $fm->getDraftFileName('testuser2');
 
     $message = $this->mockMailer->popMessage();
 
@@ -1869,7 +1869,7 @@ class DraftControllerTest extends TestBase
     $this->buildFileManager('root', $filePath);
     $expected = [[
       'destFilepath' => '/billy/concert/index.php',
-      'username'     => 'testUser',
+      'username'     => 'testuser',
       'action'       => Config::PUBLISH_PENDING_STAGE,
     ]];
 
@@ -1946,13 +1946,13 @@ class DraftControllerTest extends TestBase
   {
     $this->buildDB();
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser2', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
 
-    $this->buildFileManager('testUser2', '/billy/concert/index.php');
+    $this->buildFileManager('testuser2', '/billy/concert/index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
@@ -1960,13 +1960,13 @@ class DraftControllerTest extends TestBase
     $draft = $this->fileManager->getDraft(basename($draftName));
     $this->fileManager->stopEditing();
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
     $_POST['action']  = 'reject';
     $_POST['message'] = 'Looks good';
 
-    $fm = new FileManager('testUser', '/billy/concert/index.php', null, $this->controller->getDB());
+    $fm = new FileManager('testuser', '/billy/concert/index.php', null, $this->controller->getDB());
 
     $actual = $this->controller->handlePendingDraft($draft, $fm);
 
@@ -1974,7 +1974,7 @@ class DraftControllerTest extends TestBase
     $this->assertSame('/billy/concert/index.php', $actual['redirect']);
     $this->assertContains('couldn\'t be notified', $actual['message']);
 
-    $filePath = Config::$stagingDir . $fm->getDraftFileName('testUser2');
+    $filePath = Config::$stagingDir . $fm->getDraftFileName('testuser2');
 
     $message = $this->mockMailer->popMessage();
 

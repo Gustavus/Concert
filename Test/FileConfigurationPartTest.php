@@ -1452,6 +1452,132 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function getAllTagsByTypeWithComments()
+  {
+    $content = '<p><colgroup>test</colgroup><span style="display: inline !important;"><!-- some random comments --></span>
+      </p>';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 0,
+          ],
+          1 => [
+            0 => '<colgroup>',
+            1 => 3,
+          ],
+          3 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 28,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          1 => 'colgroup',
+          3 => 'span',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          2 => [
+            0 => '</colgroup>',
+            1 => 17,
+          ],
+          5 => [
+            0 => '</span>',
+            1 => 99,
+          ],
+          6 => [
+            0 => '</p>',
+            1 => 113,
+          ],
+        ],
+        'flattened' => [
+          2 => 'colgroup',
+          5 => 'span',
+          6 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithMultilineComments()
+  {
+    $content = '<p><colgroup>test</colgroup><span style="display: inline !important;"><!-- some random
+
+    comments --></span>
+      </p>';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 0,
+          ],
+          1 => [
+            0 => '<colgroup>',
+            1 => 3,
+          ],
+          3 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 28,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          1 => 'colgroup',
+          3 => 'span',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          2 => [
+            0 => '</colgroup>',
+            1 => 17,
+          ],
+          5 => [
+            0 => '</span>',
+            1 => 104,
+          ],
+          6 => [
+            0 => '</p>',
+            1 => 118,
+          ],
+        ],
+        'flattened' => [
+          2 => 'colgroup',
+          5 => 'span',
+          6 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
   public function findKeysLessThanKey()
   {
     $array = [
