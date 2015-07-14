@@ -506,8 +506,8 @@ class SharedControllerTest extends TestBase
     $this->setUpController();
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser1', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser1', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser2', self::$testFileDir, 'test']);
     $this->authenticate('bvisto');
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
@@ -516,11 +516,11 @@ class SharedControllerTest extends TestBase
     $this->assertContains(self::$testFileDir, $fm->saveDraft(Config::PRIVATE_DRAFT));
     $fm->stopEditing();
 
-    $fmTwo = new FileManager('testUser1', self::$testFileDir . 'index.php', null, $this->controller->getDB());
+    $fmTwo = new FileManager('testuser1', self::$testFileDir . 'index.php', null, $this->controller->getDB());
     $this->assertContains(self::$testFileDir, $fmTwo->saveDraft(Config::PRIVATE_DRAFT));
     $fmTwo->stopEditing();
 
-    $fmThree = new FileManager('testUser2', self::$testFileDir . 'index.php', null, $this->controller->getDB());
+    $fmThree = new FileManager('testuser2', self::$testFileDir . 'index.php', null, $this->controller->getDB());
     $this->assertContains(self::$testFileDir, $fmThree->saveDraft(Config::PRIVATE_DRAFT));
     $fmThree->stopEditing();
 
@@ -530,7 +530,7 @@ class SharedControllerTest extends TestBase
     $result = $this->controller->renderOpenDraftMessage($fm);
 
     $this->assertContains('a draft open for this page', $result);
-    $this->assertContains('You, testUser1, and testUser2 have', $result);
+    $this->assertContains('You, testuser1, and testuser2 have', $result);
     $this->destructDB();
     $this->unauthenticate();
   }
@@ -544,13 +544,13 @@ class SharedControllerTest extends TestBase
     $this->setUpController();
 
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser1', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser2', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser1', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser2', self::$testFileDir, 'test']);
     $this->authenticate('bvisto');
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
-    $fm = new FileManager('testUser1', self::$testFileDir . 'index.php', null, $this->controller->getDB());
+    $fm = new FileManager('testuser1', self::$testFileDir . 'index.php', null, $this->controller->getDB());
     $this->assertContains(self::$testFileDir, $fm->saveDraft(Config::PRIVATE_DRAFT));
     $fm->stopEditing();
 
@@ -558,7 +558,7 @@ class SharedControllerTest extends TestBase
     $this->assertContains(self::$testFileDir, $fmTwo->saveDraft(Config::PRIVATE_DRAFT));
     $fmTwo->stopEditing();
 
-    $fmThree = new FileManager('testUser2', self::$testFileDir . 'index.php', null, $this->controller->getDB());
+    $fmThree = new FileManager('testuser2', self::$testFileDir . 'index.php', null, $this->controller->getDB());
     $this->assertContains(self::$testFileDir, $fmThree->saveDraft(Config::PRIVATE_DRAFT));
     $fmThree->stopEditing();
 
@@ -568,7 +568,7 @@ class SharedControllerTest extends TestBase
     $result = $this->controller->renderOpenDraftMessage($fm);
 
     $this->assertContains('a draft open for this page', $result);
-    $this->assertContains('testUser1, you, and testUser2 have', $result);
+    $this->assertContains('testuser1, you, and testuser2 have', $result);
     $this->destructDB();
     $this->unauthenticate();
   }
@@ -583,9 +583,9 @@ class SharedControllerTest extends TestBase
 
     $this->set(new SharedController, 'moshMenuAdded', false);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', '/billy/concert/', 'test']);
     $_SERVER['REQUEST_URI'] = '/billy/concert/index.php';
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->controller->addMoshMenu();
 

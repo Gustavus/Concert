@@ -2055,7 +2055,7 @@ class PermissionsManagerTest extends TestBase
       'type'            => Config::PUBLIC_DRAFT,
     ];
 
-    $this->assertFalse(PermissionsManager::userCanEditDraft('testUser', $draft));
+    $this->assertFalse(PermissionsManager::userCanEditDraft('testuser', $draft));
   }
 
   /**
