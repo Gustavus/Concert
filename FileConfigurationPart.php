@@ -370,11 +370,11 @@ class FileConfigurationPart
       # find comments
       (?P<comments><!--.+?-->)|
       # find closing tags including closing comment tags that were not matched from our comment piece
-      (?P<closing></[^>]+>|-->)|
+      (?P<closing>-->|</[^>]+>)|
       # find self closing and void tags
       (?P<selfclosing>(?:<[^>]+/>)|(?:<(?:%s)(?=\W)[^>]*?>))|
       # find opening tags including opening comment tags that were not matched from our comment piece
-      (?P<opening><[^>]+>|<!--)`sx', implode('|', self::$voidElements));
+      (?P<opening><!--|<[^>]+>)`sx', implode('|', self::$voidElements));
 
     preg_match_all($tagRegex, $content, $matches, PREG_OFFSET_CAPTURE);
 

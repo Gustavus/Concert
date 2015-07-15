@@ -956,6 +956,24 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function wrapEditableContentOpeningCommentTagsInComment()
+  {
+    $content = '<div><!--
+    comments
+    --> arstarst</div><!-- <p>arstast</p>';
+
+    $expected = sprintf('<div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s<!-- <p>arstast</p>', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
   public function wrapEditableContentClosingComment()
   {
     $content = '<div> --><div><!--
@@ -963,6 +981,24 @@ class FileConfigurationPartTest extends TestBase
     --> arstarst</div>';
 
     $expected = sprintf('<div> --><div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentClosingCommentTagsInComment()
+  {
+    $content = '<div>arst</div> --><div><!--
+    comments
+    --> arstarst</div>';
+
+    $expected = sprintf('<div>arst</div> --><div class="editable" data-index="0"><div><!--
     comments
     --> arstarst</div></div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
