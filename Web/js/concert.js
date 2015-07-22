@@ -139,8 +139,8 @@ Gustavus.Concert = {
     element_format: 'xhtml',
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
-    // allow i, and remove empty li's and ul's
-    extended_valid_elements: 'i[class],-li[*],-ul[*]',
+    // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
+    extended_valid_elements: 'i[class],span[*],-li[*],-ul[*]',
     // ensure anchors can contain headings.
     valid_children: '+a[h2|h3|h4|h5|h6]',
     // we don't want it to convert rgb to hex.
@@ -159,7 +159,7 @@ Gustavus.Concert = {
     // set our customized menu.
     menu : {
       file   : {title : 'File'  , items : 'newdocument'},
-      edit   : {title : 'Edit'  , items : 'undo redo | cut copy paste pastetext | selectall'},
+      edit   : {title : 'Edit'  , items : 'undo redo | searchreplace | cut copy paste pastetext | selectall'},
       insert : {title : 'Insert', items : 'link media | template hr'},
       view   : {title : 'View'  , items : 'visualaid'},
       format : {title : 'Styles', items : 'bold italic underline strikethrough superscript subscript | list formats | clearformat'},
@@ -205,13 +205,8 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
-        // add our cleanup to run after the templates extend.apply.
-        Extend.add('page', function() {
-          // remove additional HTML calling Extend.apply may have added.
-          Gustavus.Concert.destroyTemplatePlugins();
-
-          Gustavus.Concert.toggleLinksDisplayed();
-        }, 100);
+        // destroy any plugins that we want to be re-enabled when apply gets called
+        Gustavus.Concert.destroyTemplatePluginsPreApply(editor.getElement());
         // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
         Extend.apply('page', editor.getElement());
 
@@ -515,7 +510,8 @@ Gustavus.Concert = {
    */
   buildEditsObject: function() {
     // remove template stuff
-    Gustavus.Concert.destroyTemplatePlugins();
+    Gustavus.Concert.destroyTemplatePluginsPreApply();
+    Gustavus.Concert.destroyTemplatePluginsPostApply();
     $(Gustavus.Concert.hiddenElementSelector).each(function() {
       // remove display style from these elements that we forcefully displayed earlier
       $(this).css('display', '');
@@ -673,20 +669,68 @@ Gustavus.Concert = {
   },
 
   /**
-   * Destroys any plugins the template adds
+   * Re-initializes template plugins
+   *
+   * @param  {HTMLElement} currObj object we need to reinit for
    * @return {undefined}
    */
-  destroyTemplatePlugins: function() {
+  reInitTemplatePlugins: function(currObj) {
+    // trigger load for jcaption
+    $('img.autocaption', currObj).trigger('load');
+  },
+
+  /**
+   * Destroys any plugins the template adds before Extend.apply gets called
+   * @param  {HTMLElement} currObj object we need destroy plugins in
+   * @return {undefined}
+   */
+  destroyTemplatePluginsPreApply: function(currObj) {
+    // remove any jcaption stuff
+    $('img.autocaption', currObj).each(function() {
+      var parents = $(this).parents('.caption');
+      var img = this;
+      // make sure the image's title is the same as the caption in case someone attempted to edit it.
+      var title = $(parents.first()).find('p').html();
+      $(img).attr('title', title);
+      var parent = parents.last()[0];
+      if (parent) {
+        parent.parentNode.innerHTML = parent.parentNode.innerHTML.replace(parent.outerHTML, img.outerHTML);
+      }
+    });
+
+    $('aside.pullquote').each(function() {
+      $pullquoteInsertion = $(this);
+      // we aren't allowing people to edit pullquotes, so we won't even try to save them
+      // var pullquoteText = $pullquoteInsertion.find('.q.cited').html();
+      // pullquoteText = pullquoteText.substring(1, pullquoteText.length - 2).replace(/(\s[^\s]+)&nbsp;([^\s]+\s*)$/g, '$1 $2');
+      // var cite = $pullquoteInsertion.find('cite').html();
+      // cite = cite.substring(1);
+
+      // var $pullquote = $pullquoteInsertion.next().find('span.pullquote').first();
+      // $pullquote.attr('rel', cite);
+      // $pullquote.html(pullquoteText);
+
+      $pullquoteInsertion.remove();
+    });
+
+  },
+
+  /**
+   * Destroys any plugins the template adds after Extend.apply gets called
+   * @param  {HTMLElement} currObj object we need destroy plugins in
+   * @return {undefined}
+   */
+  destroyTemplatePluginsPostApply: function(currObj) {
     // make sure table sorter is destroyed from tables otherwise they will be submitted with extra classes.
-    $('div.editable table.sortable').trigger('destroy');
+    $('table.sortable', currObj).trigger('destroy');
     // remove any tablesorter-header-inner nodes that tablesorter.destroy doesn't remove within tinyMCE for some reason.
-    $('div.editable table.sortable .tablesorter-header-inner').each(function() {
+    $('table.sortable .tablesorter-header-inner', currObj).each(function() {
         // replace this node with the text within.
         this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, this.innerHTML);
-    })
+    });
 
     // now remove html that gets added in when toggling links
-    var $toggleLinks = $('div.editable a.toggleLink')
+    var $toggleLinks = $('div.editable a.toggleLink', currObj)
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.removeClass('toggledOpen');
@@ -708,10 +752,11 @@ Gustavus.Concert = {
 
   /**
    * Displays togglable links
+   * @param  {HTMLElement} currObj object toggle links in
    * @return {undefined}
    */
-  toggleLinksDisplayed: function() {
-    var $toggleLinks = $('div.editable a.toggleLink')
+  toggleLinksDisplayed: function(currObj) {
+    var $toggleLinks = $('a.toggleLink', currObj)
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.addClass('toggledOpen');
@@ -753,10 +798,12 @@ Gustavus.Concert = {
         Extend.apply('page', $concertMessages);
       }
 
-      Extend.add('page', function() {
+      Extend.add('page', function(thisObj) {
         // Wait until the template does it's thing, then destroy certain pieces.
-        Gustavus.Concert.destroyTemplatePlugins();
-        Gustavus.Concert.toggleLinksDisplayed();
+        // remove additional HTML calling Extend.apply may have added.
+        Gustavus.Concert.destroyTemplatePluginsPostApply(thisObj);
+        Gustavus.Concert.toggleLinksDisplayed(thisObj);
+        Gustavus.Concert.reInitTemplatePlugins(thisObj);
       }, 100);
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
