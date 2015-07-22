@@ -43,12 +43,12 @@ Gustavus.Concert = {
    * @type {Array}
    */
   tinyMceDefaultMenu: [
-    {title: "Headers", items: [
-      {title: "Header 1", format: "h2"},
-      {title: "Header 2", format: "h3"},
-      {title: "Header 3", format: "h4"},
-      {title: "Header 4", format: "h5"},
-      {title: "Header 5", format: "h6"}
+    {title: "Headings", items: [
+      {title: "Heading 1", format: "h2"},
+      {title: "Heading 2", format: "h3"},
+      {title: "Heading 3", format: "h4"},
+      {title: "Heading 4", format: "h5"},
+      {title: "Heading 5", format: "h6"}
     ]},
     {title: "Inline", items: [
       {title: "Bold", icon: "bold", format: "bold"},
