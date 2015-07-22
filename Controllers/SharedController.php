@@ -1022,7 +1022,7 @@ class SharedController extends ConcourseController
     }
     $requestURI = rawurldecode($requestURI);
 
-    $editDraftUrl = $this->buildUrl('editDraft', ['draftName' => basename($requestURI)]);
+    $editDraftUrl = $this->buildUrl('editDraft', ['draftName' => self::guessDraftName($requestURI)]);
 
     if (strpos($requestURI, $editDraftUrl) !== false) {
       return true;
