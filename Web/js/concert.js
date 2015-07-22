@@ -698,7 +698,7 @@ Gustavus.Concert = {
       }
     });
 
-    $('aside.pullquote').each(function() {
+    $('aside.pullquote', currObj).each(function() {
       $pullquoteInsertion = $(this);
       // we aren't allowing people to edit pullquotes, so we won't even try to save them
       // var pullquoteText = $pullquoteInsertion.find('.q.cited').html();
@@ -712,7 +712,6 @@ Gustavus.Concert = {
 
       $pullquoteInsertion.remove();
     });
-
   },
 
   /**
@@ -747,6 +746,11 @@ Gustavus.Concert = {
       // show all of our hidden elements so they don't get deleteted by tinymce if removing the element after it.
       // Also helps editing. But reduces "preview" effect.
       $(this).show();
+    });
+
+    // remove fancy ampersand html
+    $('abbr[title=and]', currObj).each(function() {
+      this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, '&amp;');
     });
   },
 
