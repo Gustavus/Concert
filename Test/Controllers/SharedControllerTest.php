@@ -819,4 +819,25 @@ class SharedControllerTest extends TestBase
     $this->destructDB();
     $this->unauthenticate();
   }
+
+  /**
+   * @test
+   */
+  public function guessDraftName()
+  {
+    $_GET['concertDraft'] = 'arstarst';
+    $this->assertSame($_GET['concertDraft'], $this->call('Controllers\SharedController', 'guessDraftName'));
+
+    unset($_GET['concertDraft']);
+
+    $this->assertSame('123457809', $this->call('Controllers\SharedController', 'guessDraftName', ['gustavus.edu/concert/drafts/edit/123457809']));
+
+    $this->assertSame('123457809', $this->call('Controllers\SharedController', 'guessDraftName', ['gustavus.edu/concert/drafts/edit/123457809/index.php']));
+
+    $_SERVER['REQUEST_URI'] = 'gustavus.edu/concert/drafts/edit/123457809';
+    $this->assertSame('123457809', $this->call('Controllers\SharedController', 'guessDraftName'));
+
+    $_SERVER['REQUEST_URI'] = 'gustavus.edu/concert/drafts/edit/123457809/index.php';
+    $this->assertSame('123457809', $this->call('Controllers\SharedController', 'guessDraftName'));
+  }
 }
