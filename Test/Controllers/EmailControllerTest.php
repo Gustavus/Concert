@@ -139,7 +139,7 @@ class EmailControllerTest extends TestBase
       'additionalUsers' => null,
     ];
 
-    $usernames = ['testUser'];
+    $usernames = ['testuser'];
 
     $result = $this->controller->notifyUsersOfSharedDraft(['draft' => $draft, 'usernames' => $usernames]);
 
@@ -166,7 +166,7 @@ class EmailControllerTest extends TestBase
       'additionalUsers' => null,
     ];
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $result = $this->controller->notifyOwnerOfDraftEdit(['draft' => $draft]);
 
     $expectedBcc = [];

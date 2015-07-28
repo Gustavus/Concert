@@ -142,7 +142,7 @@ class MainControllerTest extends TestBase
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -159,14 +159,14 @@ class MainControllerTest extends TestBase
   public function editLink()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
 
     $filePath = self::$testFileDir . 'indexLink.php';
     symlink($filePath, self::$testFileDir . 'indexLink.php');
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -183,13 +183,13 @@ class MainControllerTest extends TestBase
   public function editNoLock()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['arst', 'billy/concert/', 'test']);
 
     $this->buildFileManager('arst', 'billy/concert/index.php');
     $this->assertTrue($this->fileManager->acquireLock());
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -206,9 +206,9 @@ class MainControllerTest extends TestBase
   public function editExcluded()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test', null, 'concourse']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test', null, 'concourse']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -226,9 +226,9 @@ class MainControllerTest extends TestBase
     mkdir(self::$testFileDir . 'billy/concert/concourse/user/', 0777, true);
     file_put_contents(self::$testFileDir . 'billy/concert/concourse/user/index.php', 'arst');
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir . 'billy/concert/', 'test', 'concourse/user', 'concourse']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir . 'billy/concert/', 'test', 'concourse/user', 'concourse']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -245,9 +245,9 @@ class MainControllerTest extends TestBase
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
     $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['billy/concert/', 'concourse2/*']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test', null, '']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test', null, '']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -266,12 +266,12 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -292,14 +292,14 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', self::$testFileDir, 'test']);
 
     $this->buildFileManager('bvisto', $filePath);
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
     $this->fileManager->stopEditing();
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -320,9 +320,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -343,9 +343,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -354,7 +354,7 @@ class MainControllerTest extends TestBase
 
     $this->assertTrue($this->controller->edit($filePath));
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
 
     $modifiedFile = file_get_contents(Config::$stagingDir . $this->fileManager->getFilePathHash());
 
@@ -376,10 +376,10 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'nonPub']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'nonPub']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['publisherUser', self::$testFileDir, Config::SITE_PUBLISHER_ACCESS_LEVEL]);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -388,9 +388,9 @@ class MainControllerTest extends TestBase
 
     $this->assertTrue($this->controller->edit($filePath));
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
 
-    $modifiedFile = file_get_contents(Config::$draftDir . $this->fileManager->getDraftFileName('testUser'));
+    $modifiedFile = file_get_contents(Config::$draftDir . $this->fileManager->getDraftFileName('testuser'));
 
     $this->assertContains('This is some edited html content', $modifiedFile);
 
@@ -423,9 +423,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'nonPub']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'nonPub']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -434,9 +434,9 @@ class MainControllerTest extends TestBase
 
     $this->assertTrue($this->controller->edit($filePath));
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
 
-    $modifiedFile = file_get_contents(Config::$draftDir . $this->fileManager->getDraftFileName('testUser'));
+    $modifiedFile = file_get_contents(Config::$draftDir . $this->fileManager->getDraftFileName('testuser'));
 
     $this->assertContains('This is some edited html content', $modifiedFile);
 
@@ -448,7 +448,7 @@ class MainControllerTest extends TestBase
     $this->checkSentEmailContents(
         ['to' => $expectedTo],
         'No publishers were found for ' . $filePath,
-        'testUser submitted a draft pending review',
+        'testuser submitted a draft pending review',
         true
     );
 
@@ -464,7 +464,7 @@ class MainControllerTest extends TestBase
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
 
-    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
 
     $this->setUpController();
     $this->assertFalse($this->controller->savePendingDraft($this->fileManager));
@@ -480,7 +480,7 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -498,14 +498,14 @@ class MainControllerTest extends TestBase
   {
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['arst', self::$testFileDir, 'test']);
 
     $this->buildFileManager('arst', $filePath);
     // create a lock on the file
     $this->assertTrue($this->fileManager->acquireLock());
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -525,12 +525,12 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $this->buildFileManager('testuser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -549,9 +549,9 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -571,9 +571,9 @@ class MainControllerTest extends TestBase
     file_put_contents($fromFilePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -591,9 +591,9 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $_POST = ['1' => '<p>This is some edited html content</p>'];
@@ -602,7 +602,7 @@ class MainControllerTest extends TestBase
 
     $this->assertTrue($this->controller->createNewPage($filePath));
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
 
     $modifiedFile = file_get_contents(Config::$stagingDir . $this->fileManager->getFilePathHash());
 
@@ -622,9 +622,9 @@ class MainControllerTest extends TestBase
     file_put_contents($fromFilePath, self::$indexContents);
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $_POST = ['1' => '<p>This is some edited html content</p>'];
@@ -633,7 +633,7 @@ class MainControllerTest extends TestBase
 
     $this->assertTrue($this->controller->createNewPage($filePath, $fromFilePath));
 
-    $this->buildFileManager('testUser', $filePath);
+    $this->buildFileManager('testuser', $filePath);
 
     $modifiedFile = file_get_contents(Config::$stagingDir . $this->fileManager->getFilePathHash());
 
@@ -651,9 +651,9 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController();
 
@@ -674,7 +674,7 @@ class MainControllerTest extends TestBase
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $this->assertFalse($this->controller->deletePage($filePath));
@@ -695,7 +695,7 @@ class MainControllerTest extends TestBase
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $this->assertFalse($this->controller->deletePage($filePath));
@@ -715,13 +715,13 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser1', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser1', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser1', $filePath);
+    $this->buildFileManager('testuser1', $filePath);
     $this->assertTrue($this->fileManager->acquireLock());
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $this->assertFalse($this->controller->deletePage($filePath));
@@ -741,14 +741,14 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser1', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser1', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser1', $filePath);
+    $this->buildFileManager('testuser1', $filePath);
     $this->assertTrue($this->fileManager->saveDraft(Config::PUBLIC_DRAFT) !== false);
     $this->fileManager->stopEditing();
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $result = $this->controller->deletePage($filePath);
@@ -756,7 +756,7 @@ class MainControllerTest extends TestBase
     $this->assertSame(['action', 'value'], array_keys($result));
     $this->assertContains('<form', $result['value']['content']);
 
-    $this->assertContains('testUser1', $result['value']['content']);
+    $this->assertContains('testuser1', $result['value']['content']);
     $this->assertContains('draft open', $result['value']['content']);
 
     $this->unauthenticate();
@@ -772,9 +772,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
     $origGet = $_GET;
     $_GET['barebones'] = true;
@@ -799,9 +799,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -828,9 +828,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -860,9 +860,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -874,8 +874,8 @@ class MainControllerTest extends TestBase
 
     $result = $this->controller->deletePage($filePath);
 
-    $this->buildFileManager('testUser', $filePath);
-    $this->buildFileManager('testUser', self::$testFileDir . $this->fileManager->getFilePathHash());
+    $this->buildFileManager('testuser', $filePath);
+    $this->buildFileManager('testuser', self::$testFileDir . $this->fileManager->getFilePathHash());
     $stagedFile = $this->fileManager->getStagedFileEntry();
 
     $this->assertSame('renderPageNotFound', $result);
@@ -894,9 +894,9 @@ class MainControllerTest extends TestBase
     file_put_contents($filePath, 'arst');
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -910,8 +910,8 @@ class MainControllerTest extends TestBase
 
     $result = $this->controller->deletePage($filePath);
 
-    $this->buildFileManager('testUser', $filePath);
-    $this->buildFileManager('testUser', self::$testFileDir . $this->fileManager->getFilePathHash());
+    $this->buildFileManager('testuser', $filePath);
+    $this->buildFileManager('testuser', self::$testFileDir . $this->fileManager->getFilePathHash());
     $stagedFile = $this->fileManager->getStagedFileEntry();
 
     $this->assertSame(['action' => 'return', 'value' => json_encode(['redirectUrl' => dirname($filePath)])], $result);
@@ -962,12 +962,12 @@ class MainControllerTest extends TestBase
     $_POST['concertAction'] = 'query';
     $_POST['query']         = 'hasSharedDraft';
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $this->buildFileManager('testuser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $this->assertTrue($this->controller->handleQueryRequest($filePath));
@@ -984,13 +984,13 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $this->buildFileManager('testuser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     //$this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']);
     $this->fileManager->acquireLock();
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $this->assertSame(['action' => 'none', 'value' => true], $this->controller->stopEditing($filePath));
@@ -1009,12 +1009,12 @@ class MainControllerTest extends TestBase
     $filePath = self::$testFileDir . 'index.php';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts', 'StagedFiles']);
 
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
-    $this->buildFileManager('testUser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $this->buildFileManager('testuser', $filePath, Config::DEFAULT_TEMPLATE_PAGE);
     $draftName = basename($this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['jerry']));
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
     $this->setUpController();
 
     $_GET['concert'] = 'editDraft';

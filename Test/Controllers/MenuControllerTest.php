@@ -78,7 +78,7 @@ class MenuControllerTest extends TestBase
   private function setUpController($fileManager = null)
   {
     if ($fileManager === null) {
-      $this->buildFileManager('testUser', $this->filePath);
+      $this->buildFileManager('testuser', $this->filePath);
       $fileManager = $this->fileManager;
     }
     $this->controller = new TestObject(new MenuControllerTestController);
@@ -242,16 +242,16 @@ class MenuControllerTest extends TestBase
   {
     $this->markTestSkipped('We need to finish menus.');
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', self::$testFileDir, 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', self::$testFileDir, 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController($this->fileManager);
 
@@ -286,16 +286,16 @@ class MenuControllerTest extends TestBase
     $_SERVER['SCRIPT_NAME'] = '/concert/testing.php';
     $_SERVER['HTTP_REFERER'] = 'https://beta.gac.edu/billy/concert/newPage.php?concert';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController($this->fileManager);
 
@@ -334,16 +334,16 @@ class MenuControllerTest extends TestBase
     $_SERVER['SCRIPT_NAME'] = '/concert/testing.php';
     $_SERVER['HTTP_REFERER'] = 'https://beta.gac.edu/billy/concert/newPage.php?concert';
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', 'billy/arst/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/arst/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController($this->fileManager);
 
@@ -366,16 +366,16 @@ class MenuControllerTest extends TestBase
     $_SERVER['HTTP_REFERER'] = 'https://beta.gac.edu/billy/concert/newPage.php?concert=edit';
 
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
-    $this->call('PermissionsManager', 'saveUserPermissions', ['testUser', '/billy/concert/', 'test']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', '/billy/concert/', 'test']);
 
     $configuration = new FileConfiguration(self::$indexConfigArray);
 
-    $this->buildFileManager('testUser', self::$testFileDir . 'index.php');
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
     $this->fileManager->fileConfiguration = $configuration;
 
     $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
 
-    $this->authenticate('testUser');
+    $this->authenticate('testuser');
 
     $this->setUpController($this->fileManager);
 

@@ -1162,6 +1162,21 @@ class PermissionsManager
       } else {
         $returnArray[$sitePerms['siteRoot']]['accessLevel'] = null;
       }
+      if (!empty($returnArray[$sitePerms['siteRoot']]['accessLevel'])) {
+        foreach ($returnArray[$sitePerms['siteRoot']]['accessLevel'] as &$accessLevel) {
+          $accessLevel = trim($accessLevel);
+        }
+      }
+      if (!empty($returnArray[$sitePerms['siteRoot']]['includedFiles'])) {
+        foreach ($returnArray[$sitePerms['siteRoot']]['includedFiles'] as &$includedFile) {
+          $includedFile = trim($includedFile);
+        }
+      }
+      if (!empty($returnArray[$sitePerms['siteRoot']]['excludedFiles'])) {
+        foreach ($returnArray[$sitePerms['siteRoot']]['excludedFiles'] as &$excludedFile) {
+          $excludedFile = trim($excludedFile);
+        }
+      }
     }
 
     self::getCache()->setValue(self::buildCacheKey($username), $returnArray, self::$ttl);

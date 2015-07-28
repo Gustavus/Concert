@@ -48,8 +48,18 @@ class MainController extends SharedController
     PageUtil::startSessionIfNeeded();
     if (isset($_SESSION['concertCMS']['siteAccessKeys'][$_GET['accessKey']])) {
       $siteBase = $_SESSION['concertCMS']['siteAccessKeys'][$_GET['accessKey']];
+      $fileToCheckForPerms = Utility::removeDocRootFromPath(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php'));
 
-      $parentSiteBase = PermissionsManager::findParentSiteForFile(Utility::removeDocRootFromPath(str_replace('//', '/', $siteBase . DIRECTORY_SEPARATOR . 'index.php')));
+      $currentFile = PageUtil::getReferer();
+      if (!empty($currentFile)) {
+        $urlParts = parse_url($currentFile);
+        if (isset($urlParts['path']) && strpos(trim($urlParts['path'], '/'), trim($siteBase, '/')) === 0) {
+          $fileToCheckForPerms = $urlParts['path'];
+        }
+      }
+
+
+      $parentSiteBase = PermissionsManager::findParentSiteForFile($fileToCheckForPerms);
       if (empty($parentSiteBase)) {
         return null;
       }
@@ -58,7 +68,7 @@ class MainController extends SharedController
       // set our current site's base in the session
       $_SESSION['concertCMS']['currentSiteBase'] = Utility::addDocRootToPath($siteBase);
       // set whether the user can upload in the session
-      $_SESSION['concertCMS']['userCanUploadToCurrentSite'] = PermissionsManager::userCanUpload($this->getLoggedInUsername(), Utility::removeDocRootFromPath($siteBase));
+      $_SESSION['concertCMS']['userCanUploadToCurrentSite'] = PermissionsManager::userCanUpload($this->getLoggedInUsername(), $fileToCheckForPerms);
     } else {
       // no access key. We won't know what to do.
       return null;

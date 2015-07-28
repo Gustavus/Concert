@@ -920,6 +920,20 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function checkIncludedAndExcludedFilesForAccessAllExcludedButOneFolder()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'index.php, public/*', '*']);
+
+    $sitePerms = PermissionsManager::getUserPermissionsForSite('bvisto', '/arst');
+
+    $this->assertTrue($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/public/arst/testing.php', '/arst/', $sitePerms]));
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function checkIncludedAndExcludedFilesForAccessSpecificExcluded()
   {
     $sitePerms = [
@@ -2055,7 +2069,7 @@ class PermissionsManagerTest extends TestBase
       'type'            => Config::PUBLIC_DRAFT,
     ];
 
-    $this->assertFalse(PermissionsManager::userCanEditDraft('testUser', $draft));
+    $this->assertFalse(PermissionsManager::userCanEditDraft('testuser', $draft));
   }
 
   /**

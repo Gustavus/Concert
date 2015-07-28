@@ -938,6 +938,96 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function wrapEditableContentOpeningComment()
+  {
+    $content = '<div><!--
+    comments
+    --> arstarst</div><!-- arstast';
+
+    $expected = sprintf('<div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s<!-- arstast', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentOpeningCommentTagsInComment()
+  {
+    $content = '<div><!--
+    comments
+    --> arstarst</div><!-- <p>arstast</p>';
+
+    $expected = sprintf('<div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s<!-- <p>arstast</p>', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentClosingComment()
+  {
+    $content = '<div> --><div><!--
+    comments
+    --> arstarst</div>';
+
+    $expected = sprintf('<div> --><div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentClosingCommentTagsInComment()
+  {
+    $content = '<div>arst</div> --><div><!--
+    comments
+    --> arstarst</div>';
+
+    $expected = sprintf('<div>arst</div> --><div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function wrapEditableContentOpeningAndClosingComment()
+  {
+    $content = '<div> --><div><!--
+    comments
+    --> arstarst</div><!-- arstast';
+
+    $expected = sprintf('<div> --><div class="editable" data-index="0"><div><!--
+    comments
+    --> arstarst</div></div>%s<!-- arstast', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->buildFileConfigurationPart();
+    $result = $this->part->wrapEditableContent($content);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
   public function findUnMatchedOpeningTagsSimple()
   {
     $opening = [
@@ -1437,6 +1527,372 @@ class FileConfigurationPartTest extends TestBase
         'flattened' => [
           2 => 'colgroup',
           4 => 'span',
+          5 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithComments()
+  {
+    $content = '<p><colgroup>test</colgroup><span style="display: inline !important;"><!-- some random comments --></span>
+      </p>';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 0,
+          ],
+          1 => [
+            0 => '<colgroup>',
+            1 => 3,
+          ],
+          3 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 28,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          1 => 'colgroup',
+          3 => 'span',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          2 => [
+            0 => '</colgroup>',
+            1 => 17,
+          ],
+          5 => [
+            0 => '</span>',
+            1 => 99,
+          ],
+          6 => [
+            0 => '</p>',
+            1 => 113,
+          ],
+        ],
+        'flattened' => [
+          2 => 'colgroup',
+          5 => 'span',
+          6 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithMultilineComments()
+  {
+    $content = '<p><colgroup>test</colgroup><span style="display: inline !important;"><!-- some random
+
+    comments --></span>
+      </p>';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 0,
+          ],
+          1 => [
+            0 => '<colgroup>',
+            1 => 3,
+          ],
+          3 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 28,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          1 => 'colgroup',
+          3 => 'span',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          2 => [
+            0 => '</colgroup>',
+            1 => 17,
+          ],
+          5 => [
+            0 => '</span>',
+            1 => 104,
+          ],
+          6 => [
+            0 => '</p>',
+            1 => 118,
+          ],
+        ],
+        'flattened' => [
+          2 => 'colgroup',
+          5 => 'span',
+          6 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithUnMatchedOpeningComment()
+  {
+    $content = '<p><colgroup>test</colgroup><span style="display: inline !important;"><!-- some random
+
+    comments';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 0,
+          ],
+          1 => [
+            0 => '<colgroup>',
+            1 => 3,
+          ],
+          3 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 28,
+          ],
+          4 => [
+            0 => '<!--',
+            1 => 70,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          1 => 'colgroup',
+          3 => 'span',
+          4 => '<!--',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          2 => [
+            0 => '</colgroup>',
+            1 => 17,
+          ],
+        ],
+        'flattened' => [
+          2 => 'colgroup',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithUnMatchedClosingComment()
+  {
+    $content = 'more comments<p>arst</p>
+    --><p><colgroup>test</colgroup><span style="display: inline !important;">arst</span></p>';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 13,
+          ],
+          3 => [
+            0 => '<p>',
+            1 => 32
+          ],
+          4 => [
+            0 => '<colgroup>',
+            1 => 35,
+          ],
+          6 => [
+            0 => '<span style="display: inline !important;">',
+            1 => 60,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          3 => 'p',
+          4 => 'colgroup',
+          6 => 'span',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          1 => [
+            0 => '</p>',
+            1 => 20,
+          ],
+          2 => [
+            0 => '-->',
+            1 => 29
+          ],
+          5 => [
+            0 => '</colgroup>',
+            1 => 49,
+          ],
+          7 => [
+            0 => '</span>',
+            1 => 106,
+          ],
+          8 => [
+            0 => '</p>',
+            1 => 113,
+          ],
+        ],
+        'flattened' => [
+          1 => 'p',
+          2 => '-->',
+          5 => 'colgroup',
+          7 => 'span',
+          8 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithCommentsUnMatchedOpeningComment()
+  {
+    $content = '<p>arst<!-- comment --></p><!-- some random
+
+    comments';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 0,
+          ],
+          3 => [
+            0 => '<!--',
+            1 => 27,
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          3 => '<!--',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          2 => [
+            0 => '</p>',
+            1 => 23,
+          ],
+        ],
+        'flattened' => [
+          2 => 'p',
+        ],
+      ],
+      'selfClosing' => [
+        'result' => [],
+        'flattened' => [],
+      ],
+    ];
+
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * @test
+   */
+  public function getAllTagsByTypeWithCommentsUnMatchedClosingComment()
+  {
+    $content = 'more comments<p>arst</p>
+    --><p>arst<!-- comment --></p>';
+
+    $result = $this->call('FileConfigurationPart', 'getAllTagsByType', [$content]);
+
+    $expected = [
+      'opening' => [
+        'result' => [
+          0 => [
+            0 => '<p>',
+            1 => 13,
+          ],
+          3 => [
+            0 => '<p>',
+            1 => 32
+          ],
+        ],
+        'flattened' => [
+          0 => 'p',
+          3 => 'p',
+        ],
+      ],
+      'closing' => [
+        'result' => [
+          1 => [
+            0 => '</p>',
+            1 => 20,
+          ],
+          2 => [
+            0 => '-->',
+            1 => 29
+          ],
+          5 => [
+            0 => '</p>',
+            1 => 55,
+          ],
+        ],
+        'flattened' => [
+          1 => 'p',
+          2 => '-->',
           5 => 'p',
         ],
       ],
