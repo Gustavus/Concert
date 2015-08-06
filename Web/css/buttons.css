@@ -1,13 +1,14 @@
 .concert-button, .concert-button:any(:link, :visited, :hover, :focus) {
-  display: inline-block;
+  /*display: inline-block;*/
   background-color: $(button-primary);
   color: white;
-  text-decoration: none;    padding: 0.5em;
+  /*text-decoration: none;
+  padding: 0.5em;
   margin: 0 0.5em;
   border-radius: 5px;
   margin-top: 6px;
   cursor: pointer;
-  transition: background-color 0.1s ease-in-out;
+  transition: background-color 0.1s ease-in-out;*/
 }
 
 .concert-button:hover {
@@ -48,8 +49,8 @@
 }
 
 .concert-button.danger:hover {
-    background-color: l-adjust($(button-danger), 5);
-  }
+  background-color: l-adjust($(button-danger), 5);
+}
 
 .concert-button.danger:active {
   background-color: $(button-active-danger);

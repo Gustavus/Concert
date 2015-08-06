@@ -4,8 +4,8 @@
   {%- set hideMenuTitle = 'Hide Concert Menu' -%}
   {%- set buttons = [] -%}
   <div id="concertMenu" class="concert-menu {% if not showMenu %} hidden{% endif %}">
-    <div class="menu-content permanent">
-      <a href="#" class="menu-activate-button menu-item" title="{% if not showMenu %}{{ showMenuTitle }}{% else %}{{ hideMenuTitle }}{% endif %}">
+    <div class="menu-content">
+      <a href="#" class="concert-menu-activate-button menu-item" title="{% if not showMenu %}{{ showMenuTitle }}{% else %}{{ hideMenuTitle }}{% endif %}">
         Concert
       </a>
     </div>
@@ -29,16 +29,12 @@
     </div>
     <div class="menu-content right">
       <ul class="menu-bar">
-        <li id="concertMessages" class="menu-item">
-          <a class="menu-item-label" href="#" data-toggle="dropdown">Messages <span class="message-count" data-message-count>0</span> ▾</a>
-          <div class="messages-dropdown" data-message-area></div>
-        </li>
         {% if showMenu %}
           <li class="menu-item">
-            <a href="{{ quitURL }}" class="concert-button danger quitConcert">Quit</a>
+            <a href="{{ quitURL }}" class="button red quitConcert">Quit</a>
           </li>
           <div id="confirmQuit" title="Quit" class="nodisplay">
-            <p class="concert-message concert-alert">It looks like you have made changes. Are you sure you want to quit?</p>
+            <div class="concert-message concert-alert"><div class="concert-message-contents icon-exclamation-triangle">It looks like you have made changes. Are you sure you want to quit?</div></div>
           </div>
         {% endif %}
       </ul>
@@ -54,86 +50,43 @@
     <div class="clear"></div>
     <link rel="stylesheet" href="{{ renderResource(['dropdown-css'])}}" media="screen" title="no title" charset="utf-8">
     <script>
-      {%- set dropdown = renderResource(['dropdown']) -%}
-{#--#} require.config({
-{#--#}   shim: {
-{#--#}     '{{ dropdown }}': ['baseJS']
-{#--#}   }
-{#--#} });
-{#--#} require(['{{ dropdown }}'], function() {
-{#--#}   $(function() {
-{#--#}     var $concertMenu = $('.concert-menu');
-{#--#}     $('.menu-activate-button').on('click.Concert.ShowMenu', function (e) {
-{#--#}       e.preventDefault();
-{#--#}       if ($concertMenu.hasClass('hidden')) {
-{#--#}         $(this).attr('title', '{{ hideMenuTitle }}');
-{#--#}         $concertMenu.removeClass('hidden');
-{#--#}       } else {
-{#--#}         $(this).attr('title', '{{ showMenuTitle }}');
-{#--#}         $concertMenu.addClass('hidden');
-{#--#}
-{#--#}         var $concertBar = $('#concertMenu');
-{#--#}         $concertBar.css('position', '');
-{#--#}         $concertBar.css('width', '');
-{#--#}         $concertBar.css('opacity', '');
-{#--#}       }
-{#--#}     });
-{#--#}
-{#--#}     if (!$concertMenu.hasClass('hidden')) {
-{#--#}       $('#concertMessages a[data-toggle="dropdown"]').dropdown('show');
-{#--#}     } else {
-{#--#}       $('.menu-activate-button').one('click.Concert.ShowMessages', function (e) {
-{#--#}         $('#concertMessages a[data-toggle="dropdown"]').dropdown('show');
-{#--#}         return false;
-{#--#}       });
-{#--#}     }
-{#--#}
-{#--#}    var $concertMenu = $('#concertMenu'),
-{#--#}        startScroll = $concertMenu.offset().top;
-{#--#}
-{#--#}     if (startScroll < 0) {
-{#--#}       startScroll = 0;
-{#--#}     }
-{#--#}
-{#--#}     $(window).scroll(function() {
-{#--#}       if ($concertMenu.hasClass('hidden')) {
-{#--#}         if ($(window).scrollTop() > startScroll) {
-{#--#}           $concertMenu.css('position', '');
-{#--#}           $concertMenu.css('width', '');
-{#--#}           $concertMenu.css('opacity', '');
-{#--#}           $concertMenu.css('top', '');
-{#--#}           $concertMenu.removeClass('floating');
-{#--#}           $concertMenu.find('.menu-content').removeClass('floating');
-{#--#}         }
-{#--#}         /* we don't want to scroll a hidden element */
-{#--#}         return;
-{#--#}       }
-{#--#}       /* make sure the window isn't too narrow, otherwise we could be covering everything they can see. */
-{#--#}       if ($(window).width() > 700 && $(window).scrollTop() > startScroll) {
-{#--#}         $concertMenu.css('position', 'fixed');
-{#--#}         $concertMenu.css('width', '100%');
-{#--#}         $concertMenu.css('opacity', '0.9');
-{#--#}         $concertMenu.css('top', 0);
-{#--#}         $concertMenu.addClass('floating');
-{#--#}         $concertMenu.find('.menu-content').addClass('floating');
-{#--#}       } else {
-{#--#}         $concertMenu.css('position', '');
-{#--#}         $concertMenu.css('width', '');
-{#--#}         $concertMenu.css('opacity', '');
-{#--#}         $concertMenu.css('top', '');
-{#--#}         $concertMenu.removeClass('floating');
-{#--#}         $concertMenu.find('.menu-content').removeClass('floating');
-{#--#}       }
-{#--#}     });
-{#--#}
-{#--#}     Extend.add('page', function() {
-{#--#}       $('#cancelEditSiteNavMessage').on('click', function(e) {
-{#--#}         e.preventDefault();
-{#--#}         $(this).colorbox.close();
-{#--#}       });
-{#--#}     });
-{#--#}   });
-{#--#} });
+    {%- set dropdown = renderResource(['dropdown']) -%}
+  require.config({
+    shim: {
+      '{{ dropdown }}': ['baseJS']
+    }
+  });
+  require(['{{ dropdown }}'], function() {
+   $(document).on('click.Concert.ShowMenu', '.concert-menu-activate-button', function (e) {
+     e.preventDefault();
+     console.log('concert');
+     var $concertMenu = $('.concert-menu');
+     if ($concertMenu.hasClass('hidden')) {
+       $(this).attr('title', '{{ hideMenuTitle }}');
+       $concertMenu.removeClass('hidden');
+     } else {
+       $(this).attr('title', '{{ showMenuTitle }}');
+       $concertMenu.addClass('hidden');
+     }
+     Extend.apply('utilBar');
+   });
+   $(function() {
+     var $concertMenu = $('.concert-menu');
+
+     if (!$concertMenu.hasClass('hidden')) {
+       $('.concert-menu-activate-button').attr('title', '{{ hideMenuTitle }}');
+     } else {
+       $('.concert-menu-activate-button').attr('title', '{{ showMenuTitle }}');
+     }
+
+     Extend.add('page', function() {
+         $('#cancelEditSiteNavMessage').on('click', function(e) {
+           e.preventDefault();
+         $(this).colorbox.close();
+       });
+     });
+   });
+  });
     </script>
   </div>
 {% endspaceless %}

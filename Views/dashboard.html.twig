@@ -2,22 +2,22 @@
 {% spaceless %}
 {%- if stats -%}
   {# render stats #}
-  <div class="grid_36 alpha omega">
-    <div class="grid_8 alpha">
+  <div class="grid-100 alpha omega">
+    <div class="grid-20 tgrid-30 alpha">
       {{ self.renderUserStats(stats['topUsers']) }}
     </div>
-    <div class="grid_14">
+    <div class="grid-40 tgrid-70">
       {{ self.renderDistinctFileStats(stats['distinctFileActions']) }}
     </div>
-    <div class="grid_14 omega">
+    <div class="grid-40 tgrid-70 omega">
       {{ self.renderAllFileStats(stats['allFileActions']) }}
     </div>
   </div>
 {%- endif -%}
 
 {# render sites #}
-<div class="grid_36 alpha omega">
-  <div class="grid_18 alpha">
+<div class="grid-100 alpha omega">
+  <div class="grid-50 tgrid-50 mgrid-50 alpha">
     {%- if isGlobal -%}
       <h2>Sites{%- if sites|length > 0 %} ({{ sites|length }}){% endif -%}</h2>
     {%- else -%}
@@ -25,10 +25,10 @@
     {% endif -%}
   </div>
 {%- if sites|length > 0 -%}
-  <div class="grid_18 omega">
+  <div class="grid-50 tgrid-50 mgrid-50 omega">
     <input type="text" name="filter" class="filter" id="filterSites" placeholder="Type to filter" />
   </div>
-  <table class="fancy sortable filterable fullWidth">
+  <table class="fancy sortable filterable grid-100 tgrid-100 mgrid-100">
     <thead>
       <tr>
         <th>Site</th>
@@ -65,7 +65,7 @@
 {% macro renderDistinctFileStats(stats) %}
   {% set totalCount = 0 %}
   {% set counts = '' %}
-  <table class="fancy fullWidth">
+  <table class="fancy grid-100 tgrid-100 mgrid-100">
     <legend>Unique File Actions</legend>
     <thead>
       <tr>
@@ -101,7 +101,7 @@
 {% macro renderAllFileStats(stats) %}
   {% set totalCount = 0 %}
   {% set counts = '' %}
-  <table class="fancy fullWidth">
+  <table class="fancy grid-100 tgrid-100 mgrid-100">
     <legend>All File Actions</legend>
     <thead>
       <tr>
@@ -135,7 +135,7 @@
   param: stats Array of stats
 #}
 {% macro renderUserStats(stats) %}
-  <table class="fancy fullWidth">
+  <table class="fancy grid-100 tgrid-100 mgrid-100">
     <legend>Top Users</legend>
     <thead>
       <tr>

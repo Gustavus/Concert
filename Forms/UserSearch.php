@@ -33,13 +33,13 @@ class UserSearch
       'type'            => 'form',
       'action'          => $_SERVER['REQUEST_URI'],
       'method'          => 'post',
-      'container-class' => 'grid_36 alpha omega',
+      'container-class' => 'grid-100 tgrid-100 mgrid-100 alpha omega',
       'children'        => [
         [
           'name'               => 'username',
           'type'               => 'text',
           'title'              => 'Username',
-          'container-class'    => 'grid_14 alpha',
+          'container-class'    => 'grid-70 tgrid-70 mgrid-100 alpha',
           'element-class'      => 'autocompleteUser',
           'element-attributes' => [
             'data-autocompletepath' => $autocompletePath,
@@ -49,7 +49,7 @@ class UserSearch
           'type'            => 'submit',
           'value'           => 'Search',
           'name'            => 'submit',
-          'container-class' => 'alpha grid_4',
+          'container-class' => 'alpha grid-30 tgrid-30 mgrid-100',
         ],
       ],
     ];

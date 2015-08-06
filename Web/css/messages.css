@@ -1,8 +1,8 @@
-.concert-message {
-  background: $(concert-gray);
+/*.concert-message {
+  background: #$(web-dark-gray);
   padding: 1em;
   padding-left: 4em;
-  color: $(concert-white);
+  color: #$(web-background);
   position: relative;
   border-radius: 3px;
 }
@@ -14,7 +14,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: $(message-color);
+  background-color: #$(web-dark-gray);
   background-image: url(/concert/icons/info-icon.png);
   background-position: center center;
   background-repeat: no-repeat;
@@ -30,10 +30,50 @@
 
 .concert-message.concert-alert:before {
   background-image: url(/concert/icons/alert-icon.png);
-  background-color: $(message-alert-color);
+  background-color: #$(brand-red);
 }
 
 .concert-message.concert-error:before {
   background-image: url(/concert/icons/error-icon.png);
-  background-color: $(message-error-color);
+  background-color: #$(brand-orange);
+}*/
+
+
+
+.concert-message {
+  background: #$(web-medium-gray);
+  padding: 30px 10px 30px 55px;
+  color: #$(web-background);
+  position: relative;
+  /*border-bottom: 1px solid #$(web-dark-gray);*/
+}
+.concert-message .concert-message-contents {
+  white-space: normal;
+  line-height: 1.2em;
+}
+.concert-message-contents[class^="icon-"]::before, .concert-message-contents[class*=" icon-"]::before {
+  font-size: 30px;
+  text-align: center;
+  position: absolute;
+  top: 40%;
+  left: 7px;
+}
+
+.concert-message:before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding-top: 10px;
+  background-color: #$(brand-blue);
+  width: 44px;
+}
+.concert-message.concert-alert:before {
+  background-color: #$(brand-orange);
+}
+
+.concert-message.concert-error:before {
+  background-color: #$(brand-red);
 }

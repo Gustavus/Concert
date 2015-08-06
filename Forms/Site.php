@@ -48,7 +48,7 @@ class Site
       'title'           => '&nbsp;',
       'subtitle'        => '&nbsp;',
       'value'           => 'Add',
-      'container-class' => 'grid_2',
+      'container-class' => 'grid-15 tgrid-15 mgrid-50 malpha',
       'element-class'   => 'positive',
     ];
     $deleteButton = [
@@ -57,8 +57,8 @@ class Site
       'title'           => '&nbsp;',
       'subtitle'        => '&nbsp;',
       'value'           => 'Del',
-      'container-class' => 'omega grid_2',
-      'element-class'   => 'negative',
+      'container-class' => 'grid-15 tgrid-15 mgrid-50 omega',
+      'element-class'   => 'red',
     ];
 
     $children = [];
@@ -69,7 +69,7 @@ class Site
         'name'            => 'siteinfo',
         'type'            => 'section',
         'title'           => 'Site Info',
-        'container-class' => 'grid_34 alpha omega prefix_1 suffix_1',
+        'container-class' => 'grid-90 tgrid-90 mgrig-100 alpha omega prefix-5 suffix-5 tprefix-5 tsuffix-5',
         'children' => [
           'name'               => 'siteroot',
           'type'               => 'text',
@@ -85,7 +85,7 @@ class Site
       $excludedFilesChildren[] = [
         'name'            => 'excludedfile',
         'type'            => 'section',
-        'container-class' => 'grid_32 prefix_1 suffix_1 alpha omega',
+        'container-class' => 'grid-90 tgrid-90 mgrid-100 prefix-5 suffix-5 tprefix-5 tsuffix-5 alpha omega',
         'duplicatable'    => true,
         'children'        => [
           [
@@ -93,7 +93,7 @@ class Site
             'type'               => 'text',
             'title'              => 'Excluded File',
             'subtitle'           => '&nbsp;',
-            'container-class'    => 'grid_16',
+            'container-class'    => 'grid-70 tgrid-70 mgrid-100 alpha momega',
           ],
           $addButton,
           $deleteButton,
@@ -105,7 +105,7 @@ class Site
         $excludedFilesChildren[] = [
           'name'            => 'excludedfile',
           'type'            => 'section',
-          'container-class' => 'grid_32 prefix_1 suffix_1 alpha omega',
+          'container-class' => 'grid-90 tgrid-90 mgrid-100 prefix-5 suffix-5 tprefix-5 tsuffix-5 alpha omega',
           'duplicatable'    => true,
           'children'        => [
             [
@@ -114,7 +114,7 @@ class Site
               'title'              => 'Excluded File',
               'value'              => $excludedFile,
               'subtitle'           => '&nbsp;',
-              'container-class'    => 'grid_16',
+              'container-class'    => 'grid-70 tgrid-70 mgrid-100 malpha momega',
             ],
             $addButton,
             $deleteButton,
@@ -126,7 +126,7 @@ class Site
       'name'            => 'excludedfilessection',
       'type'            => 'section',
       'title'           => 'Site Level Excluded Files',
-      'container-class' => 'grid_34 alpha omega prefix_1 suffix_1',
+      'container-class' => 'grid-90 tgrid-90 mgrid-100 prefix-5 suffix-5 tprefix-5 tsuffix-5 alpha omega',
       'children'        => $excludedFilesChildren,
     ];
 
@@ -134,7 +134,7 @@ class Site
       'name'            => 'peoplesection',
       'type'            => 'section',
       'title'           => 'Add People',
-      'container-class' => 'grid_34 alpha omega prefix_1 suffix_1',
+      'container-class' => 'grid-90 tgrid-90 mgrid-100 prefix-5 suffix-5 tprefix-5 tsuffix-5 alpha omega',
       'children'        => self::buildPeopleSection($site),
     ];
 
@@ -142,7 +142,7 @@ class Site
       'type'            => 'submit',
       'value'           => 'Submit',
       'name'            => 'submit',
-      'container-class' => 'alpha grid_4',
+      'container-class' => 'alpha grid-20 tgrid-30 mgrid-100 momega',
     ];
 
     $config = [
@@ -150,7 +150,7 @@ class Site
       'type'            => 'form',
       'action'          => $_SERVER['REQUEST_URI'],
       'method'          => 'post',
-      'container-class' => 'grid_36 alpha omega',
+      'container-class' => 'grid-100 tgrid-100 mgrid-100 alpha omega',
       'children'        => $children,
     ];
 
@@ -193,7 +193,7 @@ class Site
       'title'           => '&nbsp;',
       'subtitle'        => '&nbsp;',
       'value'           => 'Add Person',
-      'container-class' => 'grid_7 prefix_1',
+      'container-class' => 'grid-25 tgrid-25 mgrid-50 malpha',
       'element-class'   => 'positive',
     ];
     $deletePersonButton = [
@@ -202,7 +202,7 @@ class Site
       'title'           => '&nbsp;',
       'subtitle'        => '&nbsp;',
       'value'           => 'Delete Person',
-      'container-class' => 'omega grid_7',
+      'container-class' => 'omega grid-25 tgrid-25 mgrid-50',
       'element-class'   => 'negative',
     ];
 
@@ -211,14 +211,14 @@ class Site
         [
           'name'            => 'personpermissions',
           'type'            => 'section',
-          'container-class' => 'grid_32 prefix_1 suffix_1 alpha omega',
+          'container-class' => 'grid-90 tgrid-90 mgrid-100 prefix-5 suffix-5 tprefix-5 tsuffix-5 alpha omega',
           'duplicatable'    => true,
           'children'        => [
             [
               'name'               => 'username',
               'type'               => 'text',
               'title'              => 'Username',
-              'container-class'    => 'grid_14 alpha',
+              'container-class'    => 'grid-50 tgrid-50 mgrid-100 alpha momega',
               'element-class'      => 'autocompleteUser',
               'element-attributes' => [
                 'data-autocompletepath' => $autocompletePath,
@@ -230,7 +230,7 @@ class Site
               'multivalue'      => true,
               'title'           => 'Access Level',
               'element-class'   => 'longSelect',
-              'container-class' => 'grid_15',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 malpha omega',
               'children'        => self::buildAccessLevelChildren(),
               'validators'      => new ConditionalValidator(new ElementReference('username', 1), new PresenceValidator(), new PresenceValidator('Please specify at least one access level')),
             ],
@@ -238,20 +238,20 @@ class Site
               'name'            => 'includedfiles',
               'type'            => 'text',
               'title'           => 'Included Files',
-              'container-class' => 'grid_14 alpha',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 alpha momega',
             ],
             [
               'name'            => 'excludedfiles',
               'type'            => 'text',
               'title'           => 'Excluded Files',
-              'container-class' => 'grid_15',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 malpha omega',
             ],
             [
               'name'            => 'expirationdate',
               'type'            => 'date',
               'title'           => 'Expiration Date',
               'subtitle'           => '&nbsp;',
-              'container-class' => 'grid_14 alpha',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 alpha momega',
             ],
             $addPersonButton,
             $deletePersonButton,
@@ -264,7 +264,7 @@ class Site
         $return[] = [
           'name'            => 'personpermissions',
           'type'            => 'section',
-          'container-class' => 'grid_32 prefix_1 suffix_1 alpha omega',
+          'container-class' => 'grid-90 tgrid-90 mgrid-100 prefix-5 suffix-5 tprefix-5 tsuffix-5 alpha omega',
           'duplicatable'    => true,
           'children'        => [
             [
@@ -272,7 +272,7 @@ class Site
               'type'               => 'text',
               'title'              => 'Username',
               'value'              => $person['username'],
-              'container-class'    => 'grid_14 alpha',
+              'container-class'    => 'grid-50 tgrid-50 mgrid-100 alpha momega',
               'element-class'      => 'autocompleteUser',
               'element-attributes' => [
                 'data-autocompletepath' => $autocompletePath,
@@ -285,7 +285,7 @@ class Site
               'title'           => 'Access Level',
               'value'           => $person['accessLevel'],
               'element-class'   => 'longSelect',
-              'container-class' => 'grid_15',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 malpha momega omega',
               'children'        => self::buildAccessLevelChildren(),
               'validators'      => new ConditionalValidator(new ElementReference('username', 1), new PresenceValidator(), new PresenceValidator('Please specify at least one access level')),
             ],
@@ -294,14 +294,14 @@ class Site
               'type'            => 'text',
               'title'           => 'Included Files',
               'value'           => $person['includedFiles'],
-              'container-class' => 'grid_14 alpha',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 alpha momega',
             ],
             [
               'name'            => 'excludedfiles',
               'type'            => 'text',
               'title'           => 'Excluded Files',
               'value'           => $person['excludedFiles'],
-              'container-class' => 'grid_15',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 malpha momega omega',
             ],
             [
               'name'            => 'expirationdate',
@@ -309,7 +309,7 @@ class Site
               'title'           => 'Expiration Date',
               'value'           => $person['expirationDate'],
               'subtitle'        => '&nbsp;',
-              'container-class' => 'grid_14 alpha',
+              'container-class' => 'grid-50 tgrid-50 mgrid-100 alpha momega',
             ],
             $addPersonButton,
             $deletePersonButton,

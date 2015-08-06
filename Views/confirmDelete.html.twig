@@ -1,13 +1,14 @@
 {% spaceless %}
   {{ scripts|raw }}
   {% if message %}
-    <p class="concert-message concert-alert">{{ message }}</p>
+    <div class="concert-message concert-alert"><div class="concert-message-contents icon-exclamation-triangle">{{ message }}</div></div>
+    <br/>
   {% endif %}
   Are you sure you want to delete the file: <strong>{{ removeDocRootFromPath(filePath) }}</strong>?
   <form action="{{ actionUrl }}" method="post" id="concertDelete">
     <input type="hidden" name="filePath" value="{{ filePath|url_encode }}" />
     <input type="hidden" name="concertAction" value="delete"/>
-    <button type="submit" name="deleteAction" value="confirmDelete" class="deleteAction buttonReset concert-button danger">Delete</button>&nbsp;
-    <button type="submit" name="deleteAction" value="cancelDelete" class="deleteAction buttonReset concert-button secondary">Cancel</button>
+    <button type="submit" name="deleteAction" value="confirmDelete" class="deleteAction red">Delete</button>&nbsp;
+    <button type="submit" name="deleteAction" value="cancelDelete" class="deleteAction darkgray">Cancel</button>
   </form>
 {% endspaceless %}

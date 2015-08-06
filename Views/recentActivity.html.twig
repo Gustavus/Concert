@@ -12,10 +12,10 @@
   {% endif %}
 
   {%- if columns == 2 -%}
-    <div class="grid_48 alpha omega">
-      <div class="grid_24 alpha">
+    <div id="recentActivity" class="grid-100 tgrid-100 mgrid-100 alpha omega">
+      <div class="grid-50 tgrid-100 mgrid-100 alpha">
   {%- else -%}
-    <div class="grid_36 alpha omega">
+    <div id="recentActivity" class="grid-100 tgrid-100 mgrid-100 alpha omega">
   {%- endif -%}
 
     {%- if globalActivity and published|length > 0 -%}
@@ -30,7 +30,7 @@
     {%- endif -%}
 
     {%- if columns == 2 -%}
-      <div class="grid_24 omega">
+      <div class="grid-50 tgrid-100 mgrid-100 omega">
     {%- endif -%}
 
     {%- if globalActivity and drafts|length > 0 -%}
@@ -55,7 +55,7 @@
 #}
 {% macro renderDrafts(drafts, globalActivity) %}
   {% import _self as self %}
-  <table class="fancy sortable" style="width: 100%; word-break:break-all;">
+  <table class="fancy sortable grid-100 tgrig-100 mgrid-100" style="word-break:break-all;">
     <legend>Drafts</legend>
     <thead>
       <tr>
@@ -90,7 +90,7 @@
 #}
 {% macro renderPublishedPages(published, globalActivity) %}
   {% import _self as self %}
-  <table class="fancy sortable" style="width: 100%; word-break:break-all;">
+  <table class="fancy sortable grid-100 tgrid-100 mgrid-100" style="word-break:break-all;">
     <legend>Published Pages</legend>
     <thead>
       <tr>
