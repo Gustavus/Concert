@@ -589,8 +589,9 @@ class SharedControllerTest extends TestBase
 
     $this->controller->addMoshMenu();
 
-    global $templatePreferences;
-    $this->assertNotEmpty($templatePreferences['globalNotice']);
+    $content = '';
+    $utilBarExtras = Filters::apply('utilBarExtras', $content);
+    $this->assertContains('concert', $utilBarExtras);
 
     $this->unauthenticate();
     $this->destructDB();
