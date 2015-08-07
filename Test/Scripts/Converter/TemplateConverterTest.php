@@ -102,7 +102,7 @@ use Gustavus\SocialMedia\SocialMedia,
   /**
    * @test
    */
-  public function isPageTemplatedWithBOM()
+  public function isPageTemplatedWithBOMAndGlobalTemplatePreferences()
   {
     $this->setUpConverter('templateWithBOM.php');
     $this->assertTrue($this->templateConverter->isPageTemplated());
