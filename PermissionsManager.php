@@ -596,6 +596,9 @@ class PermissionsManager
    */
   private static function findSitesContainingFile($filePath, $includeSitePerms = false)
   {
+    if (empty($filePath)) {
+      return null;
+    }
     $filePathArray = explode('/', str_replace('//', '/', $filePath));
 
     $searchKey = (empty($filePathArray[0])) ? 1 : 0;

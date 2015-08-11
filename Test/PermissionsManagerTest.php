@@ -2203,6 +2203,23 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function findSitesContainingFileNoFile()
+  {
+    $file = false;
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/concert/test/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/', Config::SITE_ADMIN_ACCESS_LEVEL]);
+
+    $result = $this->call('PermissionsManager', 'findSitesContainingFile', [Utility::removeDocRootFromPath($file)]);
+
+    $this->assertNull($result);
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function sortSitesByDepth()
   {
     $file = '/cis/www/billy/concert/test/index.php';
