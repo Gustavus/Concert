@@ -1005,20 +1005,16 @@ class PermissionsManager
 
           $parentExcludedFiles = explode(',', $parentSite['excludedFiles']);
           foreach ($parentExcludedFiles as $parentExcludedFile) {
-            // if (trim($parentSite['siteRoot'], '/') === trim($siteBase, '/')) {
-            //   //$perms['excludedFiles'][] = $parentExcludedFile;
-            // } else {
-              // we aren't looking at the same site.
-              $parentExcludedFile = trim($parentExcludedFile);
+            // we aren't looking at the same site.
+            $parentExcludedFile = trim($parentExcludedFile);
 
-              // we need to get the siteBase from the current parent site so we can see if this file intersects the current site
-              $siteBaseFromParentSite = ltrim(str_replace(trim($parentSite['siteRoot'], '/'), '', ltrim($siteBase, '/')), '/');
-              if (trim($parentSite['siteRoot'], '/') === trim($siteBase, '/') || strpos(ltrim($parentExcludedFile, '/'), $siteBaseFromParentSite) === 0) {
-                $parentExcludedFile = ltrim(str_replace($siteBaseFromParentSite, '', $parentExcludedFile), '/');
-                // it falls within the current site's siteBase. Add it.
-                $perms['excludedFiles'][] = $parentExcludedFile;
-              }
-            //}
+            // we need to get the siteBase from the current parent site so we can see if this file intersects the current site
+            $siteBaseFromParentSite = ltrim(str_replace(trim($parentSite['siteRoot'], '/'), '', ltrim($siteBase, '/')), '/');
+            if (trim($parentSite['siteRoot'], '/') === trim($siteBase, '/') || strpos(ltrim($parentExcludedFile, '/'), $siteBaseFromParentSite) === 0) {
+              $parentExcludedFile = ltrim(str_replace($siteBaseFromParentSite, '', $parentExcludedFile), '/');
+              // it falls within the current site's siteBase. Add it.
+              $perms['excludedFiles'][] = $parentExcludedFile;
+            }
           }
         }
       }
