@@ -328,7 +328,7 @@ class PermissionsManagerTest extends TestBase
   public function saveAndGetUserPermissionsExcludedSiteFilesWithInheritedSitePerms()
   {
     $this->constructDB(['Sites', 'Permissions']);
-    $this->assertNotFalse($this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', ['concourseApp/', 'private/*']]));
+    $this->assertNotFalse($this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/billy', ['concourseApp/', 'arst/private/*']]));
     $this->assertTrue($this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/billy/arst/', 'test', [], []]));
 
     $permissions = $this->call('PermissionsManager', 'getAllPermissionsForUser', ['bvisto']);
@@ -336,7 +336,7 @@ class PermissionsManagerTest extends TestBase
     $expected = [
       '/billy/arst/' => [
         'includedFiles'  => null,
-        'excludedFiles'  => ['concourseApp/', 'private/*'],
+        'excludedFiles'  => ['private/*'],
         'expirationDate' => null,
         'accessLevel'    => ['test'],
       ],
@@ -392,7 +392,7 @@ class PermissionsManagerTest extends TestBase
     $expected = [
       '/billy' => [
         'includedFiles'  => null,
-        'excludedFiles'  => ['/arst/index.php'],
+        'excludedFiles'  => ['arst/index.php'],
         'expirationDate' => null,
         'accessLevel'    => ['testing'],
       ],
@@ -815,9 +815,26 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse']);
     $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
 
-    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/', true]);
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/']);
 
-    $this->assertSame(['excludedFiles' => ['concourse']], $actual);
+    $this->assertSame(['excludedFiles' => []], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSiteMultiplesNoIntersections()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/', 'gtsOnly']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse,private']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/']);
+
+    $this->assertSame(['excludedFiles' => []], $actual);
 
     $this->destructDB();
   }
@@ -832,9 +849,64 @@ class PermissionsManagerTest extends TestBase
     $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse,private']);
     $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/']);
 
-    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/', true]);
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/']);
+    $actual['excludedFiles'] = array_values($actual['excludedFiles']);
 
-    $this->assertSame(['excludedFiles' => ['gtsOnly', 'concourse', 'private']], $actual);
+    $this->assertSame(['excludedFiles' => ['concourse', 'private']], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSiteMultiplesWithOwnExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/', 'gtsOnly']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/', 'concourse,private']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/', 'index.php']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/']);
+    $actual['excludedFiles'] = array_values($actual['excludedFiles']);
+
+    $this->assertSame(['excludedFiles' => ['concourse', 'private', 'arst/index.php']], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSiteOnlySite()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/arst/private/arst/', 'index.php']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/arst/private/arst/']);
+
+    $this->assertSame(['excludedFiles' => ['index.php']], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function getInheritedPermissionsForSiteIndex()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/athletics/', 'index.php, athletictraining/this.php']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/athletics/athletictraining/', '/testing/arst.php']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/athletics/athletictraining/testing/']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/athletics/athletictraining']);
+
+    $this->assertSame(['excludedFiles' => ['this.php', 'testing/arst.php']], $actual);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/athletics/athletictraining/testing/']);
+
+    $this->assertSame(['excludedFiles' => ['arst.php']], $actual);
 
     $this->destructDB();
   }
@@ -999,6 +1071,34 @@ class PermissionsManagerTest extends TestBase
     ];
 
     $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/private/arst/public.php', '/arst/', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessExcludedFileWithoutSlashes()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['public.php'],
+      'includedFiles' => null,
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/public.php', 'arst', $sitePerms]));
+  }
+
+  /**
+   * @test
+   */
+  public function checkIncludedAndExcludedFilesForAccessExcludedFolderWithoutSlashes()
+  {
+    $sitePerms = [
+      'accessLevel' => 'test',
+      'excludedFiles' => ['public'],
+      'includedFiles' => null,
+    ];
+
+    $this->assertFalse($this->call('PermissionsManager', 'checkIncludedAndExcludedFilesForAccess', ['/arst/public/index.php', 'arst', $sitePerms]));
   }
 
   /**
