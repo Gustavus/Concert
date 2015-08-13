@@ -19,8 +19,8 @@
         {% if not isSuperUser and site['siteRoot'] != '/' or isSuperUser %}
           <tr>
             <td>{{ site['siteRoot'] }}</td>
-            <td>{{ site['excludedFiles'] }}</td>
-            <td><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
+            <td style="word-break:break-all;">{{ site['excludedFiles'] }}</td>
+            <td style="width: 110px;"><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
           </tr>
         {% endif %}
       {% endfor %}

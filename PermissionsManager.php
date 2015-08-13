@@ -596,6 +596,9 @@ class PermissionsManager
    */
   private static function findSitesContainingFile($filePath, $includeSitePerms = false)
   {
+    if (empty($filePath)) {
+      return null;
+    }
     $filePathArray = explode('/', str_replace('//', '/', $filePath));
 
     $searchKey = (empty($filePathArray[0])) ? 1 : 0;
@@ -997,9 +1000,21 @@ class PermissionsManager
       foreach ($parentSites as $parentSite) {
         if (!empty($parentSite['excludedFiles'])) {
           if (!isset($perms['excludedFiles'])) {
-            $perms['excludedFiles'] = explode(',', $parentSite['excludedFiles']);
-          } else {
-            $perms['excludedFiles'] = array_unique(array_merge($perms['excludedFiles'], explode(',', $parentSite['excludedFiles'])));
+            $perms['excludedFiles'] = [];
+          }
+
+          $parentExcludedFiles = explode(',', $parentSite['excludedFiles']);
+          foreach ($parentExcludedFiles as $parentExcludedFile) {
+            // we aren't looking at the same site.
+            $parentExcludedFile = trim($parentExcludedFile);
+
+            // we need to get the siteBase from the current parent site so we can see if this file intersects the current site
+            $siteBaseFromParentSite = ltrim(str_replace(trim($parentSite['siteRoot'], '/'), '', ltrim($siteBase, '/')), '/');
+            if (trim($parentSite['siteRoot'], '/') === trim($siteBase, '/') || strpos(ltrim($parentExcludedFile, '/'), $siteBaseFromParentSite) === 0) {
+              $parentExcludedFile = ltrim(str_replace($siteBaseFromParentSite, '', $parentExcludedFile), '/');
+              // it falls within the current site's siteBase. Add it.
+              $perms['excludedFiles'][] = $parentExcludedFile;
+            }
           }
         }
       }
@@ -1014,15 +1029,18 @@ class PermissionsManager
           $childExcludedBase = str_replace($siteBase, '', $childSite['siteRoot']);
           foreach ($childExcludedFiles as &$childExcludedFile) {
             // convert the paths to be from the current $siteBase and not from the child site.
-            $childExcludedFile = str_replace('//', '/', $childExcludedBase . DIRECTORY_SEPARATOR . $childExcludedFile);
+            $childExcludedFile = ltrim(preg_replace('`/+`', '/', $childExcludedBase . DIRECTORY_SEPARATOR . $childExcludedFile), '/');
           }
           if (!isset($perms['excludedFiles'])) {
             $perms['excludedFiles'] = $childExcludedFiles;
           } else {
-            $perms['excludedFiles'] = array_unique(array_merge($perms['excludedFiles'], $childExcludedFiles));
+            $perms['excludedFiles'] = array_merge($perms['excludedFiles'], $childExcludedFiles);
           }
         }
       }
+    }
+    if (isset($perms['excludedFiles'])) {
+      $perms['excludedFiles'] = array_unique($perms['excludedFiles']);
     }
 
     return empty($perms) ? null : $perms;
