@@ -800,7 +800,7 @@ class MenuController extends SharedController
       }
 
       // The 2 accounts for . and ..
-      if (count($files) > 2) {
+      if (count($files) >= 2) {
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
         if ($forSrcFile) {
           // we want our default templates on top
