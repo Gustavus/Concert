@@ -48,7 +48,6 @@
       </ul>
     </div>
     <div class="clear"></div>
-    <link rel="stylesheet" href="{{ renderResource(['dropdown-css'])}}" media="screen" title="no title" charset="utf-8">
     <script>
     {%- set dropdown = renderResource(['dropdown']) -%}
   require.config({
@@ -59,7 +58,6 @@
   require(['{{ dropdown }}'], function() {
    $(document).on('click.Concert.ShowMenu', '.concert-menu-activate-button', function (e) {
      e.preventDefault();
-     console.log('concert');
      var $concertMenu = $('.concert-menu');
      if ($concertMenu.hasClass('hidden')) {
        $(this).attr('title', '{{ hideMenuTitle }}');

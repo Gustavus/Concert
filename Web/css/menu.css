@@ -77,9 +77,6 @@
     background: #$(web-dark-gray);
     border: 1px #$(web-dark-gray) solid;
     border-top: none;
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
     min-width: 150px;
     z-index: 150;
   }
@@ -102,33 +99,6 @@
     text-decoration: none;
   }
 
-  & .messages-dropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: $(menu-height);
-    min-width: 350px;
-    background: $(concert-gray);
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
-    z-index: 150;
-    overflow: hidden;
-  }
-
-  & .concert-message {
-    border-radius: 0;
-    border-bottom: 1px solid #666;
-  }
-
-  & .concert-message:last-child {
-    border-bottom: none;
-  }
-
-  & .concert-message:before {
-    border-radius: 0;
-  }
-
   &.hidden {
     height: 0;
     min-height: 0;
@@ -139,41 +109,4 @@
     opacity: 0;
     overflow: hidden;
   }
-
-/*
-  @media screen and (max-width: 1175px) {
-    &.hidden {
-      margin-bottom: $(menu-height);
-    }
-  }
-
-  @media screen and (max-width: 700px) {
-    & {
-      height: auto;
-      transition: none;
-    }
-
-    & .menu-content, & .menu-content.right {
-      float: none;
-      height: auto;
-    }
-    & .menu-item {
-      display: block;
-    }
-    & .menu-item-label {
-      width: 100%;
-    }
-
-    & .menu-item-label, & .menu-item .menu-button {
-      display: block;
-      box-sizing: border-box;
-      margin-bottom: 0.5em;
-    }
-
-    & .menu-dropdown {
-      width: 100%;
-      font-size: 1.2em;
-    }
-  }*/
-
 }

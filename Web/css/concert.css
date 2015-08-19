@@ -1,7 +1,4 @@
 @define {
-  /*concert-white: #f8f8f8;
-  concert-gray: #3d3d3e;*/
-
   menu-height: 45px;
 
   button-primary: #$(brand-blue);
@@ -15,15 +12,10 @@
 
   button-danger: #$(brand-red);
   button-active-danger: l-adjust( #$(brand-red) -15 );
-
- /* message-color: #$(brand-blue);
-  message-error-color: #$(brand-red);
-  message-alert-color: #$(brand-orange);*/
 }
 
 @import "menu.css";
 @import "messages.css";
-/*@import "buttons.css";*/
 
 body.loading, body.loading * {
   cursor: progress !important;

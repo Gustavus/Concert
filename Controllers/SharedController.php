@@ -332,7 +332,7 @@ class SharedController extends ConcourseController
       return $content . $script;
     }, 11);
 
-    $cssResource = Resource::renderCSS(['dropdown-css', ['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]]);
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
     if (!self::isResourceAdded($cssResource, 'css')) {
       Filters::add('head', function($content) use ($cssResource) {
           $css = sprintf(
