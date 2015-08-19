@@ -20,7 +20,7 @@
           <tr>
             <td>{{ site['siteRoot'] }}</td>
             <td style="word-break:break-all;">{{ site['excludedFiles'] }}</td>
-            <td style="width: 110px;"><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
+            <td style="width: 120px;"><a href="{{ buildUrl('editSite', {'site': site['id']}) }}" class="button">Edit</a><a href="{{ buildUrl('deleteSite', {'site': site['id']}) }}" class="button">Delete</a></td>
           </tr>
         {% endif %}
       {% endfor %}
