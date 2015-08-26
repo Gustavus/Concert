@@ -418,7 +418,7 @@ Gustavus.Concert = {
     var removeFootableClasses = function($this, isTableElement) {
       if (isTableElement && $this.hasClass('footable')) {
         // remove old classes and classes that footable adds
-        $this.removeClass('phone tablet desktop breakpoint fancy sortable');
+        $this.removeClass('phone tablet default breakpoint fancy sortable');
       }
       var className = $this.attr('class');
       if (className) {
