@@ -178,10 +178,8 @@ Gustavus.Concert = {
 
     // media
     image_advtab: false,
-    image_class_list: [
-      {title: 'None', value: ''},
-      {title: 'Fancy', value: 'fancy'}
-    ],
+    // disable our class list since this overrides any other classes applied to images
+    image_class_list: false,
     filemanager_title: "Concert File Manager" ,
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
@@ -189,11 +187,8 @@ Gustavus.Concert = {
     // @todo. What to do here. Default this to true? I don't think so. it might be something we can add a setting for later.
     //visualblocks_default_state: true,
     // table configuration
-    table_class_list: [
-      {title: 'None', value: ''},
-      {title: 'Fancy', value: 'fancy'},
-      {title: 'Sortable', value: 'sortable'},
-    ],
+    // disable our class list since this overrides any other classes applied to tables
+    table_class_list: false,
     table_advtab: false,
     table_cell_advtab: false,
     table_row_advtab: false,
@@ -446,6 +441,7 @@ Gustavus.Concert = {
         $trimmed.removeAttr('data-hide data-footable-trimmed').css('display', '');
         $table.find('td[style="display: none;"]').css('display', '');
       }
+      // remove anything else footable adds. (thead and possibly more)
       $table.find('[data-footable-added]').remove();
     });
     cleaned = $content.html();
@@ -513,7 +509,7 @@ Gustavus.Concert = {
           }
           if (currentHeight) {
             if (!height) {
-              width = currentHeight;
+              height = currentHeight;
             }
             url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
           }
