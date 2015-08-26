@@ -19,6 +19,12 @@
     color: #$(web-dark-gray);
   }
 
+  & a.button {
+    padding: 10px;
+    position: relative;
+    top: -1px;
+  }
+
   & .menu-content {
     float: left;
     height: $(menu-height);

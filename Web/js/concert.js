@@ -77,8 +77,8 @@ Gustavus.Concert = {
       {title: 'Message', selector: 'p,div', classes: 'message'},
       {title: 'Highlight', selector: 'p,div', classes: 'highlight'},
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
-      {title: 'Fancy', selector: 'table,img', classes: 'fancy'},
-      {title: 'Sortable', selector: 'table', classes: 'sortable'},
+      {title: 'Remove Sorting', selector: 'table', classes: 'nosort'},
+      {title: 'Fancy', selector: 'img', classes: 'fancy'},
       {title: 'Left', selector: 'img', classes: 'left'},
       {title: 'Right', selector: 'img', classes: 'right'},
     ]}
@@ -410,10 +410,45 @@ Gustavus.Concert = {
     cleaned = cleaned.replace(/ ?mce-item[^>" ]*/g, '');
     // get rid of any empty classes we may have.
     cleaned = cleaned.replace(/class=""/g, '');
-    // remove things that fancy or striped adds to table rows
-    cleaned = cleaned.replace(/<tr class="odd">/g, '<tr>');
-    // remove stuff that tablesorter adds to sortable tables.
-    cleaned = cleaned.replace(/<th  style="-webkit-user-select: none;" tabindex="0" scope="col">/g, '<th>');
+
+    // Clean up tables
+    var $content = $('<div>' + cleaned + '</div>');
+    var $tables = $content.find('table');
+
+    var removeFootableClasses = function($this, isTableElement) {
+      if (isTableElement && $this.hasClass('footable')) {
+        // remove old classes and classes that footable adds
+        $this.removeClass('phone tablet desktop breakpoint fancy sortable');
+      }
+      var className = $this.attr('class');
+      if (className) {
+        className = className.replace(/[\s]?footable[\S]*/g, '').replace(/^\s/, '').replace(/\s\s+/g, ' ');
+        if (className) {
+          $this.attr('class', className);
+        } else {
+          $this.removeAttr('class');
+        }
+      }
+    };
+
+    $tables.each(function() {
+      var $table = $(this);
+      removeFootableClasses($table, true);
+      $table.find('*').each(function() {
+        // remove footable stuff from all elements within the table
+        removeFootableClasses($(this));
+      });
+      // now that our classes have been removed, there will probably be a bunch of empty spans
+      $table.find('span:empty').remove();
+      var $trimmed = $table.find('[data-hide][data-footable-trimmed]');
+      if ($trimmed) {
+        // remove stuff added in when trimming tables
+        $trimmed.removeAttr('data-hide data-footable-trimmed').css('display', '');
+        $table.find('td[style="display: none;"]').css('display', '');
+      }
+      $table.find('[data-footable-added]').remove();
+    });
+    cleaned = $content.html();
 
     if (isSiteNav) {
       // clean up site nav stuff.
@@ -429,7 +464,7 @@ Gustavus.Concert = {
           return;
         }
         $span.parents('a').html($span.html());
-      })
+      });
       cleaned = $content.html();
     }
 
@@ -499,7 +534,7 @@ Gustavus.Concert = {
         url.pathname = newPathname;
         $this.attr('src', Gustavus.Utility.URL.buildURL(url));
       }
-    })
+    });
 
     return $content.html();
   },
@@ -530,7 +565,7 @@ Gustavus.Concert = {
     });
 
     var edits = {};
-    for (i in tinymce.editors) {
+    for (var i in tinymce.editors) {
       if (tinymce.editors[i].isDirty()) {
         var $element = $(tinymce.editors[i].getElement());
         var isSiteNav = (tinymce.editors[i].settings.selector === 'div.editable.siteNav');
@@ -720,16 +755,8 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   destroyTemplatePluginsPostApply: function(currObj) {
-    // make sure table sorter is destroyed from tables otherwise they will be submitted with extra classes.
-    $('table.sortable', currObj).trigger('destroy');
-    // remove any tablesorter-header-inner nodes that tablesorter.destroy doesn't remove within tinyMCE for some reason.
-    $('table.sortable .tablesorter-header-inner', currObj).each(function() {
-        // replace this node with the text within.
-        this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, this.innerHTML);
-    });
-
-    // now remove html that gets added in when toggling links
-    var $toggleLinks = $('div.editable a.toggleLink', currObj)
+    // Remove html that gets added in when toggling links
+    var $toggleLinks = $('div.editable a.toggleLink', currObj);
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.removeClass('toggledOpen');
@@ -760,7 +787,7 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   toggleLinksDisplayed: function(currObj) {
-    var $toggleLinks = $('a.toggleLink', currObj)
+    var $toggleLinks = $('a.toggleLink', currObj);
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.addClass('toggledOpen');
