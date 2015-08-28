@@ -1,6 +1,6 @@
 {% import _self as self %}
 {% spaceless %}
-{% set reviewButton %}<a id="concertPublish" class="concert concert-button blue">{% if userCanPublishFile %}Publish{% else %}Submit for Review{% endif %}</a>{% endset %}
+{% set reviewButton %}<a id="concertPublish" class="button">{% if userCanPublishFile %}Publish{% else %}Submit for Review{% endif %}</a>{% endset %}
 
 {% set reviewButtonText %}
   {%- if userCanPublishFile %}Publish{% else %}Submit for Review{% endif -%}
@@ -16,27 +16,27 @@
   'savePrivateDraft': {
     'id': 'concertSavePrivateDraft',
     'text': 'Save Private Draft',
-    'classes': 'secondary',
+    'classes': 'darkgray',
   },
   'savePublicDraft': {
     'id': 'concertSavePublicDraft',
     'text': 'Save Draft',
-    'classes': 'secondary',
+    'classes': 'darkgray',
   },
   'discardDraft': {
     'id': 'concertDiscardDraft',
     'text': 'Discard Draft',
-    'classes': 'danger',
+    'classes': 'red',
   },
   'saveDraft': {
     'id': 'concertSavePublicDraft',
     'text': 'Save Draft',
-    'classes': 'primary',
+    'classes': '',
   },
   'stopEditing': {
     'id': 'concertStopEditing',
     'text': 'Stop Editing',
-    'classes': 'danger',
+    'classes': 'red',
   },
   'showEditableAreas': {
     'id': 'toggleShowingEditableContent',
@@ -64,6 +64,7 @@
           .hide()
           .fadeIn(function () {
             $(this).css('display', '');
+            Extend.apply('utilBar');
           });
       });
     });
@@ -78,7 +79,7 @@
 #}
 {% macro renderButton(button) -%}
   <li class="menu-item">
-    <a {% if button.url %}href="{{ button.url }}"{% endif %} id="{{ button.id }}" class="concert-button{% if button.classes %} {{ button.classes }}{% endif %}"{% if button.extraHTML %}{{ button.extraHTML|raw }}{% endif %}>{{ button.text }}</a>
+    <a {% if button.url %}href="{{ button.url }}"{% endif %} id="{{ button.id }}" class="button{% if button.classes %} {{ button.classes }}{% endif %}"{% if button.extraHTML %}{{ button.extraHTML|raw }}{% endif %}>{{ button.text }}</a>
   </li>
 {%- endmacro renderButton %}
 
@@ -111,14 +112,14 @@
   {%- if privateDraftDialogHTML -%}
     {# We need to insert html for the confirmation dialog for converting a shared draft to private #}
     <div id="confirmPrivateDraft" title="Save Private Draft" class="nodisplay">
-      <p class="concert-message concert-alert">This draft is shared. Converting it to a private draft will remove any sharing functionality.</p>
+      <div class="concert-message concert-alert"><div class="concert-message-contents icon-exclamation-triangle">This draft is shared. Converting it to a private draft will remove any sharing functionality.</div></div>
     </div>
   {%- endif -%}
 
   {%- if discardDraftDialogHTML -%}
-    {# We need to insert html for the confirmation dialog for converting a shared draft to private #}
+    {# We need to insert html for the confirmation dialog for discarding a shared draft #}
     <div id="confirmDiscardDraft" title="Discard Draft" class="nodisplay">
-      <p class="concert-message concert-alert">This draft is shared. Discarding it may also discard any changes made by collaborators.</p>
+      <div class="concert-message concert-alert"><div class="concert-message-contents icon-exclamation-triangle">This draft is shared. Discarding it may also discard any changes made by collaborators.</div></div>
     </div>
   {%- endif -%}
 {%- endmacro renderButtons %}

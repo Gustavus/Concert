@@ -104,6 +104,10 @@ Services at web@gustavus.edu.</p>
 <h2>Final Report</h2>
 <p>  Submission of a final report addressing the outcomes of the activities undertaken will be due 30 September 2016, to Provost Mark Braun (send via email to <a href="mailto:snowell@gustavus.edu">snowell@gustavus.edu</a>). If applicable, please provide the course syllabus as an attachment to the report. Applicants failing to submit final reports will not be considered for additional internally-funded grants.<br />
 </p>
+<?php
+  global $templatePreferences;
+  $templatePreferences['test'] = true;
+?>
 <!-- InstanceEndEditable -->
 
 <div id="focusBox"><!-- InstanceBeginNonEditable name="FocusBox" --> <!-- InstanceEndNonEditable -->

@@ -19,6 +19,7 @@ use Gustavus\Concourse\Controller as ConcourseController,
   Gustavus\Utility\Number,
   Gustavus\Utility\Set,
   Gustavus\Utility\PageUtil,
+  Gustavus\Template\Template,
   DateTime,
   Twig_SimpleFunction;
 
@@ -331,7 +332,7 @@ class SharedController extends ConcourseController
       return $content . $script;
     }, 11);
 
-    $cssResource = Resource::renderCSS(['dropdown-css', ['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]]);
+    $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
     if (!self::isResourceAdded($cssResource, 'css')) {
       Filters::add('head', function($content) use ($cssResource) {
           $css = sprintf(
@@ -425,9 +426,10 @@ class SharedController extends ConcourseController
   protected function addMoshMenu(array $menuParams = [])
   {
     if (!self::$moshMenuAdded) {
-      // add messages to the menu
-      Filters::add('scripts', function($content) {
-        return $content . $this->renderView('messages.js.twig', ['messages' => $this->getConcertMessages()]);
+      // add messages to the template's messages
+      Filters::add('preRender', function($content) {
+        self::addMessagesToTemplate();
+        return $content;
       });
 
       $menuParams['forReferer'] = false;
@@ -445,7 +447,12 @@ class SharedController extends ConcourseController
 
           self::markResourcesAdded([$cssResource], 'css');
         }
-        self::addTemplatePref(['globalNotice' => ['vanilla' => ['notice' => $result, 'dismissable' => false]]]);
+        // add Concert's menu into the template's utility bar
+        Filters::add('utilBarExtras', function($content) use($result) {
+          return $content .= $result;
+        });
+        // add the concert button into the template's user menu
+        self::addTemplatePref(['userButtons' => [['text' => 'Concert', 'classes' => 'icon-concert concert-menu-activate-button']]]);
       }
       self::$moshMenuAdded = true;
     }
@@ -477,11 +484,27 @@ class SharedController extends ConcourseController
   }
 
   /**
+   * Adds messages to the template's user messages
+   *   Note: We aren't directly adding things to the template, because for some forwarder requests, we clear messages and start over.
+   * @return  void
+   */
+  private static function addMessagesToTemplate()
+  {
+    $messages = self::getConcertMessages();
+    if (!empty($messages)) {
+      // add all of our other messages to the template
+      foreach ($messages as $message) {
+        Template::addUserMessage($message['message'], $message['type'], 50, true);
+      }
+    }
+  }
+
+  /**
    * Gets the messages we have accumulated this request
    *
    * @return string
    */
-  public function getConcertMessages()
+  public static function getConcertMessages()
   {
     $sessionMessage = self::getConcertSessionMessage();
     if (!empty($sessionMessage)) {
@@ -513,6 +536,7 @@ class SharedController extends ConcourseController
       // default type to message if it is an unsupported type
       $type = 'message';
     }
+
     $message = [
       'type'    => $type,
       'message' => $message,
@@ -667,7 +691,7 @@ class SharedController extends ConcourseController
    */
   protected function buildPublishSuccessMessage($file)
   {
-    return sprintf('Contratulations! You have successfully published %s.<br /><a href="%s" class="concert-button primary">View Recent Activity</a>', Utility::removeDocRootFromPath($file), $this->buildUrl('recentActivity'));
+    return sprintf('Contratulations! You have successfully published %s.<br /><a href="%s" class="button">View Recent Activity</a>', Utility::removeDocRootFromPath($file), $this->buildUrl('recentActivity'));
   }
 
   /**
@@ -685,7 +709,7 @@ class SharedController extends ConcourseController
       $messageAdditions = '';
     }
     return sprintf(
-        'Contratulations! You have successfully saved a draft for %s. %s<br /><a href="%s" class="concert-button primary">View Recent Activity</a>',
+        'Contratulations! You have successfully saved a draft for %s. %s<br /><a href="%s" class="button">View Recent Activity</a>',
         Utility::removeDocRootFromPath($draft['destFilepath']),
         $messageAdditions,
         $this->buildUrl('recentActivity')

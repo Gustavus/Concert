@@ -190,7 +190,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
     $this->assertSame(['action' => 'none'], $result);
-    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, $this->controller->getConcertMessages());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, SiteNavController::getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -386,7 +386,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
     $this->assertSame(['action' => 'none'], $result);
-    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, $this->controller->getConcertMessages());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, SiteNavController::getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -470,7 +470,7 @@ class SiteNavControllerTest extends TestBase
     $actual = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 
     $this->assertFalse($actual);
-    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessages());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, SiteNavController::getConcertMessages());
     $this->destructDB();
   }
 
@@ -562,7 +562,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertFalse($this->controller->handleSiteNavActions(['filePath' => $filePath]));
 
-    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, $this->controller->getConcertMessages());
+    $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_VIEW_REVISIONS, SiteNavController::getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();

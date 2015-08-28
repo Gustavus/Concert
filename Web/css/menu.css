@@ -1,16 +1,12 @@
-@in .concert-menu {
+@in #util-bar-extras .concert-menu {
 
   & {
-    background-color: $(concert-white);
-    height: $(menu-height);
-    color: $(concert-gray);
+    min-height: $(menu-height);
+    color: #$(web-dark-gray);
     position: relative;
     z-index: 145;
     text-align: left;
     margin-bottom: 0;
-  }
-  &:not(.floating) {
-    transition: height 0.25s ease-in-out, margin 0.25s ease-in-out;
   }
 
   &:after {
@@ -19,17 +15,20 @@
     clear: both;
   }
 
-  & a:not(.concert-button), & a:not(.concert-button):hover {
-    color: $(concert-gray);
+  & a:not(.button), & a:not(.button):hover {
+    color: #$(web-dark-gray);
+  }
+
+  & a.button {
+    padding: 10px;
+    position: relative;
+    top: -1px;
   }
 
   & .menu-content {
     float: left;
     height: $(menu-height);
     opacity: 1;
-  }
-  & .menu-content:not(.floating) {
-    transition: height 0.25s ease-in-out, opacity 0.25s ease-in-out;
   }
 
   & .menu-content.right {
@@ -46,7 +45,7 @@
     outline: none;
   }
 
-  & .menu-item a.menu-item-label, & .menu-activate-button {
+  & .menu-item a.menu-item-label, & .concert-menu-activate-button {
       line-height: $(menu-height);
       padding: 0 10px;
       display: inline-block;
@@ -56,18 +55,7 @@
       outline: none;
   }
 
-  & .message-count {
-    background-color: $(concert-gray);
-    color: $(concert-white);
-    border-radius: 1em;
-    padding: 0 0.5em;
-  }
-
-  & .menu-activate-button {
-    transition: color 0.25s ease-in-out;
-  }
-
-  & .menu-activate-button:before {
+  & .concert-menu-activate-button:before {
     display: inline-block;
     content: '';
     width: 25px;
@@ -80,14 +68,9 @@
   }
 
   & .menu-item:any(:hover, .open) a.menu-item-label{
-    background-color: $(concert-gray);
-    color: $(concert-white);
+    background-color: #$(web-dark-gray);
+    color: #$(web-background);
     text-decoration: none;
-  }
-
-  & .menu-item:any(:hover, .open) .message-count {
-    color: $(concert-gray);
-    background-color: $(concert-white);
   }
 
   & .menu-dropdown {
@@ -97,112 +80,39 @@
     top: $(menu-height);
     margin: 0;
     list-style: none;
-    background: $(concert-gray);
-    border: 1px $(concert-gray) solid;
+    background: #$(web-dark-gray);
+    border: 1px #$(web-dark-gray) solid;
     border-top: none;
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
     min-width: 150px;
     z-index: 150;
   }
 
-  & .menu-item.open :any(.menu-dropdown, .messages-dropdown) {
+  & .menu-item.open .menu-dropdown {
     display: block;
   }
 
-  & .menu-dropdown-item a {
+  & .menu-dropdown-item :any(a, a:visited) {
     line-height: 2em;
     padding: 0 1em;
     display: block;
     outline: none;
-    color: $(concert-white);
+    color: #$(web-background);
   }
 
   & .menu-dropdown-item a:any(:hover, :focus) {
-    background-color: $(concert-white);
-    color: $(concert-gray);
+    background-color: #$(web-light-gray);
+    color: #$(web-black);
     text-decoration: none;
-  }
-
-  & .messages-dropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: $(menu-height);
-    min-width: 350px;
-    background: $(concert-gray);
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
-    z-index: 150;
-    overflow: hidden;
-  }
-
-  & .concert-message {
-    border-radius: 0;
-    border-bottom: 1px solid #666;
-  }
-
-  & .concert-message:last-child {
-    border-bottom: none;
-  }
-
-  & .concert-message:before {
-    border-radius: 0;
   }
 
   &.hidden {
     height: 0;
+    min-height: 0;
   }
 
-  &.hidden .menu-content:not(.permanent) {
+  &.hidden .menu-content {
     height: 0;
     opacity: 0;
     overflow: hidden;
   }
-
-  &.hidden .menu-activate-button, &.hidden .menu-activate-button:hover {
-    color: white;
-  }
-
-  &.hidden .menu-activate-button:before {
-    background-image: url(/gimli/w100/concert/icons/concert-logo-light.png);
-  }
-
-  @media screen and (max-width: 1175px) {
-    &.hidden {
-      margin-bottom: $(menu-height);
-    }
-  }
-
-  @media screen and (max-width: 700px) {
-    & {
-      height: auto;
-      transition: none;
-    }
-
-    & .menu-content, & .menu-content.right {
-      float: none;
-      height: auto;
-    }
-    & .menu-item {
-      display: block;
-    }
-    & .menu-item-label {
-      width: 100%;
-    }
-
-    & .menu-item-label, & .menu-item .menu-button {
-      display: block;
-      box-sizing: border-box;
-      margin-bottom: 0.5em;
-    }
-
-    & .menu-dropdown, & .messages-dropdown {
-      width: 100%;
-      font-size: 1.2em;
-    }
-  }
-
 }

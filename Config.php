@@ -63,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 15;
+  const JS_VERSION = 16;
 
   /**
    * Autocomplete JS version
@@ -83,7 +83,7 @@ class Config
   /**
    * CSS version
    */
-  const CSS_VERSION = 2;
+  const CSS_VERSION = 3;
 
   /**
    * HTTPD user (User running apache)

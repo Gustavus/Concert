@@ -268,7 +268,7 @@ class DraftControllerTest extends TestBase
     $this->setUpController();
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draftName' => basename($draftName)]));
-    $this->assertMessageInMessages('will live at', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages('will live at', DraftController::getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -401,7 +401,7 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName), 'filePath' => $filePath]);
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
-    $this->assertMessageInMessages('users can see it by going to', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages('users can see it by going to', DraftController::getConcertMessages());
 
     $this->unauthenticate();
     $this->destructDB();
@@ -1658,8 +1658,8 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $this->assertMessageInMessages('confirmPublish=true', $this->controller->getConcertMessages());
-    $this->assertMessageInMessages('confirmReject=true', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages('confirmPublish=true', DraftController::getConcertMessages());
+    $this->assertMessageInMessages('confirmReject=true', DraftController::getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -1756,7 +1756,7 @@ class DraftControllerTest extends TestBase
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
 
-    $this->assertMessageInMessages('couldn\'t acquire a lock', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages('couldn\'t acquire a lock', DraftController::getConcertMessages());
     $this->unauthenticate();
     $this->destructDB();
   }
