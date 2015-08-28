@@ -110,7 +110,7 @@ class TemplateConverter
     if (strpos($firstPHPBlock, '$templatePreferences') !== false && strpos($firstPHPBlock, 'template/request.class.php') !== false) {
       // we have a templated page.
       // now we need to make sure it isn't using deprecated template functionality
-      if (preg_match('`^.*?global.*\$template.*?$`m', $this->pageContent)) {
+      if (preg_match('`^.*?global.*\$template\W`m', $this->pageContent)) {
         // looks like it is including page templates.
         return [
           'error' => 'deprecation',

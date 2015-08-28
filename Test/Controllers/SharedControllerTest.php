@@ -589,8 +589,9 @@ class SharedControllerTest extends TestBase
 
     $this->controller->addMoshMenu();
 
-    global $templatePreferences;
-    $this->assertNotEmpty($templatePreferences['globalNotice']);
+    $content = '';
+    $utilBarExtras = Filters::apply('utilBarExtras', $content);
+    $this->assertContains('concert', $utilBarExtras);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -604,7 +605,7 @@ class SharedControllerTest extends TestBase
     $this->setUpController();
 
     $this->controller->setConcertMessage('arst');
-    $this->assertMessageInMessages('arst', $this->controller->getConcertMessages());
+    $this->assertMessageInMessages('arst', SharedController::getConcertMessages());
   }
 
   /**
@@ -699,7 +700,7 @@ class SharedControllerTest extends TestBase
 
     $this->controller->addOutDatedDraftMessageIfNeeded($draft);
 
-    $result = $this->controller->getConcertMessages();
+    $result = SharedController::getConcertMessages();
 
     $this->assertEmpty($result);
     $this->destructDB();
@@ -730,7 +731,7 @@ class SharedControllerTest extends TestBase
 
     $this->controller->addOutDatedDraftMessageIfNeeded($draft);
 
-    $result = $this->controller->getConcertMessages();
+    $result = SharedController::getConcertMessages();
 
     $this->assertNotEmpty($result);
     $this->assertMessageInMessages(Config::OUTDATED_DRAFT_MESSAGE, $result);

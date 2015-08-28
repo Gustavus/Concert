@@ -14,6 +14,20 @@ else
   path=$1
 fi
 
+if [ -z "$2" ]; then
+  #no backup flag specified default to backing up
+  backup='true'
+else
+  backup=$2
+  if [ "$backup" == 'false' ]; then
+    echo -n "Are you sure you want to proceed without making a backup? [y] "
+    read backupConfirm
+    if [ "$backupConfirm" != 'y' ] && [ "$backupConfirm" != 'yes' ] && [ -n "$backupConfirm" ]; then
+      backup='true'
+    fi
+  fi
+fi
+
 # No path was specified, so we fall back to the current directory
 if [ -z "$path" ]; then
   path=$pwd
@@ -32,14 +46,15 @@ fi
 logFile="${parentDir}/${dirName}Conversion.log"
 echo "Converting directory: ${path}"
 echo "The log file will live at ${logFile}"
-echo -e "Backing up the directory" > $logFile
-pushd $path > /dev/null
-# only output errors to log file. Everything else will go to /dev/null
-tar -zcvf $archive . 1> /dev/null 2>> $logFile
-popd > /dev/null
+if [ "$backup" == 'true' ]; then
+  echo -e "Backing up the directory" > $logFile
+  pushd $path > /dev/null
+  # only output errors to log file. Everything else will go to /dev/null
+  tar -zcvf $archive . 1> /dev/null 2>> $logFile
+  popd > /dev/null
 
-
-echo Directory contents backed up to $archive >> $logFile
+  echo Directory contents backed up to $archive >> $logFile
+fi
 
 blackWithRedBackground='\e[0;30;41m'
 blackWithGreenBackground='\e[0;30;42m'
@@ -52,7 +67,7 @@ echo -e "\n${whiteWithBlueBackground}Converting pages${nc}\n" >> $logFile
 find $path -type f -name \*.php | grep -v 'bkup' 2>&- |
   while read file
     do
-      echo -n "."
+      #echo -n "."
       conversion=`/usr/bin/php --php-ini=/etc/php.ini /cis/lib/Gustavus/Concert/Scripts/Converter/runTemplateConverter.php "$file" false`
 
       if [ "$conversion" == 'true' ]; then

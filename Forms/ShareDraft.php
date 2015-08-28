@@ -34,7 +34,7 @@ class ShareDraft
       'type'            => 'form',
       'action'          => $actionUrl,
       'method'          => 'post',
-      'container-class' => 'grid_20 alpha omega',
+      'container-class' => 'grid-100 alpha omega',
       'children'        => self::buildChildren($draft),
     ];
 
@@ -59,7 +59,7 @@ class ShareDraft
       'title'           => '&nbsp;',
       'subtitle'        => '&nbsp;',
       'value'           => 'Add',
-      'container-class' => 'grid_2',
+      'container-class' => 'grid-15 tgrid-15 mgrid-50',
       'element-class'   => 'positive',
     ];
     $deleteButton = [
@@ -68,7 +68,7 @@ class ShareDraft
       'title'           => '&nbsp;',
       'subtitle'        => '&nbsp;',
       'value'           => 'Del',
-      'container-class' => 'omega grid_2',
+      'container-class' => 'grid-15 tgrid-15 mgrid-50',
       'element-class'   => 'negative',
     ];
 
@@ -77,7 +77,7 @@ class ShareDraft
       $return[] = [
         'name'            => 'person',
         'type'            => 'section',
-        'container-class' => 'grid_16 prefix_1 suffix_1 alpha omega',
+        'container-class' => 'grid-90 prefix-5 suffix-5 tgrid-90 tprefix-5 tsuffix-5  alpha omega',
         'duplicatable'    => true,
         'children'        => [
           [
@@ -85,7 +85,7 @@ class ShareDraft
             'type'               => 'text',
             'title'              => 'User Name',
             'subtitle'           => 'First part of Gustavus E-mail',
-            'container-class'    => 'grid_11',
+            'container-class'    => 'grid-70 tgrid-70',
             'element-class'      => 'autocompleteUser',
             'element-attributes' => [
               'data-autocompletepath' => $autocompletePath,
@@ -100,7 +100,7 @@ class ShareDraft
         $return[] = [
           'name'            => 'person',
           'type'            => 'section',
-          'container-class' => 'grid_16 prefix_1 suffix_1 alpha omega',
+          'container-class' => 'grid-90 prefix-5 suffix-5 tgrid-90 tprefix-5 tsuffix-5  alpha omega',
           'duplicatable'    => true,
           'children'        => [
             [
@@ -109,7 +109,7 @@ class ShareDraft
               'type'               => 'text',
               'title'              => 'User Name',
               'subtitle'           => 'First part of Gustavus E-mail',
-              'container-class'    => 'grid_11',
+              'container-class'    => 'grid-70 tgrid-70',
               'element-class'      => 'autocompleteUser',
               'element-attributes' => [
                 'data-autocompletepath' => $autocompletePath,
@@ -126,7 +126,7 @@ class ShareDraft
       'type'            => 'submit',
       'value'           => 'Submit',
       'name'            => 'submit',
-      'container-class' => 'alpha grid_4',
+      'container-class' => 'alpha grid-20 tgrid-20',
       'element-class'   => 'concertSubmitAddUsers'
     ];
 
@@ -135,7 +135,7 @@ class ShareDraft
       'name'            => 'adduserssection',
       'type'            => 'section',
       'title'           => 'Add collaborators to your draft',
-      'container-class' => 'grid_18 alpha omega prefix_1 suffix_1',
+      'container-class' => 'grid-100 tgrid-100 alpha omega',
       'children'        => $return,
     ];
     return $return;

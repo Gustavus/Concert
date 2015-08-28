@@ -66,22 +66,22 @@
 </script>
 
 
-<div class="grid_19 alpha omega">
-  <div class="grid_18 alpha omega">
+<div class="grid-100 alpha omega">
+  <div class="grid-100 alpha omega">
     <h3>Create a New Page</h3>
     <p><em>Please select where you would like your new page to exist.</em></p>
     <div id="toFileTreeSelector" class="fileTreeSelector"></div>
   </div>
 
-  <div class="grid_18 alpha omega">
+  <div class="grid-100 alpha omega">
     <label for="copyAFile"><input id="copyAFile" type="checkbox" class="doToggle" rel="#fromFileContainer"> I would like to copy an existing file.</label>
     <div id="fromFileContainer" class="nodisplay">
       <p><em>Please select the file you would like to copy.</em></p>
       <div id="fromFileTreeSelector" class="fileTreeSelector"></div>
     </div>
   </div>
-  <p class="grid_18 alpha omega">
-    <a href="#" id="createNewPage" class="concert-button success">Create new page</a>
+  <p class="grid-100 alpha omega">
+    <a href="#" id="createNewPage" class="button">Create new page</a>
   </p>
 </div>
 
@@ -92,6 +92,6 @@
   </form>
 </div>
 <div id="noFileSelectedDialog" class="nodisplay">
-  <p class="concert-message concert-alert">Please select where you would like your new page to exist.</p>
+  <div class="concert-message concert-alert"><div class="concert-message-contents icon-exclamation-triangle">Please select where you would like your new page to exist.</div></div>
 </div>
 {% endspaceless %}
