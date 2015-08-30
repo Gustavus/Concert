@@ -51,11 +51,14 @@
     <script>
     {%- set dropdown = renderResource(['dropdown']) -%}
   require.config({
+    path: {
+      'dropdownJS': '{{ dropdown }}'
+    },
     shim: {
-      '{{ dropdown }}': ['baseJS']
+      'dropdownJS': ['baseJS']
     }
   });
-  require(['{{ dropdown }}'], function() {
+  require(['dropdownJS'], function() {
    $(document).on('click.Concert.ShowMenu', '.concert-menu-activate-button', function (e) {
      e.preventDefault();
      var $concertMenu = $('.concert-menu');
