@@ -63,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 16;
+  const JS_VERSION = 17;
 
   /**
    * Autocomplete JS version
