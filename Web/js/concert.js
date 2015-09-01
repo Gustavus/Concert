@@ -81,6 +81,7 @@ Gustavus.Concert = {
       {title: 'Fancy', selector: 'img', classes: 'fancy'},
       {title: 'Left', selector: 'img', classes: 'left'},
       {title: 'Right', selector: 'img', classes: 'right'},
+      {title: 'Button', selector: 'a', classes: 'button'},
     ]}
   ],
 
