@@ -9,6 +9,7 @@ namespace Gustavus\Concert\Test;
 
 use Gustavus\Concert\FileConfiguration,
   Gustavus\Concert\FileConfigurationPart,
+  Gustavus\Concert\FileManager,
   Gustavus\Concert\Config,
   Gustavus\Test\TestObject;
 
@@ -28,6 +29,7 @@ class FileConfigurationTest extends TestBase
 
   public function tearDown()
   {
+    $this->set('FileConfigurationPart', 'midTagContentMayExist', false);
   }
 
   /**
@@ -153,6 +155,29 @@ ob_start();
 $config["content"] .= ob_get_contents();
 
 echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->assertSame($expected, $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithPHPMidTag()
+  {
+    $file = '<div><a href="<?php echo "url"; ?>" class="test" data-test="<?php echo "arst"; ?>" style="">';
+
+    $configuration = new FileConfiguration(FileManager::separateContentByType($file));
+    $file = $configuration->buildFile(true);
+
+    $expected = sprintf('<div class="editable" data-index="0"></div>%s<div><a href="
+
+<?php echo "url"; ?>
+
+" class="test" data-test="
+
+<?php echo "arst"; ?>
+
+" style="">', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $this->assertSame($expected, $file);
   }

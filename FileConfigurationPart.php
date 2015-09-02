@@ -73,6 +73,14 @@ class FileConfigurationPart
   private $edited = false;
 
   /**
+   * Flag to set if any html content may contain mid-tag html.
+   *   ie. <a href="\<\?php echo 'arst';\?\>" class="test" data-arst="\<\?php echo 'tsar';\?\>" style="">
+   *     class="test" and data-arst would be mid-tag content
+   * @var boolean
+   */
+  private static $midTagContentMayExist = false;
+
+  /**
    * Elements that can't have any contents in them, and don't self close in HTML5. (XHTML's space-slash.)
    *   ie. Breaks are <br /> in XHTML, but <br> in HTML
    *
@@ -187,7 +195,8 @@ class FileConfigurationPart
     }
 
     // not php if we are here.
-    if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
+    // we don't want to wrap html if it has potential to be mid-tag content. It could just include an html attribute, and we definitely don't want to throw that in an editable div
+    if ($wrapEditableContent && !self::$midTagContentMayExist && in_array($this->getContentType(), Config::$editableContentTypes)) {
       return $this->wrapEditableContent($this->content);
     }
     if ($indentHTML) {
@@ -306,6 +315,8 @@ class FileConfigurationPart
       if (isset($matches[0])) {
         $preEditableContents = substr($editableContents, 0, strlen($matches[0][0]));
         $editableContents = substr($editableContents, strlen($matches[0][0]));
+        // we found the end of our partial tag
+        self::$midTagContentMayExist = false;
       }
     }
 
@@ -314,6 +325,8 @@ class FileConfigurationPart
       if (isset($matches[0])) {
         $postEditableContents = substr($editableContents, $matches[0][1]);
         $editableContents = substr($editableContents, 0, $matches[0][1]);
+        // we have a tag that starts but is never finished
+        self::$midTagContentMayExist = true;
       }
     }
 

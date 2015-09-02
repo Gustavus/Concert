@@ -53,6 +53,7 @@ class FileConfigurationPartTest extends TestBase
 
   public function tearDown()
   {
+    $this->set('FileConfigurationPart', 'midTagContentMayExist', false);
   }
 
   /**
