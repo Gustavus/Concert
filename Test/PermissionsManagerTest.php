@@ -689,6 +689,36 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userHasAccessToSite()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+
+    $this->assertTrue($this->call('PermissionsManager', 'userHasAccessToSite', ['bvisto', '/arst/private/public.php']));
+
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst/private/', 'admin', 'files/*']);
+
+    $this->assertTrue($this->call('PermissionsManager', 'userHasAccessToSite', ['bvisto', '/arst/private/public.php']));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userHasAccessToSiteNone()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'admin', 'files/*', 'private/*']);
+
+    $this->assertFalse($this->call('PermissionsManager', 'userHasAccessToSite', ['bvisto', '/test/private/public.php']));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function findUsersSiteForFile()
   {
     $this->constructDB(['Sites', 'Permissions']);
@@ -1356,6 +1386,62 @@ class PermissionsManagerTest extends TestBase
 
     $this->assertTrue(PermissionsManager::userCanCreatePage('bvisto', '/arst/protected/arst.php'));
 
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanCreatePageInSiteNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanCreatePage('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanCreatePageInSite()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test']);
+
+    $this->assertTrue(PermissionsManager::userCanCreatePageInSite('bvisto', '/arst/private/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanCreatePageInSiteCurrentPageExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanCreatePageInSite('bvisto', '/arst/private/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanCreatePageInSiteNonCreationAccessLevel()
+  {
+    $origNonCreationAccessLevels = Config::$nonCreationAccessLevels;
+    Config::$nonCreationAccessLevels = ['test'];
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanCreatePageInSite('bvisto', '/arst/protected/arst.php'));
+
+    Config::$nonCreationAccessLevels = $origNonCreationAccessLevels;
     $this->destructDB();
   }
 
