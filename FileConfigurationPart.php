@@ -301,6 +301,23 @@ class FileConfigurationPart
     $postEditableContents = '';
     $editableContents     = $content;
 
+    if (preg_match('`(?:\A[\h\v]*)[^<]+?\>`', $editableContents, $matches, PREG_OFFSET_CAPTURE)) {
+      // our string starts in the middle of a tag
+      if (isset($matches[0])) {
+        $preEditableContents = substr($editableContents, 0, strlen($matches[0][0]));
+        $editableContents = substr($editableContents, strlen($matches[0][0]));
+      }
+    }
+
+    if (preg_match('`<[^\>]+?(?:[\h\v]*\Z)`', $editableContents, $matches, PREG_OFFSET_CAPTURE)) {
+      // our string ends in the middle of a tag
+      if (isset($matches[0])) {
+        $postEditableContents = substr($editableContents, $matches[0][1]);
+        $editableContents = substr($editableContents, 0, $matches[0][1]);
+      }
+    }
+
+
     // Find where we need to start and end our editable div.
     // We want to keep going until our editableContents don't contain unmatched tags.
     while (($offsets = array_filter(self::getUnMatchedOffsets($editableContents))) && !empty($offsets)) {
