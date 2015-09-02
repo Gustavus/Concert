@@ -197,7 +197,7 @@ class PermissionsManager
   }
 
   /**
-   * Checks to see if the specified user can create new pages or not
+   * Checks to see if the specified user can create the specified page
    *
    * @param  string $username Username to check
    * @param  string $filePath Absolute path from the doc root to the file in question
@@ -221,6 +221,33 @@ class PermissionsManager
       return false;
     }
     return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
+  }
+
+  /**
+   * Checks to see if the specified user can create new pages within the site or not
+   *
+   * @param  string $username Username to check
+   * @param  string $filePath Absolute path from the doc root to the file in question
+   * @return boolean
+   */
+  public static function userCanCreatePageInSite($username, $filePath)
+  {
+    $site = self::findUsersSiteForFile($username, $filePath);
+    if (empty($site)) {
+      return false;
+    }
+    $sitePerms = self::getUserPermissionsForSite($username, $site);
+
+    if (empty($sitePerms['accessLevel'])) {
+      // the user doesn't have an access level for this site.
+      return false;
+    }
+    // We need to check to see if their accessLevel permits creating new pages.
+    if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$nonCreationAccessLevels)) {
+      // the current user's access level doesn't allow creating
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -464,6 +491,19 @@ class PermissionsManager
     }
     // the current user's access level doesn't allow editing banners
     return false;
+  }
+
+  /**
+   * Checks to see if the user has access to the site the file exists in.
+   *
+   * @param  string $username Person in question
+   * @param  string $filePath Path of the file to search for containing sites
+   * @return boolean
+   */
+  public static function userHasAccessToSite($username, $filePath)
+  {
+    $sites = PermissionsManager::findUsersSiteForFile($username, $filePath);
+    return !empty($sites);
   }
 
   /**
@@ -1010,10 +1050,14 @@ class PermissionsManager
 
             // we need to get the siteBase from the current parent site so we can see if this file intersects the current site
             $siteBaseFromParentSite = ltrim(str_replace(trim($parentSite['siteRoot'], '/'), '', ltrim($siteBase, '/')), '/');
+
             if (trim($parentSite['siteRoot'], '/') === trim($siteBase, '/') || strpos(ltrim($parentExcludedFile, '/'), $siteBaseFromParentSite) === 0) {
               $parentExcludedFile = ltrim(str_replace($siteBaseFromParentSite, '', $parentExcludedFile), '/');
-              // it falls within the current site's siteBase. Add it.
-              $perms['excludedFiles'][] = $parentExcludedFile;
+              // We don't want to exclude the full site. We only want to exclude everyone who has access to the parent site to not have access to a child site.
+              if ($parentExcludedFile !== '*') {
+                // it falls within the current site's siteBase and isn't a wildcard. Add it.
+                $perms['excludedFiles'][] = $parentExcludedFile;
+              }
             }
           }
         }

@@ -831,15 +831,17 @@ class MainController extends SharedController
       }
 
       $filePathFromDocRoot = Utility::removeDocRootFromPath($filePath);
-      // check to see if the user has access to edit this page
-      if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot) || (self::isForwardedFromSiteNav() && PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), $filePathFromDocRoot))) {
-
+      if (PermissionsManager::userHasAccessToSite($this->getLoggedInUsername(), $filePathFromDocRoot)) {
+        // user has access to this file's site. We want to show them the menu.
         if (!self::isInternalForward()) {
           // we don't want to clear any messages if we have forwarded back to here
           $this->setConcertMessage(null);
         }
         // mosh menu has to be added after the messages get reset because it might add messages
         $this->addMoshMenu();
+      }
+      // check to see if the user has access to edit this page
+      if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $filePathFromDocRoot) || (self::isForwardedFromSiteNav() && PermissionsManager::userCanEditSiteNav($this->getLoggedInUsername(), $filePathFromDocRoot))) {
 
         if (!file_exists($filePath)) {
           // we need to check to see if the user is trying to create a new page
@@ -867,6 +869,9 @@ class MainController extends SharedController
             $this->addConcertMessage(Config::CONTINUE_EDITING_MESSAGE);
           }
         }
+      } else if (self::userIsEditing()) {
+        // user is editing, but they don't have access to edit.
+        $this->addConcertMessage(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, 'error');
       }
     } else if (!self::alreadyMoshed() && $this->userIsViewingPublicDraft($filePath)) {
       // let ourselves know that we have already moshed this request.

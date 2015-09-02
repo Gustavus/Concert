@@ -363,7 +363,6 @@ class MenuController extends SharedController
         $this->addMenuItem($item, 'drafts');
 
         // now add this to our actionButtons
-        $item['classes'] = 'primary';
         $this->addMenuItem($item, 'actionButtons');
 
         if (file_exists($this->filePath)) {
@@ -496,11 +495,8 @@ class MenuController extends SharedController
     $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
     $query = $this->queryParams;
     self::removeConcertQueryParams($query);
-    if (!PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
-      return;
-    }
 
-    if (PermissionsManager::userCanCreatePage($this->getLoggedInUsername(), $pathFromDocRoot)) {
+    if (PermissionsManager::userCanCreatePageInSite($this->getLoggedInUsername(), $pathFromDocRoot)) {
       $item = [
         'text'          => 'Create New Page',
         'url'           => $this->buildUrl('newPageMenu'),
@@ -558,7 +554,6 @@ class MenuController extends SharedController
         $this->addMenuItem($item);
         if (!self::userIsViewingPublicDraft($this->filePath) && !self::userIsEditingDraft()) {
           // now add this to our actionButtons if they aren't viewing a public draft or editing a draft.
-          $item['classes'] = 'primary';
           $this->addMenuItem($item, 'actionButtons');
         }
       } else {
@@ -570,10 +565,17 @@ class MenuController extends SharedController
           'classes'  => 'blue',
         ];
 
-        $this->addMenuItem($item);
+        if (PermissionsManager::userCanEditFile($this->getLoggedInUsername(), $pathFromDocRoot)) {
+          $this->addMenuItem($item);
+          $buttonDisabled = false;
+        } else {
+          $buttonDisabled = true;
+        }
         if (!self::isSiteNavRequest() && !self::userIsViewingDraft($this->filePath) && !self::userIsEditingDraft()) {
           // now add this to our actionButtons if they aren't viewing a public draft.
-          $item['classes'] = 'primary';
+          if ($buttonDisabled) {
+            $item['classes'] = 'disabled';
+          }
           $this->addMenuItem($item, 'actionButtons');
         }
       }

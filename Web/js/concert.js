@@ -81,6 +81,7 @@ Gustavus.Concert = {
       {title: 'Fancy', selector: 'img', classes: 'fancy'},
       {title: 'Left', selector: 'img', classes: 'left'},
       {title: 'Right', selector: 'img', classes: 'right'},
+      {title: 'Button', selector: 'a', classes: 'button'},
     ]}
   ],
 
@@ -211,6 +212,8 @@ Gustavus.Concert = {
 
         // convert images into GIMLI URLs.
         content = Gustavus.Concert.convertImageURLsToGIMLI(content);
+        // convert embedded videos into responsive boxes
+        content = Gustavus.Concert.convertEmbedsIntoResponsiveBoxes(content);
 
         editor.setContent(content);
       });
@@ -360,7 +363,7 @@ Gustavus.Concert = {
     config.formats = {
       h2: {block: 'h2', 'classes': 'noFancyAmpersands'},
       h3: {block: 'h3', 'classes': 'noFancyAmpersands'}
-    }
+    };
 
     config.toolbar = "undo redo | styleselect | bold italic | bullist | link | spellchecker";
 
@@ -529,6 +532,49 @@ Gustavus.Concert = {
         newPathname += url.pathname;
         url.pathname = newPathname;
         $this.attr('src', Gustavus.Utility.URL.buildURL(url));
+      }
+    });
+
+    return $content.html();
+  },
+
+  /**
+   * Converts iframes into responsive boxes
+   *
+   * @param  {String} content Content to convert
+   * @return {String}
+   */
+  convertEmbedsIntoResponsiveBoxes: function(content) {
+    // wrap everything in a div so we only have one jquery object to work with
+    var $content = $('<div>' + content + '</div>');
+    $content.find('iframe').each(function() {
+      var $this = $(this);
+      var width = $this.attr('width').replace('px', '');
+      if ($this.parent().hasClass('box16x9')) {
+        // this looks like it might already be wrapped. We just need to verify.
+        if ($this.parent().parent().children().length === 1) {
+          // this is the only element in the parent.
+          // We need to adjust the width of the containing element
+          if (width) {
+            $this.parent().parent().css('max-width', width + 'px');
+          } else {
+            $this.parent().parent().css('max-width', '');
+          }
+        } else if (width) {
+          // we need to wrap our parent element in a div with max-width
+          var parent = $this.parent().get(0);
+          parent.outerHTML = '<div style="max-width: ' + width + 'px;">' + parent.outerHTML + '</div>';
+        }
+      } else {
+        // this iframe needs to be wrapped to become responsive
+        var prefix = '<div class="box16x9">';
+        var suffix = '</div>';
+        if (width) {
+          // we need to wrap this in a div with max-width set
+          prefix = '<div style="max-width: ' + width + 'px;">' + prefix;
+          suffix += '</div>';
+        }
+        this.outerHTML = prefix + this.outerHTML + suffix;
       }
     });
 

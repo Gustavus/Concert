@@ -691,7 +691,7 @@ class SharedController extends ConcourseController
    */
   protected function buildPublishSuccessMessage($file)
   {
-    return sprintf('Contratulations! You have successfully published %s.<br /><a href="%s" class="button">View Recent Activity</a>', Utility::removeDocRootFromPath($file), $this->buildUrl('recentActivity'));
+    return sprintf('Congratulations! You have successfully published %s.<br /><a href="%s" class="button">View Recent Activity</a>', Utility::removeDocRootFromPath($file), $this->buildUrl('recentActivity'));
   }
 
   /**
@@ -709,7 +709,7 @@ class SharedController extends ConcourseController
       $messageAdditions = '';
     }
     return sprintf(
-        'Contratulations! You have successfully saved a draft for %s. %s<br /><a href="%s" class="button">View Recent Activity</a>',
+        'Congratulations! You have successfully saved a draft for %s. %s<br /><a href="%s" class="button">View Recent Activity</a>',
         Utility::removeDocRootFromPath($draft['destFilepath']),
         $messageAdditions,
         $this->buildUrl('recentActivity')
