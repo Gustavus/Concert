@@ -893,6 +893,26 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function getInheritedPermissionsForSiteParentExcludesAllChildSitePages()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/camps/', 'tlc/*']);
+    $this->call('PermissionsManager', 'saveNewSiteIfNeeded', ['/camps/tlc/']);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/camps/tlc']);
+
+    $this->assertSame(['excludedFiles' => []], $actual);
+
+    $actual = $this->call('PermissionsManager', 'getInheritedPermissionsForSite', ['/camps']);
+
+    $this->assertSame(['excludedFiles' => ['tlc/*']], $actual);
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function getInheritedPermissionsForSiteIndex()
   {
     $this->constructDB(['Sites', 'Permissions']);

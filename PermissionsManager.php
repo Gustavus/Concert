@@ -1050,10 +1050,14 @@ class PermissionsManager
 
             // we need to get the siteBase from the current parent site so we can see if this file intersects the current site
             $siteBaseFromParentSite = ltrim(str_replace(trim($parentSite['siteRoot'], '/'), '', ltrim($siteBase, '/')), '/');
+
             if (trim($parentSite['siteRoot'], '/') === trim($siteBase, '/') || strpos(ltrim($parentExcludedFile, '/'), $siteBaseFromParentSite) === 0) {
               $parentExcludedFile = ltrim(str_replace($siteBaseFromParentSite, '', $parentExcludedFile), '/');
-              // it falls within the current site's siteBase. Add it.
-              $perms['excludedFiles'][] = $parentExcludedFile;
+              // We don't want to exclude the full site. We only want to exclude everyone who has access to the parent site to not have access to a child site.
+              if ($parentExcludedFile !== '*') {
+                // it falls within the current site's siteBase and isn't a wildcard. Add it.
+                $perms['excludedFiles'][] = $parentExcludedFile;
+              }
             }
           }
         }
