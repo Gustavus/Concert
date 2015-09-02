@@ -551,6 +551,7 @@ Gustavus.Concert = {
       var $this = $(this);
       var width = $this.attr('width').replace('px', '');
       if ($this.parent().hasClass('box16x9')) {
+        // this looks like it might already be wrapped. We just need to verify.
         if ($this.parent().parent().children().length === 1) {
           // this is the only element in the parent.
           // We need to adjust the width of the containing element
@@ -564,8 +565,8 @@ Gustavus.Concert = {
           var parent = $this.parent().get(0);
           parent.outerHTML = '<div style="max-width: ' + width + 'px;">' + parent.outerHTML + '</div>';
         }
-        // we might need to adjust our width
       } else {
+        // this iframe needs to be wrapped to become responsive
         var prefix = '<div class="box16x9">';
         var suffix = '</div>';
         if (width) {
