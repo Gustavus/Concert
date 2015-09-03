@@ -23,15 +23,6 @@ use Gustavus\Concert\FileConfiguration,
  */
 class FileConfigurationTest extends TestBase
 {
-  public function setUp()
-  {
-  }
-
-  public function tearDown()
-  {
-    $this->set('FileConfigurationPart', 'midTagContentMayExist', false);
-  }
-
   /**
    * @test
    */
@@ -169,7 +160,7 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
     $configuration = new FileConfiguration(FileManager::separateContentByType($file));
     $file = $configuration->buildFile(true);
 
-    $expected = sprintf('<div class="editable" data-index="0"></div>%s<div><a href="
+    $expected = sprintf('<div class="editable" data-index="0"></div>%1$s<div><a href="
 
 <?php echo "url"; ?>
 
@@ -177,7 +168,30 @@ echo $config["content"];', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
 <?php echo "arst"; ?>
 
-" style="">', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+" style=""><div class="editable" data-index="4"></div>%1$s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
+
+    $this->assertSame($expected, $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithPHPMidTagEditable()
+  {
+    $file = '<div>arst</div><a href="<?php echo "url"; ?>" class="test" data-test="<?php echo "arst"; ?>" style="">';
+
+    $configuration = new FileConfiguration(FileManager::separateContentByType($file));
+    $file = $configuration->buildFile(true);
+
+    $expected = sprintf('<div class="editable" data-index="0"><div>arst</div></div>%1$s<a href="
+
+<?php echo "url"; ?>
+
+" class="test" data-test="
+
+<?php echo "arst"; ?>
+
+" style=""><div class="editable" data-index="4"></div>%1$s', Config::EDITABLE_DIV_CLOSING_IDENTIFIER);
 
     $this->assertSame($expected, $file);
   }

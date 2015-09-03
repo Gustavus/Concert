@@ -73,12 +73,20 @@ class FileConfigurationPart
   private $edited = false;
 
   /**
-   * Flag to set if any html content may contain mid-tag html.
+   * Flag to see if any html content may contain mid-tag html.
    *   ie. <a href="\<\?php echo 'arst';\?\>" class="test" data-arst="\<\?php echo 'tsar';\?\>" style="">
    *     class="test" and data-arst would be mid-tag content
+   *
    * @var boolean
    */
   private static $midTagContentMayExist = false;
+
+  /**
+   * Flag to see if we should set our midTagContentMayExist flag. This allows us to be able to still generate everything necessary for the first item.
+   *
+   * @var boolean
+   */
+  private static $setMidTagContentMayExist = false;
 
   /**
    * Elements that can't have any contents in them, and don't self close in HTML5. (XHTML's space-slash.)
@@ -196,8 +204,14 @@ class FileConfigurationPart
 
     // not php if we are here.
     // we don't want to wrap html if it has potential to be mid-tag content. It could just include an html attribute, and we definitely don't want to throw that in an editable div
-    if ($wrapEditableContent && !self::$midTagContentMayExist && in_array($this->getContentType(), Config::$editableContentTypes)) {
-      return $this->wrapEditableContent($this->content);
+    if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
+      $content = $this->wrapEditableContent($this->content);
+      if (self::$setMidTagContentMayExist) {
+        self::$midTagContentMayExist = true;
+      } else {
+        self::$midTagContentMayExist = false;
+      }
+      return $content;
     }
     if ($indentHTML) {
       return self::indentHTML($this->content);
@@ -294,6 +308,11 @@ class FileConfigurationPart
     // not php content
     $splitContents = self::separateEditableContents($content);
 
+    if (self::$midTagContentMayExist) {
+      // we don't want to wrap anything as editable
+      return sprintf('%s%s%s', $splitContents['preEditableContents'], $splitContents['editableContents'], $splitContents['postEditableContents']);
+    }
+
     return sprintf('%s%s%s%s%s', $splitContents['preEditableContents'], $openingDiv, $splitContents['editableContents'], $closingDiv, $splitContents['postEditableContents']);
   }
 
@@ -316,6 +335,7 @@ class FileConfigurationPart
         $preEditableContents = substr($editableContents, 0, strlen($matches[0][0]));
         $editableContents = substr($editableContents, strlen($matches[0][0]));
         // we found the end of our partial tag
+        self::$setMidTagContentMayExist = false;
         self::$midTagContentMayExist = false;
       }
     }
@@ -326,8 +346,26 @@ class FileConfigurationPart
         $postEditableContents = substr($editableContents, $matches[0][1]);
         $editableContents = substr($editableContents, 0, $matches[0][1]);
         // we have a tag that starts but is never finished
-        self::$midTagContentMayExist = true;
+        // we want to make sure our flag gets set after everything runs
+        self::$setMidTagContentMayExist = true;
+        if (self::userIsDebugging()) {
+          $debug = [
+            'message' => 'There might be mid-tag contents in an editable div.',
+            'openingPiece' => htmlspecialchars($postEditableContents),
+            'context' => htmlspecialchars(substr($editableContents, 0, 40)),
+          ];
+          echo sprintf('<pre>%s</pre>', Debug::dump($debug, true));
+        }
       }
+    }
+
+    if (self::$midTagContentMayExist) {
+      // we don't need to do anything because we aren't making anything editable
+      return [
+        'preEditableContents'  => $preEditableContents,
+        'editableContents'     => $editableContents,
+        'postEditableContents' => $postEditableContents,
+      ];
     }
 
 
@@ -466,6 +504,16 @@ class FileConfigurationPart
   }
 
   /**
+   * Checks to see if the user is debugging or not
+   *
+   * @return boolean
+   */
+  private static function userIsDebugging()
+  {
+    return isset($_GET['showUnMatchedTags']) && (PermissionsManager::isUserAdmin(Gatekeeper::getUsername()) || PermissionsManager::isUserSuperUser(Gatekeeper::getUsername()));
+  }
+
+  /**
    * Gets offsets for un-matched opening and closing tags
    *
    * @param  string $content Content to search for un-matched tags
@@ -475,7 +523,7 @@ class FileConfigurationPart
    */
   private static function getUnMatchedOffsets($content)
   {
-    if (isset($_GET['showUnMatchedTags']) && (PermissionsManager::isUserAdmin(Gatekeeper::getUsername()) || PermissionsManager::isUserSuperUser(Gatekeeper::getUsername()))) {
+    if (self::userIsDebugging()) {
       $userIsDebugging = true;
       $offsetDebug = ['opening' => [], 'closing' => []];
     } else {

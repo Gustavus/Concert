@@ -47,15 +47,6 @@ class FileConfigurationPartTest extends TestBase
     'key'   => 0,
   ];
 
-  public function setUp()
-  {
-  }
-
-  public function tearDown()
-  {
-    $this->set('FileConfigurationPart', 'midTagContentMayExist', false);
-  }
-
   /**
    * Builds a basic FileConfigurationPart from partParams
    * @return void
