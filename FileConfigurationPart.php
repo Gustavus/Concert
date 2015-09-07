@@ -177,15 +177,17 @@ class FileConfigurationPart
         $wrapEditablePHPContent = Config::ALLOW_PHP_EDITS;
         if ($wrapEditableContent) {
           // we need to remove nodes that have already been defined
-          $removed = $this->removeAlreadyDefinedPHPNodes();
+          $modified = $this->removeAlreadyDefinedPHPNodes();
+          // look for inclusions and convert to absolute paths
+          $modified = $modified || $this->convertRelativePathsToAbsolute();
         } else {
-          $removed = false;
+          $modified = false;
         }
         if (Config::ALLOW_PHP_EDITS) {
           $this->buildEditablePHPNodes($wrapEditablePHPContent);
         }
-        if (Config::ALLOW_PHP_EDITS || $removed) {
-          // we have removed contents, or may have wrapped editable contents
+        if (Config::ALLOW_PHP_EDITS || $modified) {
+          // we have modified contents, or may have wrapped editable contents
           $newContent = str_replace('    ', '  ', $prettyPrinter->prettyPrint($this->phpNodes));
           if (preg_match('`^(\v+)`', $this->content, $matches) === 1 && preg_match('`^\v`', $newContent) !== 1) {
             // the pretty printer removed a vertical whitespace from the beginning of the content.
@@ -195,7 +197,10 @@ class FileConfigurationPart
             // the pretty printer removed a vertical whitespace from the end of the content.
             $newContent = (isset($matches[1])) ? $newContent . $matches[1]: "{$newContent}\n";
           }
-          // remove any horizontal whitespace that exists right before any vertical whitespace.
+          if (!preg_match('`^[\s]`', $newContent)) {
+            // we need to add a space to our new content
+            return ' ' . $newContent;
+          }
           return $newContent;
         }
       }
@@ -880,6 +885,32 @@ class FileConfigurationPart
       }
     }
     return $removed;
+  }
+
+  /**
+   * Converts relative paths to absolute paths for inclusions.
+   *  (require, require_once, include, include_once)
+   *
+   * @return boolean True if anything was modified false if not.
+   */
+  private function convertRelativePathsToAbsolute()
+  {
+    if (!isset($this->phpNodes)) {
+      $this->buildPHPNodes();
+    }
+    $modified = false;
+    foreach ($this->phpNodes as $key => &$node) {
+      if ($node->getType() === 'Expr_Include') {
+        // we are looking at an include, include_once, require, or require_once
+        if ($node->expr->value && strpos($node->expr->value, '/') !== 0) {
+          // we need to convert this to be absolute
+          $base = dirname($_SERVER['SCRIPT_FILENAME']);
+          $node->expr->value = $base . DIRECTORY_SEPARATOR . $node->expr->value;
+          $modified = true;
+        }
+      }
+    }
+    return $modified;
   }
 
   /**
