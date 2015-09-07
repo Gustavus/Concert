@@ -198,7 +198,7 @@ class FileConfigurationPart
             $newContent = (isset($matches[1])) ? $newContent . $matches[1]: "{$newContent}\n";
           }
           if (!preg_match('`^[\s]`', $newContent)) {
-            // we need to add a space to our new content
+            // we need to add a space to our new content otherwise rebuilding the file will fail
             return ' ' . $newContent;
           }
           return $newContent;
