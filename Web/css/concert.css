@@ -61,12 +61,6 @@ div.editable:any(:hover, :focus) {
   width: auto;
 }
 
-@media $(mobile) {
-  #addusers {
-    width: 100%;
-  }
-}
-
 /* Add recentActivity width for colorbox */
 #recentActivity {
   width: 100%;
@@ -78,6 +72,9 @@ div.editable:any(:hover, :focus) {
 }
 
 @media $(mobile) {
+  #addusers {
+    width: 100%;
+  }
   #recentActivity {
     width: 100%;
     max-width: 767px;
