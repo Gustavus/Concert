@@ -1,0 +1,71 @@
+//pear channel-discover nikic.github.com/pear
+//pear install nikic/PHPParser-0.9.4
+This is now done through composer.
+
+sudo yum install inotify-tools
+
+
+Need a symlink to Web in doc_root/concert
+
+ResponsiveFileManager is a submodule.
+  Lives in Assets dir.
+  Symlink to ResponsiveFilemanager/filemanager in Web
+  Symlink to ResponsiveFilemanager/tinymce/plugins/responsivefilemanager in Assets/tinymce/js/tinymce/plugins
+
+  need to init submodule when first cloned
+    git submodule init
+    git submodule update
+
+  To update submodule
+    Download production package
+    remove everything from the master branch (except git stuff)
+    Copy new package into master branch and commit with the version number
+    Merge into Gustavus branch and fix any conflicts.
+    Push to origin
+
+  After pushing main Concert changes to Lisa, also need to run "git submodule update"
+
+Tinymce
+  Submodule
+  Lives in Assets dir.
+
+  need to init submodule when first cloned
+    git submodule init
+    git submodule update
+
+  To update:
+    Download package from site
+    remove everything from the master branch (except git stuff)
+    Copy new package into master branch and commit with the version number
+    Merge into Gustavus branch and fix any conflicts.
+    Push to origin
+
+    On update, make sure to fix skin css to have absolute paths from the doc_root
+      This is only if tinymce is loaded through our minifier.
+    Make sure symlink for tinymce/js/tinymce in Web/js/tinymce exists
+
+    Make sure the symlink for ResponsiveFilemanager's plugin exists
+      ln -s /cis/lib/Gustavus/Concert/Assets/ResponsiveFilemanager/tinymce/plugins/responsivefilemanager/ /cis/lib/Gustavus/Concert/Assets/tinymce_version/js/tinymce/plugins/responsivefilemanager
+
+  After pushing main Concert changes to Lisa, also need to run "git submodule update"
+
+
+fileTree
+  Third party.
+  I had to make a lot of updates to it though, so we might be in charge of maintaining our version.
+  Symlink to fileTree in Web/js/
+
+
+
+
+
+
+Todo:
+
+Restrict copied files and new files using excluded dir. Also find a way to enforce template builder pages.
+
+Add ability to merge old draft with current content. Or view changes.
+
+Add new view to revisions for viewing a page?
+
+Message system
