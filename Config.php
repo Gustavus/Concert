@@ -78,7 +78,7 @@ class Config
   /**
    * Responsive Filemanager version
    */
-  const RESPONSIVE_FILEMANAGER_VERSION = '9.9.5';
+  const RESPONSIVE_FILEMANAGER_VERSION = '9.9.6';
 
   /**
    * CSS version
