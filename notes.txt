@@ -1,6 +1,8 @@
-//pear channel-discover nikic.github.com/pear
-//pear install nikic/PHPParser-0.9.4
-This is now done through composer.
+PHPParser
+  Assets/Composer
+
+  To check for updates
+  /cis/bin/composer update --dry-run
 
 sudo yum install inotify-tools
 

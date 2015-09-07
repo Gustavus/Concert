@@ -902,7 +902,7 @@ class FileConfigurationPart
     foreach ($this->phpNodes as $key => &$node) {
       if ($node->getType() === 'Expr_Include') {
         // we are looking at an include, include_once, require, or require_once
-        if ($node->expr->value && strpos($node->expr->value, '/') !== 0) {
+        if ($node->expr->getType() === 'Scalar_String' && strpos($node->expr->value, '/') !== 0) {
           // we need to convert this to be absolute
           $base = dirname($_SERVER['SCRIPT_FILENAME']);
           $node->expr->value = $base . DIRECTORY_SEPARATOR . $node->expr->value;
