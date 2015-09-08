@@ -409,7 +409,8 @@ class PermissionsManager
       // nope. They cannot upload.
       return false;
     }
-    return self::checkIncludedAndExcludedFilesForAccess($filePath, $site, $sitePerms);
+    // looks like they can upload
+    return true;
   }
 
   /**
@@ -824,8 +825,10 @@ class PermissionsManager
   {
     $accessLevels = [];
     foreach ($permissions as $permission) {
-      foreach ((array) $permission['accessLevel'] as $accessLevel) {
-        $accessLevels[] = $accessLevel;
+      if (isset($permission['accessLevel'])) {
+        foreach ((array) $permission['accessLevel'] as $accessLevel) {
+          $accessLevels[] = $accessLevel;
+        }
       }
     }
     return $accessLevels;

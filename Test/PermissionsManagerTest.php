@@ -1867,7 +1867,7 @@ class PermissionsManagerTest extends TestBase
     $this->constructDB(['Sites', 'Permissions']);
     $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
 
-    $this->assertFalse(PermissionsManager::userCanUpload('bvisto', '/arst/private/arst.php'));
+    $this->assertTrue(PermissionsManager::userCanUpload('bvisto', '/arst/private/arst.php'));
 
     Config::$nonUploadingAccessLevels = $origNonUploadingAccessLevels;
     $this->destructDB();
