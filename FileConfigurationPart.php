@@ -73,6 +73,22 @@ class FileConfigurationPart
   private $edited = false;
 
   /**
+   * Flag to see if any html content may contain mid-tag html.
+   *   ie. <a href="\<\?php echo 'arst';\?\>" class="test" data-arst="\<\?php echo 'tsar';\?\>" style="">
+   *     class="test" and data-arst would be mid-tag content
+   *
+   * @var boolean
+   */
+  private static $midTagContentMayExist = false;
+
+  /**
+   * Flag to see if we should set our midTagContentMayExist flag. This allows us to be able to still generate everything necessary for the first item.
+   *
+   * @var boolean
+   */
+  private static $setMidTagContentMayExist = false;
+
+  /**
    * Elements that can't have any contents in them, and don't self close in HTML5. (XHTML's space-slash.)
    *   ie. Breaks are <br /> in XHTML, but <br> in HTML
    *
@@ -161,15 +177,17 @@ class FileConfigurationPart
         $wrapEditablePHPContent = Config::ALLOW_PHP_EDITS;
         if ($wrapEditableContent) {
           // we need to remove nodes that have already been defined
-          $removed = $this->removeAlreadyDefinedPHPNodes();
+          $modified = $this->removeAlreadyDefinedPHPNodes();
+          // look for inclusions and convert to absolute paths
+          $modified = $modified || $this->convertRelativePathsToAbsolute();
         } else {
-          $removed = false;
+          $modified = false;
         }
         if (Config::ALLOW_PHP_EDITS) {
           $this->buildEditablePHPNodes($wrapEditablePHPContent);
         }
-        if (Config::ALLOW_PHP_EDITS || $removed) {
-          // we have removed contents, or may have wrapped editable contents
+        if (Config::ALLOW_PHP_EDITS || $modified) {
+          // we have modified contents, or may have wrapped editable contents
           $newContent = str_replace('    ', '  ', $prettyPrinter->prettyPrint($this->phpNodes));
           if (preg_match('`^(\v+)`', $this->content, $matches) === 1 && preg_match('`^\v`', $newContent) !== 1) {
             // the pretty printer removed a vertical whitespace from the beginning of the content.
@@ -179,7 +197,10 @@ class FileConfigurationPart
             // the pretty printer removed a vertical whitespace from the end of the content.
             $newContent = (isset($matches[1])) ? $newContent . $matches[1]: "{$newContent}\n";
           }
-          // remove any horizontal whitespace that exists right before any vertical whitespace.
+          if (!preg_match('`^[\s]`', $newContent)) {
+            // we need to add a space to our new content otherwise rebuilding the file will fail
+            return ' ' . $newContent;
+          }
           return $newContent;
         }
       }
@@ -187,8 +208,15 @@ class FileConfigurationPart
     }
 
     // not php if we are here.
+    // we don't want to wrap html if it has potential to be mid-tag content. It could just include an html attribute, and we definitely don't want to throw that in an editable div
     if ($wrapEditableContent && in_array($this->getContentType(), Config::$editableContentTypes)) {
-      return $this->wrapEditableContent($this->content);
+      $content = $this->wrapEditableContent($this->content);
+      if (self::$setMidTagContentMayExist) {
+        self::$midTagContentMayExist = true;
+      } else {
+        self::$midTagContentMayExist = false;
+      }
+      return $content;
     }
     if ($indentHTML) {
       return self::indentHTML($this->content);
@@ -285,6 +313,11 @@ class FileConfigurationPart
     // not php content
     $splitContents = self::separateEditableContents($content);
 
+    if (self::$midTagContentMayExist) {
+      // we don't want to wrap anything as editable
+      return sprintf('%s%s%s', $splitContents['preEditableContents'], $splitContents['editableContents'], $splitContents['postEditableContents']);
+    }
+
     return sprintf('%s%s%s%s%s', $splitContents['preEditableContents'], $openingDiv, $splitContents['editableContents'], $closingDiv, $splitContents['postEditableContents']);
   }
 
@@ -306,6 +339,9 @@ class FileConfigurationPart
       if (isset($matches[0])) {
         $preEditableContents = substr($editableContents, 0, strlen($matches[0][0]));
         $editableContents = substr($editableContents, strlen($matches[0][0]));
+        // we found the end of our partial tag
+        self::$setMidTagContentMayExist = false;
+        self::$midTagContentMayExist = false;
       }
     }
 
@@ -314,7 +350,27 @@ class FileConfigurationPart
       if (isset($matches[0])) {
         $postEditableContents = substr($editableContents, $matches[0][1]);
         $editableContents = substr($editableContents, 0, $matches[0][1]);
+        // we have a tag that starts but is never finished
+        // we want to make sure our flag gets set after everything runs
+        self::$setMidTagContentMayExist = true;
+        if (self::userIsDebugging()) {
+          $debug = [
+            'message' => 'There might be mid-tag contents in an editable div.',
+            'openingPiece' => htmlspecialchars($postEditableContents),
+            'context' => htmlspecialchars(substr($editableContents, 0, 40)),
+          ];
+          echo sprintf('<pre>%s</pre>', Debug::dump($debug, true));
+        }
       }
+    }
+
+    if (self::$midTagContentMayExist) {
+      // we don't need to do anything because we aren't making anything editable
+      return [
+        'preEditableContents'  => $preEditableContents,
+        'editableContents'     => $editableContents,
+        'postEditableContents' => $postEditableContents,
+      ];
     }
 
 
@@ -453,6 +509,16 @@ class FileConfigurationPart
   }
 
   /**
+   * Checks to see if the user is debugging or not
+   *
+   * @return boolean
+   */
+  private static function userIsDebugging()
+  {
+    return isset($_GET['showUnMatchedTags']) && (PermissionsManager::isUserAdmin(Gatekeeper::getUsername()) || PermissionsManager::isUserSuperUser(Gatekeeper::getUsername()));
+  }
+
+  /**
    * Gets offsets for un-matched opening and closing tags
    *
    * @param  string $content Content to search for un-matched tags
@@ -462,7 +528,7 @@ class FileConfigurationPart
    */
   private static function getUnMatchedOffsets($content)
   {
-    if (isset($_GET['showUnMatchedTags']) && (PermissionsManager::isUserAdmin(Gatekeeper::getUsername()) || PermissionsManager::isUserSuperUser(Gatekeeper::getUsername()))) {
+    if (self::userIsDebugging()) {
       $userIsDebugging = true;
       $offsetDebug = ['opening' => [], 'closing' => []];
     } else {
@@ -819,6 +885,32 @@ class FileConfigurationPart
       }
     }
     return $removed;
+  }
+
+  /**
+   * Converts relative paths to absolute paths for inclusions.
+   *  (require, require_once, include, include_once)
+   *
+   * @return boolean True if anything was modified false if not.
+   */
+  private function convertRelativePathsToAbsolute()
+  {
+    if (!isset($this->phpNodes)) {
+      $this->buildPHPNodes();
+    }
+    $modified = false;
+    foreach ($this->phpNodes as $key => &$node) {
+      if ($node->getType() === 'Expr_Include') {
+        // we are looking at an include, include_once, require, or require_once
+        if ($node->expr->getType() === 'Scalar_String' && strpos($node->expr->value, '/') !== 0) {
+          // we need to convert this to be absolute
+          $base = dirname($_SERVER['SCRIPT_FILENAME']);
+          $node->expr->value = $base . DIRECTORY_SEPARATOR . $node->expr->value;
+          $modified = true;
+        }
+      }
+    }
+    return $modified;
   }
 
   /**

@@ -3313,4 +3313,206 @@ echo $config["content"];';
 
     $this->assertTrue($this->fileManager->isNonEditableFile());
   }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithDefinedPHPFunction()
+  {
+    $fileContents = '<?php
+      function testingArst() {
+
+      }
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertNotContains('testingArst', $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithDefinedPHPClass()
+  {
+    $fileContents = '<?php
+      class testingArst
+      {
+        public function testingFunc() {
+
+        }
+      }
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertNotContains('testingArst', $file);
+    $this->assertNotContains('testingFunc', $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithDefinedPHPClassAndFunc()
+  {
+    $fileContents = '<?php
+      class testingArst1
+      {
+        public function testingFunc() {
+
+        }
+      }
+      function anotherFunc() {
+
+      }
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertNotContains('testingArst', $file);
+    $this->assertNotContains('testingFunc', $file);
+    $this->assertNotContains('anotherFunc', $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithRelativePathInclude()
+  {
+    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
+    $fileContents = '<?php
+      include "arst.php";
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    file_put_contents(self::$testFileDir . 'arst.php', 'hello');
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertContains('include \'' . self::$testFileDir, $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithRelativePathIncludeInlinePHP()
+  {
+    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
+    $fileContents = '<?php include "arst.php"; ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    file_put_contents(self::$testFileDir . 'arst.php', 'hello');
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertContains('<?php include \'' . self::$testFileDir, $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithRelativePathRequire()
+  {
+    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
+    $fileContents = '<?php
+      require "arst.php";
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    file_put_contents(self::$testFileDir . 'arst.php', 'hello');
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertContains('require \'' . self::$testFileDir, $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithRelativePathRequireOnce()
+  {
+    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
+    $fileContents = '<?php
+      require_once "arst.php";
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    file_put_contents(self::$testFileDir . 'arst.php', 'hello');
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertContains('require_once \'' . self::$testFileDir, $file);
+  }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithRelativePathRequireOnceAbsolute()
+  {
+    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
+    $fileContents = sprintf('<?php
+      require_once "%sarst.php";
+      ?>
+      this is text
+    ', self::$testFileDir);
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    file_put_contents(self::$testFileDir . 'arst.php', 'hello');
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertContains('require_once "' . self::$testFileDir . 'arst.php"', $file);
+  }
 }

@@ -158,6 +158,7 @@ class TestBase extends TestEM
     $this->set('PermissionsManager', 'cache', null);
     $_GET = $this->origGet;
     unset($this->mockMailer);
+    $this->set('FileConfigurationPart', 'midTagContentMayExist', false);
   }
 
   /**
