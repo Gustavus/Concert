@@ -903,6 +903,19 @@ class FileConfigurationPart
       if ($node->getType() === 'Expr_Include') {
         // we are looking at an include, include_once, require, or require_once
         if ($node->expr->getType() === 'Scalar_String' && strpos($node->expr->value, '/') !== 0) {
+          // we need to make sure the file doesn't exist in any of our paths
+          $paths = explode(':', ini_get('include_path'));
+          $fileExistsInPath = false;
+          foreach ($paths as $path) {
+            if (file_exists($path . DIRECTORY_SEPARATOR . $node->expr->value)) {
+              $fileExistsInPath = true;
+              break;
+            }
+          }
+          if ($fileExistsInPath) {
+            // we don't want to convert this file
+            continue;
+          }
           // we need to convert this to be absolute
           $base = dirname($_SERVER['SCRIPT_FILENAME']);
           $node->expr->value = $base . DIRECTORY_SEPARATOR . $node->expr->value;
