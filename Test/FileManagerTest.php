@@ -3515,4 +3515,28 @@ echo $config["content"];';
 
     $this->assertContains('require_once "' . self::$testFileDir . 'arst.php"', $file);
   }
+
+  /**
+   * @test
+   */
+  public function buildFileForEditingWithRelativePathInPath()
+  {
+    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
+    $fileContents = '<?php
+      require_once "Gustavus/Concert/Test/files/arst.php";
+      ?>
+      this is text
+    ';
+    file_put_contents(self::$testFileDir . 'test.php', $fileContents);
+    file_put_contents(self::$testFileDir . 'arst.php', 'hello');
+    ob_start();
+    require(self::$testFileDir . 'test.php');
+    ob_end_clean();
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'test.php');
+
+    $file = $this->fileManager->assembleFile(true);
+
+    $this->assertContains('require_once "Gustavus/Concert/Test/files/arst.php"', $file);
+  }
 }
