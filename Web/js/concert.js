@@ -550,7 +550,7 @@ Gustavus.Concert = {
     $content.find('iframe').each(function() {
       var $this = $(this);
       var width = $this.attr('width').replace('px', '');
-      if ($this.parent().hasClass('box16x9')) {
+      if ($this.parent().hasClass('box16x9') || $this.parent().hasClass('box4x3') || $this.parent().hasClass('boxWidescreen') || $this.parent().hasClass('boxFullscreen')) {
         // this looks like it might already be wrapped. We just need to verify.
         if ($this.parent().parent().children().length === 1) {
           // this is the only element in the parent.
