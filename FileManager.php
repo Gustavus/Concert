@@ -1059,7 +1059,9 @@ class FileManager
 
     $this->saveInitialRevisionIfNeeded();
     if (rename($srcFilePath, $destination)) {
-      chgrp($destination, $group);
+      if ($group) {
+        chgrp($destination, $group);
+      }
       chown($destination, $owner);
 
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
@@ -1332,7 +1334,9 @@ class FileManager
 
     if (!is_dir($directory)) {
       if (mkdir($directory, 0775, true)) {
-        chgrp($directory, $group);
+        if ($group) {
+          chgrp($directory, $group);
+        }
 
         if ($currentUser === 'root') {
           chown($directory, $owner);
@@ -1344,7 +1348,9 @@ class FileManager
     } else if ($forcePermissions) {
       // Directory exists. Ensure our specified permissions are forced.
       if ($currentUser === 'root') {
-        chgrp($directory, $group);
+        if ($group) {
+          chgrp($directory, $group);
+        }
         chown($directory, $owner);
       }
     }
