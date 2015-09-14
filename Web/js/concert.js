@@ -181,6 +181,8 @@ Gustavus.Concert = {
     image_advtab: false,
     // disable our class list since this overrides any other classes applied to images
     image_class_list: false,
+    image_title: true,
+    //image_description: true,
     filemanager_title: "Concert File Manager" ,
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
@@ -217,6 +219,35 @@ Gustavus.Concert = {
 
         editor.setContent(content);
       });
+
+      // editor.on('init', function(e) {
+      //   // highjack the open function so we can do extra operations if needed
+      //   editor.windowManager.origOpen = editor.windowManager.open;
+      //   editor.windowManager.open = function(args, params) {
+      //     // check to see if this is an image window. Title should work, but fallback to looking at the data and guessing that it is an image
+      //     if ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width'))) {
+      //       // we are working with images
+      //       // highjack the onSubmit function so we can do our checks
+      //       args.origSubmit = args.onSubmit;
+      //       args.onSubmit = function(e) {
+      //         if (!e.data.alt) {
+      //           // we don't see an alt property
+      //           editor.windowManager.alert("Please specify an image description", function() {
+      //             if (editor.windowManager.windows.length > 0) {
+      //               // focus our last window
+      //               editor.windowManager.windows[editor.windowManager.windows.length - 1].focus();
+      //             }
+      //           });
+      //           return false;
+      //         }
+      //         // call the original onSubmit function
+      //         return args.origSubmit(e);
+      //       };
+      //     }
+      //     // call the original open function
+      //     return editor.windowManager.origOpen(args, params);
+      //   };
+      // });
 
       // add a shortcut to indent list elements
       // supports alt+= and alt+shift+=, but we broadcast it as alt++
@@ -798,7 +829,11 @@ Gustavus.Concert = {
    */
   destroyTemplatePluginsPostApply: function(currObj) {
     // Remove html that gets added in when toggling links
-    var $toggleLinks = $('div.editable a.toggleLink', currObj);
+    if (currObj) {
+      var $toggleLinks = $('a.toggleLink', currObj);
+    } else {
+      var $toggleLinks = $('div.editable a.toggleLink');
+    }
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.removeClass('toggledOpen');
@@ -865,13 +900,15 @@ Gustavus.Concert = {
         Gustavus.Template.addUserMessage('Some hidden elements on this page have been displayed to help with editing.', 'message', 50);
       }
 
-      Extend.add('page', function(thisObj) {
+      Extend.add('page', function() {
         // Wait until the template does it's thing, then destroy certain pieces.
         // remove additional HTML calling Extend.apply may have added.
-        Gustavus.Concert.destroyTemplatePluginsPostApply(thisObj);
-        Gustavus.Concert.toggleLinksDisplayed(thisObj);
-        Gustavus.Concert.reInitTemplatePlugins(thisObj);
+        Gustavus.Concert.destroyTemplatePluginsPostApply(this);
+        Gustavus.Concert.toggleLinksDisplayed(this);
+        Gustavus.Concert.reInitTemplatePlugins(this);
       }, 100);
+      // apply the page filter to make sure our stuff runs.
+      Extend.apply('page', $('div.editable'));
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;
