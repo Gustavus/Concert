@@ -682,6 +682,123 @@ echo $config["content"];', rtrim(self::$testFileDir, '/'), Config::EDITABLE_DIV_
     $this->destructDB();
   }
 
+  /**
+   * @test
+   */
+  public function makeTemporaryFile()
+  {
+    file_put_contents(self::$testFileDir . 'index.php', self::$indexContents);
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
+
+    $filename = $this->fileManager->makeTemporaryFile();
+    $this->assertContains(self::$testFileDir, $filename);
+
+    $expected = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+
+    $tmpFile = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertSame($expected, $tmpFile);
+  }
+
+  /**
+   * @test
+   */
+  public function makeTemporaryFileAdjusted()
+  {
+    $contents = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+require(__DIR__ . "/arst.php");
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+    file_put_contents(self::$testFileDir . 'index.php', $contents);
+
+    $this->buildFileManager('testuser', self::$testFileDir . 'index.php');
+
+    $filename = $this->fileManager->makeTemporaryFile();
+    $this->assertContains(self::$testFileDir, $filename);
+
+    $expected = sprintf('<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+require(\'%s\' . "/arst.php");
+$config["content"] .= executeSomeContent();
+
+function executeSomeContent()
+{
+  return "This is some executed content.";
+}
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];', rtrim(self::$testFileDir, '/'));
+
+    $tmpFile = file_get_contents($filename);
+    unlink($filename);
+
+    $this->assertSame($expected, $tmpFile);
+  }
 
   /**
    * @test
@@ -3403,7 +3520,6 @@ echo $config["content"];';
    */
   public function buildFileForEditingWithRelativePathInclude()
   {
-    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
     $fileContents = '<?php
       include "arst.php";
       ?>
@@ -3427,7 +3543,6 @@ echo $config["content"];';
    */
   public function buildFileForEditingWithRelativePathIncludeInlinePHP()
   {
-    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
     $fileContents = '<?php include "arst.php"; ?>
       this is text
     ';
@@ -3449,7 +3564,6 @@ echo $config["content"];';
    */
   public function buildFileForEditingWithRelativePathRequire()
   {
-    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
     $fileContents = '<?php
       require "arst.php";
       ?>
@@ -3473,7 +3587,6 @@ echo $config["content"];';
    */
   public function buildFileForEditingWithRelativePathRequireOnce()
   {
-    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
     $fileContents = '<?php
       require_once "arst.php";
       ?>
@@ -3497,7 +3610,6 @@ echo $config["content"];';
    */
   public function buildFileForEditingWithRelativePathRequireOnceAbsolute()
   {
-    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
     $fileContents = sprintf('<?php
       require_once "%sarst.php";
       ?>
@@ -3521,7 +3633,6 @@ echo $config["content"];';
    */
   public function buildFileForEditingWithRelativePathInPath()
   {
-    $_SERVER['SCRIPT_FILENAME'] = self::$testFileDir . 'test.php';
     $fileContents = '<?php
       require_once "Gustavus/Concert/Test/files/arst.php";
       ?>

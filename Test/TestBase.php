@@ -125,6 +125,7 @@ class TestBase extends TestEM
     Config::$stagingDir       = self::$testFileDir . '/staging/';
     Config::$draftDir         = self::$testFileDir . '/drafts/';
     Config::$editableDraftDir = self::$testFileDir . '/editableDrafts/';
+    Config::$tmpDir           = self::$testFileDir . '/tmp/';
 
     Config::$allowableDraftTypes = [
       Config::PUBLIC_DRAFT,

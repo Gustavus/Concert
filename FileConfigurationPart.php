@@ -73,6 +73,12 @@ class FileConfigurationPart
   private $edited = false;
 
   /**
+   * Path of the file this configuration represents
+   * @var integer
+   */
+  private $filePath;
+
+  /**
    * Flag to see if any html content may contain mid-tag html.
    *   ie. <a href="\<\?php echo 'arst';\?\>" class="test" data-arst="\<\?php echo 'tsar';\?\>" style="">
    *     class="test" and data-arst would be mid-tag content
@@ -120,7 +126,7 @@ class FileConfigurationPart
    *
    * @throws  InvalidArgumentException If contentType, content, or key is missing from the params array
    */
-  public function __construct(array $params = array())
+  public function __construct(array $params = array(), $filePath = null)
   {
     if (!isset($params['contentType'], $params['content'], $params['key'])) {
       throw new InvalidArgumentException('The expected keys of contentType, content, and key were not found.');
@@ -129,6 +135,7 @@ class FileConfigurationPart
     $this->contentType = $params['contentType'];
     $this->content     = $params['content'];
     $this->key         = $params['key'];
+    $this->filePath    = $filePath;
   }
 
   /**
@@ -166,16 +173,22 @@ class FileConfigurationPart
    *
    * @param boolean $wrapEditableContent Whether we want editable content wrapped in our editable html container
    * @param boolean $indentHTML Whether to indent HTML or not
+   * @param boolean $adjustPHPForExecution Whether to convert php to be able to be executed from a new location
    * @return string
    */
-  public function getContent($wrapEditableContent = false, $indentHTML = true)
+  public function getContent($wrapEditableContent = false, $indentHTML = true, $adjustPHPForExecution = false)
   {
     if ($this->isPHPContent()) {
-      if ($wrapEditableContent || (Config::ALLOW_PHP_EDITS && $this->edited)) {
+      if ($adjustPHPForExecution || (Config::ALLOW_PHP_EDITS && $this->edited)) {
         // @todo convert GustavusPrettyPrinter to support whitespace once we start allowing php edits.
         $prettyPrinter = new GustavusPrettyPrinter;
         $wrapEditablePHPContent = Config::ALLOW_PHP_EDITS;
-        if ($wrapEditableContent) {
+        if ($adjustPHPForExecution) {
+          // replace magic constants in our file
+          if ($this->replaceMagicConstants()) {
+            // contents have been replaced. We want to rebuild our phpNodes if they have been built already.
+            $this->phpNodes = null;
+          }
           // we need to remove nodes that have already been defined
           $modified = $this->removeAlreadyDefinedPHPNodes();
           // look for inclusions and convert to absolute paths
@@ -917,13 +930,33 @@ class FileConfigurationPart
             continue;
           }
           // we need to convert this to be absolute
-          $base = dirname($_SERVER['SCRIPT_FILENAME']);
+          if (!empty($this->filePath)) {
+            $base = dirname($this->filePath);
+          } else {
+            // fallback to using the script filename
+            $base = dirname($_SERVER['SCRIPT_FILENAME']);
+          }
           $node->expr->value = $base . DIRECTORY_SEPARATOR . $node->expr->value;
           $modified = true;
         }
       }
     }
     return $modified;
+  }
+
+  /**
+   * Removes magic php constants content and replaces them with their interpreted value.
+   *
+   * @return boolean
+   */
+  private function replaceMagicConstants()
+  {
+    $oldContent = $this->content;
+    $newDir = dirname($this->filePath);
+
+    $this->content = str_replace('__DIR__', sprintf('\'%s\'', $newDir), $this->content);
+    $this->content = str_replace('__FILE__', sprintf('\'%s\'', $this->filePath), $this->content);
+    return $this->content !== $oldContent;
   }
 
   /**

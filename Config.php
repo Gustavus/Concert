@@ -617,6 +617,13 @@ class Config
   public static $stagingDir = '/cis/www-etc/lib/Gustavus/Concert/staging/';
 
   /**
+   * Directory used to store temporary files
+   *
+   * @var string
+   */
+  public static $tmpDir = '/cis/www-etc/lib/Gustavus/Concert/tmp/';
+
+  /**
    * Supported content types
    *
    * @var array
