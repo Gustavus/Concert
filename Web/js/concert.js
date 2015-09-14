@@ -182,7 +182,7 @@ Gustavus.Concert = {
     // disable our class list since this overrides any other classes applied to images
     image_class_list: false,
     image_title: true,
-    //image_description: true,
+    image_description: true,
     filemanager_title: "Concert File Manager" ,
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
@@ -220,34 +220,66 @@ Gustavus.Concert = {
         editor.setContent(content);
       });
 
-      // editor.on('init', function(e) {
-      //   // highjack the open function so we can do extra operations if needed
-      //   editor.windowManager.origOpen = editor.windowManager.open;
-      //   editor.windowManager.open = function(args, params) {
-      //     // check to see if this is an image window. Title should work, but fallback to looking at the data and guessing that it is an image
-      //     if ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width'))) {
-      //       // we are working with images
-      //       // highjack the onSubmit function so we can do our checks
-      //       args.origSubmit = args.onSubmit;
-      //       args.onSubmit = function(e) {
-      //         if (!e.data.alt) {
-      //           // we don't see an alt property
-      //           editor.windowManager.alert("Please specify an image description", function() {
-      //             if (editor.windowManager.windows.length > 0) {
-      //               // focus our last window
-      //               editor.windowManager.windows[editor.windowManager.windows.length - 1].focus();
-      //             }
-      //           });
-      //           return false;
-      //         }
-      //         // call the original onSubmit function
-      //         return args.origSubmit(e);
-      //       };
-      //     }
-      //     // call the original open function
-      //     return editor.windowManager.origOpen(args, params);
-      //   };
-      // });
+      editor.on('init', function(e) {
+        // highjack the open function so we can do extra operations if needed
+        editor.windowManager.origOpen = editor.windowManager.open;
+        editor.windowManager.open = function(args, params) {
+          // check to see if this is an image window. Title should work, but fallback to looking at the data and guessing that it is an image
+          if (typeof args.data == 'object' && ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width')))) {
+
+            if (args.data.src) {
+              // we might need to adjust the width and height of the dialog from our gimli url
+              var url = Gustavus.Utility.URL.parseURL(args.data.src);
+              if (url.pathname.indexOf('/gimli/') === 0) {
+                // we have a gimli url
+                // we may need to update the width and height
+                var widthMatches = url.pathname.match('^/gimli/[^w]*?(w[,.:x]?([0-9]+))');
+                var currentWidth = widthMatches ? widthMatches[2] : null;
+
+                var heightMatches = url.pathname.match('^/gimli/[^h]*?(h[,.:x]?([0-9]+))');
+                var currentHeight = heightMatches ? heightMatches[2] : null;
+
+                args.data.width  = currentWidth;
+                args.data.height = currentHeight;
+              }
+            }
+
+            // now we need to hide our constrain proportions box
+            for (key in args.body) {
+              if (args.body[key] && args.body[key].label && args.body[key].label === 'Dimensions') {
+                for (dimKey in args.body[key].items) {
+                  if (args.body[key].items[dimKey] && args.body[key].items[dimKey].name === 'constrain') {
+                    // add a class to hide the constrain proportions box
+                    args.body[key].items[dimKey].classes = 'nodisplay';
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+
+            // we are working with images
+            // highjack the onSubmit function so we can do our checks
+            args.origSubmit = args.onSubmit;
+            args.onSubmit = function(e) {
+              if (!e.data.alt) {
+                // we don't see an alt property
+                editor.windowManager.alert("Please specify an image description", function() {
+                  if (editor.windowManager.windows.length > 0) {
+                    // focus our last window
+                    editor.windowManager.windows[editor.windowManager.windows.length - 1].focus();
+                  }
+                });
+                return false;
+              }
+              // call the original onSubmit function
+              return args.origSubmit(e);
+            };
+          }
+          // call the original open function
+          return editor.windowManager.origOpen(args, params);
+        };
+      });
 
       // add a shortcut to indent list elements
       // supports alt+= and alt+shift+=, but we broadcast it as alt++
@@ -514,6 +546,8 @@ Gustavus.Concert = {
       $this = $(this);
       var width = $this.attr('width');
       var height = $this.attr('height');
+      $this.attr('width', null);
+      $this.attr('height', null);
       var src = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
@@ -537,16 +571,32 @@ Gustavus.Concert = {
           // now we need to adjust the gimli parameters
           if (currentWidth) {
             if (!width) {
-              width = currentWidth;
+              // remove width
+              url.pathname = url.pathname.replace(widthMatches[1], '');
+            } else {
+              url.pathname = url.pathname.replace(widthMatches[1], 'w' + width);
             }
-            url.pathname = url.pathname.replace(widthMatches[1], 'w' + width);
+          } else if (width) {
+            // we might need to add our new width in
+            var heightMatch = url.pathname.match(/gimli\/(h\d+)/);
+            if (heightMatch) {
+              url.pathname = url.pathname.replace(heightMatch[1], heightMatch[1] + '-w' + width);
+            }
           }
           if (currentHeight) {
             if (!height) {
-              height = currentHeight;
+              url.pathname = url.pathname.replace(heightMatches[1], '');
+            } else {
+              url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
             }
-            url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
+          } else if (height) {
+            var widthMatch = url.pathname.match(/gimli\/(w\d+)/);
+            if (widthMatch) {
+              url.pathname = url.pathname.replace(widthMatch[1], widthMatch[1] + '-h' + height);
+            }
           }
+          // clean up any rogue dashes
+          url.pathname = url.pathname.replace(/gimli\/(w\d+|h\d+)-\//, 'gimli/$1/');
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
           return true;
         }

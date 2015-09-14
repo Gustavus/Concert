@@ -71,6 +71,15 @@ div.editable:any(:hover, :focus) {
   width: auto;
 }
 
+/* Fix tinymce's browse butotn alignment */
+.mce-open.mce-btn button {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.mce-nodisplay {
+  display: none;
+}
+
 @media $(mobile) {
   #addusers {
     width: 100%;
