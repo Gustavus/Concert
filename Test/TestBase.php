@@ -652,6 +652,77 @@ $config["focusBox"] = ob_get_contents();
     ];
 
   /**
+   * File with magic constants
+   * @var string
+   */
+  protected static $magicConstantsContents = '<?php
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent(__DIR__);
+
+function executeSomeContent()
+{
+  return "This is some executed content for" . __FILE__;
+}
+
+ob_start();
+?>
+
+<p>This is some html content</p>
+
+<?php
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];';
+
+  /**
+   * File with magic constants configuration array
+   * @var array
+   */
+  protected static $magicConstantsConfigArray = [
+      'phpcontent' => [
+        0 => '
+// use template getter...
+// must use $config["templatepreference"]
+$config = [
+  "title" => "Some Title",
+  "subTitle" => "Some Sub Title",
+  "content" => "This is some content.",
+];
+
+$config["content"] .= executeSomeContent(__DIR__);
+
+function executeSomeContent()
+{
+  return "This is some executed content for " . __FILE__;
+}
+
+ob_start();
+',
+        2 => '
+
+$config["content"] .= ob_get_contents();
+
+echo $config["content"];'
+      ],
+      'scriptcontent' => [],
+      'content' => [
+        1 => '
+
+<p>This is some html content</p>
+
+'
+      ],
+    ];
+
+  /**
    * Sets up the DB using the entities and their namespace mapping
    *
    * @param  array  $entities Entity names
