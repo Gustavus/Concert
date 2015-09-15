@@ -327,9 +327,8 @@ Gustavus.Concert = {
       "advlist autolink lists link image charmap print anchor",
       "searchreplace visualblocks fullscreen",
       "insertdatetime media table contextmenu paste responsivefilemanager",
-      "spellchecker" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
+      "spellchecker hr" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
     ];
-    //@todo add hr
 
     if (this.allowCode || this.isAdmin) {
       plugins.push('code');
