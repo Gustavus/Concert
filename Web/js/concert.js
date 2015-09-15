@@ -904,11 +904,17 @@ Gustavus.Concert = {
    * Re-initializes template plugins
    *
    * @param  {HTMLElement} currObj object we need to reinit for
+   * @param {Object} args additional arguments extend.apply passes
    * @return {undefined}
    */
-  reInitTemplatePlugins: function(currObj) {
+  reInitTemplatePlugins: function(currObj, args) {
+    if (currObj && args && args.editable) {
+      var $autoCaptions = $('img.autocaption', currObj);
+    } else {
+      var $autoCaptions = $('div.editable img.autocaption');
+    }
     // trigger load for jcaption
-    $('img.autocaption', currObj).trigger('load');
+    $autoCaptions.trigger('load');
   },
 
   /**
@@ -917,8 +923,13 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   destroyTemplatePluginsPreApply: function(currObj) {
+    if (currObj) {
+      var $autoCaptions = $('img.autocaption', currObj);
+    } else {
+      var $autoCaptions = $('div.editable img.autocaption');
+    }
     // remove any jcaption stuff
-    $('img.autocaption', currObj).each(function() {
+    $autoCaptions.each(function() {
       var parents = $(this).parents('.caption');
       var img = this;
       // make sure the image's title is the same as the caption in case someone attempted to edit it.
@@ -949,11 +960,12 @@ Gustavus.Concert = {
   /**
    * Destroys any plugins the template adds after Extend.apply gets called
    * @param  {HTMLElement} currObj object we need destroy plugins in
+   * @param {Object} args additional arguments extend.apply passes
    * @return {undefined}
    */
-  destroyTemplatePluginsPostApply: function(currObj) {
+  destroyTemplatePluginsPostApply: function(currObj, args) {
     // Remove html that gets added in when toggling links
-    if (currObj) {
+    if (currObj && args && args.editable) {
       var $toggleLinks = $('a.toggleLink', currObj);
     } else {
       var $toggleLinks = $('div.editable a.toggleLink');
@@ -985,10 +997,15 @@ Gustavus.Concert = {
   /**
    * Displays togglable links
    * @param  {HTMLElement} currObj object toggle links in
+   * @param {Object} args additional arguments extend.apply passes
    * @return {undefined}
    */
-  toggleLinksDisplayed: function(currObj) {
-    var $toggleLinks = $('a.toggleLink', currObj);
+  toggleLinksDisplayed: function(currObj, args) {
+    if (currObj && args && args.editable) {
+      var $toggleLinks = $('a.toggleLink', currObj);
+    } else {
+      var $toggleLinks = $('div.editable a.toggleLink');
+    }
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.addClass('toggledOpen');
@@ -1024,16 +1041,16 @@ Gustavus.Concert = {
         Gustavus.Template.addUserMessage('Some hidden elements on this page have been displayed to help with editing.', 'message', 50);
       }
 
-      Extend.add('page', function() {
+      Extend.add('page', function(args) {
         // Wait until the template does it's thing, then destroy certain pieces.
         // remove additional HTML calling Extend.apply may have added.
-        Gustavus.Concert.destroyTemplatePluginsPostApply(this);
-        Gustavus.Concert.toggleLinksDisplayed(this);
-        Gustavus.Concert.reInitTemplatePlugins(this);
+        Gustavus.Concert.destroyTemplatePluginsPostApply(this, args);
+        Gustavus.Concert.toggleLinksDisplayed(this, args);
+        Gustavus.Concert.reInitTemplatePlugins(this, args);
       }, 100);
       // apply the page filter to make sure our stuff runs.
       // @todo convert this to the body and add div.editable in the places this is used so we don't adjust things outside of editable divs. Or send another param
-      Extend.apply('page', $('div.editable'));
+      Extend.apply('page', $('div.editable'), {'editable': true});
 
       Gustavus.Concert.addImageWidthAndHeightAttributesFromGIMLI();
 
