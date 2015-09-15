@@ -36,6 +36,12 @@ class FileManager
   private $srcFilePath;
 
   /**
+   * Destination of the file the file we are editing represents
+   * @var string
+   */
+  private $destFilePath;
+
+  /**
    * Username of the person editing the file
    * @var string
    */
@@ -131,13 +137,31 @@ class FileManager
    * @param string $filePath Path to the file we are trying to edit
    * @param string $srcFilePath Path to the file we are creating a file from
    * @param Connection $dbal Doctrine connection to use
+   * @param string $destFilePath Path to the file this page is representing
    */
-  public function __construct($username, $filePath, $srcFilePath = null, $dbal = null)
+  public function __construct($username, $filePath, $srcFilePath = null, $dbal = null, $destFilePath = null)
   {
     $this->username    = $username;
     $this->filePath    = str_replace('//', '/', $filePath);
     $this->srcFilePath = $srcFilePath;
     $this->dbal        = $dbal;
+    if (empty($destFilePath)) {
+      $this->destFilePath = $this->filePath;
+    } else {
+      $this->destFilePath = $destFilePath;
+    }
+  }
+
+  /**
+   * Destructor
+   */
+  public function __destruct()
+  {
+    $fileName = Config::$tmpDir . $this->getDraftFileName();
+    if (file_exists($fileName)){
+      // remove any temporary files we have made..
+      unlink($fileName);
+    }
   }
 
   /**
@@ -287,7 +311,7 @@ class FileManager
    */
   private function buildFileConfiguration()
   {
-    return new FileConfiguration($this->getFileConfigurationArray(), $this->fileSize);
+    return new FileConfiguration($this->getFileConfigurationArray(), $this->destFilePath, $this->fileSize);
   }
 
   /**
@@ -307,11 +331,16 @@ class FileManager
    * Assembles the file from the FileConfiguration
    *
    * @param  boolean $forEditing Whether we want to assemble the file for editing or for saving.
+   * @param boolean $adjustPHPForExecution Whether to convert php to be able to be executed from a new location
    * @return string
    */
-  private function assembleFile($forEditing = false)
+  private function assembleFile($forEditing = false, $adjustPHPForExecution = false)
   {
-    $file = $this->getFileConfiguration()->buildFile($forEditing);
+    if ($forEditing) {
+      // we want to adjust our php if we are building an editable file
+      $adjustPHPForExecution = true;
+    }
+    $file = $this->getFileConfiguration()->buildFile($forEditing, $adjustPHPForExecution);
 
     // remove things the template adds in.
     $file = preg_replace('`\<\!\-\-templateInsertion\-\-\>.+?\<\!\-\-endTemplateInsertion\-\-\>`', '', $file);
@@ -411,15 +440,11 @@ class FileManager
       $result = $this->getDraftForUser($this->username);
       $draftFilePath = $this->getDraftFileName();
 
-      $fm = new FileManager($this->username, Config::$draftDir . $draftFilePath, null, $this->getDBAL());
-      $fileContents = $fm->assembleFile(true);
+      $fm = new FileManager($this->username, Config::$draftDir . $draftFilePath, null, $this->getDBAL(), $this->destFilePath);
+      $fileContents = $fm->assembleFile(true, true);
     } else {
-      $fileContents = $this->assembleFile(true);
+      $fileContents = $this->assembleFile(true, true);
     }
-
-    // Replace magic constants with their interpreted value.
-    // If we don't do this, the magic constants will point to our editable draft folder, and paths using these will be broken.
-    $this->replaceMagicConstants($fileContents);
 
     if ($this->saveFile($fileName, $fileContents)) {
       return $fileName;
@@ -428,18 +453,25 @@ class FileManager
   }
 
   /**
-   * Removes magic php constants from assembled file and replaces them with their interpreted value.
-   *   This is necessary if the file we are editing uses __DIR__ to specify file paths.
+   * Makes and saves a temporary file
    *
-   * @param  string &$fileContents Contents to remove magic constants from
-   * @return void
+   * @return string|boolean String of the temporary file. False if saving failed.
    */
-  private function replaceMagicConstants(&$fileContents)
+  public function makeTemporaryFile()
   {
-    $newDir = dirname($this->filePath);
+    // make sure our tmp folder exists
+    if (!is_dir(Config::$tmpDir)) {
+      mkdir(Config::$tmpDir, 0777, true);
+    }
 
-    $fileContents = str_replace('__DIR__', sprintf('\'%s\'', $newDir), $fileContents);
-    $fileContents = str_replace('__FILE__', sprintf('\'%s\'', $this->filePath), $fileContents);
+    $fileName = Config::$tmpDir . $this->getDraftFileName();
+
+    $fileContents = $this->assembleFile(false, true);
+
+    if ($this->saveFile($fileName, $fileContents)) {
+      return $fileName;
+    }
+    return false;
   }
 
   /**
@@ -1027,7 +1059,9 @@ class FileManager
 
     $this->saveInitialRevisionIfNeeded();
     if (rename($srcFilePath, $destination)) {
-      chgrp($destination, $group);
+      if ($group) {
+        chgrp($destination, $group);
+      }
       chown($destination, $owner);
 
       if (!$this->markStagedFileAsPublished($srcFilePath)) {
@@ -1300,7 +1334,9 @@ class FileManager
 
     if (!is_dir($directory)) {
       if (mkdir($directory, 0775, true)) {
-        chgrp($directory, $group);
+        if ($group) {
+          chgrp($directory, $group);
+        }
 
         if ($currentUser === 'root') {
           chown($directory, $owner);
@@ -1312,7 +1348,9 @@ class FileManager
     } else if ($forcePermissions) {
       // Directory exists. Ensure our specified permissions are forced.
       if ($currentUser === 'root') {
-        chgrp($directory, $group);
+        if ($group) {
+          chgrp($directory, $group);
+        }
         chown($directory, $owner);
       }
     }

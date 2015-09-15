@@ -37,6 +37,12 @@ class FileConfiguration
   private $fileSize;
 
   /**
+   * Path of the file this configuration represents
+   * @var integer
+   */
+  private $filePath;
+
+  /**
    * Array of keys of edited FileConfigurationParts
    * @var array
    */
@@ -46,12 +52,14 @@ class FileConfiguration
    * Object constructor
    *
    * @param array $fileConfigurationArray fileConfigurationArray to build off of
+   * @param string $filePath Path of the file we are representing
    * @param integer $fileSize Size of the file
    */
-  public function __construct($fileConfigurationArray, $fileSize = null)
+  public function __construct($fileConfigurationArray, $filePath = null, $fileSize = null)
   {
     $this->fileConfigurationArray = $fileConfigurationArray;
     $this->fileSize = $fileSize;
+    $this->filePath = $filePath;
     $this->buildFileConfigurationParts();
   }
 
@@ -72,7 +80,7 @@ class FileConfiguration
           if (isset($this->fileConfigurationParts[$key])) {
             throw new UnexpectedValueException('The configuration part already exists.');
           }
-          $this->fileConfigurationParts[$key] = new FileConfigurationPart(['contentType' => $contentType, 'key' => $key, 'content' => $content]);
+          $this->fileConfigurationParts[$key] = new FileConfigurationPart(['contentType' => $contentType, 'key' => $key, 'content' => $content], $this->filePath);
         }
       }
     }
@@ -95,9 +103,10 @@ class FileConfiguration
    * Builds a file from the FileConfigurationPart objects.
    *
    * @param boolean $wrapEditableContent Whether we want to build the file for for editing or not.
+   * @param boolean $adjustPHPForExecution Whether to convert php to be able to be executed from a new location
    * @return string
    */
-  public function buildFile($wrapEditableContent = false)
+  public function buildFile($wrapEditableContent = false, $adjustPHPForExecution = false)
   {
     $file = '';
     if (empty($this->fileSize)) {
@@ -124,12 +133,12 @@ class FileConfiguration
         } else {
           $template = "%s<?php%s?>\n";
         }
-        $file .= sprintf($template, $newLine, $configurationPart->getContent($wrapEditableContent, $indentHTML));
+        $file .= sprintf($template, $newLine, $configurationPart->getContent($wrapEditableContent, $indentHTML, $adjustPHPForExecution));
 
       } else {
         $file .= sprintf('%s%s%s',
             ($i === 1 ? '' : "\n"),
-            $configurationPart->getContent($wrapEditableContent, $indentHTML),
+            $configurationPart->getContent($wrapEditableContent, $indentHTML, $adjustPHPForExecution),
             ($i === $partsCount ? '' : "\n")
         );
       }

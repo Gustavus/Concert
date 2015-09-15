@@ -181,6 +181,8 @@ Gustavus.Concert = {
     image_advtab: false,
     // disable our class list since this overrides any other classes applied to images
     image_class_list: false,
+    image_title: true,
+    image_description: true,
     filemanager_title: "Concert File Manager" ,
     external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
 
@@ -216,6 +218,36 @@ Gustavus.Concert = {
         content = Gustavus.Concert.convertEmbedsIntoResponsiveBoxes(content);
 
         editor.setContent(content);
+      });
+
+      editor.on('init', function(e) {
+        // highjack the open function so we can do extra operations if needed
+        editor.windowManager.origOpen = editor.windowManager.open;
+        editor.windowManager.open = function(args, params) {
+          // check to see if this is an image window. Title should work, but fallback to looking at the data and guessing that it is an image
+          if (typeof args.data == 'object' && ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width')))) {
+
+            // we are working with images
+            // highjack the onSubmit function so we can do our checks
+            args.origSubmit = args.onSubmit;
+            args.onSubmit = function(e) {
+              if (!e.data.alt) {
+                // we don't see an alt property
+                editor.windowManager.alert("Please specify an image description", function() {
+                  if (editor.windowManager.windows.length > 0) {
+                    // focus our last window
+                    editor.windowManager.windows[editor.windowManager.windows.length - 1].focus();
+                  }
+                });
+                return false;
+              }
+              // call the original onSubmit function
+              return args.origSubmit(e);
+            };
+          }
+          // call the original open function
+          return editor.windowManager.origOpen(args, params);
+        };
       });
 
       // add a shortcut to indent list elements
@@ -295,7 +327,7 @@ Gustavus.Concert = {
       "advlist autolink lists link image charmap print anchor",
       "searchreplace visualblocks fullscreen",
       "insertdatetime media table contextmenu paste responsivefilemanager",
-      "spellchecker" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
+      "spellchecker hr" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
     ];
 
     if (this.allowCode || this.isAdmin) {
@@ -403,6 +435,8 @@ Gustavus.Concert = {
    */
   cleanUpContent: function(content, isSiteNav) {
     var cleaned = Gustavus.Concert.mceCleanup(content);
+    // convert images to be responsive
+    cleaned = Gustavus.Concert.makeImagesResponsive(cleaned);
     cleaned = cleaned.replace(/<br.data-mce[^>]*>/g, '');
     // get rid of mce-item* stuff that tinymce doesn't always clean up.
     cleaned = cleaned.replace(/ ?mce-item[^>" ]*/g, '');
@@ -438,7 +472,7 @@ Gustavus.Concert = {
       });
       // now that our classes have been removed, there will probably be a bunch of empty spans
       $table.find('span:empty').remove();
-      var $trimmed = $table.find('[data-hide][data-footable-trimmed]');
+      var $trimmed = $table.find('[data-footable-trimmed]');
       if ($trimmed) {
         // remove stuff added in when trimming tables
         $trimmed.removeAttr('data-hide data-footable-trimmed').css('display', '');
@@ -471,6 +505,99 @@ Gustavus.Concert = {
   },
 
   /**
+   * Makes our images responsive by converting them to gimli and removing the width and height attributes. This has to be called when building the edit objects. Tinymce relies on the width and height attributes being set
+   * @param  {String} content Content to convert images in
+   * @return {String}
+   */
+  makeImagesResponsive: function(content) {
+    // wrap everything in a div so we only have one jquery object to work with
+    var $content = $('<div>' + content + '</div>');
+
+    $content.find('img').each(function() {
+      var $this = $(this);
+      var width = $this.attr('width');
+      var height = $this.attr('height');
+      var src = $this.attr('src');
+
+      var url = Gustavus.Utility.URL.parseURL(src);
+      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
+        // convertImageURLsToGIMLI should take care of all of these, but just in case.
+        if (url.pathname.indexOf('/slir/') === 0) {
+          // we have a slir request. We want this converted to gimli.
+          url.pathname = url.pathname.replace('/slir/', '/gimli/');
+          $this.attr('src', Gustavus.Utility.URL.buildURL(url));
+        } else if (url.pathname.indexOf('/gimli/') !== 0 && (width || height)) {
+          // we have a width and height set, but it isn't in gimli yet.
+          // Convert it
+          var newPathname = '/gimli/';
+          var separator = '';
+          if (width) {
+            newPathname += 'w' + width;
+            separator = '-';
+          }
+          if (height) {
+            newPathname += separator + 'h' + height;
+          }
+          newPathname += url.pathname;
+          url.pathname = newPathname;
+          $this.attr('src', Gustavus.Utility.URL.buildURL(url));
+        }
+
+        // remove width and height
+        $this.attr('width', null);
+        $this.attr('height', null);
+
+      }
+    });
+    return $content.html();
+  },
+
+  /**
+   * Adds our height and width attributes to images from gimli so we can maintain aspect ratios. This should be called right before tiny mce is initialized.
+   * @return {undefined}
+   */
+  addImageWidthAndHeightAttributesFromGIMLI: function() {
+    var $images = $('div.editable img');
+
+    $images.each(function() {
+      var $this = $(this);
+      var width  = $this.attr('width');
+      var height = $this.attr('height');
+      var src = $this.attr('src');
+
+      var url = Gustavus.Utility.URL.parseURL(src);
+      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
+        if (url.pathname.indexOf('/slir/') === 0) {
+          // we have a slir request. We want this converted to gimli.
+          url.pathname = url.pathname.replace('/slir/', '/gimli/');
+        }
+        if (url.pathname.indexOf('/gimli/') === 0) {
+          // we have a gimli url
+          // lets get the width and height out of it
+          var widthMatches = url.pathname.match('^/gimli/[^w]*?(w[,.:x]?([0-9]+))');
+          var gimliWidth = widthMatches ? widthMatches[2] : null;
+
+          var heightMatches = url.pathname.match('^/gimli/[^h]*?(h[,.:x]?([0-9]+))');
+          var gimliHeight = heightMatches ? heightMatches[2] : null;
+
+          if (!width) {
+            width  = gimliWidth;
+          }
+          if (!height) {
+            height = gimliHeight;
+          }
+        }
+
+        // set our width and height
+        $this.attr('width', width);
+        $this.attr('height', height);
+
+        $this.attr('src', Gustavus.Utility.URL.buildURL(url));
+      }
+    });
+  },
+
+  /**
    * Function for tinyMCE to convert image urls into GIMLI urls
    * @param  {String} content Content to convert URLs for
    * @return {String} Adjusted content
@@ -481,9 +608,9 @@ Gustavus.Concert = {
 
     $content.find('img').each(function() {
       $this = $(this);
-      var width = $this.attr('width');
+      var width  = $this.attr('width');
       var height = $this.attr('height');
-      var src = $this.attr('src');
+      var src    = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
       if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
@@ -500,38 +627,65 @@ Gustavus.Concert = {
           var heightMatches = url.pathname.match('^/gimli/[^h]*?(h[,.:x]?([0-9]+))');
           var currentHeight = heightMatches ? heightMatches[2] : null;
           if (currentWidth == width && currentHeight == height) {
-            // nothing to do
+            // nothing to do.
+            // return true to continue our .each loop
             return true;
           }
           // now we need to adjust the gimli parameters
           if (currentWidth) {
             if (!width) {
-              width = currentWidth;
+              // remove width from gimli
+              url.pathname = url.pathname.replace(widthMatches[1], '');
+            } else {
+              url.pathname = url.pathname.replace(widthMatches[1], 'w' + width);
             }
-            url.pathname = url.pathname.replace(widthMatches[1], 'w' + width);
+          } else if (width) {
+            // we don't have a width in gimli, but do in the width attribute. Add our new width after the height if it exists
+            var heightMatch = url.pathname.match(/gimli\/(h\d+)/);
+            if (heightMatch) {
+              var replacement = (height ? heightMatch[1] : '');
+              // we need to add our width after the height
+              url.pathname = url.pathname.replace(heightMatch[1], replacement + '-w' + width);
+            } else {
+              url.pathname = url.pathname.replace('/gimli/', '/gimli/w' + width);
+            }
           }
           if (currentHeight) {
             if (!height) {
-              height = currentHeight;
+              // remove height from gimli
+              url.pathname = url.pathname.replace(heightMatches[1], '');
+            } else {
+              url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
             }
-            url.pathname = url.pathname.replace(heightMatches[1], 'h' + height);
+          } else if (height) {
+            // we don't have a height in gimli, but do in the height attribute. Add our new height after the width if it exists
+            var widthMatch = url.pathname.match(/gimli\/(w\d+)/);
+            if (widthMatch) {
+              var replacement = (width ? widthMatch[1] : '');
+              // we need to add our height after the width
+              url.pathname = url.pathname.replace(widthMatch[1], replacement + '-h' + height);
+            } else {
+              url.pathname = url.pathname.replace('/gimli/', '/gimli/h' + height);
+            }
           }
+          // clean up any rogue dashes
+          url.pathname = url.pathname.replace(/gimli\/(w\d+|h\d+)-\//, 'gimli/$1/');
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
-          return true;
+        } else {
+          // we don't yet have a gimli url. Let's build one.
+          var newPathname = '/gimli/';
+          var separator = '';
+          if (width) {
+            newPathname += 'w' + width;
+            separator = '-';
+          }
+          if (height) {
+            newPathname += separator + 'h' + height;
+          }
+          newPathname += url.pathname;
+          url.pathname = newPathname;
+          $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         }
-        // we don't yet have a gimli url. Let's build one.
-        var newPathname = '/gimli/';
-        var separator = '';
-        if (width) {
-          newPathname += 'w' + width;
-          separator = '-';
-        }
-        if (height) {
-          newPathname += separator + 'h' + height;
-        }
-        newPathname += url.pathname;
-        url.pathname = newPathname;
-        $this.attr('src', Gustavus.Utility.URL.buildURL(url));
       }
     });
 
@@ -550,7 +704,7 @@ Gustavus.Concert = {
     $content.find('iframe').each(function() {
       var $this = $(this);
       var width = $this.attr('width').replace('px', '');
-      if ($this.parent().hasClass('box16x9')) {
+      if ($this.parent().hasClass('box16x9') || $this.parent().hasClass('box4x3') || $this.parent().hasClass('boxWidescreen') || $this.parent().hasClass('boxFullscreen')) {
         // this looks like it might already be wrapped. We just need to verify.
         if ($this.parent().parent().children().length === 1) {
           // this is the only element in the parent.
@@ -720,7 +874,7 @@ Gustavus.Concert = {
       'concertAction': 'query',
       'query': 'hasSharedDraft',
       'filePath': this.filePath,
-    }
+    };
 
     return $.ajax({
       type: 'POST',
@@ -735,8 +889,8 @@ Gustavus.Concert = {
    * @return {Boolean}
    */
   hasDirtyEditor: function() {
-    var dirtyEditor = false
-    for (i in tinymce.editors) {
+    var dirtyEditor = false;
+    for (var i in tinymce.editors) {
       if (tinymce.editors[i].isDirty()) {
         dirtyEditor = true;
         break;
@@ -749,11 +903,17 @@ Gustavus.Concert = {
    * Re-initializes template plugins
    *
    * @param  {HTMLElement} currObj object we need to reinit for
+   * @param {Object} args additional arguments extend.apply passes
    * @return {undefined}
    */
-  reInitTemplatePlugins: function(currObj) {
+  reInitTemplatePlugins: function(currObj, args) {
+    if (currObj && args && args.editable) {
+      var $autoCaptions = $('img.autocaption', currObj);
+    } else {
+      var $autoCaptions = $('div.editable img.autocaption');
+    }
     // trigger load for jcaption
-    $('img.autocaption', currObj).trigger('load');
+    $autoCaptions.trigger('load');
   },
 
   /**
@@ -762,8 +922,13 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   destroyTemplatePluginsPreApply: function(currObj) {
+    if (currObj) {
+      var $autoCaptions = $('img.autocaption', currObj);
+    } else {
+      var $autoCaptions = $('div.editable img.autocaption');
+    }
     // remove any jcaption stuff
-    $('img.autocaption', currObj).each(function() {
+    $autoCaptions.each(function() {
       var parents = $(this).parents('.caption');
       var img = this;
       // make sure the image's title is the same as the caption in case someone attempted to edit it.
@@ -794,11 +959,16 @@ Gustavus.Concert = {
   /**
    * Destroys any plugins the template adds after Extend.apply gets called
    * @param  {HTMLElement} currObj object we need destroy plugins in
+   * @param {Object} args additional arguments extend.apply passes
    * @return {undefined}
    */
-  destroyTemplatePluginsPostApply: function(currObj) {
+  destroyTemplatePluginsPostApply: function(currObj, args) {
     // Remove html that gets added in when toggling links
-    var $toggleLinks = $('div.editable a.toggleLink', currObj);
+    if (currObj && args && args.editable) {
+      var $toggleLinks = $('a.toggleLink', currObj);
+    } else {
+      var $toggleLinks = $('div.editable a.toggleLink');
+    }
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.removeClass('toggledOpen');
@@ -826,10 +996,15 @@ Gustavus.Concert = {
   /**
    * Displays togglable links
    * @param  {HTMLElement} currObj object toggle links in
+   * @param {Object} args additional arguments extend.apply passes
    * @return {undefined}
    */
-  toggleLinksDisplayed: function(currObj) {
-    var $toggleLinks = $('a.toggleLink', currObj);
+  toggleLinksDisplayed: function(currObj, args) {
+    if (currObj && args && args.editable) {
+      var $toggleLinks = $('a.toggleLink', currObj);
+    } else {
+      var $toggleLinks = $('div.editable a.toggleLink');
+    }
     $toggleLinks.each(function() {
       $toggleLink = $(this);
       $toggleLink.addClass('toggledOpen');
@@ -865,13 +1040,17 @@ Gustavus.Concert = {
         Gustavus.Template.addUserMessage('Some hidden elements on this page have been displayed to help with editing.', 'message', 50);
       }
 
-      Extend.add('page', function(thisObj) {
+      Extend.add('page', function(args) {
         // Wait until the template does it's thing, then destroy certain pieces.
         // remove additional HTML calling Extend.apply may have added.
-        Gustavus.Concert.destroyTemplatePluginsPostApply(thisObj);
-        Gustavus.Concert.toggleLinksDisplayed(thisObj);
-        Gustavus.Concert.reInitTemplatePlugins(thisObj);
+        Gustavus.Concert.destroyTemplatePluginsPostApply(this, args);
+        Gustavus.Concert.toggleLinksDisplayed(this, args);
+        Gustavus.Concert.reInitTemplatePlugins(this, args);
       }, 100);
+      // apply the page filter to make sure our stuff runs.
+      Extend.apply('page', $('div.editable'), {'editable': true});
+
+      Gustavus.Concert.addImageWidthAndHeightAttributesFromGIMLI();
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;
@@ -913,7 +1092,7 @@ $(document)
       .fail(function() {
         // something happened.
         alert('The draft was not successfully saved');
-      })
+      });
   })
 
   .on('click', '#concertSavePublicDraft', function(e) {

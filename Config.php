@@ -63,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 17;
+  const JS_VERSION = 19;
 
   /**
    * Autocomplete JS version
@@ -83,7 +83,7 @@ class Config
   /**
    * CSS version
    */
-  const CSS_VERSION = 3;
+  const CSS_VERSION = 4;
 
   /**
    * HTTPD user (User running apache)
@@ -615,6 +615,13 @@ class Config
    * @var string
    */
   public static $stagingDir = '/cis/www-etc/lib/Gustavus/Concert/staging/';
+
+  /**
+   * Directory used to store temporary files
+   *
+   * @var string
+   */
+  public static $tmpDir = '/cis/www-etc/lib/Gustavus/Concert/tmp/';
 
   /**
    * Supported content types

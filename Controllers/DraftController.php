@@ -96,6 +96,27 @@ class DraftController extends SharedController
     $this->addOutdatedDraftMessageIfNeeded($draft);
 
     $this->addNoRobotsTag();
+
+    return $this->displayDraft($filePath, $draftFilename);
+  }
+
+  /**
+   * Displays the draft.
+   *
+   * @param  string  $filePath  Path to the page the draft represents
+   * @param  string  $draftFilename Filename of the draft to display
+   * @return string
+   */
+  private function displayDraft($filePath, $draftFilename)
+  {
+    // we need to build a temporary file based on the draft for rendering.
+    // This fixes cases where the draft has relative includes, php magic constants, or anything else we needed to adjust
+    $tmpFM = new FileManager($this->getLoggedInUsername(), $filePath, $draftFilename);
+    $tmpFile = $tmpFM->makeTemporaryFile();
+    if ($tmpFile) {
+      return $this->displayPage($tmpFile, true);
+    }
+
     return $this->displayPage($draftFilename, true);
   }
 
@@ -166,7 +187,7 @@ class DraftController extends SharedController
     }
 
     $this->addNoRobotsTag();
-    return $this->displayPage($draftFilename, true);
+    return $this->displayDraft($draft['destFilepath'], $draftFilename);
   }
 
   /**
@@ -214,7 +235,7 @@ class DraftController extends SharedController
     $this->addOutdatedDraftMessageIfNeeded($draft);
 
     $this->addNoRobotsTag();
-    return $this->displayPage(Config::$draftDir . $draftName, true);
+    return $this->displayDraft($draft['destFilepath'], Config::$draftDir . $draftName);
   }
 
   /**
@@ -246,7 +267,7 @@ class DraftController extends SharedController
     }
 
     // now we need to make a fileManager to edit the current draft
-    $draftFM = new FileManager($this->getLoggedInUsername(), $draftFilePath, null, $this->getDB());
+    $draftFM = new FileManager($this->getLoggedInUsername(), $draftFilePath, null, $this->getDB(), $draft['destFilepath']);
     $draftFM->setUserIsEditingPublicDraft();
 
     if (!PermissionsManager::userCanEditDraft($this->getLoggedInUsername(), $draft)) {

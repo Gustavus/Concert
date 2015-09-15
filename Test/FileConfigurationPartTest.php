@@ -180,6 +180,62 @@ class FileConfigurationPartTest extends TestBase
   /**
    * @test
    */
+  public function replaceMagicConstants()
+  {
+    $params = [
+      'contentType' => Config::PHP_CONTENT_TYPE,
+      'content' => 'require_once(__DIR__ . "arst.php"); $currFile = __FILE__;',
+      'key'   => 0,
+    ];
+    $part = new FileConfigurationPart($params, '/testDir/test.php');
+
+    $this->assertTrue($this->call($part, 'replaceMagicConstants'));
+    $actual = $this->get($part, 'content');
+    $this->assertContains('/testDir/', $actual);
+    $this->assertNotContains('__DIR__', $actual);
+    $this->assertContains('/testDir/test.php', $actual);
+    $this->assertNotContains('__FILE__', $actual);
+  }
+
+  /**
+   * @test
+   */
+  public function replaceMagicConstantsNone()
+  {
+    $params = [
+      'contentType' => Config::PHP_CONTENT_TYPE,
+      'content' => 'require_once("arst.php");',
+      'key'   => 0,
+    ];
+    $part = new FileConfigurationPart($params, '/testDir/test.php');
+
+    $this->assertFalse($this->call($part, 'replaceMagicConstants'));
+    $actual = $this->get($part, 'content');
+    $this->assertContains('arst.php', $actual);
+  }
+
+  /**
+   * @test
+   */
+  public function getContentWithMagicConstants()
+  {
+    $params = [
+      'contentType' => Config::PHP_CONTENT_TYPE,
+      'content' => 'require_once(__DIR__ . "arst.php"); $currFile = __FILE__;',
+      'key'   => 0,
+    ];
+    $part = new FileConfigurationPart($params, '/testDir/test.php');
+
+    $actual = $part->getContent(false, false, true);
+    $this->assertContains('/testDir/', $actual);
+    $this->assertNotContains('__DIR__', $actual);
+    $this->assertContains('/testDir/test.php', $actual);
+    $this->assertNotContains('__FILE__', $actual);
+  }
+
+  /**
+   * @test
+   */
   public function parseContentNotPHP()
   {
     $this->buildFileConfigurationPart();

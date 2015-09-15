@@ -248,6 +248,33 @@ class DraftControllerTest extends TestBase
   /**
    * @test
    */
+  public function showDraftSpecificWithMagicConstants()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$magicConstantsConfigArray);
+
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->authenticate('testuser');
+
+    $this->setUpController();
+
+    $actual = $this->controller->showDraft(['filePath' => '/billy/concert/index.php', 'draftName' => basename($draftName)]);
+    $this->assertContains(trim(self::$magicConstantsConfigArray['content'][1]), $actual);
+    $this->assertNotContains('__DIR__', $actual);
+    $this->assertNotContains('__FILE__', $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function showDraftFromConcertRoot()
   {
     $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
@@ -374,6 +401,33 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName)]);
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function renderPublicDraftWithMagicConstants()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$magicConstantsConfigArray);
+
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $this->authenticate('testuser2');
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT);
+
+    $this->setUpController();
+
+    $actual = $this->controller->renderPublicDraft(['draftName' => basename($draftName)]);
+
+    $this->assertContains(trim(self::$magicConstantsConfigArray['content'][1]), $actual);
+    $this->assertNotContains('__DIR__', $actual);
+    $this->assertNotContains('__FILE__', $actual);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -592,6 +646,35 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->editPublicDraft(['draftName' => basename($draftName)]);
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function editPublicDraftWithMagicConstants()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$magicConstantsConfigArray);
+
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PUBLIC_DRAFT, ['bvisto']);
+    $this->fileManager->stopEditing();
+
+    $this->authenticate('bvisto');
+
+    $this->setUpController();
+
+    $actual = $this->controller->editPublicDraft(['draftName' => basename($draftName)]);
+
+    $this->assertContains(trim(self::$magicConstantsConfigArray['content'][1]), $actual);
+    $this->assertNotContains('__DIR__', $actual);
+    $this->assertNotContains('__FILE__', $actual);
     $this->unauthenticate();
     $this->destructDB();
   }
@@ -1657,6 +1740,39 @@ class DraftControllerTest extends TestBase
     $actual = $this->controller->handlePendingDraft($draft, $this->fileManager);
 
     $this->assertContains(trim(self::$indexConfigArray['content'][1]), $actual);
+
+    $this->assertMessageInMessages('confirmPublish=true', DraftController::getConcertMessages());
+    $this->assertMessageInMessages('confirmReject=true', DraftController::getConcertMessages());
+    $this->unauthenticate();
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function handlePendingDraftWithMagicConstants()
+  {
+    $this->constructDB(['Sites', 'Permissions', 'Locks', 'Drafts']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['testuser', 'billy/concert/', 'test']);
+
+    $configuration = new FileConfiguration(self::$magicConstantsConfigArray);
+
+    $this->buildFileManager('testuser', '/billy/concert/index.php');
+    $this->fileManager->fileConfiguration = $configuration;
+
+    $draftName = $this->fileManager->saveDraft(Config::PENDING_PUBLISH_DRAFT);
+
+    $draft = $this->fileManager->getDraft(basename($draftName));
+
+    $this->authenticate('testuser');
+
+    $this->setUpController();
+
+    $actual = $this->controller->handlePendingDraft($draft, $this->fileManager);
+
+    $this->assertContains(trim(self::$magicConstantsConfigArray['content'][1]), $actual);
+    $this->assertNotContains('__DIR__', $actual);
+    $this->assertNotContains('__FILE__', $actual);
 
     $this->assertMessageInMessages('confirmPublish=true', DraftController::getConcertMessages());
     $this->assertMessageInMessages('confirmReject=true', DraftController::getConcertMessages());
