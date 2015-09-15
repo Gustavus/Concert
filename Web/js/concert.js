@@ -475,7 +475,7 @@ Gustavus.Concert = {
       var $trimmed = $table.find('[data-footable-trimmed]');
       if ($trimmed) {
         // remove stuff added in when trimming tables
-        $trimmed.removeAttr('data-footable-trimmed').css('display', '');
+        $trimmed.removeAttr('data-hide data-footable-trimmed').css('display', '');
         $table.find('td[style="display: none;"]').css('display', '');
       }
       // remove anything else footable adds. (thead and possibly more)
