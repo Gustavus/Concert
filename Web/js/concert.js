@@ -473,10 +473,10 @@ Gustavus.Concert = {
       // now that our classes have been removed, there will probably be a bunch of empty spans
       $table.find('span:empty').remove();
       // @todo remove data-hide
-      var $trimmed = $table.find('[data-hide][data-footable-trimmed]');
+      var $trimmed = $table.find('[data-footable-trimmed]');
       if ($trimmed) {
         // remove stuff added in when trimming tables
-        $trimmed.removeAttr('data-hide data-footable-trimmed').css('display', '');
+        $trimmed.removeAttr('data-footable-trimmed').css('display', '');
         $table.find('td[style="display: none;"]').css('display', '');
       }
       // remove anything else footable adds. (thead and possibly more)
