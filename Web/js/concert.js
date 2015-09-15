@@ -472,7 +472,6 @@ Gustavus.Concert = {
       });
       // now that our classes have been removed, there will probably be a bunch of empty spans
       $table.find('span:empty').remove();
-      // @todo remove data-hide
       var $trimmed = $table.find('[data-footable-trimmed]');
       if ($trimmed) {
         // remove stuff added in when trimming tables
@@ -1049,7 +1048,6 @@ Gustavus.Concert = {
         Gustavus.Concert.reInitTemplatePlugins(this, args);
       }, 100);
       // apply the page filter to make sure our stuff runs.
-      // @todo convert this to the body and add div.editable in the places this is used so we don't adjust things outside of editable divs. Or send another param
       Extend.apply('page', $('div.editable'), {'editable': true});
 
       Gustavus.Concert.addImageWidthAndHeightAttributesFromGIMLI();
