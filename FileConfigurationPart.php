@@ -79,6 +79,7 @@ class FileConfigurationPart
 
   /**
    * Path of the file this configuration represents
+   *
    * @var integer
    */
   private $filePath;
@@ -128,6 +129,7 @@ class FileConfigurationPart
    * Sets up the object
    *
    * @param array $params Params to populate the object with
+   * @param string $filePath Path of the current file we are representing
    *
    * @throws  InvalidArgumentException If contentType, content, or key is missing from the params array
    */
@@ -244,6 +246,8 @@ class FileConfigurationPart
 
   /**
    * Parses php content
+   *
+   * @throws  ParserError If the parser throws an error that isn't an EOF error
    *
    * @return array Array of parsed nodes
    */
@@ -618,7 +622,7 @@ class FileConfigurationPart
    * @param  integer $key   Key we want our found keys to be less than.
    * @return array
    */
-  private static function findKeysLessThanKey(Array $array, $key)
+  private static function findKeysLessThanKey(array $array, $key)
   {
     $i = 0;
     foreach ($array as $arrKey => $arrValue) {
@@ -639,7 +643,7 @@ class FileConfigurationPart
    * @param  integer $key   Key we want our found keys to be greater than.
    * @return array
    */
-  private static function findKeysGreaterThanKey(Array $array, $key)
+  private static function findKeysGreaterThanKey(array $array, $key)
   {
     foreach ($array as $arrKey => $arrValue) {
       if ($arrKey > $key) {
@@ -659,7 +663,7 @@ class FileConfigurationPart
    * @param  array  $closing Array of closing tags
    * @return array  Array of opening tags that aren't matched
    */
-  private static function findUnMatchedOpeningTags(Array $opening, Array $closing)
+  private static function findUnMatchedOpeningTags(array $opening, array $closing)
   {
     // let's try looking at our first closing tag and see if it has an opening tag
     // we will be finding all opening tags that have a matching closing tag and un-setting them leaving us with anything that doesn't have a matching closing tag
@@ -683,7 +687,7 @@ class FileConfigurationPart
    * @param  array  $closing Array of closing tags
    * @return array  Array of closing tags that aren't matched
    */
-  private static function findUnMatchedClosingTags(Array $opening, Array $closing)
+  private static function findUnMatchedClosingTags(array $opening, array $closing)
   {
     // let's try looking at our first opening tag and see if it has a closing tag
     // we will be finding all closing tags that have a matching opening tag and un-setting them leaving us with anything that doesn't have a matching opening tag
@@ -693,7 +697,7 @@ class FileConfigurationPart
       }
       $closingAfterCurr = self::findKeysGreaterThanKey($closingAfterCurr, $key);
 
-      if (($closingKey = array_search($openingTag, $closingAfterCurr)) !== false){
+      if (($closingKey = array_search($openingTag, $closingAfterCurr)) !== false) {
         unset($closing[$closingKey], $closingAfterCurr[$closingKey]);
       }
     }
