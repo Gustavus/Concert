@@ -27,6 +27,11 @@ use Gustavus\Utility\Set,
 class FileConfigurationPart
 {
   /**
+   * Number of characters of context to display when debugging
+   */
+  const CONTEXT_CHARS_TO_DISPLAY = 150;
+
+  /**
    * The type of the content
    * @var string
    */
@@ -370,7 +375,7 @@ class FileConfigurationPart
           $debug = [
             'message' => 'There might be mid-tag contents in an editable div.',
             'openingPiece' => htmlspecialchars($postEditableContents),
-            'context' => htmlspecialchars(substr($editableContents, 0, 40)),
+            'context' => htmlspecialchars(substr($editableContents, 0, self::CONTEXT_CHARS_TO_DISPLAY)),
           ];
           echo sprintf('<pre>%s</pre>', Debug::dump($debug, true));
         }
@@ -565,7 +570,7 @@ class FileConfigurationPart
           $offsetDebug['opening'][] = [
             'tag'     => htmlspecialchars($tags['opening']['result'][$key][0]),
             // include 40 characters for our context.
-            'context' => htmlspecialchars(substr($content, $tags['opening']['result'][$key][1], strlen($tags['opening']['result'][$key][0]) + 40)),
+            'context' => htmlspecialchars(substr($content, $tags['opening']['result'][$key][1], strlen($tags['opening']['result'][$key][0]) + self::CONTEXT_CHARS_TO_DISPLAY)),
           ];
         }
         $unMatchedOpeningOffsets[] = [
@@ -586,7 +591,7 @@ class FileConfigurationPart
           $offsetDebug['closing'][] = [
             'tag'     => htmlspecialchars($tags['closing']['result'][$key][0]),
             // include 40 characters for our context.
-            'context' => htmlspecialchars(substr($content, $tags['closing']['result'][$key][1], strlen($tags['closing']['result'][$key][0]) + 40)),
+            'context' => htmlspecialchars(substr($content, $tags['closing']['result'][$key][1], strlen($tags['closing']['result'][$key][0]) + self::CONTEXT_CHARS_TO_DISPLAY)),
           ];
         }
         $unMatchedClosingOffsets[] = [
