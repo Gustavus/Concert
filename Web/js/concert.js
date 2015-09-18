@@ -613,7 +613,8 @@ Gustavus.Concert = {
       var src    = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
-      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
+      if (url.pathname && (!url.host || Gustavus.Utility.URL.isGustavusHost(url.host))) {
+        // we are either a relative path, or a Gustavus host
         if (url.pathname.indexOf('/slir/') === 0) {
           // we have a slir request. We want this converted to gimli.
           url.pathname = url.pathname.replace('/slir/', '/gimli/');
@@ -672,6 +673,7 @@ Gustavus.Concert = {
           url.pathname = url.pathname.replace(/gimli\/(w\d+|h\d+)-\//, 'gimli/$1/');
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         } else {
+          url.pathname = Gustavus.Utility.URL.toAbsolute(url.pathname);
           // we don't yet have a gimli url. Let's build one.
           var newPathname = '/gimli/';
           var separator = '';
