@@ -137,7 +137,7 @@ Gustavus.Concert = {
     relative_urls: false,
 
     forced_root_block: '',
-    element_format: 'xhtml',
+    element_format: 'html',
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
     // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
