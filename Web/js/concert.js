@@ -673,19 +673,22 @@ Gustavus.Concert = {
           url.pathname = url.pathname.replace(/gimli\/(w\d+|h\d+)-\//, 'gimli/$1/');
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         } else {
+          // we don't yet have a gimli url. We might want to build one.
           url.pathname = Gustavus.Utility.URL.toAbsolute(url.pathname);
-          // we don't yet have a gimli url. Let's build one.
-          var newPathname = '/gimli/';
-          var separator = '';
-          if (width) {
-            newPathname += 'w' + width;
-            separator = '-';
+          if (width || height) {
+            // we have a width or height set. We want to convert to gimli
+            var newPathname = '/gimli/';
+            var separator = '';
+            if (width) {
+              newPathname += 'w' + width;
+              separator = '-';
+            }
+            if (height) {
+              newPathname += separator + 'h' + height;
+            }
+            newPathname += url.pathname;
+            url.pathname = newPathname;
           }
-          if (height) {
-            newPathname += separator + 'h' + height;
-          }
-          newPathname += url.pathname;
-          url.pathname = newPathname;
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         }
       }
