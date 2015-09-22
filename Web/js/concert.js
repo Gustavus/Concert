@@ -137,7 +137,7 @@ Gustavus.Concert = {
     relative_urls: false,
 
     forced_root_block: '',
-    element_format: 'xhtml',
+    element_format: 'html',
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
     // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
@@ -613,7 +613,8 @@ Gustavus.Concert = {
       var src    = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
-      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
+      if (url.pathname && (!url.host || Gustavus.Utility.URL.isGustavusHost(url.host))) {
+        // we are either a relative path, or a Gustavus host
         if (url.pathname.indexOf('/slir/') === 0) {
           // we have a slir request. We want this converted to gimli.
           url.pathname = url.pathname.replace('/slir/', '/gimli/');
@@ -672,18 +673,22 @@ Gustavus.Concert = {
           url.pathname = url.pathname.replace(/gimli\/(w\d+|h\d+)-\//, 'gimli/$1/');
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         } else {
-          // we don't yet have a gimli url. Let's build one.
-          var newPathname = '/gimli/';
-          var separator = '';
-          if (width) {
-            newPathname += 'w' + width;
-            separator = '-';
+          // we don't yet have a gimli url. We might want to build one.
+          url.pathname = Gustavus.Utility.URL.toAbsolute(url.pathname);
+          if (width || height) {
+            // we have a width or height set. We want to convert to gimli
+            var newPathname = '/gimli/';
+            var separator = '';
+            if (width) {
+              newPathname += 'w' + width;
+              separator = '-';
+            }
+            if (height) {
+              newPathname += separator + 'h' + height;
+            }
+            newPathname += url.pathname;
+            url.pathname = newPathname;
           }
-          if (height) {
-            newPathname += separator + 'h' + height;
-          }
-          newPathname += url.pathname;
-          url.pathname = newPathname;
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         }
       }
