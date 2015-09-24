@@ -1038,6 +1038,7 @@ Gustavus.Concert = {
       $('#page-titles div.editable').removeClass('default').addClass('title');
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
+      $('#local-navigation div.editable a .description').remove();
 
       if ($(Gustavus.Concert.hiddenElementSelector).length) {
         // we have hidden elements that have been displayed

@@ -68,6 +68,20 @@ class SiteNavController extends SharedController
     if ($this->getMethod() === 'POST') {
       return true;
     }
+    $this->addStyleSheets('<style type="text/css">
+        #local-navigation div.editable.siteNav a[title]:after {
+          content: attr(title);
+          display: block;
+          opacity: .4;
+          font-size: 10px;
+          line-height: 12px;
+          transition: all .1s ease-in-out;
+        }
+        #local-navigation a[title]:hover:after {
+          opacity: .8;
+        }
+      </style>'
+    );
 
     return $this->displayPage();
   }
