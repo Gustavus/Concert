@@ -146,6 +146,16 @@ class MenuController extends SharedController
       $showMenu = isset($_GET['concert']);
     }
 
+    if (!$showMenu) {
+      $refererParts = parse_url(PageUtil::getReferer());
+      if (isset($refererParts['query'])) {
+        $queryParams = (new String($refererParts['query']))->splitQueryString()->getValue();
+        if (isset($queryParams['concert'])) {
+          $showMenu = true;
+        }
+      }
+    }
+
     $this->analyzeReferer($forReferer);
     $this->addRefererParamsToGet();
 
