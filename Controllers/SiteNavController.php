@@ -68,6 +68,7 @@ class SiteNavController extends SharedController
     if ($this->getMethod() === 'POST') {
       return true;
     }
+    // add css to replicate link descriptions so we can seamlessly edit link text
     $this->addStyleSheets('<style type="text/css">
         #local-navigation div.editable.siteNav a[title]:after {
           content: attr(title);
