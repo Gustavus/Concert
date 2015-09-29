@@ -154,7 +154,7 @@ Gustavus.Concert = {
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
     menubar: 'edit insert view format table tools',
-    toolbar: "insertfile undo redo | styleselect | bold italic | bullist numlist | link anchor image responsivefilemanager | spellchecker",
+    toolbar: "insertfile undo redo | styleselect | bold italic | bullist numlist | link anchor image responsivefilemanager | spellchecker improvedcode",
     // right click menu
     contextmenu: "link image inserttable | cell row column deletetable | list spellchecker",
     // set our customized menu.
@@ -165,7 +165,7 @@ Gustavus.Concert = {
       view   : {title : 'View'  , items : 'visualaid'},
       format : {title : 'Styles', items : 'bold italic underline strikethrough superscript subscript | list formats | clearformat'},
       table  : {title : 'Table' , items : 'inserttable tableprops deletetable | cell row column'},
-      tools  : {title : 'Tools' , items : 'spellchecker code'}
+      tools  : {title : 'Tools' , items : 'spellchecker'}
     },
     // menu : { // this is the complete default configuration
     //   file   : {title : 'File'  , items : 'newdocument'},
@@ -331,7 +331,7 @@ Gustavus.Concert = {
     ];
 
     if (this.allowCode || this.isAdmin) {
-      plugins.push('code');
+      plugins.push('improvedcode');
     }
 
     config.plugins  = plugins;
@@ -357,7 +357,7 @@ Gustavus.Concert = {
     ];
 
     if (this.isAdmin) {
-      plugins.push('code');
+      plugins.push('improvedcode');
     }
 
     config.plugins  = plugins;
@@ -365,7 +365,7 @@ Gustavus.Concert = {
 
     config.style_formats = this.tinyMceTitleMenu;
 
-    config.toolbar = "undo redo | styleselect | bold italic | link | spellchecker";
+    config.toolbar = "undo redo | styleselect | bold italic | link | spellchecker improvedcode";
 
     return config;
   },
@@ -384,7 +384,7 @@ Gustavus.Concert = {
     ];
 
     if (this.isAdmin) {
-      plugins.push('code');
+      plugins.push('improvedcode');
     }
 
     config.plugins  = plugins;
@@ -397,7 +397,7 @@ Gustavus.Concert = {
       h3: {block: 'h3', 'classes': 'noFancyAmpersands'}
     };
 
-    config.toolbar = "undo redo | styleselect | bold italic | bullist | link | spellchecker";
+    config.toolbar = "undo redo | styleselect | bold italic | bullist | link | spellchecker improvedcode";
 
     return config;
   },
@@ -1038,6 +1038,7 @@ Gustavus.Concert = {
       $('#page-titles div.editable').removeClass('default').addClass('title');
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
+      $('#local-navigation div.editable a span.description, #local-navigation div.editable a span.nodisplay').remove();
 
       if ($(Gustavus.Concert.hiddenElementSelector).length) {
         // we have hidden elements that have been displayed
