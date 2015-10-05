@@ -397,6 +397,16 @@ class Config
   const SITE_NAV_ACCESS_LEVEL = 'siteNav';
 
   /**
+   * Global switch to turn off concert
+   */
+  const GLOBAL_SHUTDOWN = false;
+
+  /**
+   * Message to display when concert is disabled
+   */
+  const CONCERT_DISABLED_MESSAGE = 'Concert is currently disabled due to system maintenance.';
+
+  /**
    * All available access levels with brief description
    *
    * @var array
