@@ -581,7 +581,7 @@ class MenuController extends SharedController
         } else {
           $buttonDisabled = true;
         }
-        if (!self::isSiteNavRequest() && !self::userIsViewingDraft($this->filePath) && !self::userIsEditingDraft()) {
+        if (!(self::isSiteNavRequest() && self::userIsEditing()) && !self::userIsViewingDraft($this->filePath) && !self::userIsEditingDraft()) {
           // now add this to our actionButtons if they aren't viewing a public draft.
           if ($buttonDisabled) {
             $item['classes'] = 'disabled';
