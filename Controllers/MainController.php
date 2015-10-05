@@ -19,6 +19,7 @@ use Gustavus\Concert\Config,
   Gustavus\Extensibility\Filters,
   Gustavus\Revisions\API as RevisionsAPI,
   Gustavus\Resources\Resource,
+  Gustavus\Template\Template,
   Config as GACConfig,
   InvalidArgumentException;
 
@@ -790,6 +791,13 @@ class MainController extends SharedController
     }
     if (substr($filePath, -4) !== '.php') {
       $filePath = str_replace('//', '/', $filePath . '/index.php');
+    }
+
+    if (Config::GLOBAL_SHUTDOWN) {
+      if (PermissionsManager::userHasAccessToSite($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath))) {
+        Template::addUserMessage(Config::CONCERT_DISABLED_MESSAGE);
+      }
+      return ['action' => 'none'];
     }
 
     if ($this->isLoggedIn() && !self::alreadyMoshed()) {
