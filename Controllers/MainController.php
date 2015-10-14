@@ -239,7 +239,7 @@ class MainController extends SharedController
         $fromFilePath = $_POST['fromFilePath'];
       } else {
         // default to our default template.
-        $fromFilePath = Config::DEFAULT_TEMPLATE_PAGE;
+        $fromFilePath = Config::DEFAULT_TEMPLATE;
       }
     }
 
