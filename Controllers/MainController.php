@@ -779,6 +779,12 @@ class MainController extends SharedController
         'action' => 'none',
       ];
     }
+    if (Utility::isRequestFromRemoteDomain()) {
+      // we don't support multi-domains, so we don't want to do anything.
+      return [
+        'action' => 'none',
+      ];
+    }
     if (is_array($params)) {
       if (isset($params['dbal'])) {
         $this->setDBAL($params['dbal']);

@@ -71,3 +71,8 @@ Add ability to merge old draft with current content. Or view changes.
 Add new view to revisions for viewing a page?
 
 Message system
+
+
+
+multi domain:
+  I was using localMachine:/home/billy/projects/concertSite/concert/index.php
