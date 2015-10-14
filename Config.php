@@ -120,12 +120,29 @@ class Config
   /**
    * Base template
    */
-  const DEFAULT_TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+  const DEFAULT_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+  /**
+   * Base template identifier
+   */
+  const DEFAULT_TEMPLATE_IDENTIFIER = 'GustavusConcertDefaultTemplate';
 
   /**
-   * Base template
+   * 2 column template
    */
-  const DEFAULT_TEMPLATE_PAGE_IDENTIFIER = 'GustavusConcertDefaultTemplate';
+  const TWO_COLUMN_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/2ColumnTemplate.php';
+  /**
+   * 2 column template identifier
+   */
+  const TWO_COLUMN_TEMPLATE_IDENTIFIER = '2ColumnTemplate';
+
+  /**
+   * 3 column template
+   */
+  const THREE_COLUMN_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/3ColumnTemplate.php';
+  /**
+   * 3 column template identifier
+   */
+  const THREE_COLUMN_TEMPLATE_IDENTIFIER = '3ColumnTemplate';
 
   /**
    * Base site_nav template
@@ -136,6 +153,8 @@ class Config
    * .htaccess file to copy to any new media directory
    */
   const MEDIA_DIR_HTACCESS_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/.htaccess';
+
+  // Draft Types
 
   /**
    * Private draft type identifier
@@ -706,9 +725,17 @@ class Config
    * @var array
    */
   public static $templates = [
-    self::DEFAULT_TEMPLATE_PAGE_IDENTIFIER => [
+    self::DEFAULT_TEMPLATE_IDENTIFIER => [
       'name' => 'default',
-      'location' => self::DEFAULT_TEMPLATE_PAGE,
+      'location' => self::DEFAULT_TEMPLATE,
+    ],
+    self::TWO_COLUMN_TEMPLATE_IDENTIFIER => [
+      'name' => '2 column',
+      'location' => self::TWO_COLUMN_TEMPLATE,
+    ],
+    self::THREE_COLUMN_TEMPLATE_IDENTIFIER => [
+      'name' => '3 column',
+      'location' => self::THREE_COLUMN_TEMPLATE,
     ],
   ];
 
