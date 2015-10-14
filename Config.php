@@ -111,6 +111,13 @@ class Config
   const LOCK_DURATION = 86400; // 60*60*24 = 86400
 
   /**
+   * Global switch to turn off concert
+   */
+  const GLOBAL_SHUTDOWN = false;
+
+  // Templates
+
+  /**
    * Base template
    */
   const DEFAULT_TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
@@ -304,6 +311,11 @@ class Config
    */
   const LARGE_FILE_EDIT_MESSAGE = 'This file is very large and performance issues may be noticeable.';
 
+  /**
+   * Message to display when concert is disabled
+   */
+  const CONCERT_DISABLED_MESSAGE = 'Concert is currently disabled due to system maintenance.';
+
 
   // Staged file stages
 
@@ -395,16 +407,6 @@ class Config
    * Access level that can edit siteNavs
    */
   const SITE_NAV_ACCESS_LEVEL = 'siteNav';
-
-  /**
-   * Global switch to turn off concert
-   */
-  const GLOBAL_SHUTDOWN = false;
-
-  /**
-   * Message to display when concert is disabled
-   */
-  const CONCERT_DISABLED_MESSAGE = 'Concert is currently disabled due to system maintenance.';
 
   /**
    * All available access levels with brief description
