@@ -127,24 +127,6 @@ class Config
   const DEFAULT_TEMPLATE_IDENTIFIER = 'GustavusConcertDefaultTemplate';
 
   /**
-   * 2 column template
-   */
-  const TWO_COLUMN_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/2ColumnTemplate.php';
-  /**
-   * 2 column template identifier
-   */
-  const TWO_COLUMN_TEMPLATE_IDENTIFIER = '2ColumnTemplate';
-
-  /**
-   * 3 column template
-   */
-  const THREE_COLUMN_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/3ColumnTemplate.php';
-  /**
-   * 3 column template identifier
-   */
-  const THREE_COLUMN_TEMPLATE_IDENTIFIER = '3ColumnTemplate';
-
-  /**
    * Base site_nav template
    */
   const SITE_NAV_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/site_nav.php';
@@ -728,14 +710,6 @@ class Config
     self::DEFAULT_TEMPLATE_IDENTIFIER => [
       'name' => 'default',
       'location' => self::DEFAULT_TEMPLATE,
-    ],
-    self::TWO_COLUMN_TEMPLATE_IDENTIFIER => [
-      'name' => '2 column',
-      'location' => self::TWO_COLUMN_TEMPLATE,
-    ],
-    self::THREE_COLUMN_TEMPLATE_IDENTIFIER => [
-      'name' => '3 column',
-      'location' => self::THREE_COLUMN_TEMPLATE,
     ],
   ];
 
