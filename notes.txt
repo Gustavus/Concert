@@ -40,6 +40,8 @@ Tinymce
     remove everything from the master branch (except git stuff)
     Copy new package into master branch and commit with the version number
     Merge into Gustavus branch and fix any conflicts.
+      Make sure dom.split still accepts 3 params (http://www.tinymce.com/wiki.php/api4:method.tinymce.dom.DOMUtils.split)
+      Make sure editor.windowManager.open still supports 1 param (http://www.tinymce.com/wiki.php/api4:method.tinymce.WindowManager.open)
     Push to origin
 
     On update, make sure to fix skin css to have absolute paths from the doc_root
@@ -50,6 +52,7 @@ Tinymce
       ln -s /cis/lib/Gustavus/Concert/Assets/ResponsiveFilemanager/tinymce/plugins/responsivefilemanager/ /cis/lib/Gustavus/Concert/Assets/tinymce_version/js/tinymce/plugins/responsivefilemanager
 
   After pushing main Concert changes to Lisa, also need to run "git submodule update"
+
 
 
 fileTree

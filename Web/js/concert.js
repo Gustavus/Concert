@@ -327,7 +327,7 @@ Gustavus.Concert = {
       "advlist autolink lists link image charmap print anchor",
       "searchreplace visualblocks fullscreen",
       "insertdatetime media table contextmenu paste responsivefilemanager",
-      "spellchecker hr" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
+      "spellchecker hr template" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
     ];
 
     if (this.allowCode || this.isAdmin) {
@@ -339,6 +339,15 @@ Gustavus.Concert = {
 
     config.style_formats = this.tinyMceDefaultMenu;
     config.forced_root_block = 'p';
+
+    config.template_replace_values = {
+      mceTmpl: function(element) {
+        // we want to get rid of the mceTmpl div
+        element.outerHTML = element.innerHTML;
+      }
+    };
+    config.templates = '/concert/js/tinymce/templates/templates.json';
+    config.template_popup_height = 150;
 
     return config;
   },
