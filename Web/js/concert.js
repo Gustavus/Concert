@@ -150,6 +150,8 @@ Gustavus.Concert = {
     keep_styles: false,
     // disable indenting/outdenting things with padding. (Only allows nesting lists, and other elements.)
     indentation: false,
+    // when hitting return inside of a container, it first duplicates the current child element, the next return will pull that child element outside of the parent.
+    end_container_on_empty_block: true,
 
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
@@ -228,7 +230,7 @@ Gustavus.Concert = {
           if (typeof args.data == 'object' && ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width')))) {
 
             // we are working with images
-            // highjack the onSubmit function so we can do our checks
+            // hijack the onSubmit function so we can do our checks
             args.origSubmit = args.onSubmit;
             args.onSubmit = function(e) {
               if (!e.data.alt) {
@@ -247,6 +249,17 @@ Gustavus.Concert = {
           }
           // call the original open function
           return editor.windowManager.origOpen(args, params);
+        };
+
+        // We need to hijack split so we can remove any classes applied to the element we are splitting. (This fixes not being able to get rid of grid classes on containers)
+        editor.dom.origSplit = editor.dom.split;
+        editor.dom.split = function(parentElm, splitElm, replacementElm) {
+          if (replacementElm) {
+            replacementElm.className = '';
+          } else {
+            splitElm.className = '';
+          }
+          editor.dom.origSplit(parentElm, splitElm, replacementElm);
         };
       });
 
