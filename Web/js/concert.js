@@ -161,8 +161,8 @@ Gustavus.Concert = {
     menu : {
       file   : {title : 'File'  , items : 'newdocument'},
       edit   : {title : 'Edit'  , items : 'undo redo | searchreplace | cut copy paste pastetext | selectall'},
-      insert : {title : 'Insert', items : 'link media | template hr'},
-      view   : {title : 'View'  , items : 'visualaid'},
+      insert : {title : 'Insert', items : 'link media | hr template'},
+      view   : {title : 'View'  , items : 'visualaid visualblocks'},
       format : {title : 'Styles', items : 'bold italic underline strikethrough superscript subscript | list formats | clearformat'},
       table  : {title : 'Table' , items : 'inserttable tableprops deletetable | cell row column'},
       tools  : {title : 'Tools' , items : 'spellchecker'}

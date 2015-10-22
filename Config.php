@@ -83,7 +83,7 @@ class Config
   /**
    * CSS version
    */
-  const CSS_VERSION = 4;
+  const CSS_VERSION = 5;
 
   /**
    * HTTPD user (User running apache)
