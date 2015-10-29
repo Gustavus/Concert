@@ -1045,10 +1045,6 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   init: function() {
-    /**
-     * Document.ready()
-     * @return {undefined}
-     */
     $(function() {
       // add a class to define default tinyMCE settings
       $('div.editable').addClass('default');

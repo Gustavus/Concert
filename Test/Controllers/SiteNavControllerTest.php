@@ -157,7 +157,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     $this->assertContains('siteNav test contents', $result['value']['localNavigation']);
     $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
@@ -188,7 +188,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action' => 'none'], $result);
     $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_EDIT_MESSAGE, SiteNavController::getConcertMessages());
 
@@ -252,7 +252,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     $this->assertContains('parent siteNav test contents', $result['value']['localNavigation']);
     $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
@@ -288,7 +288,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
     $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
@@ -322,7 +322,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
     $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
@@ -353,7 +353,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
     $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
@@ -384,7 +384,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action' => 'none'], $result);
     $this->assertMessageInMessages(Config::NOT_ALLOWED_TO_CREATE_MESSAGE, SiteNavController::getConcertMessages());
 
@@ -413,7 +413,7 @@ class SiteNavControllerTest extends TestBase
     $scripts = '';
     $scripts = Filters::apply('scripts', $scripts);
 
-    $this->assertContains(Config::WEB_DIR . '/js/concert.js', $scripts);
+    $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
     $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
