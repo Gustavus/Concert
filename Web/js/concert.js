@@ -76,6 +76,7 @@ Gustavus.Concert = {
       {title: 'Disabled', selector: '*', classes: 'disabled'},
       {title: 'Message', selector: 'p,div', classes: 'message'},
       {title: 'Highlight', selector: 'p,div', classes: 'highlight'},
+      {title: 'Lead In', selector: 'p', classes: 'leadin'},
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
       {title: 'Remove Sorting', selector: 'table', classes: 'nosort'},
       {title: 'Fancy', selector: 'img', classes: 'fancy'},
