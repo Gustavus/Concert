@@ -63,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 21;
+  const JS_VERSION = 22;
 
   /**
    * Autocomplete JS version
@@ -83,7 +83,7 @@ class Config
   /**
    * CSS version
    */
-  const CSS_VERSION = 4;
+  const CSS_VERSION = 5;
 
   /**
    * HTTPD user (User running apache)
@@ -111,14 +111,20 @@ class Config
   const LOCK_DURATION = 86400; // 60*60*24 = 86400
 
   /**
-   * Base template
+   * Global switch to turn off concert
    */
-  const DEFAULT_TEMPLATE_PAGE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+  const GLOBAL_SHUTDOWN = false;
+
+  // Templates
 
   /**
    * Base template
    */
-  const DEFAULT_TEMPLATE_PAGE_IDENTIFIER = 'GustavusConcertDefaultTemplate';
+  const DEFAULT_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/template.php';
+  /**
+   * Base template identifier
+   */
+  const DEFAULT_TEMPLATE_IDENTIFIER = 'GustavusConcertDefaultTemplate';
 
   /**
    * Base site_nav template
@@ -129,6 +135,8 @@ class Config
    * .htaccess file to copy to any new media directory
    */
   const MEDIA_DIR_HTACCESS_TEMPLATE = '/cis/lib/Gustavus/Concert/Templates/.htaccess';
+
+  // Draft Types
 
   /**
    * Private draft type identifier
@@ -304,6 +312,11 @@ class Config
    */
   const LARGE_FILE_EDIT_MESSAGE = 'This file is very large and performance issues may be noticeable.';
 
+  /**
+   * Message to display when concert is disabled
+   */
+  const CONCERT_DISABLED_MESSAGE = 'Concert is currently disabled due to system maintenance.';
+
 
   // Staged file stages
 
@@ -395,16 +408,6 @@ class Config
    * Access level that can edit siteNavs
    */
   const SITE_NAV_ACCESS_LEVEL = 'siteNav';
-
-  /**
-   * Global switch to turn off concert
-   */
-  const GLOBAL_SHUTDOWN = false;
-
-  /**
-   * Message to display when concert is disabled
-   */
-  const CONCERT_DISABLED_MESSAGE = 'Concert is currently disabled due to system maintenance.';
 
   /**
    * All available access levels with brief description
@@ -704,9 +707,9 @@ class Config
    * @var array
    */
   public static $templates = [
-    self::DEFAULT_TEMPLATE_PAGE_IDENTIFIER => [
+    self::DEFAULT_TEMPLATE_IDENTIFIER => [
       'name' => 'default',
-      'location' => self::DEFAULT_TEMPLATE_PAGE,
+      'location' => self::DEFAULT_TEMPLATE,
     ],
   ];
 

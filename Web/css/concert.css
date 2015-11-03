@@ -79,6 +79,9 @@ div.editable:any(:hover, :focus) {
 .mce-nodisplay {
   display: none;
 }
+div.editable.mce-visualblocks div {
+  margin-left: 0;
+}
 
 @media $(mobile) {
   #addusers {

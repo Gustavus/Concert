@@ -695,6 +695,6 @@ class DraftController extends SharedController
         return (isset(Config::$templates[$srcFilePath])) ? Config::$templates[$srcFilePath]['location'] : Utility::addDocRootToPath($srcFilePath);
       }
     }
-    return Config::DEFAULT_TEMPLATE_PAGE;
+    return Config::DEFAULT_TEMPLATE;
   }
 }

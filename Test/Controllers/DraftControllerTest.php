@@ -1052,7 +1052,7 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE);
 
     $this->assertContains(Config::LOCK_NOT_ACQUIRED_MESSAGE, $actual['reason']);
 
@@ -1075,7 +1075,7 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE);
 
     $this->assertNotEmpty($actual['redirectUrl']);
 
@@ -1098,14 +1098,14 @@ class DraftControllerTest extends TestBase
 
     $_POST = ['1' => '<p>This is some edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE);
 
     $this->assertNotEmpty($actual['redirectUrl']);
 
 
     $_POST = ['1' => '<p>This is some more edited html content</p>'];
 
-    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE_PAGE);
+    $actual = $this->controller->saveDraftForNewFile($filePath, Config::DEFAULT_TEMPLATE);
     $this->assertNotEmpty($actual['redirectUrl']);
 
     $this->buildFileManager('testuser', $filePath);
@@ -1681,7 +1681,7 @@ class DraftControllerTest extends TestBase
 
     $result = $this->controller->getFilePathToCopy();
 
-    $this->assertSame(Config::DEFAULT_TEMPLATE_PAGE, $result);
+    $this->assertSame(Config::DEFAULT_TEMPLATE, $result);
   }
 
   /**
@@ -1695,7 +1695,7 @@ class DraftControllerTest extends TestBase
     $_GET['srcFilePath'] = Config::SITE_NAV_TEMPLATE;
     $result = $this->controller->getFilePathToCopy();
 
-    $this->assertSame(Config::DEFAULT_TEMPLATE_PAGE, $result);
+    $this->assertSame(Config::DEFAULT_TEMPLATE, $result);
     $_GET = $origGet;
   }
 

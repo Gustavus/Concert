@@ -76,6 +76,7 @@ Gustavus.Concert = {
       {title: 'Disabled', selector: '*', classes: 'disabled'},
       {title: 'Message', selector: 'p,div', classes: 'message'},
       {title: 'Highlight', selector: 'p,div', classes: 'highlight'},
+      {title: 'Lead In', selector: 'p', classes: 'leadin'},
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
       {title: 'Remove Sorting', selector: 'table', classes: 'nosort'},
       {title: 'Fancy', selector: 'img', classes: 'fancy'},
@@ -150,6 +151,8 @@ Gustavus.Concert = {
     keep_styles: false,
     // disable indenting/outdenting things with padding. (Only allows nesting lists, and other elements.)
     indentation: false,
+    // when hitting return inside of a container, it first duplicates the current child element, the next return will pull that child element outside of the parent.
+    end_container_on_empty_block: true,
 
     //invalid_styles http://www.tinymce.com/wiki.php/Configuration:invalid_elements
     //keep_styles http://www.tinymce.com/wiki.php/Configuration:keep_styles
@@ -161,8 +164,8 @@ Gustavus.Concert = {
     menu : {
       file   : {title : 'File'  , items : 'newdocument'},
       edit   : {title : 'Edit'  , items : 'undo redo | searchreplace | cut copy paste pastetext | selectall'},
-      insert : {title : 'Insert', items : 'link media | template hr'},
-      view   : {title : 'View'  , items : 'visualaid'},
+      insert : {title : 'Insert', items : 'link media | hr template'},
+      view   : {title : 'View'  , items : 'visualaid visualblocks'},
       format : {title : 'Styles', items : 'bold italic underline strikethrough superscript subscript | list formats | clearformat'},
       table  : {title : 'Table' , items : 'inserttable tableprops deletetable | cell row column'},
       tools  : {title : 'Tools' , items : 'spellchecker'}
@@ -228,7 +231,7 @@ Gustavus.Concert = {
           if (typeof args.data == 'object' && ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width')))) {
 
             // we are working with images
-            // highjack the onSubmit function so we can do our checks
+            // hijack the onSubmit function so we can do our checks
             args.origSubmit = args.onSubmit;
             args.onSubmit = function(e) {
               if (!e.data.alt) {
@@ -247,6 +250,17 @@ Gustavus.Concert = {
           }
           // call the original open function
           return editor.windowManager.origOpen(args, params);
+        };
+
+        // We need to hijack split so we can remove any classes applied to the element we are splitting. (This fixes not being able to get rid of grid classes on containers)
+        editor.dom.origSplit = editor.dom.split;
+        editor.dom.split = function(parentElm, splitElm, replacementElm) {
+          if (replacementElm) {
+            replacementElm.className = '';
+          } else {
+            splitElm.className = '';
+          }
+          editor.dom.origSplit(parentElm, splitElm, replacementElm);
         };
       });
 
@@ -327,7 +341,7 @@ Gustavus.Concert = {
       "advlist autolink lists link image charmap print anchor",
       "searchreplace visualblocks fullscreen",
       "insertdatetime media table contextmenu paste responsivefilemanager",
-      "spellchecker hr" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
+      "spellchecker hr template" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
     ];
 
     if (this.allowCode || this.isAdmin) {
@@ -339,6 +353,15 @@ Gustavus.Concert = {
 
     config.style_formats = this.tinyMceDefaultMenu;
     config.forced_root_block = 'p';
+
+    config.template_replace_values = {
+      mceTmpl: function(element) {
+        // we want to get rid of the mceTmpl div
+        element.outerHTML = element.innerHTML;
+      }
+    };
+    config.templates = '/concert/js/tinymce/templates/templates.json';
+    config.template_popup_height = 150;
 
     return config;
   },
@@ -1023,10 +1046,6 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   init: function() {
-    /**
-     * Document.ready()
-     * @return {undefined}
-     */
     $(function() {
       // add a class to define default tinyMCE settings
       $('div.editable').addClass('default');

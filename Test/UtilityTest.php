@@ -345,4 +345,28 @@ class UtilityTest extends TestBase
 
     $this->assertTrue(Utility::isPageEditable($page));
   }
+
+  /**
+   * @test
+   */
+  public function isRequestFromRemoteDomain()
+  {
+    $this->assertFalse(Utility::isRequestFromRemoteDomain());
+
+    $origServer = $_SERVER;
+    $_SERVER['REAL_HTTP_HOST'] = $_SERVER['HTTP_HOST'];
+    $_SERVER['HTTP_HOST'] = 'billy.gac.edu';
+    $this->assertTrue(Utility::isRequestFromRemoteDomain());
+
+    $_SERVER = $origServer;
+    $_SERVER['REAL_SCRIPT_NAME'] = '/template/getter.php';
+    $this->assertTrue(Utility::isRequestFromRemoteDomain());
+
+    $_SERVER = $origServer;
+    $_SERVER['SCRIPT_NAME'] = '/template/getter.php';
+    $this->assertTrue(Utility::isRequestFromRemoteDomain());
+
+    $_SERVER = $origServer;
+    $this->assertFalse(Utility::isRequestFromRemoteDomain());
+  }
 }

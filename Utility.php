@@ -308,4 +308,23 @@ class Utility
     }
     return false;
   }
+
+  /**
+   * Checks to see if the request is using template getter and originated from
+   *
+   * @return boolean
+   */
+  public static function isRequestFromRemoteDomain()
+  {
+    if (isset($_SERVER['REAL_HTTP_HOST'], $_SERVER['HTTP_HOST'])) {
+      return $_SERVER['REAL_HTTP_HOST'] !== $_SERVER['HTTP_HOST'];
+    }
+    if (isset($_SERVER['REAL_SCRIPT_NAME']) && strpos($_SERVER['REAL_SCRIPT_NAME'], '/template/getter.php') !== false) {
+      return true;
+    }
+    if (isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], '/template/getter.php') !== false) {
+      return true;
+    }
+    return false;
+  }
 }
