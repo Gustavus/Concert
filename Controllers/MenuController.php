@@ -155,8 +155,10 @@ class MenuController extends SharedController
         }
       }
     }
-    // remove the cookie that tells us that we just quit and don't want to re-show the menu
-    setcookie('quitConcert', '0', -1);
+    if (isset($_COOKIE['quitConcert'])) {
+      // remove the cookie that tells us that we just quit and don't want to re-show the menu
+      setcookie('quitConcert', '0', -1);
+    }
 
     $this->analyzeReferer($forReferer);
     $this->addRefererParamsToGet();
