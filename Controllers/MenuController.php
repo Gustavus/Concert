@@ -150,7 +150,7 @@ class MenuController extends SharedController
       $refererParts = parse_url(PageUtil::getReferer());
       if (isset($refererParts['query'])) {
         $queryParams = (new String($refererParts['query']))->splitQueryString()->getValue();
-        if (isset($queryParams['concert']) && (!isset($_COOKIE['quitConcert']) || $_COOKIE['quitConcert'] === '1')) {
+        if (isset($queryParams['concert']) && (!isset($_COOKIE['quitConcert']) || $_COOKIE['quitConcert'] === '0')) {
           $showMenu = true;
         }
       }
