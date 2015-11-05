@@ -150,11 +150,13 @@ class MenuController extends SharedController
       $refererParts = parse_url(PageUtil::getReferer());
       if (isset($refererParts['query'])) {
         $queryParams = (new String($refererParts['query']))->splitQueryString()->getValue();
-        if (isset($queryParams['concert']) && $queryParams['concert'] !== 'stopEditing') {
+        if (isset($queryParams['concert']) && (!isset($_COOKIE['quitConcert']) || $_COOKIE['quitConcert'] === '1')) {
           $showMenu = true;
         }
       }
     }
+    // remove the cookie that tells us that we just quit and don't want to re-show the menu
+    setcookie('quitConcert', '0', -1);
 
     $this->analyzeReferer($forReferer);
     $this->addRefererParamsToGet();

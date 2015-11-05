@@ -110,6 +110,11 @@ class TestBase extends TestEM
         }
     );
     self::$overrideToken['ini_set'] = $iniSetToken;
+    self::$overrideToken['setcookie'] = override_function('setcookie',
+        function() {
+          return;
+        }
+    );
 
     self::$testFileDir = sprintf('%s/files/', __DIR__);
   }

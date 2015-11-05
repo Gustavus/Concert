@@ -1167,6 +1167,8 @@ $(document)
           'Quit': function() {
             Gustavus.Concert.releaseLock();
             $(this).dialog('close');
+            // set a cookie so we know the user wants to quit.
+            $.cookie('quitConcert', '1');
             // redirect to the link's href
             window.location = e.target.href;
           },
@@ -1178,6 +1180,8 @@ $(document)
       });
     } else {
       Gustavus.Concert.releaseLock();
+      // set a cookie so we know the user wants to quit.
+      $.cookie('quitConcert', '1');
       // redirect to the link's href
       window.location = e.target.href;
     }
