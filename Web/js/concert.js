@@ -963,7 +963,7 @@ Gustavus.Concert = {
       var title = $(parents.first()).find('p').html();
       $(img).attr('title', title);
       var parent = parents.last()[0];
-      if (parent) {
+      if (parent && parent.parentNode) {
         parent.parentNode.innerHTML = parent.parentNode.innerHTML.replace(parent.outerHTML, img.outerHTML);
       }
     });
@@ -1017,7 +1017,9 @@ Gustavus.Concert = {
 
     // remove fancy ampersand html
     $('abbr[title=and]', currObj).each(function() {
-      this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, '&amp;');
+      if (this.parentNode) {
+        this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, '&amp;');
+      }
     });
   },
 
