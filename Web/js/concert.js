@@ -1017,9 +1017,7 @@ Gustavus.Concert = {
 
     // remove fancy ampersand html
     $('abbr[title=and]', currObj).each(function() {
-      if (this.parentNode) {
-        this.parentNode.innerHTML = this.parentNode.innerHTML.replace(this.outerHTML, '&amp;');
-      }
+      this.outerHTML = '&amp;';
     });
   },
 
