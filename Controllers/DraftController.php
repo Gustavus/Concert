@@ -210,8 +210,12 @@ class DraftController extends SharedController
 
     $shouldRedirectToFullPath = true;
     if (self::isRequestFromConcertRoot() && $shouldRedirectToFullPath) {
+      $query = ['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']];
+      if (isset($_GET['draftAction'])) {
+        $query['draftAction'] = $_GET['draftAction'];
+      }
       // we are using this location as a url shortener
-      return $this->redirect((new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue());
+      return $this->redirect((new String($filePathFromDocRoot))->addQueryString($query)->buildUrl()->getValue());
     }
 
     if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
@@ -280,9 +284,9 @@ class DraftController extends SharedController
     }
 
     if (self::isRequestFromConcertRoot()) {
-      $buttonUrl = $this->buildUrl('drafts', ['draftName' => $draftName]);
+      $buttonUrl = $this->buildUrl('drafts', ['draftName' => $draftName]) . '?draftAction=stopEditing';
     } else {
-      $buttonUrl = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
+      $buttonUrl = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename'], 'draftAction' => 'stopEditing'])->buildUrl()->getValue();
     }
 
     if ($this->getMethod() === 'POST' && $draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
@@ -301,7 +305,6 @@ class DraftController extends SharedController
     $additionalButtons = [
       [
         'url'  => $buttonUrl,
-        'id'   => 'concertStopEditing',
         'text' => 'Stop Editing Draft',
       ]
     ];
@@ -659,7 +662,7 @@ class DraftController extends SharedController
   {
     $filePath = $params['filePath'];
 
-    $draftName = basename($filePath);
+    $draftName = self::guessDraftName($filePath);
     $filePath  = Config::$draftDir . $draftName;
 
     $draftFM = new FileManager($this->getLoggedInUsername(), $filePath, null, $this->getDB());
