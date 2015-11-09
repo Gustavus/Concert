@@ -1152,10 +1152,6 @@ $(document)
       });
   })
 
-  .on('click', '#concertStopEditing', function(e) {
-    window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing', 'concertAction': 'menu'});
-  })
-
   .on('click', 'a.quitConcert', function(e) {
     e.preventDefault();
     Gustavus.Concert.ignoreDirtyEditors = true;

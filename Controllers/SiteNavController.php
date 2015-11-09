@@ -11,6 +11,7 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
   Gustavus\Utility\File,
+  Gustavus\Utility\String,
   Gustavus\Concert\PermissionsManager,
   Gustavus\FormBuilderMk2\ElementRenderers\TwigElementRenderer,
   Gustavus\FormBuilderMk2\FormElement,
@@ -95,8 +96,17 @@ class SiteNavController extends SharedController
    */
   private function createOrEditSiteNav($filePath)
   {
-    // we only want users to be able to publish
-    self::overrideVisibleEditingButtons(['publish', 'stopEditing']);
+    // we only want users to be able to publish, so we need to override our action buttons
+    $query = self::removeConcertQueryParams($_GET);
+    $query['concert']       = 'stopEditingSiteNav';
+
+    self::overrideVisibleEditingButtons([
+      'publish',
+      [
+        'url'  => (new String(Utility::removeDocRootFromPath($filePath)))->addQueryString($query)->buildUrl()->getValue(),
+        'text' => 'Stop Editing',
+      ]
+    ]);
     // check to see if the site nav already exists.
     // if it is from a parent site, we want to give them the offer to copy their parent.
     // if it exists in a parent directory, we want to give them the option to create a new one for the current file's directory, or to edit the parent.
