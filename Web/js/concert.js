@@ -1175,6 +1175,7 @@ $(document)
           Cancel: function() {
             Gustavus.Concert.ignoreDirtyEditors = false;
             $(this).dialog('close');
+            $.cookie('quitConcert', '0');
           }
         }
       });
