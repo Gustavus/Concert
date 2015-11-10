@@ -790,6 +790,19 @@ class SharedController extends ConcourseController
     }
   }
 
+  /**
+   * Removes concert query params from an array
+   *
+   * @param  array &$query Array to remove concert parameters from
+   * @return void
+   */
+  protected static function removeConcertQueryParams(&$query)
+  {
+    foreach (Config::$concertGETKeys as $key) {
+      unset($query[$key]);
+    }
+  }
+
 
   // Action checks
 

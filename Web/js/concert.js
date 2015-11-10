@@ -227,9 +227,8 @@ Gustavus.Concert = {
         // highjack the open function so we can do extra operations if needed
         editor.windowManager.origOpen = editor.windowManager.open;
         editor.windowManager.open = function(args, params) {
-          // check to see if this is an image window. Title should work, but fallback to looking at the data and guessing that it is an image
-          if (typeof args.data == 'object' && ((args.title === 'Insert/edit image' && args.data.hasOwnProperty('alt'))  || (args.data.hasOwnProperty('src') && args.data.hasOwnProperty('alt') && args.data.hasOwnProperty('title') && args.data.hasOwnProperty('width')))) {
-
+          // check to see if this is an image window.
+          if (typeof args.data == 'object' && args.title === 'Insert/edit image') {
             // we are working with images
             // hijack the onSubmit function so we can do our checks
             args.origSubmit = args.onSubmit;
@@ -1072,6 +1071,8 @@ Gustavus.Concert = {
         Gustavus.Concert.toggleLinksDisplayed(this, args);
         Gustavus.Concert.reInitTemplatePlugins(this, args);
       }, 100);
+      // destroy template plugins so things don't get duplicated
+      Gustavus.Concert.destroyTemplatePluginsPreApply($('div.editable'));
       // apply the page filter to make sure our stuff runs.
       Extend.apply('page', $('div.editable'), {'editable': true});
 
@@ -1150,10 +1151,6 @@ $(document)
         // something happened.
         alert('The draft was not successfully discarded');
       });
-  })
-
-  .on('click', '#concertStopEditing', function(e) {
-    window.location = Gustavus.Utility.URL.urlify(Gustavus.Concert.redirectPath, {'concert': 'stopEditing', 'concertAction': 'menu'});
   })
 
   .on('click', 'a.quitConcert', function(e) {

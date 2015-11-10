@@ -394,7 +394,7 @@ class MenuController extends SharedController
       $draft = $this->getFileManager()->getDraft($draftName);
 
       if (self::isRequestFromConcertRoot($this->filePath)) {
-        $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]);
+        $url = $this->buildUrl('drafts', ['draftName' => $draft['draftFilename']]) . '?draftAction=stopEditing';
       } else {
         $query = $this->queryParams;
         self::removeConcertQueryParams($query);
@@ -550,7 +550,7 @@ class MenuController extends SharedController
 
       $draft = $this->getFileManager()->getDraftForUser($this->getLoggedInUsername());
 
-      if (!empty($draft) && PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
+      if (!self::isSiteNavRequest() && !empty($draft) && PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
         if (self::isRequestFromConcertRoot($this->filePath)) {
           $url = $this->buildUrl('editDraft', ['draftName' => $draft['draftFilename']]);
         } else {
@@ -949,19 +949,6 @@ class MenuController extends SharedController
     $this->analyzeReferer();
     if (!empty($this->queryParams)) {
       $_GET = array_merge($this->queryParams, $_GET);
-    }
-  }
-
-  /**
-   * Removes concert query params from an array
-   *
-   * @param  array &$query Array to remove concert parameters from
-   * @return void
-   */
-  private static function removeConcertQueryParams(&$query)
-  {
-    foreach (Config::$concertGETKeys as $key) {
-      unset($query[$key]);
     }
   }
 }
