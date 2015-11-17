@@ -1,5 +1,11 @@
 # Note: This file is symlinked everywhere it is used, so editing this file is frowned upon.
 <FilesMatch "(?i)\.(php|php3?|phtml)$">
-        Order Deny,Allow
-        Deny from All
+  Order Deny,Allow
+  Deny from All
 </FilesMatch>
+<If "%{REQUEST_FILENAME} =~ m#/secure/#">
+  # Anything in a secure folder requires login
+  AuthType CAS
+  AuthName "Gustavus"
+  require valid-user
+</If>
