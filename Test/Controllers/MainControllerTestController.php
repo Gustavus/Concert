@@ -61,6 +61,17 @@ class MainControllerTestController extends MainController
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function insertEditingResources($filePath, $redirectPath = null, array $visibleButtons = null, array $additionalButtons = null, array $additionalJSOptions = null)
+  {
+    $origDocRoot = $_SERVER['DOCUMENT_ROOT'];
+    $_SERVER['DOCUMENT_ROOT'] = '/cis/www/';
+    parent::insertEditingResources($filePath, $redirectPath, $visibleButtons, $additionalButtons, $additionalJSOptions);
+    $_SERVER['DOCUMENT_ROOT'] = $origDocRoot;
+  }
+
+  /**
    * Adds css and js needed for filtering
    *
    * @return  void
