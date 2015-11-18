@@ -79,7 +79,7 @@ class PermissionsController extends SharedController
     // we don't want this form to be persisted
     $this->flushForm('concertCreateSite');
 
-    $form = $this->buildForm('concertCreateSite', ['\Gustavus\Concert\Forms\Site', 'getConfig'], [null, $this->getLoggedInUsername()]);
+    $form = $this->buildForm('concertCreateSite', ['\Gustavus\Concert\Forms\Site', 'getConfig'], [null, $this->getLoggedInUsername()], 600); // 600 = 10 minutes
 
     if ($this->getMethod() === 'POST' && $form->validate()) {
       $siteRoot = $form->getChildElement('siteinfo.siteroot')->getValue();
@@ -197,7 +197,7 @@ class PermissionsController extends SharedController
     $formKey = 'concertEditSite_'. $siteId;
     $this->flushForm($formKey);
 
-    $form = $this->buildForm($formKey, ['\Gustavus\Concert\Forms\Site', 'getConfig'], [$site, $this->getLoggedInUsername()]);
+    $form = $this->buildForm($formKey, ['\Gustavus\Concert\Forms\Site', 'getConfig'], [$site, $this->getLoggedInUsername()], 600); // 600 = 10 minutes
 
     if ($this->getMethod() === 'POST' && $form->validate()) {
       $excludedFiles = [];
@@ -321,7 +321,7 @@ class PermissionsController extends SharedController
       return PageUtil::renderAccessDenied();
     }
 
-    $form = $this->buildForm('userSearch', ['\Gustavus\Concert\Forms\UserSearch', 'getConfig']);
+    $form = $this->buildForm('userSearch', ['\Gustavus\Concert\Forms\UserSearch', 'getConfig'], null, 600); // 600 = 10 minutes
 
     $autocompletePath = $this->buildUrl('autocompleteUser', ['value' => '{value}']);
 
