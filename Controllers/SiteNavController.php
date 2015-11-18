@@ -97,7 +97,8 @@ class SiteNavController extends SharedController
   private function createOrEditSiteNav($filePath)
   {
     // we only want users to be able to publish, so we need to override our action buttons
-    $query = self::removeConcertQueryParams($_GET);
+    $query = $_GET;
+    self::removeConcertQueryParams($query);
     $query['concert']       = 'stopEditingSiteNav';
 
     self::overrideVisibleEditingButtons([
