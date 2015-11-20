@@ -684,6 +684,12 @@ Gustavus.Concert = {
       } else {
         $this.css('height', '');
       }
+      var mceStyle = $this.attr('data-mce-style');
+      if (mceStyle) {
+        // remove height from mce-style since it would have been set to 0
+        mceStyle = mceStyle.replace(/height.+?;/, '');
+        $this.attr('data-mce-style', mceStyle);
+      }
     });
   },
 
