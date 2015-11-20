@@ -223,18 +223,7 @@ Gustavus.Concert = {
 
         editor.setContent(content);
         // remove any image placeholders
-        $('img').load(function() {
-          var $this = $(this);
-          $this.next('.spinner[data-img-placeholder]').remove();
-          // we need to adjust the height now since we set it to be zero when we threw the placeholder in.
-          if ($this.data('orig-height')) {
-            // reset our height to the original value
-            $this.css('height', $this.data('orig-height'));
-            $this.removeAttr('data-orig-height');
-          } else {
-            $this.css('height', '');
-          }
-        });
+        Gustavus.Concert.removeImagePlaceholders();
       });
 
       editor.on('init', function(e) {
@@ -680,6 +669,25 @@ Gustavus.Concert = {
   },
 
   /**
+   * Removes any image placeholders once images load
+   * @return {undefined}
+   */
+  removeImagePlaceholders: function() {
+    $('img').load(function() {
+      var $this = $(this);
+      $this.next('.spinner[data-img-placeholder]').remove();
+      // we need to adjust the height now since we set it to be zero when we threw the placeholder in.
+      if ($this.data('orig-height')) {
+        // reset our height to the original value
+        $this.css('height', $this.data('orig-height'));
+        $this.removeAttr('data-orig-height');
+      } else {
+        $this.css('height', '');
+      }
+    });
+  },
+
+  /**
    * Function for tinyMCE to convert image urls into GIMLI urls
    * @param  {String} content Content to convert URLs for
    * @return {String} Adjusted content
@@ -697,7 +705,7 @@ Gustavus.Concert = {
         // we are either a relative path, or a Gustavus host
         var width  = $this.attr('width');
         var height = $this.attr('height');
-        
+
         resizedDims = Gustavus.Concert.resizeImagesIfNeeded(width, height);
         width  = resizedDims.width;
         height = resizedDims.height;
