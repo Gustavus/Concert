@@ -119,6 +119,7 @@ Gustavus.Concert = {
     ]},
     {title: 'Classes', items: [
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
+      {title: 'Button', selector: 'a', classes: 'button'},
     ]}
   ],
 
