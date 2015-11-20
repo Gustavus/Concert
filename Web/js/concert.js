@@ -222,6 +222,19 @@ Gustavus.Concert = {
         content = Gustavus.Concert.convertEmbedsIntoResponsiveBoxes(content);
 
         editor.setContent(content);
+        // remove any image placeholders
+        $('img').load(function() {
+          var $this = $(this);
+          $this.next('.spinner[data-img-placeholder]').remove();
+          // we need to adjust the height now since we set it to be zero when we threw the placeholder in.
+          if ($this.data('orig-height')) {
+            // reset our height to the original value
+            $this.css('height', $this.data('orig-height'));
+            $this.removeAttr('data-orig-height');
+          } else {
+            $this.css('height', '');
+          }
+        });
       });
 
       editor.on('init', function(e) {
@@ -243,6 +256,18 @@ Gustavus.Concert = {
                   }
                 });
                 return false;
+              }
+              // adjust our dimensions in case the image is too big
+              var adjustedDims = Gustavus.Concert.resizeImagesIfNeeded(e.data.width, e.data.height);
+              if (adjustedDims.width !== e.data.width) {
+                if (e.target.find('#width')) {
+                  // only set the width because constrain being true will automatically adjust the height
+                  e.target.find('#width').value(adjustedDims.width.toString());
+                }
+                if (e.target.find('#height')) {
+                  // remove our height so we don't distort the image if it is in a container less than 1200
+                  e.target.find('#height').value(null);
+                }
               }
               // call the original onSubmit function
               return args.origSubmit(e);
@@ -621,6 +646,40 @@ Gustavus.Concert = {
   },
 
   /**
+   * Resizes images to have a max width of 1200 if they are bigger than that.
+   * @param  {integer} width  Image width
+   * @param  {integer} height Image height
+   * @return {object}  Object with properties of the new width and height
+   */
+  resizeImagesIfNeeded: function(width, height) {
+    if (width && height && width > 1200) {
+      var ratio = height / width;
+      width = 1200
+      height = width * ratio;
+    } else if (width && width > 1200) {
+      width = 1200;
+    }
+    return {'width': width, 'height': height};
+  },
+
+  /**
+   * Adds an image placeholder so we know an image is loading in case GIMLI takes awhile to generate the image
+   * @param  {jQuery} $img JQuery object representing the image to put the placeholder in for
+   * @return {undefined}
+   */
+  addImagePlaceholder: function($img) {
+    // throw our placeholder after the image
+    $img.after('<span class="spinner" data-img-placeholder style="display:block;"></span>');
+    var style = $img.attr('style');
+    if (style && style.indexOf('height') >= 0) {
+      // save our original height so we can restore later
+      $img.attr('data-orig-height', $img.css('height'));
+    }
+    // set the height to be zero so we can see the placeholder and know that it is loading
+    $img.css('height', '0px');
+  },
+
+  /**
    * Function for tinyMCE to convert image urls into GIMLI urls
    * @param  {String} content Content to convert URLs for
    * @return {String} Adjusted content
@@ -631,13 +690,18 @@ Gustavus.Concert = {
 
     $content.find('img').each(function() {
       $this = $(this);
-      var width  = $this.attr('width');
-      var height = $this.attr('height');
-      var src    = $this.attr('src');
+      var src = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
       if (url.pathname && (!url.host || Gustavus.Utility.URL.isGustavusHost(url.host))) {
         // we are either a relative path, or a Gustavus host
+        var width  = $this.attr('width');
+        var height = $this.attr('height');
+        
+        resizedDims = Gustavus.Concert.resizeImagesIfNeeded(width, height);
+        width  = resizedDims.width;
+        height = resizedDims.height;
+
         if (url.pathname.indexOf('/slir/') === 0) {
           // we have a slir request. We want this converted to gimli.
           url.pathname = url.pathname.replace('/slir/', '/gimli/');
@@ -694,6 +758,7 @@ Gustavus.Concert = {
           }
           // clean up any rogue dashes
           url.pathname = url.pathname.replace(/gimli\/(w\d+|h\d+)-\//, 'gimli/$1/');
+          Gustavus.Concert.addImagePlaceholder($this);
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         } else {
           // we don't yet have a gimli url. We might want to build one.
@@ -712,6 +777,7 @@ Gustavus.Concert = {
             newPathname += url.pathname;
             url.pathname = newPathname;
           }
+          Gustavus.Concert.addImagePlaceholder($this);
           $this.attr('src', Gustavus.Utility.URL.buildURL(url));
         }
       }
