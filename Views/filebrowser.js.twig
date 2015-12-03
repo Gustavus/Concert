@@ -1,0 +1,56 @@
+{% spaceless %}
+{#--#}<div id="fileTreeSelector"></div>
+{#--#}<style>
+{#--#}  html {
+{#--#}    background-color: white;
+{#--#}  }
+{#--#}  body {
+{#--#}    background-color: white;
+{#--#}    margin-top: 0px;
+{#--#}  }
+{#--#}  #fileTreeSelector {
+{#--#}    margin: 10px;
+{#--#}  }
+{#--#}</style>
+{#--#}<script>
+{#--#}  var require = {
+{#--#}    packages: [
+{#--#}      {
+{#--#}        name: "ui",
+{#--#}        location: "/js/jquery/ui/current",
+{#--#}        main: null
+{#--#}      }
+{#--#}    ],
+{#--#}    paths: {
+{#--#}      'css'            : '/js/require/require-css/css.min',
+{#--#}      'jquery'         : ['//ajax.googleapis.com/ajax/libs/jquery/{{ jQueryVersion }}/jquery.min', '/js/jquery/jquery-{{ jQueryVersion }}.min']
+{#--#}    },
+{#--#}    skipDataMain: true,
+{#--#}    waitSeconds: 15
+{#--#}  };
+{#--#}</script>
+{#--#}
+{#--#}<script src="/js/require/require.js"></script>
+{#--#}
+{#--#}<script>
+{#--#}  require(['jquery'], function() {
+{#--#}    require(
+{#--#}      [
+{#--#}        "ui/dialog",
+{#--#}        "ui/button",
+{#--#}        "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}",
+{#--#}        "css!{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css'}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}",
+{#--#}        "css!{{ renderCSS({'path': '/template/css/style.css', 'version': templateCSSVersion}) }}"
+{#--#}      ],
+{#--#}      function() {
+{#--#}        $("#fileTreeSelector").fileTree({
+{#--#}          root: '{{ siteBase }}',
+{#--#}          script: '{{ fileTreeScript }}?excludeTemplates=true'
+{#--#}        }, function(file) {
+{#--#}          window.top.tinymce.activeEditor.windowManager.getParams().setURL(file);
+{#--#}        });
+{#--#}      }
+{#--#}    );
+{#--#}  });
+{#--#}</script>
+{% endspaceless %}
