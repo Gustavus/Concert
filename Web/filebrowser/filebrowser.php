@@ -1,4 +1,10 @@
 <?php
+/**
+ * This is a custom plugin to allow people to browse files on the filesystem for creating links
+ * @package Concert
+ * @subpackage FileBrowser
+ * @author Billy Visto
+ */
 use Gustavus\Template\Config as TemplateConfig,
   Gustavus\Concert\Config,
   Gustavus\Concert\Utility,
@@ -7,6 +13,7 @@ use Gustavus\Template\Config as TemplateConfig,
   Gustavus\Concourse\RoutingUtil,
   Gustavus\TwigFactory\TwigFactory;
 
+// render our view that populates the tinymce window
 echo TwigFactory::renderTwigFileSystemTemplate(
     '/cis/lib/Gustavus/Concert/Views/filebrowser.js.twig',
     [
