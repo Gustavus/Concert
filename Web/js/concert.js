@@ -840,7 +840,11 @@ Gustavus.Concert = {
         }
       } else {
         // this iframe needs to be wrapped to become responsive
-        var prefix = '<div class="box16x9">';
+        if ($this.attr('src') && $this.attr('src').match(/youtube|vimeo/)) {
+          var prefix = '<div class="box16x9">';
+        } else {
+          var prefix = '<div class="responsiveBox">';
+        }
         var suffix = '</div>';
         if (width) {
           // we need to wrap this in a div with max-width set
