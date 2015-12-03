@@ -1138,29 +1138,31 @@ Gustavus.Concert = {
    */
   saveInitialBxSliderElements: function() {
     var $bx = $('.bx-wrapper');
-    var $bxCopy = $($bx[0].outerHTML);
-    $bxCopy.addClass('concertNonEditable');
-    $bx.hide();
-    $bx.after($bxCopy);
-    $bx.detach();
-    // grab our item we added bxSlider to
-    // $bx.children().first() will be the bx-viewport. Then the viewport will contain the itm we added bxSlider to
-    var $bxElement = $bx.children().first().children().first();
-    // destroy bxSlider!
-    $bxElement.data('bxSlider').destroySlider();
-    // remove stuff left over from bxSlider
-    $bxElement.find('[aria-hidden]').each(function() {
-      $(this).removeAttr('aria-hidden');
-    });
-    // get our editable index
-    var index = $bxCopy.closest('div.editable').data('index');
-    if (!this.destroyedElements[index]) {
-      this.destroyedElements[index] = [];
+    if ($bx.length > 0) {
+      var $bxCopy = $($bx[0].outerHTML);
+      $bxCopy.addClass('concertNonEditable');
+      $bx.hide();
+      $bx.after($bxCopy);
+      $bx.detach();
+      // grab our item we added bxSlider to
+      // $bx.children().first() will be the bx-viewport. Then the viewport will contain the itm we added bxSlider to
+      var $bxElement = $bx.children().first().children().first();
+      // destroy bxSlider!
+      $bxElement.data('bxSlider').destroySlider();
+      // remove stuff left over from bxSlider
+      $bxElement.find('[aria-hidden]').each(function() {
+        $(this).removeAttr('aria-hidden');
+      });
+      // get our editable index
+      var index = $bxCopy.closest('div.editable').data('index');
+      if (!this.destroyedElements[index]) {
+        this.destroyedElements[index] = [];
+      }
+      // save our initial item so we can re-add it later
+      this.destroyedElements[index].push($bxElement[0].outerHTML);
+      // add an attribute to the item we want to replace upon save
+      $bxCopy.attr('data-concert-replacement-index', this.destroyedElements[index].length - 1);
     }
-    // save our initial item so we can re-add it later
-    this.destroyedElements[index].push($bxElement[0].outerHTML);
-    // add an attribute to the item we want to replace upon save
-    $bxCopy.attr('data-concert-replacement-index', this.destroyedElements[index].length - 1);
   },
 
   /**
