@@ -48,10 +48,10 @@ if(jQuery) (function($){
         o.folderEvent = 'click';
       }
 			if (o.expandSpeed == undefined) {
-        o.expandSpeed = 500;
+        o.expandSpeed = 200;
       }
 			if (o.collapseSpeed == undefined) {
-        o.collapseSpeed = 500;
+        o.collapseSpeed = 200;
       }
 			if (o.expandEasing == undefined) {
         o.expandEasing = null;
