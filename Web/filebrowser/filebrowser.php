@@ -9,7 +9,6 @@ use Gustavus\Template\Config as TemplateConfig,
   Gustavus\Concert\Config,
   Gustavus\Concert\Utility,
   Gustavus\Concert\PermissionsManager,
-  Gustavus\Resources\Resource,
   Gustavus\Concourse\RoutingUtil,
   Gustavus\TwigFactory\TwigFactory;
 
