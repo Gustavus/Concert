@@ -818,7 +818,7 @@ class MenuController extends SharedController
       // The 2 accounts for . and ..
       if (count($files) >= 2) {
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
-        if ($forSrcFile) {
+        if ($forSrcFile && !isset($_GET['excludeTemplates'])) {
           // we want our default templates on top
           foreach (Config::$templates as $templateIdentifier => $templateProperties) {
             $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
@@ -827,6 +827,9 @@ class MenuController extends SharedController
         // All dirs
         foreach ($files as $file) {
           if (file_exists($absDir . $file) && $file != '.' && $file != '..' && is_dir($absDir . $file) && !in_array($file, Config::$fileTreeExcludedFolders)) {
+            if ($forSrcFile && count(scandir($absDir . $file)) <= 2) {
+              continue;
+            }
             $return .= sprintf('<li class="directory collapsed"><a href="#" rel="%s">%s</a></li>', htmlentities($dir . $file . DIRECTORY_SEPARATOR), htmlentities($file));
           }
         }
