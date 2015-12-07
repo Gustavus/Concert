@@ -33,6 +33,12 @@ Gustavus.Concert = {
   ignoreDirtyEditors: false,
 
   /**
+   * Storage for destroyed elements that we need to add back in after editing
+   * @type {Object}
+   */
+  destroyedElements: {},
+
+  /**
    * Selector of elements that get dynamically hidden via template javascript
    * @type {String}
    */
@@ -188,7 +194,9 @@ Gustavus.Concert = {
     image_title: true,
     image_description: true,
     filemanager_title: "Concert File Manager" ,
-    external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js"},
+    external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js", "filebrowser": "/concert/filebrowser/filebrowser.min.js"},
+
+    noneditable_noneditable_class: 'concertNonEditable',
 
     resize: false,
     // @todo. What to do here. Default this to true? I don't think so. it might be something we can add a setting for later.
@@ -355,7 +363,7 @@ Gustavus.Concert = {
       "advlist autolink lists link image charmap print anchor",
       "searchreplace visualblocks fullscreen",
       "insertdatetime media table contextmenu paste responsivefilemanager",
-      "spellchecker hr template" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
+      "spellchecker hr template noneditable" //http://www.tinymce.com/wiki.php/Plugin:spellchecker
     ];
 
     if (this.allowCode || this.isAdmin) {
@@ -390,7 +398,7 @@ Gustavus.Concert = {
 
     var plugins = [
       "autolink link searchreplace visualblocks contextmenu paste",
-      "spellchecker"
+      "spellchecker noneditable"
     ];
 
     if (this.isAdmin) {
@@ -417,7 +425,7 @@ Gustavus.Concert = {
 
     var plugins = [
       "autolink lists link searchreplace visualblocks contextmenu paste",
-      "spellchecker"
+      "spellchecker noneditable"
     ];
 
     if (this.isAdmin) {
@@ -468,10 +476,13 @@ Gustavus.Concert = {
    * Cleanup function for editable content to strip editing leftovers
    * @param  {String} content Content to clean up
    * @param  {Boolean} isSiteNav Whether we are cleaning content for a site nav or not
+   * @param  {Integer} editableIndex Index of the current editable content
    * @return {String} Cleaned content
    */
-  cleanUpContent: function(content, isSiteNav) {
+  cleanUpContent: function(content, isSiteNav, editableIndex) {
     var cleaned = Gustavus.Concert.mceCleanup(content);
+    // re add anything we destroyed
+    cleaned = Gustavus.Concert.reAddDestroyedElements(content, editableIndex)
     // convert images to be responsive
     cleaned = Gustavus.Concert.makeImagesResponsive(cleaned);
     cleaned = cleaned.replace(/<br.data-mce[^>]*>/g, '');
@@ -829,7 +840,11 @@ Gustavus.Concert = {
         }
       } else {
         // this iframe needs to be wrapped to become responsive
-        var prefix = '<div class="box16x9">';
+        if ($this.attr('src') && $this.attr('src').match(/youtube|vimeo/)) {
+          var prefix = '<div class="box16x9">';
+        } else {
+          var prefix = '<div class="responsiveBox">';
+        }
         var suffix = '</div>';
         if (width) {
           // we need to wrap this in a div with max-width set
@@ -873,7 +888,7 @@ Gustavus.Concert = {
       if (tinymce.editors[i].isDirty()) {
         var $element = $(tinymce.editors[i].getElement());
         var isSiteNav = (tinymce.editors[i].settings.selector === 'div.editable.siteNav');
-        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(tinymce.editors[i].getContent(), isSiteNav);
+        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(tinymce.editors[i].getContent(), isSiteNav, $element.data('index'));
       }
     }
     return edits;
@@ -1102,6 +1117,59 @@ Gustavus.Concert = {
   },
 
   /**
+   * Re-adds any elements that we destroyed before creating our editor instances
+   * @param  {string} content       Content to add elements back onto
+   * @param  {integer} editableIndex Editable index that content belongs to
+   * @return {string}
+   */
+  reAddDestroyedElements: function(content, editableIndex) {
+    // convert content to a jquery object
+    var $content = $('<div>' + content + '</div>');
+    $content.find('[data-concert-replacement-index]').each(function() {
+      var $this = $(this);
+      var index = $(this).attr('data-concert-replacement-index');
+      if (Gustavus.Concert.destroyedElements[editableIndex][index]) {
+        this.outerHTML = Gustavus.Concert.destroyedElements[editableIndex][index];
+      }
+    });
+    return $content.html();
+  },
+
+  /**
+   * Grab the items that bxSlider is attached to so we can store them for replacing the bxSlider instances on save.
+   *   This prevents us from saving the html that bxSlider adds to elements
+   * @return {undefined}
+   */
+  saveInitialBxSliderElements: function() {
+    var $bx = $('.bx-wrapper');
+    if ($bx.length > 0) {
+      var $bxCopy = $($bx[0].outerHTML);
+      $bxCopy.addClass('concertNonEditable');
+      $bx.hide();
+      $bx.after($bxCopy);
+      $bx.detach();
+      // grab our item we added bxSlider to
+      // $bx.children().first() will be the bx-viewport. Then the viewport will contain the itm we added bxSlider to
+      var $bxElement = $bx.children().first().children().first();
+      // destroy bxSlider!
+      $bxElement.data('bxSlider').destroySlider();
+      // remove stuff left over from bxSlider
+      $bxElement.find('[aria-hidden]').each(function() {
+        $(this).removeAttr('aria-hidden');
+      });
+      // get our editable index
+      var index = $bxCopy.closest('div.editable').data('index');
+      if (!this.destroyedElements[index]) {
+        this.destroyedElements[index] = [];
+      }
+      // save our initial item so we can re-add it later
+      this.destroyedElements[index].push($bxElement[0].outerHTML);
+      // add an attribute to the item we want to replace upon save
+      $bxCopy.attr('data-concert-replacement-index', this.destroyedElements[index].length - 1);
+    }
+  },
+
+  /**
    * Displays togglable links
    * @param  {HTMLElement} currObj object toggle links in
    * @param {Object} args additional arguments extend.apply passes
@@ -1158,6 +1226,8 @@ Gustavus.Concert = {
       Extend.apply('page', $('div.editable'), {'editable': true});
 
       Gustavus.Concert.addImageWidthAndHeightAttributesFromGIMLI();
+      // save bxSlider elements since we lose bxSlider data once tinyMCE takes over so we can replace them with their initial content
+      Gustavus.Concert.saveInitialBxSliderElements();
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;
