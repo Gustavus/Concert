@@ -6,7 +6,7 @@ tinymce.PluginManager.add("filebrowser", function(editor){
     if (type === 'file') {
       // we only want to use our custom filebrowser for file selections and not media
       editor.windowManager.open({
-        title: 'Choose a file',
+        title: 'Choose a page',
         url: Gustavus.Utility.URL.urlify('/concert/filebrowser/filebrowser.php', {'filePath': Gustavus.Concert.filePath}),
         buttons: [{
             text: 'Concert File Manager',
