@@ -100,6 +100,7 @@ class TestBase extends TestEM
    */
   public static function setUpBeforeClass()
   {
+    parent::setUpBeforeClass();
     self::$overrideToken = [];
     $iniSetToken = override_function('ini_set',
         function($varname, $newvalue) use (&$iniSetToken) {
