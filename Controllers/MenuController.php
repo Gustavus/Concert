@@ -319,6 +319,14 @@ class MenuController extends SharedController
     ];
     $this->addMenuItem($item, 'help', 2);
 
+    $item = [
+      'text'     => 'Dashboard',
+      'url'      => $this->buildUrl('dashboard'),
+      'newTab'   => 'true',
+      'thickbox' => false,
+    ];
+    $this->addMenuItem($item, 'help', 3);
+
     if (self::userIsEditing() && (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername()))) {
       $query = $this->queryParams;
       if (isset($query['showUnMatchedTags'])) {
