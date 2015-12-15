@@ -307,7 +307,7 @@ class MenuController extends SharedController
     $item = [
       'text'     => 'Concert Basics',
       'url'      => 'https://gustavus.edu/gts/Concert',
-      'newTab'   => 'true',
+      'newTab'   => true,
       'thickbox' => false,
     ];
     $this->addMenuItem($item, 'help', 1);
@@ -322,7 +322,7 @@ class MenuController extends SharedController
     $item = [
       'text'     => 'Dashboard',
       'url'      => $this->buildUrl('dashboard'),
-      'newTab'   => 'true',
+      'newTab'   => true,
       'thickbox' => false,
     ];
     $this->addMenuItem($item, 'help', 3);
