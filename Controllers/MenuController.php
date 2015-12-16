@@ -307,7 +307,7 @@ class MenuController extends SharedController
     $item = [
       'text'     => 'Concert Basics',
       'url'      => 'https://gustavus.edu/gts/Concert',
-      'newTab'   => 'true',
+      'newTab'   => true,
       'thickbox' => false,
     ];
     $this->addMenuItem($item, 'help', 1);
@@ -318,6 +318,14 @@ class MenuController extends SharedController
       'thickbox' => false,
     ];
     $this->addMenuItem($item, 'help', 2);
+
+    $item = [
+      'text'     => 'Dashboard',
+      'url'      => $this->buildUrl('dashboard'),
+      'newTab'   => true,
+      'thickbox' => false,
+    ];
+    $this->addMenuItem($item, 'help', 3);
 
     if (self::userIsEditing() && (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername()))) {
       $query = $this->queryParams;

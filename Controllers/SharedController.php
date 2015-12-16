@@ -1199,12 +1199,16 @@ class SharedController extends ConcourseController
 
     if (!$draft && $requestURI !== null) {
       $parts = parse_url(str_replace('/index.php', '', $requestURI));
-      $draft = basename($parts['path']);
+      if (isset($parts['path'])) {
+        $draft = basename($parts['path']);
+      }
     }
 
     if (!$draft && isset($_SERVER['REQUEST_URI'])) {
       $parts = parse_url(str_replace('/index.php', '', rawurldecode($_SERVER['REQUEST_URI'])));
-      $draft = basename($parts['path']);
+      if (isset($parts['path'])) {
+        $draft = basename($parts['path']);
+      }
     }
     return $draft;
   }
