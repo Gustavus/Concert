@@ -491,8 +491,12 @@ Gustavus.Concert = {
     // get rid of any empty classes we may have.
     cleaned = cleaned.replace(/class=""/g, '');
 
-    // Clean up tables
     var $content = $('<div>' + cleaned + '</div>');
+    // remove any concert-remove elements
+    $content.find('[data-concert-remove]').remove();
+    // remove image placeholders
+    Gustavus.Concert.removeImagePlaceholders($content);
+    // Clean up tables
     var $tables = $content.find('table');
 
     var removeFootableClasses = function($this, isTableElement) {
@@ -683,8 +687,9 @@ Gustavus.Concert = {
    * Removes any image placeholders once images load
    * @return {undefined}
    */
-  removeImagePlaceholders: function() {
-    $('img').load(function() {
+  removeImagePlaceholders: function($content) {
+    // function to actually remove image placeholders
+    var removeFunc = function() {
       var $this = $(this);
       $this.next('.spinner[data-img-placeholder]').remove();
       // we need to adjust the height now since we set it to be zero when we threw the placeholder in.
@@ -701,7 +706,12 @@ Gustavus.Concert = {
         mceStyle = mceStyle.replace(/height.+?;/, '');
         $this.attr('data-mce-style', mceStyle);
       }
-    });
+    };
+    if ($content) {
+      $('img', $content).each(removeFunc);
+    } else {
+      $('img').load(removeFunc);
+    }
   },
 
   /**
