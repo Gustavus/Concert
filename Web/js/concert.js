@@ -235,7 +235,7 @@ Gustavus.Concert = {
       });
 
       editor.on('init', function(e) {
-        // highjack the open function so we can do extra operations if needed
+        // hijack the open function so we can do extra operations if needed
         editor.windowManager.origOpen = editor.windowManager.open;
         editor.windowManager.open = function(args, params) {
           // check to see if this is an image window.
@@ -278,6 +278,7 @@ Gustavus.Concert = {
         editor.dom.origReplace = editor.dom.replace;
         editor.dom.replace = function(newElm, oldElm, keepChildren) {
           if (oldElm && typeof oldElm === 'object' && oldElm.tagName && oldElm.tagName.match(/^(P|DIV)$/i) && oldElm.className && oldElm.className.match(/grid-/)) {
+            newElm.className = '';
             // we have a paragraph or div with a grid class
             // pull our innerHTML from our old element into the new element.
             newElm.innerHTML = oldElm.innerHTML;
