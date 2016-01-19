@@ -859,9 +859,18 @@ class MenuController extends SharedController
         $return .= '</ul>';
       }
     } else {
+      // the directory doesn't exist.
       if (!$forSrcFile) {
+        // We want to give them the option to create a new index.php file.
         $newIndexFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s" class="selected">index.php</a></li>', htmlentities($dir . 'index.php'));
         $return = sprintf('<ul class="jqueryFileTree" style="display: none;">%s%s%s</ul>', $newIndexFileHTML, $newFileHTML, $newFolderHTML);
+      } else if (!isset($_GET['excludeTemplates'])) {
+        // We only want them to be able to copy a template since no files exist in the directory.
+        $return .= '<ul class="jqueryFileTree" style="display: none;">';
+        foreach (Config::$templates as $templateIdentifier => $templateProperties) {
+          $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
+        }
+        $return .= '</ul>';
       }
     }
     return $return;

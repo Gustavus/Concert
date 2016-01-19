@@ -274,6 +274,24 @@ Gustavus.Concert = {
           return editor.windowManager.origOpen(args, params);
         };
 
+        // hijack replace, so we can make sure that we don't replace grid blocks with other elements.
+        editor.dom.origReplace = editor.dom.replace;
+        editor.dom.replace = function(newElm, oldElm, keepChildren) {
+          if (oldElm && typeof oldElm === 'object' && oldElm.tagName && oldElm.tagName.match(/^(P|DIV)$/i) && oldElm.className && oldElm.className.match(/grid-/)) {
+            // we have a paragraph or div with a grid class
+            // pull our innerHTML from our old element into the new element.
+            newElm.innerHTML = oldElm.innerHTML;
+            // replace the inner html of the old element with the outer html of our new element that now contains the inner html of the old element.
+            oldElm.innerHTML = newElm.outerHTML;
+
+            // we want the new element to be an empty version of the old element.
+            // we do this so things that the original editor.dom.replace does will still get processed.
+            newElm = oldElm.cloneNode();
+            newElm.innerHTML = '';
+          }
+          editor.dom.origReplace(newElm, oldElm, keepChildren);
+        }
+
         // We need to hijack split so we can remove any classes applied to the element we are splitting. (This fixes not being able to get rid of grid classes on containers)
         editor.dom.origSplit = editor.dom.split;
         editor.dom.split = function(parentElm, splitElm, replacementElm) {
