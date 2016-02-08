@@ -591,7 +591,7 @@ Gustavus.Concert = {
       var src = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
-      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
+      if (url.pathname && (!url.host || Gustavus.Utility.URL.isGustavusHost(url.host))) {
         // convertImageURLsToGIMLI should take care of all of these, but just in case.
         if (url.pathname.indexOf('/slir/') === 0) {
           // we have a slir request. We want this converted to gimli.
@@ -637,7 +637,7 @@ Gustavus.Concert = {
       var src = $this.attr('src');
 
       var url = Gustavus.Utility.URL.parseURL(src);
-      if (url.host && url.pathname && Gustavus.Utility.URL.isGustavusHost(url.host)) {
+      if (url.pathname && (!url.host || Gustavus.Utility.URL.isGustavusHost(url.host))) {
         if (url.pathname.indexOf('/slir/') === 0) {
           // we have a slir request. We want this converted to gimli.
           url.pathname = url.pathname.replace('/slir/', '/gimli/');
@@ -1075,20 +1075,21 @@ Gustavus.Concert = {
    */
   destroyTemplatePluginsPreApply: function(currObj) {
     if (currObj) {
-      var $autoCaptions = $('img.autocaption', currObj);
+      var $autoCaptions = $('span.caption', currObj);
     } else {
-      var $autoCaptions = $('div.editable img.autocaption');
+      var $autoCaptions = $('div.editable span.caption');
     }
     // remove any jcaption stuff
     $autoCaptions.each(function() {
-      var parents = $(this).parents('.caption');
-      var img = this;
-      // make sure the image's title is the same as the caption in case someone attempted to edit it.
-      var title = $(parents.first()).find('p').html();
-      $(img).attr('title', title);
-      var parent = parents.last()[0];
-      if (parent && parent.parentNode) {
-        parent.parentNode.innerHTML = parent.parentNode.innerHTML.replace(parent.outerHTML, img.outerHTML);
+      var $this = $(this);
+      var $img = $this.children('img.autocaption').first();
+      if ($img) {
+        var $titleElement = $this.find('span');
+        var title = $titleElement ? $titleElement.html() : '';
+        $img.attr('title', title);
+        $img.data('loaded', '');
+
+        $this.replaceWith($img);
       }
     });
 
