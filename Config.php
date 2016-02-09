@@ -63,7 +63,7 @@ class Config
   /**
    * JS version
    */
-  const JS_VERSION = 28;
+  const JS_VERSION = 29;
 
   /**
    * Autocomplete JS version
@@ -78,7 +78,7 @@ class Config
   /**
    * Responsive Filemanager version
    */
-  const RESPONSIVE_FILEMANAGER_VERSION = '9.9.6-1';
+  const RESPONSIVE_FILEMANAGER_VERSION = '9.9.7';
 
   /**
    * CSS version
