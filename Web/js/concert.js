@@ -1147,6 +1147,20 @@ Gustavus.Concert = {
     $('abbr[title=and]', currObj).each(function() {
       this.outerHTML = '&amp;';
     });
+
+    // destroy colorbox
+    if (currObj && args && args.editable) {
+      var $colorBoxElements = $('.thickbox', currObj);
+    } else {
+      var $colorBoxElements = $('div.editable .thickbox');
+    }
+    $colorBoxElements.each(function() {
+      var $this = $(this);
+      // make sure colorbox has been initialized on this element
+      if ($this.data('colorbox')) {
+        $this.colorbox.remove();
+      }
+    });
   },
 
   /**
