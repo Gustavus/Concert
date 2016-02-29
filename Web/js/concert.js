@@ -86,8 +86,8 @@ Gustavus.Concert = {
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
       {title: 'Remove Sorting', selector: 'table', classes: 'nosort'},
       {title: 'Fancy', selector: 'img', classes: 'fancy'},
-      {title: 'Left', selector: 'img', classes: 'left'},
-      {title: 'Right', selector: 'img', classes: 'right'},
+      {title: 'Left', selector: 'img,div.boxContainer', classes: 'left'},
+      {title: 'Right', selector: 'img,div.boxContainer', classes: 'right'},
       {title: 'Button', selector: 'a', classes: 'button'},
     ]}
   ],
@@ -146,12 +146,13 @@ Gustavus.Concert = {
 
     forced_root_block: '',
     element_format: 'html',
+    schema: 'html5',
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
     // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
     extended_valid_elements: 'i[class],span[*],-li[*],-ul[*]',
     // ensure anchors can contain headings.
-    valid_children: '+a[h2|h3|h4|h5|h6]',
+    valid_children: '+a[h2|h3|h4|h5|h6|div|p]',
     // we don't want it to convert rgb to hex.
     force_hex_style_colors: false,
     // we don't want to keep our styles when we hit return/enter.
@@ -859,13 +860,15 @@ Gustavus.Concert = {
           // We need to adjust the width of the containing element
           if (width) {
             $this.parent().parent().css('max-width', width + 'px');
+            $this.parent().parent().addClass('boxContainer');
           } else {
             $this.parent().parent().css('max-width', '');
+            $this.parent().parent().addClass('boxContainer');
           }
         } else if (width) {
           // we need to wrap our parent element in a div with max-width
           var parent = $this.parent().get(0);
-          parent.outerHTML = '<div style="max-width: ' + width + 'px;">' + parent.outerHTML + '</div>';
+          parent.outerHTML = '<div class="boxContainer" style="max-width: ' + width + 'px;">' + parent.outerHTML + '</div>';
         }
       } else {
         // this iframe needs to be wrapped to become responsive
@@ -877,7 +880,7 @@ Gustavus.Concert = {
         var suffix = '</div>';
         if (width) {
           // we need to wrap this in a div with max-width set
-          prefix = '<div style="max-width: ' + width + 'px;">' + prefix;
+          prefix = '<div class="boxContainer" style="max-width: ' + width + 'px;">' + prefix;
           suffix += '</div>';
         }
         this.outerHTML = prefix + this.outerHTML + suffix;
@@ -1200,6 +1203,38 @@ Gustavus.Concert = {
   },
 
   /**
+   * Converts html4 elements to html5.
+   *   This includes the name attribute to ids for anchors.
+   *   More to come?
+   * @return {undefined}
+   */
+  convertToHTML5: function() {
+    $('div.editable a[name]').each(function() {
+      var $this = $(this);
+      if ($this.attr('href') && $this.attr('name')) {
+        if ($this.attr('id') && $this.attr('id') === $this.attr('name')) {
+          // id is the same as the name. remove the name
+          $this.removeAttr('name');
+          return;
+        }
+        // this anchor has an href and a name. We need to remove the name and insert an anchor before it
+        $this.before('<a id="' + $this.attr('name') + '"></a>');
+        $this.removeAttr('name');
+      } else if (!$this.attr('href')) {
+        // we don't have a link
+        if ($this.attr('id') && $this.attr('name')) {
+          // we just need to remove the name attribute, and we will be valid
+          $this.removeAttr('name');
+        } else if ($this.attr('name')) {
+          // we just need to convert the name to an id and we will be valid.
+          $this.attr('id', $this.attr('name'));
+          $this.removeAttr('name');
+        }
+      }
+    });
+  },
+
+  /**
    * Displays togglable links
    * @param  {HTMLElement} currObj object toggle links in
    * @param {Object} args additional arguments extend.apply passes
@@ -1258,6 +1293,8 @@ Gustavus.Concert = {
       Gustavus.Concert.addImageWidthAndHeightAttributesFromGIMLI();
       // save bxSlider elements since we lose bxSlider data once tinyMCE takes over so we can replace them with their initial content
       Gustavus.Concert.saveInitialBxSliderElements();
+      // convert all html4 elements into their corresponding html5 element
+      Gustavus.Concert.convertToHTML5();
 
       Gustavus.Concert.initilizeEditablePartsForEdits();
       Gustavus.Concert.initilizeEditablePartsForEdits = null;

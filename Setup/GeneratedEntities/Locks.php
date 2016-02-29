@@ -31,7 +31,7 @@ class Locks
     /**
      * @var string
      *
-     * @Column(name="username", type="string", length=24, nullable=false)
+     * @Column(name="username", type="string", length=32, nullable=false)
      */
     private $username;
 

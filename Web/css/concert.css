@@ -79,6 +79,9 @@ div.editable:any(:hover, :focus) {
 .mce-nodisplay {
   display: none;
 }
+.mce-menu-item.mce-disabled .mce-text {
+  color: #adadad !important;
+}
 div.editable.mce-visualblocks div {
   margin-left: 0;
 }
