@@ -86,8 +86,8 @@ Gustavus.Concert = {
       {title: 'Small', selector: '*', inline : 'span',  classes: 'small'},
       {title: 'Remove Sorting', selector: 'table', classes: 'nosort'},
       {title: 'Fancy', selector: 'img', classes: 'fancy'},
-      {title: 'Left', selector: 'img,div.boxContainer', classes: 'left'},
-      {title: 'Right', selector: 'img,div.boxContainer', classes: 'right'},
+      {title: 'Left', selector: 'img,div.boxContainer', cmd: 'addLeftClass'},
+      {title: 'Right', selector: 'img,div.boxContainer', cmd: 'addRightClass'},
       {title: 'Button', selector: 'a', classes: 'button'},
     ]}
   ],
@@ -304,6 +304,73 @@ Gustavus.Concert = {
           }
           editor.dom.origSplit(parentElm, splitElm, replacementElm);
         };
+      });
+
+      // Add a command for adding our left class to elements.
+      // This needs to grab the parent container for iframes
+      editor.addCommand('addLeftClass', function() {
+        var selectedNode, box, boxContainer;
+        selectedNode = editor.selection.getNode();
+        if (selectedNode.getAttribute('data-mce-object') === 'iframe' && (box = selectedNode.parentNode) && (boxContainer = box.parentNode) && boxContainer.className.indexOf('boxContainer') !== -1) {
+          // change the selectedNode to be the boxContainer so we can add our class to that element
+          selectedNode = boxContainer;
+        }
+
+        if (selectedNode.className.indexOf('left') !== -1) {
+          // we have a left class already. We want to remove it.
+          selectedNode.className = selectedNode.className.replace('left', '');
+        } else if (selectedNode.className.indexOf('right') !== -1) {
+          // we have a right class. We want to swap right for left.
+          selectedNode.className = selectedNode.className.replace('right', 'left');
+        } else {
+          // we don't have a left class or a right class. Add our left class
+          selectedNode.className = selectedNode.className + ' left';
+        }
+      });
+      // add a custom query state handler so we can see if an element has a class of left or not.
+      editor.addQueryStateHandler('addLeftClass', function() {
+        var selectedNode, box, boxContainer;
+        selectedNode = editor.selection.getNode();
+        if (selectedNode.getAttribute('data-mce-object') === 'iframe' && (box = selectedNode.parentNode) && (boxContainer = box.parentNode) && boxContainer.className.indexOf('boxContainer') !== -1) {
+          selectedNode = boxContainer;
+        }
+        if (selectedNode.className.indexOf('left') !== -1) {
+          return true;
+        }
+        return false;
+      });
+      // Add a command for adding our right class to elements.
+      // This needs to grab the parent container for iframes
+      editor.addCommand('addRightClass', function() {
+        var selectedNode, box, boxContainer;
+        selectedNode = editor.selection.getNode();
+        if (selectedNode.getAttribute('data-mce-object') === 'iframe' && (box = selectedNode.parentNode) && (boxContainer = box.parentNode) && boxContainer.className.indexOf('boxContainer') !== -1) {
+          // change the selectedNode to be the boxContainer so we can add our class to that element
+          selectedNode = boxContainer;
+        }
+
+        if (selectedNode.className.indexOf('right') !== -1) {
+          // we have a right class already. We want to remove it.
+          selectedNode.className = selectedNode.className.replace('right', '');
+        } else if (selectedNode.className.indexOf('left') !== -1) {
+          // we have a left class. We want to swap left for right.
+          selectedNode.className = selectedNode.className.replace('left', 'right');
+        } else {
+          // we don't have a right class or a left class. Add our right class
+          selectedNode.className = selectedNode.className + ' right';
+        }
+      });
+      // add a custom query state handler so we can see if an element has a class of right or not.
+      editor.addQueryStateHandler('addRightClass', function() {
+        var selectedNode, box, boxContainer;
+        selectedNode = editor.selection.getNode();
+        if (selectedNode.getAttribute('data-mce-object') === 'iframe' && (box = selectedNode.parentNode) && (boxContainer = box.parentNode) && boxContainer.className.indexOf('boxContainer') !== -1) {
+          selectedNode = boxContainer;
+        }
+        if (selectedNode.className.indexOf('right') !== -1) {
+          return true;
+        }
+        return false;
       });
 
       // add a shortcut to indent list elements
