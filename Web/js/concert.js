@@ -234,6 +234,17 @@ Gustavus.Concert = {
         // remove any image placeholders
         Gustavus.Concert.removeImagePlaceholders();
       });
+      // add html into any empty i elements so they don't get removed
+      editor.on('beforeSetContent', function(e) {
+        var $content = $('<div>' + e.content + '</div>');
+        $('i', $content).each(function() {
+          var $this = $(this);
+          if ($this.html() === '') {
+            $this.html('<span class="concertInsertion nodisplay">concert</span>');
+          }
+        });
+        e.content = $content.html();
+      });
 
       editor.on('init', function(e) {
         // hijack the open function so we can do extra operations if needed
@@ -619,6 +630,11 @@ Gustavus.Concert = {
       }
       // remove anything else footable adds. (thead and possibly more)
       $table.find('[data-footable-added]').remove();
+    });
+
+    // remove any concertInsertions in i's that we added to make sure the i tag itself didn't get stripped
+    $('i span.concertInsertion', $content).each(function() {
+      $(this).remove();
     });
     cleaned = $content.html();
 
