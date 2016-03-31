@@ -16,7 +16,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Doctrine\DBAL,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Concourse\RoutingUtil,
   Gustavus\Extensibility\Filters,
   Gustavus\Revisions\API as RevisionsAPI;
@@ -648,7 +648,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertNull($actual['value']['content']);
 
-    $url = (new String($filePath))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
+    $url = (new GACString($filePath))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
 
     $this->assertSame(Config::RESTORED_MESSAGE, PageUtil::getSessionMessage($url));
 
@@ -704,7 +704,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertNull($actual['value']['content']);
 
-    $url = (new String($filePath))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
+    $url = (new GACString($filePath))->addQueryString(['concert' => 'revisions', 'revisionsAction' => 'thankYou'])->buildUrl()->getValue();
 
     $this->assertSame(Config::RESTORED_MESSAGE, PageUtil::getSessionMessage($url));
 
@@ -720,7 +720,7 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertNull($actual['value']['content']);
 
-    $url = (new String($filePath))->addQueryString(['concert' => 'revisions'])->buildUrl()->getValue();
+    $url = (new GACString($filePath))->addQueryString(['concert' => 'revisions'])->buildUrl()->getValue();
 
     $this->assertSame(Config::UNDO_RESTORE_MESSAGE, PageUtil::getSessionMessage($url));
 

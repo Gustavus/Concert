@@ -11,7 +11,7 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Concert\PermissionsManager,
   Gustavus\Utility\PageUtil,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Utility\File;
 
 /**
@@ -149,7 +149,7 @@ class MenuController extends SharedController
     if (!$showMenu) {
       $refererParts = parse_url(PageUtil::getReferer());
       if (isset($refererParts['query'])) {
-        $queryParams = (new String($refererParts['query']))->splitQueryString()->getValue();
+        $queryParams = (new GACString($refererParts['query']))->splitQueryString()->getValue();
         if (isset($queryParams['concert']) && (!isset($_COOKIE['quitConcert']) || $_COOKIE['quitConcert'] === '0')) {
           $showMenu = true;
         }
@@ -188,7 +188,7 @@ class MenuController extends SharedController
       $pathFromDocRoot = Utility::removeDocRootFromPath($this->filePath);
       $query = $this->queryParams;
       self::removeConcertQueryParams($query);
-      $quitURL = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      $quitURL = (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
 
       return $this->renderView('menu.html.twig',
           [
@@ -275,7 +275,7 @@ class MenuController extends SharedController
       $params['concert'] = 'revisions';
       $item = [
         'text'     => 'View Page Revisions',
-        'url'      => (new String($pathFromDocRoot))->addQueryString($params)->buildUrl()->getValue(),
+        'url'      => (new GACString($pathFromDocRoot))->addQueryString($params)->buildUrl()->getValue(),
         'thickbox' => false,
       ];
 
@@ -290,7 +290,7 @@ class MenuController extends SharedController
       $item = [
         'text'     => 'Quit Concert',
         'classes'  => 'quitConcert',
-        'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+        'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
       ];
 
@@ -333,7 +333,7 @@ class MenuController extends SharedController
         unset($query['showUnMatchedTags']);
         $item = [
           'text'     => 'Hide unmatched tags',
-          'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+          'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
           'thickbox' => false,
         ];
         $this->addMenuItem($item, 'help', 5);
@@ -342,7 +342,7 @@ class MenuController extends SharedController
         $query['showUnMatchedTags'] = 'true';
         $item = [
           'text'     => 'Show unmatched tags',
-          'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+          'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
           'thickbox' => false,
         ];
         $this->addMenuItem($item, 'help', 5);
@@ -372,7 +372,7 @@ class MenuController extends SharedController
           self::removeConcertQueryParams($query);
           $query['concert'] = 'editDraft';
           $query['concertDraft'] = $draft['draftFilename'];
-          $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new GACString(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
 
         $item = [
@@ -411,7 +411,7 @@ class MenuController extends SharedController
         }
         $query['concert'] = 'viewDraft';
         $query['draftAction'] = 'stopEditing';
-        $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+        $url = (new GACString(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
       }
 
       $item = [
@@ -459,7 +459,7 @@ class MenuController extends SharedController
           if (self::isSiteNavRequest()) {
             $query['concertAction'] = 'siteNav';
           }
-          $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new GACString(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
           'text'     => 'View Draft',
@@ -476,7 +476,7 @@ class MenuController extends SharedController
           self::removeConcertQueryParams($query);
           $query['concert'] = 'addUsers';
           $query['concertDraft'] = $draft['draftFilename'];
-          $url = (new String(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new GACString(Utility::removeDocRootFromPath($this->filePath)))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
           'text'         => 'Add Collaborators to Your Draft',
@@ -500,7 +500,7 @@ class MenuController extends SharedController
 
       $item = [
         'text' => 'View All Drafts',
-        'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+        'url'  => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
       ];
 
       $this->addMenuItem($item, 'drafts');
@@ -533,7 +533,7 @@ class MenuController extends SharedController
       $query['concert'] = 'delete';
       $item = [
         'text'     => 'Delete Page',
-        'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+        'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => true,
         'classes'  => 'red',
       ];
@@ -545,7 +545,7 @@ class MenuController extends SharedController
       $query['concert'] = 'stopEditing';
       $item = [
         'text'     => 'Stop Editing',
-        'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+        'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
         'thickbox' => false,
         'classes'  => 'red',
       ];
@@ -565,7 +565,7 @@ class MenuController extends SharedController
           $query = $this->queryParams;
           self::removeConcertQueryParams($query);
           $query['concert'] = 'edit';
-          $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
         }
         $item = [
           'text'     => 'Continue Draft',
@@ -582,7 +582,7 @@ class MenuController extends SharedController
         $query['concert'] = 'edit';
         $item = [
           'text'     => 'Edit Page',
-          'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+          'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
           'thickbox' => false,
           'classes'  => 'blue',
         ];
@@ -647,7 +647,7 @@ class MenuController extends SharedController
       $query = $this->queryParams;
       self::removeConcertQueryParams($query);
       $query['concert']       = 'stopEditingSiteNav';
-      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      $url = (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
         'text'     => 'Stop Editing Menu',
         'url'      => $url,
@@ -661,7 +661,7 @@ class MenuController extends SharedController
       //   $query = $this->queryParams;
       //   $query['concert'] = 'edit';
       //   $query['concertAction'] = 'siteNav';
-      //   $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      //   $url = (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       //   $item = [
       //     'text'     => 'Continue draft',
       //     'url'      => $url,
@@ -679,7 +679,7 @@ class MenuController extends SharedController
       self::removeConcertQueryParams($query);
       $query['concert']       = 'edit';
       $query['concertAction'] = 'siteNav';
-      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      $url = (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
 
       $item = [
         'text'     => $isInheritedNav ? 'Edit Inherited Menu' : 'Edit Menu',
@@ -703,7 +703,7 @@ class MenuController extends SharedController
       self::removeConcertQueryParams($query);
       $query['concert']       = 'createSiteNav';
       $query['concertAction'] = 'siteNav';
-      $url = (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
+      $url = (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue();
       $item = [
         'text'     => 'Create Menu',
         'url'      => $url,
@@ -728,7 +728,7 @@ class MenuController extends SharedController
       $query['concertAction']   = 'siteNav';
       $item = [
         'text'     => $isInheritedNav ? 'View Inherited Menu Revisions' : 'View Menu Revisions',
-        'url'      => (new String($pathFromDocRoot))->addQueryString($query),
+        'url'      => (new GACString($pathFromDocRoot))->addQueryString($query),
         'thickbox' => false,
       ];
       $this->addMenuItem($item, 'menu', 20);
@@ -765,7 +765,7 @@ class MenuController extends SharedController
 
     //     $item = [
     //       'text' => 'View all drafts',
-    //       'url'  => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+    //       'url'  => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
     //     ];
 
     //     $this->addMenuItem($item, 'menu', 20);
@@ -781,7 +781,7 @@ class MenuController extends SharedController
     //   $query['concertAction'] = 'siteNav';
     //   $item = [
     //     'text'     => 'Delete Local menu',
-    //     'url'      => (new String($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
+    //     'url'      => (new GACString($pathFromDocRoot))->addQueryString($query)->buildUrl()->getValue(),
     //     'thickbox' => true,
     //     'classes'  => 'red',
     //   ];
@@ -829,7 +829,7 @@ class MenuController extends SharedController
         if ($forSrcFile && !isset($_GET['excludeTemplates'])) {
           // we want our default templates on top
           foreach (Config::$templates as $templateIdentifier => $templateProperties) {
-            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
+            $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new GACString($templateProperties['name']))->titleCase()->getValue());
           }
         }
         // All dirs
@@ -868,7 +868,7 @@ class MenuController extends SharedController
         // We only want them to be able to copy a template since no files exist in the directory.
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
         foreach (Config::$templates as $templateIdentifier => $templateProperties) {
-          $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new String($templateProperties['name']))->titleCase()->getValue());
+          $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new GACString($templateProperties['name']))->titleCase()->getValue());
         }
         $return .= '</ul>';
       }
@@ -940,7 +940,7 @@ class MenuController extends SharedController
     $parts = parse_url($referer);
 
     if (isset($parts['query'])) {
-      $this->queryParams = (new String($parts['query']))->splitQueryString()->getValue();
+      $this->queryParams = (new GACString($parts['query']))->splitQueryString()->getValue();
     } else {
       $this->queryParams = [];
     }

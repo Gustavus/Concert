@@ -14,7 +14,7 @@ use Gustavus\Concert\Config,
   Gustavus\Resources\Resource,
   Gustavus\Utility\PageUtil,
   Gustavus\Utility\Set,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Campus\Pull\People as CampusPeople,
   DateTime;
 
@@ -343,7 +343,7 @@ class PermissionsController extends SharedController
           $name    = $username;
         }
 
-        $this->setSubTitle(sprintf('%s Sites', (new String($name))->possessive()));
+        $this->setSubTitle(sprintf('%s Sites', (new GACString($name))->possessive()));
         $this->addContent($this->renderView('permissions/renderSites.html.twig', ['sites' => $userSites]));
       }
     }

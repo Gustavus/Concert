@@ -10,7 +10,7 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\Utility,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Utility\PageUtil,
   Gustavus\Utility\Jsonizer,
   Gustavus\Concert\PermissionsManager,
@@ -177,7 +177,7 @@ class MainController extends SharedController
       // trying to save an edit
       $userCanPublish = PermissionsManager::userCanPublishFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($filePath));
       if ($userCanPublish && $fm->stageFile()) {
-        $location = (new String(Utility::removeDocRootFromPath($filePath)))
+        $location = (new GACString(Utility::removeDocRootFromPath($filePath)))
           ->removeQueryStringParams(Config::$concertGETKeys)
           ->addQueryString(['concert' => 'stopEditing'])
           ->buildUrl()
@@ -352,7 +352,7 @@ class MainController extends SharedController
 
       if ($_POST['deleteAction'] === 'confirmDelete' && urldecode($_POST['filePath']) === $filePath && $fm->stageForDeletion()) {
         if (isset($_GET['barebones'])) {
-          $url = (new String(Utility::removeDocRootFromPath(dirname($filePath))))->getValue();
+          $url = (new GACString(Utility::removeDocRootFromPath(dirname($filePath))))->getValue();
           return ['action' => 'return', 'value' => json_encode(['redirectUrl' => $url])];
         } else {
           return PageUtil::renderPageNotFound(true);
@@ -461,14 +461,14 @@ class MainController extends SharedController
         if ($restoreAction === RevisionsAPI::UNDO_ACTION) {
           $_POST = [];
 
-          $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new GACString($redirectPath))->addQueryString($query)->buildUrl()->getValue();
           return $this->redirectWithMessage($url, Config::UNDO_RESTORE_MESSAGE);
 
         } else {
           $_POST = [];
 
           $query['revisionsAction'] = 'thankYou';
-          $url = (new String($redirectPath))->addQueryString($query)->buildUrl()->getValue();
+          $url = (new GACString($redirectPath))->addQueryString($query)->buildUrl()->getValue();
           return $this->redirectWithMessage($url, Config::RESTORED_MESSAGE);
         }
       });

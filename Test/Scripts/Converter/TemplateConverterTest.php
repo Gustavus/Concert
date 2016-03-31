@@ -84,7 +84,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString;
+    Gustavus\Utility\GACString;
 ?>';
 
     $this->assertSame($expected, $prefs);
@@ -152,7 +152,7 @@ use Gustavus\SocialMedia\SocialMedia,
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 ';
 
@@ -160,7 +160,7 @@ use Gustavus\SocialMedia\SocialMedia,
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 ';
 
@@ -180,7 +180,7 @@ use Gustavus\SocialMedia\SocialMedia,
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder as GACBuilder;
 ';
 
@@ -188,7 +188,7 @@ use Gustavus\SocialMedia\SocialMedia,
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder as GACBuilder;
 ';
 
@@ -207,14 +207,14 @@ use Gustavus\SocialMedia\SocialMedia,
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString;
+    Gustavus\Utility\GACString;
 ';
 
     $expected = '
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 ';
 
@@ -247,7 +247,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 Builder::init();
@@ -363,7 +363,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString;
+    Gustavus\Utility\GACString;
 ?>';
     $this->templateConverter->firstPHPBlock = $firstBlock;
 
@@ -383,7 +383,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 Builder::init();
@@ -419,7 +419,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString;
+    Gustavus\Utility\GACString;
 ?>';
     $this->templateConverter->firstPHPBlock = $firstBlock;
 
@@ -439,7 +439,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 Builder::init();
@@ -475,7 +475,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString;
+    Gustavus\Utility\GACString;
 ?>';
     $this->templateConverter->firstPHPBlock = $firstBlock;
 
@@ -495,7 +495,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 Builder::init();
@@ -531,7 +531,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString;
+    Gustavus\Utility\GACString;
 ?>';
     $this->templateConverter->firstPHPBlock = $firstBlock;
 
@@ -551,7 +551,7 @@ require_once \'/cis/www/calendar/classes/puller.class.php\';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 Builder::init();
