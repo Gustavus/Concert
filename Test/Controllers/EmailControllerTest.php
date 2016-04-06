@@ -13,7 +13,7 @@ use Gustavus\Test\TestObject,
   Gustavus\Concert\Controllers\SharedController,
   Gustavus\Concert\Config,
   Gustavus\Concert\Utility,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Utility\Set,
   Campus\Pull\People as CampusPeople;
 
@@ -341,7 +341,7 @@ class EmailControllerTest extends TestBase
     $this->checkSentEmailContents(
         ['bcc' => $expectedBcc],
         $draft['username'] . ' has submitted a draft awaiting',
-        'The draft can be reviewed at: ' . (new String($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
+        'The draft can be reviewed at: ' . (new GACString($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
         true
     );
   }
@@ -382,7 +382,7 @@ class EmailControllerTest extends TestBase
         ['bcc' => $expectedBcc],
         $draft['username'] . ' has submitted a draft awaiting',
         sprintf("The draft can be reviewed at: %s\n\r%s",
-            (new String($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
+            (new GACString($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
             (new Set($publisherNames))->toSentence()->getValue()
         ),
         true

@@ -2,7 +2,7 @@
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 $templatePreferences  = array(

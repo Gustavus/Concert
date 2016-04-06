@@ -11,7 +11,7 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\File,
   Gustavus\Utility\PageUtil,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Concert\PermissionsManager,
   Gustavus\FormBuilderMk2\ElementRenderers\TwigElementRenderer,
   Gustavus\FormBuilderMk2\FormElement,
@@ -167,7 +167,7 @@ class DraftController extends SharedController
     } else {
       $filePathFromDocRoot = Utility::removeDocRootFromPath($draft['destFilepath']);
       // Let's give them the option to publish the draft.
-      $url = (new String($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']]);
+      $url = (new GACString($filePathFromDocRoot))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']]);
 
       if (isset($_GET['confirmReject']) && $_GET['confirmReject'] === 'true') {
         return $this->renderView('confirmPendingDraftAction.html.twig', ['url' => $url, 'forPublish' => false]);
@@ -215,7 +215,7 @@ class DraftController extends SharedController
         $query['draftAction'] = $_GET['draftAction'];
       }
       // we are using this location as a url shortener
-      return $this->redirect((new String($filePathFromDocRoot))->addQueryString($query)->buildUrl()->getValue());
+      return $this->redirect((new GACString($filePathFromDocRoot))->addQueryString($query)->buildUrl()->getValue());
     }
 
     if (PermissionsManager::userOwnsDraft($this->getLoggedInUsername(), $draft)) {
@@ -286,7 +286,7 @@ class DraftController extends SharedController
     if (self::isRequestFromConcertRoot()) {
       $buttonUrl = $this->buildUrl('drafts', ['draftName' => $draftName]) . '?draftAction=stopEditing';
     } else {
-      $buttonUrl = (new String($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename'], 'draftAction' => 'stopEditing'])->buildUrl()->getValue();
+      $buttonUrl = (new GACString($_SERVER['REQUEST_URI']))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename'], 'draftAction' => 'stopEditing'])->buildUrl()->getValue();
     }
 
     if ($this->getMethod() === 'POST' && $draftFM->editFile($_POST) && $draftFM->saveDraft($draft['type'])) {
@@ -296,7 +296,7 @@ class DraftController extends SharedController
       }
       $draftFM->stopEditing();
 
-      $redirectLocation = (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
+      $redirectLocation = (new GACString(Utility::removeDocRootFromPath($draft['destFilepath'])))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue();
 
       self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft, false), null, $redirectLocation);
       return ['redirectUrl' => $buttonUrl];
@@ -414,7 +414,7 @@ class DraftController extends SharedController
           // make sure we have the draft we just saved.
           $draft = $fm->getDraft();
         }
-        $redirectUrl = (new String(PageUtil::getReferer()))->removeQueryStringParams(['srcFilePath'])->getValue();
+        $redirectUrl = (new GACString(PageUtil::getReferer()))->removeQueryStringParams(['srcFilePath'])->getValue();
         self::setConcertSessionMessage($this->buildDraftSavedSuccessMessage($draft), null, $redirectUrl);
         return ['redirectUrl' => $redirectUrl];
       }
@@ -692,7 +692,7 @@ class DraftController extends SharedController
     $parts = parse_url($referer);
     if (isset($parts['query'])) {
       // we need to see if the filePath to copy is set in the referer
-      $query = (new String($parts['query']))->splitQueryString()->getValue();
+      $query = (new GACString($parts['query']))->splitQueryString()->getValue();
       if (isset($query['srcFilePath'])) {
         $srcFilePath = urldecode($query['srcFilePath']);
         return (isset(Config::$templates[$srcFilePath])) ? Config::$templates[$srcFilePath]['location'] : Utility::addDocRootToPath($srcFilePath);

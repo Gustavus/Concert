@@ -14,7 +14,7 @@ require_once '/cis/www/calendar/classes/puller.class.php';
 use Gustavus\SocialMedia\SocialMedia,
     Gustavus\Resources\Resource,
     Gustavus\TwigFactory\TwigFactory,
-    Gustavus\Utility\String as GACString,
+    Gustavus\Utility\GACString,
     Gustavus\TemplateBuilder\Builder;
 
 Builder::init();

@@ -9,7 +9,7 @@ namespace Gustavus\Concert\Controllers;
 use Gustavus\Concert\Config,
   Gustavus\Concert\Utility,
   Gustavus\GACMailer\EmailMessage,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Utility\Set,
   Campus\Pull\People as CampusPeople;
 
@@ -228,7 +228,7 @@ class EmailController extends SharedController
     $body = sprintf("%s has submitted a draft to be published for: %s\n\rThe draft can be reviewed at: %s%s",
         $name,
         $draftPath,
-        (new String($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
+        (new GACString($draftPath))->addQueryString(['concert' => 'viewDraft', 'concertDraft' => $draft['draftFilename']])->buildUrl()->getValue(),
         $othersNotifiedMessage
     );
 
@@ -273,7 +273,7 @@ class EmailController extends SharedController
       $publisher = $this->getLoggedInUsername();
     }
 
-    $body = sprintf('%s published your draft of %s', $publisher, (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
+    $body = sprintf('%s published your draft of %s', $publisher, (new GACString(Utility::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
 
     if (!empty($params['message'])) {
       $body .= sprintf(" with the following comment:\n\r\"%s\"", $params['message']);
@@ -321,7 +321,7 @@ class EmailController extends SharedController
       $publisher = $this->getLoggedInUsername();
     }
 
-    $body = sprintf('%s rejected your draft of %s', $publisher, (new String(Utility::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
+    $body = sprintf('%s rejected your draft of %s', $publisher, (new GACString(Utility::removeDocRootFromPath($draft['destFilepath'])))->buildUrl()->getValue());
 
     if (!empty($params['message'])) {
       $body .= sprintf(" with the following comment:\n\r\"%s\"", $params['message']);

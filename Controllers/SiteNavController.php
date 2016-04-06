@@ -11,7 +11,7 @@ use Gustavus\Concert\Config,
   Gustavus\Concert\FileManager,
   Gustavus\Utility\PageUtil,
   Gustavus\Utility\File,
-  Gustavus\Utility\String,
+  Gustavus\Utility\GACString,
   Gustavus\Concert\PermissionsManager,
   Gustavus\FormBuilderMk2\ElementRenderers\TwigElementRenderer,
   Gustavus\FormBuilderMk2\FormElement,
@@ -104,7 +104,7 @@ class SiteNavController extends SharedController
     self::overrideVisibleEditingButtons([
       'publish',
       [
-        'url'  => (new String(Utility::removeDocRootFromPath($filePath)))->addQueryString($query)->buildUrl()->getValue(),
+        'url'  => (new GACString(Utility::removeDocRootFromPath($filePath)))->addQueryString($query)->buildUrl()->getValue(),
         'text' => 'Stop Editing',
       ]
     ]);
