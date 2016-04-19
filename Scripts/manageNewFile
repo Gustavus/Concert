@@ -21,4 +21,4 @@ result=`/usr/bin/time -f '" Time spent: %E Memory used: %MK' $cmd 2>&1`
 
 message="$fileType: $file was found on $date. File handling result: \"$result"
 # Write this message to our log
-echo $message >> /cis/lib/Gustavus/Concert/Scripts/Logs/watcher_log
+echo $message >> /cis/log/lib/Gustavus/Concert/watcher_log
