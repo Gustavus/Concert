@@ -3,6 +3,22 @@ if(!window.Gustavus) {
   window.Gustavus = {};
 }
 
+Gustavus.ConcertConstants = {
+  /**
+   * Global attributes to be used for the valid_elements configuration of tinyMCE
+   * @type {String}
+   */
+  globalAttributes: 'accesskey|class|contenteditable|contextmenu|data-+|dir|draggable|dropzone|hidden|id|lang|spellcheck|style|tabindex|title|translate',
+
+  /**
+   * Event attributes to be used for the valid_elements configuration of tinyMCE
+   *   Note: Event attributes aren't currently supported by tinymce, but if we ever needed them, we would have to utilize this.
+   *   @todo Use this if needed. It currently isn't used anywhere.
+   * @type {String}
+   */
+  eventAttributes: "onabort|onblur|oncancel|oncanplay|oncanplaythrough|onchange|onclick|onclose|oncontextmenu|oncuechange|ondblclick|ondrag|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|ondurationchange|onemptied|onended|onerror|onfocus|oninput|oninvalid|onkeydown|onkeypress|onkeyup|onload|onloadeddata|onloadedmetadata|onloadstart|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|onmousewheel|onpause|onplay|onplaying|onprogress|onratechange|onreset|onscroll|onseeked|onseeking|onseeking|onselect|onshow|onstalled|onsubmit|onsuspend|ontimeupdate|onvolumechange|onwaiting"
+};
+
 /**
  * Concert pseudo namespace
  * @author Billy Visto
@@ -150,7 +166,12 @@ Gustavus.Concert = {
     //force_p_newlines: true, deprecated
     invalid_elements: 'script',
     // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
-    extended_valid_elements: 'i[class],span[*],-li[*],-ul[*]',
+    // we don't want to allow * for attributes because some text editors use random attributes that get inserted when using copy\paste (Libre Office vs. Word).
+    extended_valid_elements: 'i[class],span[rel|' + Gustavus.ConcertConstants.globalAttributes + '],-li[type|value|' + Gustavus.ConcertConstants.globalAttributes + '],-ul[compact|type|' + Gustavus.ConcertConstants.globalAttributes + ']',
+    // invalid styles. This can exclude styles for particular elements as well.
+    invalid_styles: {
+      '*': 'font-face font-family'
+    },
     // ensure anchors can contain headings.
     valid_children: '+a[h2|h3|h4|h5|h6|div|p]',
     // we don't want it to convert rgb to hex.
