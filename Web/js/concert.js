@@ -307,6 +307,16 @@ Gustavus.Concert = {
           return editor.windowManager.origOpen(args, params);
         };
 
+        // hijack insertAfter so we can remove classes if it appears to be copying the classes of the element we want to insert after
+        editor.dom.origInsertAfter = editor.dom.insertAfter;
+        editor.dom.insertAfter = function(node, referenceNode) {
+          if (node.className === referenceNode.className) {
+            // remove the class if it appears that the class name was copied
+            node.removeAttribute('class');
+          }
+          return editor.dom.origInsertAfter(node, referenceNode);
+        }
+
         // hijack replace, so we can make sure that we don't replace grid blocks with other elements.
         editor.dom.origReplace = editor.dom.replace;
         editor.dom.replace = function(newElm, oldElm, keepChildren) {
