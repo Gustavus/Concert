@@ -58,7 +58,7 @@ Gustavus.Concert = {
    * Selector of elements that get dynamically hidden via template javascript
    * @type {String}
    */
-  hiddenElementSelector: 'div.editable .JSHide, div.editable .doShow, div.editable .doHide, div.editable .doToggle, div.editable .doFadeToggle, div.editable .toggleLink',
+  hiddenElementSelector: 'div.editable .JSHide, div.editable .doShow, div.editable .doHide, div.editable .doToggle, div.editable .doFadeToggle, div.editable .nodisplay',
 
   /**
    * TinyMCE menu configuration for default content
@@ -167,7 +167,12 @@ Gustavus.Concert = {
     invalid_elements: 'script',
     // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
     // we don't want to allow * for attributes because some text editors use random attributes that get inserted when using copy\paste (Libre Office vs. Word).
-    extended_valid_elements: 'i[class],span[rel|' + Gustavus.ConcertConstants.globalAttributes + '],-li[type|value|' + Gustavus.ConcertConstants.globalAttributes + '],-ul[compact|type|' + Gustavus.ConcertConstants.globalAttributes + ']',
+    extended_valid_elements: 'i[class]' +
+      ',span[rel|' + Gustavus.ConcertConstants.globalAttributes + '],' +
+      '-li[type|value|' + Gustavus.ConcertConstants.globalAttributes + '],' +
+      '-ul[compact|type|' + Gustavus.ConcertConstants.globalAttributes + '],' +
+      'svg[class|data-icon-toggle],' +
+      'use[xlink+]',
     // invalid styles. This can exclude styles for particular elements as well.
     invalid_styles: {
       '*': 'font-face font-family'
@@ -625,6 +630,37 @@ Gustavus.Concert = {
     $content.find('[data-concert-remove]').remove();
     // remove image placeholders
     Gustavus.Concert.removeImagePlaceholders($content);
+
+    // remove toggledOpen class and svg's from toggleable links
+    $content.find('a.toggleLink').each(function() {
+      $(this).removeClass('toggledOpen');
+      $(this).find('svg').remove();
+    });
+
+    // swap toggleable icons
+    $content.find('svg[data-icon-toggle]').each(function() {
+      var $toggleIcon = $(this);
+      if ($toggleIcon.attr('data-icon-original')) {
+        $toggleIcon.removeClass($toggleIcon.attr('data-icon-toggle').addClass($toggleIcon.attr('data-icon-original')));
+        $toggleIcon.attr('data-icon-original', '');
+      }
+    });
+    // re-add a use statement in case svgForEveryone modified it
+    $content.find('svg').each(function() {
+      var $svg = $(this);
+      if ($svg.attr('data-icon-toggle')) {
+        // swap toggleable icons back to their original state
+        if ($svg.attr('data-icon-original')) {
+          $svg.removeClass($svg.attr('data-icon-toggle').addClass($svg.attr('data-icon-original')));
+          $svg.attr('data-icon-original', '');
+        }
+      }
+      var icon = $svg.attr('class').match(/icon-\w+/);
+      if (icon[0] && !$svg.find('use')) {
+        $svg.html('<use xlink:href="/template/css/icons/icons.svg#' + icon[0] + '"></use>');
+      }
+    });
+
     // Clean up tables
     var $tables = $content.find('table');
 
@@ -1013,7 +1049,7 @@ Gustavus.Concert = {
     Gustavus.Concert.destroyTemplatePluginsPreApply();
     Gustavus.Concert.destroyTemplatePluginsPostApply();
     $(Gustavus.Concert.hiddenElementSelector).each(function() {
-      // remove display style from these elements that we forcefully displayed earlier
+      // remove display style from hidden elements that may have been toggled
       $(this).css('display', '');
     });
 
@@ -1233,29 +1269,14 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   destroyTemplatePluginsPostApply: function(currObj, args) {
-    // Remove html that gets added in when toggling links
-    if (currObj && args && args.editable) {
-      var $toggleLinks = $('a.toggleLink', currObj);
-    } else {
-      var $toggleLinks = $('div.editable a.toggleLink');
-    }
-    $toggleLinks.each(function() {
-      $toggleLink = $(this);
-      $toggleLink.removeClass('toggledOpen');
-      var $toggleLinkRel = $($toggleLink.attr('rel'));
-      $toggleLinkRel.hide();
-      if ($toggleLinkRel.attr('style')) {
-        $toggleLinkRel.attr('style', $toggleLinkRel.attr('style').replace('display: none;', ''));
-      }
-    });
-
-    var $hiddenElements = $(Gustavus.Concert.hiddenElementSelector);
-
-    $hiddenElements.each(function() {
-      // show all of our hidden elements so they don't get deleteted by tinymce if removing the element after it.
-      // Also helps editing. But reduces "preview" effect.
-      $(this).show();
-    });
+    // TinyMCE doesn't appear to delete hidden elements that occur before an element getting deleted.
+    // var $hiddenElements = $(Gustavus.Concert.hiddenElementSelector);
+    //
+    // $hiddenElements.each(function() {
+    //   // show all of our hidden elements so they don't get deleteted by tinymce if removing the element after it.
+    //   // Also helps editing. But reduces "preview" effect.
+    //   $(this).show();
+    // });
 
     // remove fancy ampersand html
     $('abbr[title=and]', currObj).each(function() {
@@ -1363,26 +1384,6 @@ Gustavus.Concert = {
   },
 
   /**
-   * Displays togglable links
-   * @param  {HTMLElement} currObj object toggle links in
-   * @param {Object} args additional arguments extend.apply passes
-   * @return {undefined}
-   */
-  toggleLinksDisplayed: function(currObj, args) {
-    if (currObj && args && args.editable) {
-      var $toggleLinks = $('a.toggleLink', currObj);
-    } else {
-      var $toggleLinks = $('div.editable a.toggleLink');
-    }
-    $toggleLinks.each(function() {
-      $toggleLink = $(this);
-      $toggleLink.addClass('toggledOpen');
-      var $toggleLinkRel = $($toggleLink.attr('rel'));
-      $toggleLinkRel.show();
-    });
-  },
-
-  /**
    * Initializes concert
    * @return {undefined}
    */
@@ -1400,17 +1401,17 @@ Gustavus.Concert = {
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
       $('#local-navigation div.editable a span.description, #local-navigation div.editable a span.nodisplay').remove();
 
-      if ($(Gustavus.Concert.hiddenElementSelector).length) {
-        // we have hidden elements that have been displayed
-        // throw a message into concert messages
-        Gustavus.Template.addUserMessage('Some hidden elements on this page have been displayed to help with editing.', 'message', 50);
-      }
+      // We aren't showing hidden elements anymore
+      // if ($(Gustavus.Concert.hiddenElementSelector).length) {
+      //   // we have hidden elements that have been displayed
+      //   // throw a message into concert messages
+      //   Gustavus.Template.addUserMessage('Some hidden elements on this page have been displayed to help with editing.', 'message', 50, true);
+      // }
 
       Extend.add('page', function(args) {
         // Wait until the template does it's thing, then destroy certain pieces.
         // remove additional HTML calling Extend.apply may have added.
         Gustavus.Concert.destroyTemplatePluginsPostApply(this, args);
-        Gustavus.Concert.toggleLinksDisplayed(this, args);
         Gustavus.Concert.reInitTemplatePlugins(this, args);
       }, 100);
       // destroy template plugins so things don't get duplicated
