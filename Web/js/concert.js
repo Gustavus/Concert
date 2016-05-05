@@ -695,11 +695,9 @@ Gustavus.Concert = {
     $('i span.concertInsertion', $content).each(function() {
       $(this).remove();
     });
-    cleaned = $content.html();
 
     if (isSiteNav) {
       // clean up site nav stuff.
-      $content = $('<div>' + content + '</div>');
       // the template adds spans with classes of text, description, etc.
       // The original link text will live in span.text, so just look for that and reset the link's html.
       $textSpans = $content.find('a span.text');
@@ -712,8 +710,8 @@ Gustavus.Concert = {
         }
         $span.parents('a').html($span.html());
       });
-      cleaned = $content.html();
     }
+    cleaned = $content.html();
 
     return cleaned;
   },
