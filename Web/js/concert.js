@@ -633,8 +633,11 @@ Gustavus.Concert = {
 
     // remove toggledOpen class and svg's from toggleable links
     $content.find('a.toggleLink').each(function() {
-      $(this).removeClass('toggledOpen');
-      $(this).find('svg').remove();
+      var $toggleLink = $(this);
+      $toggleLink.removeClass('toggledOpen');
+      $toggleLink.find('svg').remove();
+      // remove any non-breaking spaces that occur immediately after an ">" since the template adds a non-breaking space after the toggleIcon svg's
+      $toggleLink.html($toggleLink.html().replace(/\>(?:\&nbsp\;)+/, '>'));
     });
 
     // re-add a use statement in case svgForEveryone modified it
