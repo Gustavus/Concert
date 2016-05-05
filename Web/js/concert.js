@@ -1261,15 +1261,6 @@ Gustavus.Concert = {
    * @return {undefined}
    */
   destroyTemplatePluginsPostApply: function(currObj, args) {
-    // TinyMCE doesn't appear to delete hidden elements that occur before an element getting deleted.
-    // var $hiddenElements = $(Gustavus.Concert.hiddenElementSelector);
-    //
-    // $hiddenElements.each(function() {
-    //   // show all of our hidden elements so they don't get deleteted by tinymce if removing the element after it.
-    //   // Also helps editing. But reduces "preview" effect.
-    //   $(this).show();
-    // });
-
     // remove fancy ampersand html
     $('abbr[title=and]', currObj).each(function() {
       this.outerHTML = '&amp;';
@@ -1392,13 +1383,6 @@ Gustavus.Concert = {
       // same with local navigation
       $('#local-navigation div.editable').removeClass('default').addClass('siteNav');
       $('#local-navigation div.editable a span.description, #local-navigation div.editable a span.nodisplay').remove();
-
-      // We aren't showing hidden elements anymore
-      // if ($(Gustavus.Concert.hiddenElementSelector).length) {
-      //   // we have hidden elements that have been displayed
-      //   // throw a message into concert messages
-      //   Gustavus.Template.addUserMessage('Some hidden elements on this page have been displayed to help with editing.', 'message', 50, true);
-      // }
 
       Extend.add('page', function(args) {
         // Wait until the template does it's thing, then destroy certain pieces.
