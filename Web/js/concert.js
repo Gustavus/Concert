@@ -637,14 +637,6 @@ Gustavus.Concert = {
       $(this).find('svg').remove();
     });
 
-    // swap toggleable icons
-    $content.find('svg[data-icon-toggle]').each(function() {
-      var $toggleIcon = $(this);
-      if ($toggleIcon.attr('data-icon-original')) {
-        $toggleIcon.removeClass($toggleIcon.attr('data-icon-toggle').addClass($toggleIcon.attr('data-icon-original')));
-        $toggleIcon.attr('data-icon-original', '');
-      }
-    });
     // re-add a use statement in case svgForEveryone modified it
     $content.find('svg').each(function() {
       var $svg = $(this);
