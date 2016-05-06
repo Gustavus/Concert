@@ -1507,6 +1507,16 @@ $(document)
       // redirect to the link's href
       window.location = e.target.href;
     }
+  })
+  .on('shown.Gustavus.jQuery.Dropdown', 'li.dropdown', function() {
+    if ($(this).find('ul.menu-dropdown').is(':visible')) {
+      Gustavus.Template.toggleIcon($(this).find('svg'));
+    }
+  })
+  .on('hidden.Gustavus.jQuery.Dropdown', 'li.dropdown', function() {
+    if (!$(this).find('ul.menu-dropdown').is(':visible')) {
+      Gustavus.Template.toggleIcon($(this).find('svg'));
+    }
   });
 
 // When the user leaves the page release the lock.
