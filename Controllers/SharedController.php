@@ -452,7 +452,7 @@ class SharedController extends ConcourseController
           return $content .= $result;
         });
         // add the concert button into the template's user menu
-        self::addTemplatePref(['userButtons' => [['text' => 'Concert', 'classes' => 'icon-concert concert-menu-activate-button']]]);
+        self::addTemplatePref(['userButtons' => [['text' => 'Concert', 'classes' => 'concert-menu-activate-button', 'icon' => 'icon-concert']]]);
       }
       self::$moshMenuAdded = true;
     }

@@ -13,8 +13,8 @@
       <ul class="menu-bar">
         {%- for groupName,group in menu -%}
           {%- if group.type == 'menu' -%}
-            <li class="menu-item">
-              <a id="menu-{{groupName}}" class="menu-item-label" href="#" data-toggle="dropdown">{{ groupName|un_camel_case|title }} ▾</a>
+            <li class="menu-item dropdown">
+              <a id="menu-{{groupName}}" class="menu-item-label" href="#" data-toggle="dropdown">{{ groupName|un_camel_case|title }}<svg class="icon-angle-down" data-icon-toggle="icon-angle-up"><use xlink:href="/template/css/icons/icons.svg#icon-angle-down"></use></svg></a>
               <ul class="menu-dropdown" role="menu" aria-labelledby="menu-{{groupName}}">
                 {%- for item in group.items -%}
                   <li class="menu-dropdown-item"><a href="{{ item.url|replace({' ': '%20'}) }}" class="{% if item.thickbox is not defined or item.thickbox == true %} thickbox{% endif %}{% if item.classes %} {{ item.classes }}{% endif %}"{% if item.id is defined %} id="{{ item.id }}"{% endif %}{% if item.newTab %} target="_blank"{% endif %}{{ self.renderThickboxData(item) }}>{{ item.text|replace({' ': '&nbsp;'})|raw }}</a></li>
@@ -34,7 +34,7 @@
             <a href="{{ quitURL }}" class="button red quitConcert">Quit</a>
           </li>
           <div id="confirmQuit" title="Quit" class="nodisplay">
-            <div class="concert-message concert-alert"><div class="concert-message-contents icon-exclamation-triangle">It looks like you have made changes. Are you sure you want to quit?</div></div>
+            <div class="concert-message concert-alert"><div class="concert-message-contents"><div class="message-icon"><svg class="icon-exclamation-triangle"><use xlink:href="/template/css/icons/icons.svg#icon-exclamation-triangle"></use></svg></div>It looks like you have made changes. Are you sure you want to quit?</div></div>
           </div>
         {% endif %}
       </ul>
