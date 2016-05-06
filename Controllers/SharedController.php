@@ -108,57 +108,57 @@ class SharedController extends ConcourseController
     }
 
     $localNavigation = array_filter([
-      [
-        'url'  => $this->buildUrl('dashboard'),
-        'text' => 'Dashboard',
-      ],
-      $globalDashboard,
-      [
-        'url'  => $this->buildUrl('recentActivity'),
-        'text' => 'Recent Activity',
-      ],
-      [
-        'url'       => $this->buildUrl('listAllSites'),
-        'text'      => 'View all Concert Sites',
-        'visibleTo' => [
-          'Concert' => [
-            'all',
-            'callbacks' => [
-              [
-                'callback'   => 'hasDepartment',
-                'parameters' => 'Gustavus Technology Services'
-              ]
-            ]
-          ]
-        ]
-      ],
-      [
-        'heading'        => true,
-        'text'           => 'Help',
-        'toggleChildren' => true,
-        'items'          => [
-          [
-            'url'  => 'https://gustavus.edu/gts/Concert',
-            'text' => 'Instructions'
-          ],
-          [
-            'url'       => 'https://gustavus.edu/gts/Restricted:ConcertTroubleshooting',
-            'text'      => 'Troubleshooting',
-            'visibleTo' => [
-              'concert' => [
-                'all',
-                'callbacks' => [
-                  [
-                    'callback'   => 'hasDepartment',
-                    'parameters' => 'Gustavus Technology Services'
-                  ]
+        [
+          'url'  => $this->buildUrl('dashboard'),
+          'text' => 'Dashboard',
+        ],
+        $globalDashboard,
+        [
+          'url'  => $this->buildUrl('recentActivity'),
+          'text' => 'Recent Activity',
+        ],
+        [
+          'url'       => $this->buildUrl('listAllSites'),
+          'text'      => 'View all Concert Sites',
+          'visibleTo' => [
+            'Concert' => [
+              'all',
+              'callbacks' => [
+                [
+                  'callback'   => 'hasDepartment',
+                  'parameters' => 'Gustavus Technology Services'
                 ]
               ]
             ]
+          ]
+        ],
+        [
+          'heading'        => true,
+          'text'           => 'Help',
+          'toggleChildren' => true,
+          'items'          => [
+            [
+              'url'  => 'https://gustavus.edu/gts/Concert',
+              'text' => 'Instructions'
+            ],
+            [
+              'url'       => 'https://gustavus.edu/gts/Restricted:ConcertTroubleshooting',
+              'text'      => 'Troubleshooting',
+              'visibleTo' => [
+                'concert' => [
+                  'all',
+                  'callbacks' => [
+                    [
+                      'callback'   => 'hasDepartment',
+                      'parameters' => 'Gustavus Technology Services'
+                    ]
+                  ]
+                ]
+              ]
+            ],
           ],
         ],
-      ],
-      $permissions,
+        $permissions,
     ]);
 
     return $localNavigation;
@@ -200,9 +200,9 @@ class SharedController extends ConcourseController
   protected function getTwigEnvironment($viewDir = null, $viewNamespace = null)
   {
     Filters::add('twigEnvironmentSetUp', function($twigEnv) {
-      $twigEnv->addFunction(new Twig_SimpleFunction('getFullNameFromUsername', [$this, 'getFullNameFromUsername']));
-      $twigEnv->addFunction(new Twig_SimpleFunction('removeDocRootFromPath', '\Gustavus\Concert\Utility::removeDocRootFromPath'));
-      return $twigEnv;
+        $twigEnv->addFunction(new Twig_SimpleFunction('getFullNameFromUsername', [$this, 'getFullNameFromUsername']));
+        $twigEnv->addFunction(new Twig_SimpleFunction('removeDocRootFromPath', '\Gustavus\Concert\Utility::removeDocRootFromPath'));
+        return $twigEnv;
     });
     return parent::getTwigEnvironment($viewDir, $viewNamespace);
   }
@@ -278,58 +278,58 @@ class SharedController extends ConcourseController
     }
 
     Filters::add('scripts', function($content) use ($originalFilePath, $redirectPath, $concertJS, $allowCode, $siteAccessKey, $additionalJSOptions) {
-      if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
-        $isAdmin = 'true';
-      } else {
-        $isAdmin = 'false';
-      }
+        if (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername())) {
+          $isAdmin = 'true';
+        } else {
+          $isAdmin = 'false';
+        }
 
-      if (!empty($additionalJSOptions)) {
-        $additionalJSOptions = (new Set($additionalJSOptions))->toSentence('Gustavus.Concert.{{ key }} = {% if value == \'true\' or value == \'false\' %}{{ value }}{% else %}"{{ value }}"{% endif %};', '', 0, ' ');
-      } else {
-        $additionalJSOptions = '';
-      }
+        if (!empty($additionalJSOptions)) {
+          $additionalJSOptions = (new Set($additionalJSOptions))->toSentence('Gustavus.Concert.{{ key }} = {% if value == \'true\' or value == \'false\' %}{{ value }}{% else %}"{{ value }}"{% endif %};', '', 0, ' ');
+        } else {
+          $additionalJSOptions = '';
+        }
 
-      $tinyMCEPath = str_replace('//', '/', sprintf('%s/js/tinymce_%s/tinymce.min', Config::WEB_DIR, Config::TINY_MCE_VERSION));
+        $tinyMCEPath = str_replace('//', '/', sprintf('%s/js/tinymce_%s/tinymce.min', Config::WEB_DIR, Config::TINY_MCE_VERSION));
 
-      $script = sprintf(
-          '<script type="text/javascript">
-            require.config({
-              paths: {
-                "concertJS": "%1$s",
-                "concertTinyMCE": "%2$s"
-              },
-              shim: {
-                "concertTinyMCE": ["baseJS"],
-                "concertJS": ["concertTinyMCE", "baseJS", "ui/dialog", "ui/button"]
-              }
-            });
-            require(["concertJS"], function() {
-              Gustavus.Concert.filePath = "%3$s";
-              Gustavus.Concert.redirectPath = "%4$s";
-              Gustavus.Concert.allowCode = %5$s;
-              Gustavus.Concert.isAdmin = %6$s;
-              Gustavus.Concert.isSiteNavRequest = %7$s;
-              Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%8$s";
-              Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "%9$s/filemanager_%10$s/%8$s/";
-              Gustavus.Concert.tinyMCEPath = "%2$s.js";
-              %11$s
-              Gustavus.Concert.init();
-            });
-          </script>',
-          $concertJS,
-          $tinyMCEPath,
-          $originalFilePath,
-          $redirectPath,
-          $allowCode ? 'true' : 'false',
-          $isAdmin,
-          self::isSiteNavRequest() ? 'true' : 'false',
-          $siteAccessKey,
-          Config::WEB_DIR,
-          Config::RESPONSIVE_FILEMANAGER_VERSION,
-          $additionalJSOptions
-      );
-      return $content . $script;
+        $script = sprintf(
+            '<script type="text/javascript">
+              require.config({
+                paths: {
+                  "concertJS": "%1$s",
+                  "concertTinyMCE": "%2$s"
+                },
+                shim: {
+                  "concertTinyMCE": ["baseJS"],
+                  "concertJS": ["concertTinyMCE", "baseJS", "ui/dialog", "ui/button"]
+                }
+              });
+              require(["concertJS"], function() {
+                Gustavus.Concert.filePath = "%3$s";
+                Gustavus.Concert.redirectPath = "%4$s";
+                Gustavus.Concert.allowCode = %5$s;
+                Gustavus.Concert.isAdmin = %6$s;
+                Gustavus.Concert.isSiteNavRequest = %7$s;
+                Gustavus.Concert.tinyMCEDefaultConfig.filemanager_access_key = "%8$s";
+                Gustavus.Concert.tinyMCEDefaultConfig.external_filemanager_path = "%9$s/filemanager_%10$s/%8$s/";
+                Gustavus.Concert.tinyMCEPath = "%2$s.js";
+                %11$s
+                Gustavus.Concert.init();
+              });
+            </script>',
+            $concertJS,
+            $tinyMCEPath,
+            $originalFilePath,
+            $redirectPath,
+            $allowCode ? 'true' : 'false',
+            $isAdmin,
+            self::isSiteNavRequest() ? 'true' : 'false',
+            $siteAccessKey,
+            Config::WEB_DIR,
+            Config::RESPONSIVE_FILEMANAGER_VERSION,
+            $additionalJSOptions
+        );
+        return $content . $script;
     }, 11);
 
     $cssResource = Resource::renderCSS(['path' => Config::WEB_DIR . '/css/concert.css', 'version' => Config::CSS_VERSION]);
@@ -362,14 +362,14 @@ class SharedController extends ConcourseController
     }
 
     Filters::add('scripts', function($content) use ($userCanPublishFile, $visibleButtons, $additionalButtons) {
-      return $content . $this->renderView(
-          'actionButtons.js.twig',
-          [
-            'userCanPublishFile' => $userCanPublishFile,
-            'visibleButtons'     => $visibleButtons,
-            'additionalButtons'  => $additionalButtons,
-          ]
-      );
+        return $content . $this->renderView(
+            'actionButtons.js.twig',
+            [
+              'userCanPublishFile' => $userCanPublishFile,
+              'visibleButtons'     => $visibleButtons,
+              'additionalButtons'  => $additionalButtons,
+            ]
+        );
     }, 9999);
   }
 
@@ -420,7 +420,7 @@ class SharedController extends ConcourseController
   /**
    * Adds the menu to interact with Concert
    *
-   * @param   $menuParams Params to pass to the menus forward index
+   * @param array $menuParams Params to pass to the menus forward index
    * @return  void
    */
   protected function addMoshMenu(array $menuParams = [])
@@ -428,8 +428,8 @@ class SharedController extends ConcourseController
     if (!self::$moshMenuAdded) {
       // add messages to the template's messages
       Filters::add('preRender', function($content) {
-        self::addMessagesToTemplate();
-        return $content;
+          self::addMessagesToTemplate();
+          return $content;
       });
 
       $menuParams['forReferer'] = false;
@@ -449,7 +449,7 @@ class SharedController extends ConcourseController
         }
         // add Concert's menu into the template's utility bar
         Filters::add('utilBarExtras', function($content) use($result) {
-          return $content .= $result;
+            return $content .= $result;
         });
         // add the concert button into the template's user menu
         self::addTemplatePref(['userButtons' => [['text' => 'Concert', 'classes' => 'concert-menu-activate-button', 'icon' => 'icon-concert']]]);
@@ -524,7 +524,7 @@ class SharedController extends ConcourseController
    *
    * @param string  $message Message to add
    * @param string  $type Message type. Either error, alert, or message (default)
-   * @return  void
+   * @return  void|boolean  false if message is empty
    */
   protected function addConcertMessage($message, $type = 'message')
   {
