@@ -171,7 +171,7 @@ Gustavus.Concert = {
       ',span[rel|' + Gustavus.ConcertConstants.globalAttributes + '],' +
       '-li[type|value|' + Gustavus.ConcertConstants.globalAttributes + '],' +
       '-ul[compact|type|' + Gustavus.ConcertConstants.globalAttributes + '],' +
-      'svg[class|data-icon-toggle],' +
+      'svg[class|data-icon-toggle|aria*],' +
       'use[xlink+]',
     // invalid styles. This can exclude styles for particular elements as well.
     invalid_styles: {
