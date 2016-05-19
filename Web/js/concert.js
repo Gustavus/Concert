@@ -167,13 +167,13 @@ Gustavus.Concert = {
     invalid_elements: 'script',
     // allow i, all attrs in spans (pullquotes), and remove empty li's and ul's
     // we don't want to allow * for attributes because some text editors use random attributes that get inserted when using copy\paste (Libre Office vs. Word).
-    extended_valid_elements: 'i[class]' +
-      ',span[rel|' + Gustavus.ConcertConstants.globalAttributes + '],' +
+    extended_valid_elements: 'i[class],' +
+      'span[rel|' + Gustavus.ConcertConstants.globalAttributes + '],' +
       '-li[type|value|' + Gustavus.ConcertConstants.globalAttributes + '],' +
       '-ul[compact|type|' + Gustavus.ConcertConstants.globalAttributes + '],' +
-      'svg[class|data-icon-toggle|role|aria*],' +
-      'desc[id],' +
-      'use[xlink+]',
+      '+svg[class|data-icon-toggle|role|aria*],' +
+      '+desc[id],' +
+      '+use[xlink+]',
     // invalid styles. This can exclude styles for particular elements as well.
     invalid_styles: {
       '*': 'font-face font-family'
@@ -261,13 +261,19 @@ Gustavus.Concert = {
         // remove any image placeholders
         Gustavus.Concert.removeImagePlaceholders();
       });
-      // add html into any empty i elements so they don't get removed
+      // add html into any empty i and svg elements so they don't get removed
       editor.on('beforeSetContent', function(e) {
         var $content = $('<div>' + e.content + '</div>');
         $('i', $content).each(function() {
           var $this = $(this);
           if ($this.html() === '') {
             $this.html('<span class="concertInsertion nodisplay">concert</span>');
+          }
+        });
+        $('svg', $content).each(function() {
+          var $this = $(this);
+          if (!$this.find('.concertInsertion').length) {
+            $this.append('<title class="concertInsertion nodisplay">concert</title>');
           }
         });
         e.content = $content.html();
@@ -652,8 +658,17 @@ Gustavus.Concert = {
         }
       }
       var icon = $svg.attr('class').match(/icon-\w+/);
-      if (icon[0] && !$svg.find('use')) {
-        $svg.html('<use xlink:href="/template/css/icons/icons.svg#' + icon[0] + '"></use>');
+      if (icon && icon[0]) {
+        var title = $svg.find('title');
+        var desc  = $svg.find('desc');
+        var titleDesc = '';
+        if (title.length && title[0].outerHTML) {
+          titleDesc += title[0].outerHTML;
+        }
+        if (desc.length && desc[0].outerHTML) {
+          titleDesc += desc[0].outerHTML;
+        }
+        $svg.html(titleDesc + '<use xlink:href="/template/css/icons/icons.svg#' + icon[0] + '"></use>');
       }
     });
 
@@ -695,8 +710,8 @@ Gustavus.Concert = {
       $table.find('[data-footable-added]').remove();
     });
 
-    // remove any concertInsertions in i's that we added to make sure the i tag itself didn't get stripped
-    $('i span.concertInsertion', $content).each(function() {
+    // remove any concertInsertions in i's and svg's that we added to make sure the i tag itself didn't get stripped
+    $('i span.concertInsertion, svg .concertInsertion', $content).each(function() {
       $(this).remove();
     });
 
