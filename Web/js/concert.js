@@ -1075,13 +1075,13 @@ Gustavus.Concert = {
     });
 
     var edits = {};
-    for (var i in tinymce.editors) {
-      if (tinymce.editors[i].isDirty()) {
-        var $element = $(tinymce.editors[i].getElement());
-        var isSiteNav = (tinymce.editors[i].settings.selector === 'div.editable.siteNav');
-        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(tinymce.editors[i].getContent(), isSiteNav, $element.data('index'));
+    tinymce.editors.forEach(function(editor) {
+      if (editor.isDirty()) {
+        var $element = $(editor.getElement());
+        var isSiteNav = (editor.settings.selector === 'div.editable.siteNav');
+        edits[$element.data('index')] = Gustavus.Concert.cleanUpContent(editor.getContent(), isSiteNav, $element.data('index'));
       }
-    }
+    });
     return edits;
   },
 
