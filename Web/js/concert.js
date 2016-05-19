@@ -659,8 +659,8 @@ Gustavus.Concert = {
       }
       var icon = $svg.attr('class').match(/icon-\w+/);
       if (icon && icon[0]) {
-        var title = $svg.find('title');
-        var desc  = $svg.find('desc');
+        var title = $svg.find('title:not(.concertInsertion)');
+        var desc  = $svg.find('desc:not(.concertInsertion)');
         var titleDesc = '';
         if (title.length && title[0].outerHTML) {
           titleDesc += title[0].outerHTML;
