@@ -156,6 +156,7 @@ Gustavus.Concert = {
     //style_formats_merge: true,
     //style_formats: null, // this must be set by the configuration builder.
     inline: true,
+    theme: 'modern',
     convert_urls: false, // prevent messing with URLs
     allow_script_urls: false,
     relative_urls: false,

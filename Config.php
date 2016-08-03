@@ -73,12 +73,12 @@ class Config
   /**
    * tinyMCE version
    */
-  const TINY_MCE_VERSION = '4.3.11';
+  const TINY_MCE_VERSION = '4.4.1 ';
 
   /**
    * Responsive Filemanager version
    */
-  const RESPONSIVE_FILEMANAGER_VERSION = '9.9.7';
+  const RESPONSIVE_FILEMANAGER_VERSION = '9.10.2';
 
   /**
    * CSS version
