@@ -73,6 +73,7 @@ return [
     'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderNewPageForm',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
+  // site structure functionality
   'siteStructure' => [
     'route'     => '/menus/siteStructure',
     'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderSiteStructure',

@@ -513,11 +513,11 @@ class PermissionsManager
       // the user doesn't have an access level for this site.
       return false;
     }
-    // We need to check to see if their accessLevel permits editing banners.
+    // We need to check to see if their accessLevel permits viewing the site structure.
     if (self::accessLevelExistsInArray($sitePerms['accessLevel'], Config::$viewSiteStructureAccessLevels)) {
       return true;
     }
-    // the current user's access level doesn't allow editing banners
+    // the current user's access level doesn't allow viewing the site structure
     return false;
   }
 
