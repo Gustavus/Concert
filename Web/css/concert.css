@@ -46,7 +46,10 @@ div.editable:any(:hover, :focus) {
 .fileTreeSelector .disabled {
   opacity: 0.5;
 }
-
+#fileTree a.deleteFileButton {
+  float: right;
+  color: #$(brand-red);
+}
 #filterSites {
   margin-top: 15px;
   width: 100%;

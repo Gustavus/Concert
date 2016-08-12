@@ -567,6 +567,17 @@ class Config
   ];
 
   /**
+   * Access levels that can view the site structure
+   *
+   * @var array
+   */
+  public static $viewSiteStructureAccessLevels = [
+    self::SUPER_USER,
+    self::ADMIN_ACCESS_LEVEL,
+    self::SITE_ADMIN_ACCESS_LEVEL,
+  ];
+
+  /**
    * Template parts that are editable
    *   Note: These should all be lowercase
    *

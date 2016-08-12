@@ -73,6 +73,16 @@ return [
     'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderNewPageForm',
     'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
   ],
+  'siteStructure' => [
+    'route'     => '/menus/siteStructure',
+    'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderSiteStructure',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
+  'siteStructureFiles' => [
+    'route'     => '/menus/siteStructure/{files=files}',
+    'handler'   => 'Gustavus\Concert\Controllers\MenuController:renderSiteStructure',
+    'visibleTo' => ['Concert', [Gatekeeper::PERMISSION_ALL]],
+  ],
   // autocompletion
   'autocompleteUser' => [
     'route'   => '/autocompleteUser/{value}',
