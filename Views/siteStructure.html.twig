@@ -3,17 +3,12 @@
   require(['baseJS'], function() {
     require(
       [
-        "ui/dialog",
-        "ui/button",
         "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}",
         "css!{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css', 'version': 2}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}"
       ],
       function() {
 
         $(function() {
-          var newFile = '';
-          var fromFile = '';
-
           $('#fileTree').fileTree({
             root: '{{ site }}',
             script: '{{ buildUrl('siteStructureFiles', {'files': 'files'}) }}'
