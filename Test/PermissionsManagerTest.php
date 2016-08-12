@@ -2109,6 +2109,85 @@ class PermissionsManagerTest extends TestBase
   /**
    * @test
    */
+  public function userCanViewSiteStructureNoSites()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    // force a cache refresh
+    PermissionsManager::getUserPermissionsForSite('bvisto', 'test', true);
+
+    $this->assertFalse(PermissionsManager::userCanViewSiteStructure('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewSiteStructureNoAccessLevels()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', '', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanViewSiteStructure('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewSiteStructureFalse()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', 'test', 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanViewSiteStructure('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewSiteStructureExcluded()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', Config::SITE_ADMIN_ACCESS_LEVEL, 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanViewSiteStructure('bvisto', '/arst/private/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewSiteStructureNotAllowed()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', Config::SITE_PUBLISHER_ACCESS_LEVEL, 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertFalse(PermissionsManager::userCanViewSiteStructure('bvisto', '/arst/private/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
+  public function userCanViewSiteStructure()
+  {
+    $this->constructDB(['Sites', 'Permissions']);
+    $this->call('PermissionsManager', 'saveUserPermissions', ['bvisto', '/arst', Config::SITE_ADMIN_ACCESS_LEVEL, 'files/*,private/files', 'private/*,secure']);
+
+    $this->assertTrue(PermissionsManager::userCanViewSiteStructure('bvisto', '/arst/protected/arst.php'));
+
+    $this->destructDB();
+  }
+
+  /**
+   * @test
+   */
   public function adjustPermissionFiles()
   {
     $files = ['/arst', '/private//*', 'secure', 'files/private.php'];
