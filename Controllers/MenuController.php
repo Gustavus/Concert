@@ -328,7 +328,7 @@ class MenuController extends SharedController
     $this->addMenuItem($item, 'help', 3);
 
     if (PermissionsManager::userCanViewSiteStructure($this->getLoggedInUsername(), $pathFromDocRoot)) {
-
+      // add the option for viewing the site structure
       $item = [
         'text'         => 'View Files',
         'url'          => $this->buildUrl('siteStructure'),
@@ -884,7 +884,7 @@ class MenuController extends SharedController
             $ext = preg_replace('/^.*\./', '', $file);
             if ($forSiteStructure) {
               $path = htmlentities($dir . $file);
-              if ($ext === 'php') {
+              if ($ext === 'php' && $file !== 'site_nav.php') {
                 // we can also add a delete option, and add concert to the url
                 $deletePath = $path . '?concert=delete';
                 $deleteButton = sprintf('<a href="" rel="%s" class="deleteFileButton" title="Delete %s">x</a>', $deletePath, $path);
