@@ -495,7 +495,7 @@ class PermissionsManager
   }
 
   /**
-   * Checks to see if the specified user can manage banners or not
+   * Checks to see if the specified user can view the site structure or not
    *
    * @param  string $username Username to check
    * @param  string $filePath Absolute path from the doc root to the file in question

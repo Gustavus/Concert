@@ -805,13 +805,18 @@ class MenuController extends SharedController
    * Checks whether the specified file is a valid type to display in the site structure
    *
    * @param  string $file Name of the file to check
+   * @param  boolean $isDir Whether this file is a directory or not
    * @return boolean
    */
-  private function fileCanBeShownInStructure($file)
+  private function fileCanBeShownInStructure($file, $isDir)
   {
     if (preg_match('`^\.`', $file)) {
       // we don't want to show any files that start with a dot
       return false;
+    }
+    if ($isDir) {
+      // our dir won't have an extension
+      return true;
     }
     // array of extensions we will show to people
     $whiteListExts = [
@@ -855,7 +860,7 @@ class MenuController extends SharedController
       $foundFiles = scandir($absDir);
       $files = [];
       foreach ($foundFiles as $file) {
-        if (((substr($file, strlen($file) - 4) === '.php' && strpos($file, 'site_nav.php') === false) || is_dir($absDir . $file)) || ($forSiteStructure && $this->fileCanBeShownInStructure($file))) {
+        if (((substr($file, strlen($file) - 4) === '.php' && strpos($file, 'site_nav.php') === false) || is_dir($absDir . $file) && !$forSiteStructure) || ($forSiteStructure && $this->fileCanBeShownInStructure($file, is_dir($absDir . $file)))) {
           $files[] = $file;
         }
       }
@@ -907,12 +912,12 @@ class MenuController extends SharedController
         }
         $return .= '</ul>';
       } else if ($forSiteStructure) {
-        $return .= 'This directory appears to be empty';
+        $return .= '<ul class="jqueryFileTree"><li class="emptyMessage">No contents are available</li></ul>';
       }
     } else {
       // the directory doesn't exist.
       if ($forSiteStructure) {
-        $return .= 'This directory appears to be empty';
+        $return .= '<ul class="jqueryFileTree"><li class="emptyMessage">No contents are available</li></ul>';
       } else if (!$forSrcFile) {
         // We want to give them the option to create a new index.php file.
         $newIndexFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s" class="selected">index.php</a></li>', htmlentities($dir . 'index.php'));

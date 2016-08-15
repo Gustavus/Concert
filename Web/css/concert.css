@@ -50,6 +50,9 @@ div.editable:any(:hover, :focus) {
   float: right;
   color: #$(brand-red);
 }
+.jqueryFileTree li.emptyMessage {
+  padding-left: 0;
+}
 #filterSites {
   margin-top: 15px;
   width: 100%;
