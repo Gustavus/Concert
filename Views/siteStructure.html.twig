@@ -1,0 +1,29 @@
+{% spaceless %}
+<script type="text/javascript">
+  require(['baseJS'], function() {
+    require(
+      [
+        "{{ renderResource(['urlutil', {'path': '/concert/js/fileTree/jqueryFileTree.js'}]) }}",
+        "css!{{ renderCSS([{'path': '/concert/js/fileTree/jqueryFileTree.css', 'version': 2}, {'path': '/concert/css/concert.css', 'version': cssVersion}]) }}"
+      ],
+      function() {
+
+        $(function() {
+          $('#fileTree').fileTree({
+            root: '{{ site }}',
+            script: '{{ buildUrl('siteStructureFiles', {'files': 'files'}) }}'
+          }, function (file) {
+            window.location = file;
+          });
+        });
+      }
+    )
+  });
+</script>
+
+
+<div class="grid-100 alpha omega">
+  <h3>Files in your site</h3>
+  <div id="fileTree" class="fileTreeSelector"></div>
+</div>
+{% endspaceless %}

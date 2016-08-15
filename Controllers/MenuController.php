@@ -327,6 +327,17 @@ class MenuController extends SharedController
     ];
     $this->addMenuItem($item, 'help', 3);
 
+    if (PermissionsManager::userCanViewSiteStructure($this->getLoggedInUsername(), $pathFromDocRoot)) {
+      // add the option for viewing the site structure
+      $item = [
+        'text'         => 'View Files',
+        'url'          => $this->buildUrl('siteStructure'),
+        'thickbox'     => true,
+        'thickboxData' => ['height' => '400px', 'width' => '400px'],
+      ];
+      $this->addMenuItem($item, 'file', 2);
+    }
+
     if (self::userIsEditing() && (PermissionsManager::isUserAdmin($this->getLoggedInUsername()) || PermissionsManager::isUserSuperUser($this->getLoggedInUsername()))) {
       $query = $this->queryParams;
       if (isset($query['showUnMatchedTags'])) {
@@ -791,12 +802,38 @@ class MenuController extends SharedController
   }
 
   /**
+   * Checks whether the specified file is a valid type to display in the site structure
+   *
+   * @param  string $file Name of the file to check
+   * @return boolean
+   */
+  private function fileCanBeShownInStructure($file)
+  {
+    if (preg_match('`^\.`', $file)) {
+      // we don't want to show any files that start with a dot
+      return false;
+    }
+    // array of extensions we will show to people
+    $whiteListExts = [
+      'doc','docx','rtf', 'pdf', 'xls', 'xlsx', 'csv','fla','ppt','pptx', // files
+      'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'svg', // images
+      'mov', 'mpeg', 'm4v', 'mp4', 'avi', 'mpg', 'wma', 'flv', 'webm', // videos
+      'mp3', 'm4a', 'ac3', 'aiff', 'mid', 'ogg', 'wav', // music
+      'php'
+    ];
+
+    $ext = preg_replace('/^.*\./', '', $file);
+    return in_array($ext, $whiteListExts);
+  }
+
+  /**
    * Renders the html for our file tree plugin
    *
    * @param  boolean $forSrcFile Whether this is a tree for the src file or not.
+   * @param  boolean $forSiteStructure Whether this is a tree for displaying the site structure.
    * @return string
    */
-  private function renderFileTree($forSrcFile = false)
+  private function renderFileTree($forSrcFile = false, $forSiteStructure = false)
   {
     $this->analyzeReferer();
 
@@ -818,15 +855,15 @@ class MenuController extends SharedController
       $foundFiles = scandir($absDir);
       $files = [];
       foreach ($foundFiles as $file) {
-        if ((substr($file, strlen($file) - 4) === '.php' && strpos($file, 'site_nav.php') === false) || is_dir($absDir . $file)) {
+        if (((substr($file, strlen($file) - 4) === '.php' && strpos($file, 'site_nav.php') === false) || is_dir($absDir . $file)) || ($forSiteStructure && $this->fileCanBeShownInStructure($file))) {
           $files[] = $file;
         }
       }
 
       // The 2 accounts for . and ..
-      if (count($files) >= 2) {
+      if (count($files) >= 2 && (!$forSiteStructure || count($files) > 2)) {
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
-        if ($forSrcFile && !isset($_GET['excludeTemplates'])) {
+        if ($forSrcFile && !isset($_GET['excludeTemplates']) && !$forSiteStructure) {
           // we want our default templates on top
           foreach (Config::$templates as $templateIdentifier => $templateProperties) {
             $return .= sprintf('<li class="file ext_html"><a href="#" rel="%s" class="selected">%s Template</a></li>', $templateIdentifier, (new GACString($templateProperties['name']))->titleCase()->getValue());
@@ -845,22 +882,38 @@ class MenuController extends SharedController
         foreach ($files as $file) {
           if (file_exists($absDir . $file) && $file != '.' && $file != '..' && !is_dir($absDir . $file)) {
             $ext = preg_replace('/^.*\./', '', $file);
-            if ($forSrcFile) {
+            if ($forSiteStructure) {
+              $path = htmlentities($dir . $file);
+              if ($ext === 'php' && $file !== 'site_nav.php') {
+                // we can also add a delete option, and add concert to the url
+                $deletePath = $path . '?concert=delete';
+                $deleteButton = sprintf('<a href="" rel="%s" class="deleteFileButton" title="Delete %s">x</a>', $deletePath, $path);
+
+                $path .= '?concert';
+              } else {
+                $deleteButton = '';
+              }
+              $return .= sprintf('<li class="file ext_%s"><a href="#" rel="%s">%s</a>%s</li>', $ext, $path, htmlentities($file), $deleteButton);
+            } else if ($forSrcFile) {
               $return .= sprintf('<li class="file ext_%s"><a href="#" rel="%s">%s</a></li>', $ext, htmlentities($dir . $file), htmlentities($file));
             } else {
               $return .= sprintf('<li class="file ext_%s disabled">%s</li>', $ext, htmlentities($file));
             }
           }
         }
-        if (!$forSrcFile) {
+        if (!$forSrcFile && !$forSiteStructure) {
           $return .= $newFileHTML;
           $return .= $newFolderHTML;
         }
         $return .= '</ul>';
+      } else if ($forSiteStructure) {
+        $return .= 'This directory appears to be empty';
       }
     } else {
       // the directory doesn't exist.
-      if (!$forSrcFile) {
+      if ($forSiteStructure) {
+        $return .= 'This directory appears to be empty';
+      } else if (!$forSrcFile) {
         // We want to give them the option to create a new index.php file.
         $newIndexFileHTML = sprintf('<li class="file ext_php"><a href="#" rel="%s" class="selected">index.php</a></li>', htmlentities($dir . 'index.php'));
         $return = sprintf('<ul class="jqueryFileTree" style="display: none;">%s%s%s</ul>', $newIndexFileHTML, $newFileHTML, $newFolderHTML);
@@ -905,6 +958,44 @@ class MenuController extends SharedController
     }
 
     $view = $this->renderView('newPageForm.html.twig', ['site' => $siteBase, 'cssVersion' => Config::CSS_VERSION]);
+
+    if (self::isBareboneRequest()) {
+      return $view;
+    } else {
+      $this->setContent($view);
+      return $this->renderPage();
+    }
+  }
+
+  /**
+   * Renders the site structure
+   *
+   * @param  array $params array of params from router
+   * @return string
+   */
+  public function renderSiteStructure($params = null)
+  {
+    if (!empty($params) && isset($params['files']) && $params['files'] === 'files') {
+      return $this->renderFileTree(false, true);
+    }
+
+    if (self::isBareboneRequest()) {
+      $this->analyzeReferer();
+    } else {
+      $this->analyzeReferer(false);
+    }
+
+    $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), Utility::removeDocRootFromPath($this->filePath));
+    if (empty($siteBase)) {
+      // user doesn't have access to this site.
+      if (self::isBareboneRequest()) {
+        return false;
+      } else {
+        return $this->renderErrorPage(Config::NO_SITE_ACCESS_MESSAGE);
+      }
+    }
+
+    $view = $this->renderView('siteStructure.html.twig', ['site' => $siteBase, 'cssVersion' => Config::CSS_VERSION]);
 
     if (self::isBareboneRequest()) {
       return $view;

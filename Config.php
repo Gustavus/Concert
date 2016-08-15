@@ -83,7 +83,7 @@ class Config
   /**
    * CSS version
    */
-  const CSS_VERSION = 7;
+  const CSS_VERSION = 8;
 
   /**
    * HTTPD user (User running apache)
@@ -564,6 +564,17 @@ class Config
     self::SUPER_USER,
     self::ADMIN_ACCESS_LEVEL,
     self::BANNER_ACCESS_LEVEL,
+  ];
+
+  /**
+   * Access levels that can view the site structure
+   *
+   * @var array
+   */
+  public static $viewSiteStructureAccessLevels = [
+    self::SUPER_USER,
+    self::ADMIN_ACCESS_LEVEL,
+    self::SITE_ADMIN_ACCESS_LEVEL,
   ];
 
   /**
