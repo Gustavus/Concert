@@ -857,7 +857,9 @@ class MenuController extends SharedController
     $newFolderHTML = sprintf('<li class="directory collapsed"><a href="#" rel="%s">+newFolder</a></li>', htmlentities($dir . 'concertNewFolder/'));
 
     if (file_exists($absDir)) {
-      $foundFiles = scandir($absDir);
+      $foundFiles = array_filter(scandir($absDir), function($var) {
+        return $var !== '.' && $var !== '..';
+      });
       $files = [];
       foreach ($foundFiles as $file) {
         if (((substr($file, strlen($file) - 4) === '.php' && strpos($file, 'site_nav.php') === false) || is_dir($absDir . $file) && !$forSiteStructure) || ($forSiteStructure && $this->fileCanBeShownInStructure($file, is_dir($absDir . $file)))) {
@@ -865,8 +867,7 @@ class MenuController extends SharedController
         }
       }
 
-      // The 2 accounts for . and ..
-      if (count($files) >= 2 && (!$forSiteStructure || count($files) > 2)) {
+      if (!$forSiteStructure || count($files) > 0) {
         $return .= '<ul class="jqueryFileTree" style="display: none;">';
         if ($forSrcFile && !isset($_GET['excludeTemplates']) && !$forSiteStructure) {
           // we want our default templates on top
