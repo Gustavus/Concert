@@ -13,7 +13,7 @@
             root: '{{ site }}',
             script: '{{ buildUrl('siteStructureFiles', {'files': 'files'}) }}'
           }, function (file) {
-            window.location = file;
+            window.open(file, '_blank');
           });
         });
       }
