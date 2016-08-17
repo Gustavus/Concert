@@ -658,8 +658,15 @@ Gustavus.Concert = {
           $svg.attr('data-icon-original', '');
         }
       }
-      var icon = $svg.attr('class').match(/icon-\w+/);
-      if (icon && icon[0]) {
+      var svgClasses = $svg.attr('class').split(/\s+/);
+      var icon = null;
+      for (var i in svgClasses) {
+        if (svgClasses[i].match(/icon-\w+/)) {
+          icon = svgClasses[i];
+          break;
+        }
+      }
+      if (icon) {
         var title = $svg.find('title:not(.concertInsertion)');
         var desc  = $svg.find('desc:not(.concertInsertion)');
         var titleDesc = '';
@@ -669,7 +676,14 @@ Gustavus.Concert = {
         if (desc.length && desc[0].outerHTML) {
           titleDesc += desc[0].outerHTML;
         }
-        $svg.html(titleDesc + '<use xlink:href="/template/css/icons/icons.svg#' + icon[0] + '"></use>');
+
+        if ($svg.find('use').attr('xlink:href')) {
+          var xlinkHref = $svg.find('use').attr('xlink:href');
+        } else {
+          var iconPath = $svg.data('svg-file') ? $svg.data('svg-file') : '/template/css/icons/icons.svg';
+          var xlinkHref = iconPath + '#' + icon;
+        }
+        $svg.html(titleDesc + '<use xlink:href="' + xlinkHref + '"></use>');
       }
     });
 
@@ -1385,11 +1399,32 @@ Gustavus.Concert = {
   },
 
   /**
+   * Checks to see if the browser is supported
+   *   Adds a message to the page and returns false if it is not supported
+   *
+   * @return {boolean} True if the browser is supported
+   */
+  checkBrowser: function() {
+    var newerIE = /\bTrident\/[567]\b|\bMSIE (?:9|10)\.0\b/, webkit = /\bAppleWebKit\/(\d+)\b/, olderEdge = /\bEdge\/12\.(\d+)\b/;
+
+    if (newerIE.test(navigator.userAgent) || (navigator.userAgent.match(olderEdge) || [])[1] < 10547 || (navigator.userAgent.match(webkit) || [])[1] < 537) {
+      // we are using an old browser that doesn't like SVG's we want to avoid them editing pages
+      $('#globalNotice').append('<div class="global-notification-message noticeMessage"><div class="grid-container"><div class="message-contents"><svg class="icon-info-circle" role="img" aria-labelledby="browserIconTitle browserIconDesc"><title id="browserIconTitle">Global Notice Icon</title><desc id="browserIconDesc">Small icon for a global notice</desc><use xlink:href="/template/css/icons/icons.svg#icon-info-circle"></use></svg> It looks like your browser is not supported by Concert. Please upgrade to a <a href="http://google.com/chrome">newer browser</a>.</div></div></div>');
+      return false;
+    }
+    return true;
+  },
+
+  /**
    * Initializes concert
    * @return {undefined}
    */
   init: function() {
     $(function() {
+      if (!Gustavus.Concert.checkBrowser()) {
+        // our browser isn't supported
+        return false;
+      }
       // add a class to define default tinyMCE settings
       $('div.editable').addClass('default');
       var $lastChild = $('div.editable.default > div:last-child');
