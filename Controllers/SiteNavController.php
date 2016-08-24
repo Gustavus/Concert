@@ -62,7 +62,9 @@ class SiteNavController extends SharedController
       if (!is_string($moshResult['value'])) {
         $moshResult['value'] = '';
       }
-      $this->setLocalNavigation($moshResult['value']);
+      // note: Since this is putting the local navigation in the content for editing, we are assuming the person has access to edit the content, otherwise the "concertCMSCheckEditable" filter would remove the editable pieces.
+      $this->setLocalNavigation((new File('site_nav.php'))->find(null, '/cis/www/site_nav.php', 5)->loadAndEvaluate());
+      $this->setContent('<div id="local-navigation" class="grid-50 tgrid-50 mgrid-100 alpha omega concertBorder">' . $moshResult['value'] . '</div>');
     }
     // we don't want our temporary GET parameters for moshing set anymore.
     self::setGET($origGet);
@@ -192,7 +194,9 @@ class SiteNavController extends SharedController
     $moshResult = $this->forward('mosh', ['filePath' => $navToCreate, 'dbal' => $this->getDB()]);
 
     if (isset($moshResult['action']) && $moshResult['action'] === 'return') {
-      $this->setLocalNavigation($moshResult['value']);
+      // note: Since this is putting the local navigation in the content for editing, we are assuming the person has access to edit the content, otherwise the "concertCMSCheckEditable" filter would remove the editable pieces.
+      $this->setLocalNavigation((new File('site_nav.php'))->find(null, '/cis/www/site_nav.php', 5)->loadAndEvaluate());
+      $this->setContent('<div id="local-navigation" class="grid-50 tgrid-50 mgrid-100 alpha omega concertBorder">' . $moshResult['value'] . '</div>');
     }
     // we don't want our temporary GET parameters for moshing set anymore.
     self::setGET($origGet);
