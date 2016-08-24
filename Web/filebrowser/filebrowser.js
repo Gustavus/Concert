@@ -28,7 +28,6 @@ tinymce.PluginManager.add("filebrowser", function(editor) {
           // close the current window
           editor.windowManager.close();
           var item = win.document.getElementById(fieldName);
-          console.log(item, url);
           item.value = editor.convertURL(url);
           // trigger a change event so it will update the text to display
           if ('createEvent' in document) {
