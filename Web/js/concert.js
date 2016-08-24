@@ -223,7 +223,7 @@ Gustavus.Concert = {
     image_title: true,
     image_description: true,
     filemanager_title: "Concert File Manager" ,
-    external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js", "filebrowser": "/concert/filebrowser/filebrowser.min.js"},
+    external_plugins: {"filemanager" : "/concert/filemanager/plugin.min.js?v=1", "filebrowser": "/concert/filebrowser/filebrowser.min.js?v=1"},
 
     noneditable_noneditable_class: 'concertNonEditable',
 
