@@ -18,7 +18,7 @@ tinymce.PluginManager.add("filebrowser", function(editor) {
             text: 'Concert File Manager',
             onclick: function() {
               editor.windowManager.close();
-              return tinymce.activeEditor.settings.origFileBrowserCallback(fieldName, url, type, win);
+              return editor.settings.origFileBrowserCallback(fieldName, url, type, win);
             },
             icon: 'browse',
             classes: 'primary'
@@ -39,9 +39,9 @@ tinymce.PluginManager.add("filebrowser", function(editor) {
           }
         }
       });
-    } else if (tinymce.activeEditor.settings.origFileBrowserCallback) {
+    } else if (editor.settings.origFileBrowserCallback) {
       // call the original file_browser_callback
-      return tinymce.activeEditor.settings.origFileBrowserCallback(fieldName, url, type, win);
+      return editor.settings.origFileBrowserCallback(fieldName, url, type, win);
     }
   };
 
@@ -63,7 +63,7 @@ tinymce.PluginManager.add("filebrowser", function(editor) {
           text: 'Concert File Manager',
           onclick: function() {
             editor.windowManager.close();
-            return tinymce.activeEditor.settings.origFilePickerCallback(callback, value, meta);
+            return editor.settings.origFilePickerCallback(callback, value, meta);
           },
           icon: 'browse',
           classes: 'primary'
@@ -75,19 +75,19 @@ tinymce.PluginManager.add("filebrowser", function(editor) {
           callback(editor.convertURL(url), {text: url});
         }
       });
-    } else if (tinymce.activeEditor.settings.origFilePickerCallback) {
+    } else if (editor.settings.origFilePickerCallback) {
       //open responsiveFilemanager
-      return tinymce.activeEditor.settings.origFilePickerCallback(callback, value, meta);
+      return editor.settings.origFilePickerCallback(callback, value, meta);
     }
   };
 
-  if (tinymce.activeEditor.settings.file_picker_callback) {
+  if (editor.settings.file_picker_callback) {
     // we have a file_picker_callback. Hijack it so we can use our custom picker
-    tinymce.activeEditor.settings.origFilePickerCallback = tinymce.activeEditor.settings.file_picker_callback;
-    tinymce.activeEditor.settings.file_picker_callback = filePicker;
-  } else if (tinymce.activeEditor.settings.file_browser_callback) {
+    editor.settings.origFilePickerCallback = editor.settings.file_picker_callback;
+    editor.settings.file_picker_callback = filePicker;
+  } else if (editor.settings.file_browser_callback) {
     // we have a file_browser_callback. Hijack it so we can use our custom browser
-    tinymce.activeEditor.settings.origFileBrowserCallback = tinymce.activeEditor.settings.file_browser_callback;
-    tinymce.activeEditor.settings.file_browser_callback = fileBrowser;
+    editor.settings.origFileBrowserCallback = editor.settings.file_browser_callback;
+    editor.settings.file_browser_callback = fileBrowser;
   }
 });
