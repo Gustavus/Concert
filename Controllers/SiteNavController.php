@@ -129,6 +129,11 @@ class SiteNavController extends SharedController
 
     $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), $filePathFromDocRoot);
 
+    if ($this->userIsCreatingSiteNav() && $siteNav !== $currentDirNav && !file_exists($currentDirNav)) {
+      // user is requesting to create a site nav and it doesn't already exist
+      return $this->create($currentDirNav);
+    }
+
     if (strpos($siteNavFromDocRoot, $siteBase) === 0) {
       // the found site nav exists in the base of the site.
       // we need to ask them if they want to use this one, create a new one based off of this, or create a blank one.
