@@ -1045,7 +1045,12 @@ class MenuController extends SharedController
     // $parts['path'] will have a leading slash. We want to remove the trailing slash from the doc root
     $this->filePath = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . $parts['path'];
     if (strpos($this->filePath, '.php') === false) {
-      $this->filePath = str_replace('//', '/', $this->filePath . DIRECTORY_SEPARATOR . 'index.php');
+      $filePath = str_replace('//', '/', $this->filePath . DIRECTORY_SEPARATOR . 'index.php');
+      if (file_exists($filePath)) {
+        // we don't want to add index.php to the path if it doesn't exist otherwise they could get an error page when clicking on some menu options.
+        // ie. Editing the site nav within a Concourse app. Usually these apps don't have index.php, so adding index.php to it breaks the request.
+        $this->filePath = $filePath;
+      }
     }
 
     $origGET = $_GET;
