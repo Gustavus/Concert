@@ -159,8 +159,8 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
-    $this->assertContains('siteNav test contents', $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains('siteNav test contents', $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -216,8 +216,8 @@ class SiteNavControllerTest extends TestBase
     $result = $this->controller->handleSiteNavActions(['filePath' => $filePath]);
 
     $this->assertSame(['action', 'value'], array_keys($result));
-    $this->assertContains('siteNav test contents', $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains('siteNav test contents', $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -254,8 +254,8 @@ class SiteNavControllerTest extends TestBase
 
     $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
-    $this->assertContains('parent siteNav test contents', $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains('parent siteNav test contents', $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     Config::$siteNavAccessLevels = $origSiteNavAccessLevels;
     $this->unauthenticate();
@@ -291,8 +291,8 @@ class SiteNavControllerTest extends TestBase
     $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
-    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -325,8 +325,8 @@ class SiteNavControllerTest extends TestBase
     $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
-    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -356,8 +356,8 @@ class SiteNavControllerTest extends TestBase
     $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
-    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
@@ -416,8 +416,8 @@ class SiteNavControllerTest extends TestBase
     $this->assertContains('/js/min/concert', $scripts);
     $this->assertSame(['action', 'value'], array_keys($result));
     // they weren't able to edit the parent site nav, so they should be creating a new one from the starter nav
-    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['localNavigation']);
-    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['localNavigation']);
+    $this->assertContains(file_get_contents(Config::SITE_NAV_TEMPLATE), $result['value']['content']);
+    $this->assertContains($this->wrappedEditableIdentifier, $result['value']['content']);
 
     $this->unauthenticate();
     $this->destructDB();
