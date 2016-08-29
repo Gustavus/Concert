@@ -91,6 +91,9 @@ div.editable:any(:hover, :focus) {
 div.editable.mce-visualblocks div {
   margin-left: 0;
 }
+#local-navigation.concert {
+  display: block !important;
+}
 
 @media $(mobile) {
   #addusers {

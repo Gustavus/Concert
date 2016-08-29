@@ -62,7 +62,9 @@ class SiteNavController extends SharedController
       if (!is_string($moshResult['value'])) {
         $moshResult['value'] = '';
       }
-      $this->setLocalNavigation($moshResult['value']);
+      // note: Since this is putting the local navigation in the content for editing, we are assuming the person has access to edit the content, otherwise the "concertCMSCheckEditable" filter would remove the editable pieces.
+      $this->setContent('<div id="local-navigation" class="grid-20 tgrid-40 mgrid-100 alpha omega concert">' . $moshResult['value'] . '</div>');
+      $this->setTemplatePreferences(['localNavigation' => false]);
     }
     // we don't want our temporary GET parameters for moshing set anymore.
     self::setGET($origGet);
@@ -129,6 +131,11 @@ class SiteNavController extends SharedController
 
     $siteBase = PermissionsManager::findUsersSiteForFile($this->getLoggedInUsername(), $filePathFromDocRoot);
 
+    if ($this->userIsCreatingSiteNav() && $siteNav !== $currentDirNav && !file_exists($currentDirNav)) {
+      // user is requesting to create a site nav and it doesn't already exist
+      return $this->create($currentDirNav);
+    }
+
     if (strpos($siteNavFromDocRoot, $siteBase) === 0) {
       // the found site nav exists in the base of the site.
       // we need to ask them if they want to use this one, create a new one based off of this, or create a blank one.
@@ -187,7 +194,9 @@ class SiteNavController extends SharedController
     $moshResult = $this->forward('mosh', ['filePath' => $navToCreate, 'dbal' => $this->getDB()]);
 
     if (isset($moshResult['action']) && $moshResult['action'] === 'return') {
-      $this->setLocalNavigation($moshResult['value']);
+      // note: Since this is putting the local navigation in the content for editing, we are assuming the person has access to edit the content, otherwise the "concertCMSCheckEditable" filter would remove the editable pieces.
+      $this->setContent('<div id="local-navigation" class="grid-20 tgrid-40 mgrid-100 alpha omega concert">' . $moshResult['value'] . '</div>');
+      $this->setTemplatePreferences(['localNavigation' => false]);
     }
     // we don't want our temporary GET parameters for moshing set anymore.
     self::setGET($origGet);
