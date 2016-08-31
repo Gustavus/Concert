@@ -73,7 +73,7 @@ class Config
   /**
    * tinyMCE version
    */
-  const TINY_MCE_VERSION = '4.4.1 ';
+  const TINY_MCE_VERSION = '4.4.2';
 
   /**
    * Responsive Filemanager version
@@ -83,7 +83,7 @@ class Config
   /**
    * CSS version
    */
-  const CSS_VERSION = 9;
+  const CSS_VERSION = 10;
 
   /**
    * HTTPD user (User running apache)
