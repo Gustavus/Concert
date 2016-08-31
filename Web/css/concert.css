@@ -94,7 +94,9 @@ div.editable.mce-visualblocks div {
 #local-navigation.concert {
   display: block !important;
 }
-
+.mce-floatpanel.mce-fixed {
+  top: 45px !important;
+}
 @media $(mobile) {
   #addusers {
     width: 100%;
