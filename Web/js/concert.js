@@ -624,7 +624,7 @@ Gustavus.Concert = {
   cleanUpContent: function(content, isSiteNav, editableIndex) {
     var cleaned = Gustavus.Concert.mceCleanup(content);
     // re add anything we destroyed
-    cleaned = Gustavus.Concert.reAddDestroyedElements(content, editableIndex)
+    cleaned = Gustavus.Concert.reAddDestroyedElements(cleaned, editableIndex)
     // convert images to be responsive
     cleaned = Gustavus.Concert.makeImagesResponsive(cleaned);
     cleaned = cleaned.replace(/<br.data-mce[^>]*>/g, '');
