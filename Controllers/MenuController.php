@@ -163,7 +163,7 @@ class MenuController extends SharedController
     $this->analyzeReferer($forReferer);
     $this->addRefererParamsToGet();
 
-    if (file_exists($this->filePath)) {
+    if (file_exists($this->filePath) && ($this->userIsEditing() || $this->userIsEditingDraft())) {
       $fileSize = filesize($this->filePath);
 
       if ($fileSize > Config::MAX_EDITABLE_FILE_SIZE) {
