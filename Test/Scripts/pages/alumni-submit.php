@@ -1,6 +1,7 @@
 <?php
 use Gustavus\GACMailer\EmailMessage,
-  Gustavus\FileUploader\FileUploader;
+  Gustavus\FileUploader\FileUploader,
+  Gustavus\Config\Config;
 $templatePreferences  = array(
   'localNavigation'   => TRUE,
   'auxBox'        => TRUE,
