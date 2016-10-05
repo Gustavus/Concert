@@ -20,7 +20,7 @@ use Gustavus\Concert\Config,
   Gustavus\Revisions\API as RevisionsAPI,
   Gustavus\Resources\Resource,
   Gustavus\Template\Template,
-  Config as GACConfig,
+  Gustavus\Config\Config as GACConfig,
   InvalidArgumentException;
 
 /**

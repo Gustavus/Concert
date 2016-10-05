@@ -3,7 +3,7 @@ use Gustavus\Concourse\Router,
   Gustavus\Concert\Config,
   Gustavus\Utility\Jsonizer,
   Gustavus\Utility\PageUtil,
-  Config as GACConfig;
+  Gustavus\Config\Config as GACConfig;
 
 if (GACConfig::isProductionBackup()) {
   // we don't want people to edit or do anything if we are working on our backup server
