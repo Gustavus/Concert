@@ -525,7 +525,7 @@ Gustavus.Concert = {
       }
     };
     config.templates = '/concert/js/tinymce/templates/templates.json';
-    config.template_popup_height = 150;
+    config.template_popup_height = 250;
 
     return config;
   },
