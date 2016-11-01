@@ -5,10 +5,6 @@
 @import "menu.css";
 @import "messages.css";
 
-body.loading, body.loading * {
-  cursor: progress !important;
-}
-
 div.editable {
   cursor: text !important;
   min-height: 20px;
@@ -93,9 +89,6 @@ div.editable.mce-visualblocks div {
 }
 #local-navigation.concert {
   display: block !important;
-}
-.mce-floatpanel.mce-fixed {
-  top: 45px !important;
 }
 @media $(mobile) {
   #addusers {
