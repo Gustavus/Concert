@@ -1027,17 +1027,18 @@ Gustavus.Concert = {
     $content.find('iframe').each(function() {
       var $this = $(this);
       var width = $this.attr('width').replace('px', '');
-      if ($this.parent().hasClass('box16x9') || $this.parent().hasClass('box4x3') || $this.parent().hasClass('boxWidescreen') || $this.parent().hasClass('boxFullscreen')) {
+      var $parent = $this.parent();
+      if ($parent.hasClass('box16x9') || $parent.hasClass('box4x3') || $parent.hasClass('boxWidescreen') || $parent.hasClass('boxFullscreen') || $parent.hasClass('responsiveBox')) {
         // this looks like it might already be wrapped. We just need to verify.
-        if ($this.parent().parent().children().length === 1) {
+        if ($parent.parent().children().length === 1) {
           // this is the only element in the parent.
           // We need to adjust the width of the containing element
           if (width) {
-            $this.parent().parent().css('max-width', width + 'px');
-            $this.parent().parent().addClass('boxContainer');
+            $parent.parent().css('max-width', width + 'px');
+            $parent.parent().addClass('boxContainer');
           } else {
-            $this.parent().parent().css('max-width', '');
-            $this.parent().parent().addClass('boxContainer');
+            $parent.parent().css('max-width', '');
+            $parent.parent().addClass('boxContainer');
           }
         } else if (width) {
           // we need to wrap our parent element in a div with max-width
