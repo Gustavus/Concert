@@ -101,9 +101,6 @@ class MainController extends SharedController
     if (!isset($_SESSION['RF']['language'])) {
       $_SESSION['RF']['language'] = 'en_EN';
     }
-    if (!isset($_SESSION['RF']['language_file'])) {
-      $_SESSION['RF']['language_file'] = Config::FILE_MANAGER_LOCATION . '/lang/' . $_SESSION['RF']['language'] . '.php';
-    }
 
     $file = (new File(Utility::addDocRootToPath($this->buildUrl('fileManager', ['request' => '']) . $params['request'])));
     if (strpos($params['request'], '.php') !== false) {
