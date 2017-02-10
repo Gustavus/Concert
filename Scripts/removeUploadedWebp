@@ -1,0 +1,39 @@
+#!/bin/bash
+if [ `whoami` != 'root' ]; then
+  echo "This script should be run as root."
+  exit
+fi
+
+if [ -z "$1" ]; then
+  #prompt for path
+  pwd=`pwd`
+  echo -n "Directory to convert pages: [$pwd] "
+  read path
+else
+  path=$1
+fi
+
+# No path was specified, so we fall back to the current directory
+if [ -z "$path" ]; then
+  path=$pwd
+fi
+
+find $path -type d -name concertFiles |
+  while read concertDir
+    do
+      find $concertDir -type f -name \*.jpg |
+        while read currFile
+          do
+            info=`identify "$currFile" 2>&-`
+            if [[ ! -z `echo "$info" | grep 'identify:'` || -z "$info" ]]; then
+              echo 'error'
+              echo "rm \"$currFile\""
+              rm "$currFile"
+            elif [[ ! -z `echo "$info" | grep WEBP` ]]; then
+              echo 'webp'
+              echo "rm \"$currFile\""
+              rm "$currFile"
+            fi
+          done
+
+    done
