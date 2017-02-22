@@ -84,6 +84,8 @@ class MainController extends SharedController
       if (isset($_POST['path_thumb'])) {
         $_POST['path_thumb'] = Utility::addDocRootToPath($_POST['path_thumb']);
       }
+      // increase our memory limit for large uploads
+      ini_set('memory_limit', '256M');
     }
 
     if ($this->getMethod() === 'POST' && strpos($params['request'], 'execute.php') !== false) {
