@@ -2,7 +2,7 @@
 use Gustavus\TemplateBuilder\Builder;
 $templatePreferences  = array(
   'localNavigation'   => true,
-  'auxBox'            => true,
+  'auxBox'            => false,
   'templateRevision'  => 2,
 );
 
