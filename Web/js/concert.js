@@ -732,18 +732,7 @@ Gustavus.Concert = {
 
     if (isSiteNav) {
       // clean up site nav stuff.
-      // the template adds spans with classes of text, description, etc.
-      // The original link text will live in span.text, so just look for that and reset the link's html.
-      $textSpans = $content.find('a span.text');
-
-      $textSpans.each(function() {
-        var $span = $(this);
-        if ($span.find('span.text').length > 0) {
-          // we want to find the inner most span.text
-          return;
-        }
-        $span.parents('a').html($span.html());
-      });
+      Gustavus.Template.compressLinkTitles($content);
     }
     cleaned = $content.html();
 
