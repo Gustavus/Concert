@@ -498,6 +498,7 @@ Gustavus.Concert = {
    * Callback for tinymce blur
    *
    * @param {Object}  editor  The editor instance we are setting blur up for
+   * @return {undefined}
    */
   editorBlur: function(editor) {
     // destroy any plugins that we want to be re-enabled when apply gets called
@@ -521,6 +522,7 @@ Gustavus.Concert = {
 
   /**
    * Resets our blur action on the editors
+   * @return {undefined}
    */
   reInitEditorBlur: function() {
     // reset our blur action that we removed
