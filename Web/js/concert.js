@@ -244,23 +244,7 @@ Gustavus.Concert = {
 
     setup : function(editor) {
       editor.on('blur', function(e) {
-        // destroy any plugins that we want to be re-enabled when apply gets called
-        Gustavus.Concert.destroyTemplatePluginsPreApply(editor.getElement());
-        // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
-        Extend.apply('page', editor.getElement());
-
-        Gustavus.Concert.ignoreDirtyEditors = false;
-        // clean up content
-        var content = Gustavus.Concert.mceCleanup(editor.getContent());
-
-        // convert images into GIMLI URLs.
-        content = Gustavus.Concert.convertImageURLsToGIMLI(content);
-        // convert embedded videos into responsive boxes
-        content = Gustavus.Concert.convertEmbedsIntoResponsiveBoxes(content);
-
-        editor.setContent(content);
-        // remove any image placeholders
-        Gustavus.Concert.removeImagePlaceholders();
+        Gustavus.Concert.editorBlur(editor);
       });
       // add html into any empty i and svg elements so they don't get removed
       editor.on('beforeSetContent', function(e) {
@@ -315,6 +299,23 @@ Gustavus.Concert = {
               // call the original onSubmit function
               return args.origSubmit(e);
             };
+            // check to see if gimli has a crop and un-check the constrain checkbox
+            if (args.data.src && args.data.src.match(/\/gimli\/.*?c\d+:\d+/)) {
+              // look for our constrain proportions checkbox in the body
+              // this is gross, but should be more future proof that using the current indexes within the args
+              for (var a in args.body) {
+                if (args.body[a] && args.body[a].items) {
+                  // our item has sub items
+                  for (var b in args.body[a].items) {
+                    if (args.body[a].items[b].name === 'constrain') {
+                      // we found our constrain item
+                      args.body[a].items[b].checked = false;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
           }
           // call the original open function
           return editor.windowManager.origOpen(args, params);
@@ -491,6 +492,45 @@ Gustavus.Concert = {
     spellchecker_rpc_url: '/js/tinymce-spellchecker/spellchecker.php',
     spellchecker_languages: 'English=en'
     //spellchecker_languages: 'English=en,Danish=da,Dutch=nl,Finnish=fi,French=fr_FR, German=de,Italian=it,Polish=pl,Portuguese=pt_BR,Spanish=es,Swedish=sv'
+  },
+
+  /**
+   * Callback for tinymce blur
+   *
+   * @param {Object}  editor  The editor instance we are setting blur up for
+   * @return {undefined}
+   */
+  editorBlur: function(editor) {
+    // destroy any plugins that we want to be re-enabled when apply gets called
+    Gustavus.Concert.destroyTemplatePluginsPreApply(editor.getElement());
+    // run any filters added to 'page' in case a filter adds styles to any elements. (fancy tables)
+    Extend.apply('page', editor.getElement());
+
+    Gustavus.Concert.ignoreDirtyEditors = false;
+    // clean up content
+    var content = Gustavus.Concert.mceCleanup(editor.getContent());
+
+    // convert images into GIMLI URLs.
+    content = Gustavus.Concert.convertImageURLsToGIMLI(content);
+    // convert embedded videos into responsive boxes
+    content = Gustavus.Concert.convertEmbedsIntoResponsiveBoxes(content);
+
+    editor.setContent(content);
+    // remove any image placeholders
+    Gustavus.Concert.removeImagePlaceholders();
+  },
+
+  /**
+   * Resets our blur action on the editors
+   * @return {undefined}
+   */
+  reInitEditorBlur: function() {
+    // reset our blur action that we removed
+    for (var i in tinyMCE.editors) {
+      tinyMCE.editors[i].on('blur', function(e) {
+        Gustavus.Concert.editorBlur(tinyMCE.editors[i]);
+      });
+    };
   },
 
   /**
@@ -732,18 +772,7 @@ Gustavus.Concert = {
 
     if (isSiteNav) {
       // clean up site nav stuff.
-      // the template adds spans with classes of text, description, etc.
-      // The original link text will live in span.text, so just look for that and reset the link's html.
-      $textSpans = $content.find('a span.text');
-
-      $textSpans.each(function() {
-        var $span = $(this);
-        if ($span.find('span.text').length > 0) {
-          // we want to find the inner most span.text
-          return;
-        }
-        $span.parents('a').html($span.html());
-      });
+      Gustavus.Template.compressLinkTitles($content);
     }
     cleaned = $content.html();
 
@@ -1114,7 +1143,16 @@ Gustavus.Concert = {
     if (allowRedirects == undefined) {
       allowRedirects = true;
     }
+
+    for (var i in tinyMCE.editors) {
+      // force blur
+      tinyMCE.editors[i].fire('blur');
+      // remove our blur trigger so we don't get a prompt to ask if we want to leave for touch screens
+      tinyMCE.editors[i].off('blur');
+    };
+
     this.ignoreDirtyEditors = true;
+
     var edits = this.buildEditsObject();
 
     edits.concertAction = 'save';
@@ -1131,6 +1169,7 @@ Gustavus.Concert = {
       success: function(data) {
         if (data && data.error) {
           $('body').removeClass('loading');
+          Gustavus.Concert.reInitEditorBlur();
           alert(data.reason);
         } else if (allowRedirects) {
           if (data && data.redirectUrl) {
@@ -1150,6 +1189,7 @@ Gustavus.Concert = {
         } else {
           $('body').removeClass('loading');
           Gustavus.Concert.ignoreDirtyEditors = false;
+          Gustavus.Concert.reInitEditorBlur();
           if ($element) {
             $element.attr('disabled', '');
           }
@@ -1158,6 +1198,7 @@ Gustavus.Concert = {
       error: function() {
         $('body').removeClass('loading');
         Gustavus.Concert.ignoreDirtyEditors = false;
+        Gustavus.Concert.reInitEditorBlur();
         if ($element) {
           $element.attr('disabled', '');
         }
